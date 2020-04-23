@@ -18,6 +18,10 @@
     -- v = {
     --   "vim.visualMode()"
     -- },
+    ["<number><command>"] = {
+      "<command>",
+      times = "<number>"
+    }
     ["<alt>l"] = {
       41144,
       "MidiLearnLastTouchedFX"

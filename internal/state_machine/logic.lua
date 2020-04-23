@@ -8,11 +8,13 @@ local modes = {
   motion_pending = 1,
   operator_pending = 2,
   visual = 3,
+  reset = 4,
 }
 
 local display = require("display")
 local definitions = require("definitions")
-local dispatch = require("dispatch")
+local output = require("state_machine.output")
+
 local str = require("string")
 
 function splitIntoPrefixNumberAndCommandSequence(key_sequence)
@@ -65,7 +67,49 @@ function getCompletions(command_sequence, definitions_tables, valid_command_type
     end
 end
 
+function logic.getCompletions(state)
+  local valid_command_types = {}
+  if state["mode"] == modes["normal"] or state["mode"] == modes["visual"] then
+    valid_command_types = {'actions', 'motions', 'operators'}
+  elseif state["mode"] == modes["motion_pending"] then
+    valid_command_types = {'motions'}
+  end
+
+  local definitions_tables = definitions.readMultiple({state['context'], 'global'})
+
+  local completions = {}
+  local found_completion = false
+  for _, definition_table in ipairs(definitions_tables) do
+    for _, valid_command_type in ipairs(valid_command_types) do
+      local section_completions = definitions.getCompletions(command_sequence, definition_table[valid_command_type])
+      if section_completions then
+        for sequence, sequence_value in pairs(section_completions) do
+          if not completions[sequence] then
+            found_completion = true
+            completions[sequence] = sequence_value
+          end
+        end
+      end
+    end
+  end
+
+  if found_completion then
+    return completions
+  else
+    return nil
+  end
+end
+
 function logic.tick(state, key_press)
+  local completions = logic.getCompletions(state)
+  local new_state = state
+
+  local command = completions[key_press["key"]]
+  if command then
+    log.info('Command triggered: ' .. serpent.block(command, {comment=false}))
+    new_state = output(command, repetitions, state)
+  end
+
   local new_key_sequence = state['key_sequence'] .. key_press['key']
 
   local repetitions = 1
@@ -74,21 +118,13 @@ function logic.tick(state, key_press)
     repetitions = prefix_num
   end
 
-  local valid_command_types = {}
-  if state["mode"] == modes["normal"] or state["mode"] == modes["visual"] then
-    valid_command_types = {'actions', 'motions', 'operators'}
-  elseif state["mode"] == modes["motion_pending"] then
-    valid_command_types = {'motions'}
-  end
-
-  local definitions_tables = definitions.readMultiple({key_press['context'], 'global'})
 
   local new_state = state
 
   local command = findCommand(command_sequence, definitions_tables, valid_command_types)
   if command then
     log.info('Command triggered: ' .. serpent.block(command, {comment=false}))
-    new_state = dispatch(command, repetitions, state)
+    new_state = output(command, repetitions, state)
   else
     local completions = getCompletions(command_sequence, definitions_tables, valid_command_types)
     if completions then

@@ -15,7 +15,7 @@ function runReaperCommand(command_id)
   reaper.Main_OnCommand(numeric_id, 0)
 end
 
-function dispatch(command, specified_repetitions, state)
+function output(command, specified_repetitions, state)
   reaper.Undo_BeginBlock()
   local new_state = state
 
@@ -49,4 +49,4 @@ function dispatch(command, specified_repetitions, state)
   return new_state
 end
 
-return dispatch
+return output
