@@ -17,12 +17,16 @@ return {
     timeline_operator = {},
     timeline_selector = {},
     timeline_motion = {},
-    command = {},
+    command = {
+      ["<C-,>"] = { "+fx", {
+          ["f"] = "FuzzyFx"
+      }}
+    },
   },
   midi = {
-    timeline_selector = {},
-    timeline_operator = {},
-    timeline_motion = {},
-    command = {},
-  },
-}
+      timeline_selector = {},
+      timeline_operator = {},
+      timeline_motion = {},
+      command = {},
+    },
+  }

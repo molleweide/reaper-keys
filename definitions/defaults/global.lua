@@ -92,6 +92,7 @@ return {
                   ["x"] = "CloseWindow",
                   ["g"] = "SetMidiGridDivision",
                   ["q"] = "Quantize",
+                  ["Q"] = "ToggleInputQuantize",
                   [","] = {"+options", {
                              ["g"] = "ToggleMidiEditorUsesMainGridDivision",
                              ["s"] = "ToggleMidiSnap",
@@ -146,6 +147,7 @@ return {
                   ["z"] = "MinimizeTracks",
                   ["M"] = "CycleRecordMonitor",
                   ["f"] = "CycleFolderState",
+                  ["S"] = "ShowTrackRecordingSettings",
                   ["x"] = {"+routing", {
                             ["i"] = "TrackSetInputToMatchFirstSelected",
                             ["p"] = "TrackToggleSendToParent",

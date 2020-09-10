@@ -15,4 +15,5 @@ local custom = require('custom_actions')
 -- longer verbs are usually commands
 
 return {
+  FuzzyFx = "_RSd7bf7022d92114682d354e90dbe8aef580a5ef5c"
 }
