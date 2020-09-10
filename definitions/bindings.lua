@@ -19,7 +19,9 @@ return {
     timeline_motion = {},
     command = {
       ["<C-,>"] = { "+fx", {
-          ["f"] = "FuzzyFx"
+          ["f"] = "FuzzyFx",
+          ["a"] = "ApplyTrackSyntax",
+          ["w"] = "WriteTrackTable"
       }}
     },
   },

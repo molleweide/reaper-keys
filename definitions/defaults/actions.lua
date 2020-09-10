@@ -106,6 +106,7 @@ return {
       InsertOrExtendMidiItem = 42069,
       InsertTrackAbove = '_SWS_INSRTTRKABOVE',
       InsertTrackBelow = 40001,
+      InsertTrackFromTrackTemplate = 46000,
       Insert4EnvelopePointsAtTimeSelection = 40726,
       ShiftEnvelopePointsUp = 41180,
       ShiftEnvelopePointsUpATinyBit = 42381,

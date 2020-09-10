@@ -143,6 +143,7 @@ return {
                   ["n"] = "ResetTrackToNormal",
                   ["R"] = "RenderTrack",
                   ["i"] = "AddTrackVirtualInstrument",
+                  ["I"] = "InsertTrackFromTrackTemplate",
                   ["r"] = "RenameTrack",
                   ["z"] = "MinimizeTracks",
                   ["M"] = "CycleRecordMonitor",
