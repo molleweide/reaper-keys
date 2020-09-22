@@ -144,6 +144,7 @@ return {
                   ["R"] = "RenderTrack",
                   ["i"] = "AddTrackVirtualInstrument",
                   ["I"] = "InsertTrackFromTrackTemplate",
+                  ["W"] = "SaveTrackTempFromSelected",
                   ["r"] = "RenameTrack",
                   ["z"] = "MinimizeTracks",
                   ["M"] = "CycleRecordMonitor",

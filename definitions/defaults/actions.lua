@@ -315,6 +315,7 @@ return {
       SaveProject = 40026,
       SaveTimeSelection = "_SWS_SAVETIME5",
       SaveTrackSelection = "_SWS_SAVESEL",
+      SaveTrackTempFromSelected = 40392,
       ScrollToPlayPosition = 40150,
       ScrollToEditCursor = "_SWS_HSCROLL10",
       ScrollToSelectedTracks = 40913,
