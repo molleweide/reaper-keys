@@ -2,6 +2,7 @@ return {
   timeline_motion = {
     ["0"] = "ProjectStart",
     ["<C-$>"] = "ProjectEnd",
+
     ["f"] = "PlayPosition",
     ["x"] = "MousePosition",
     ["["] = "LoopStart",
@@ -56,7 +57,7 @@ return {
     ["<C-'>"] = "DeleteMark",
     ["<C-r>"] = "Redo",
     ["u"] = "Undo",
-    ["R"] = "RecordOrStop",
+    ["R"] = "RecordToggle",
     ["T"] = "Play",
     ["<M-t>"] = "PlayFromMousePosition",
     ["tt"] = "PlayFromTimeSelectionStart",

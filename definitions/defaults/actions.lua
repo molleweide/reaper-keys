@@ -275,6 +275,7 @@ return {
       RecordConditional = {"Stop", "ToggleRecordConditional"},
       RecordMacro = {metaCommand=true, registerAction=true, registerOptional=true},
       RecordOrStop = "_SWS_RECTOGGLE",
+      RecordToggle = 1013,
       Record = {"SaveEditCursorPosition", "TimeSelectionStart", "RecordConditional", "RestoreEditCursorPosition", setTimeSelection=true},
       Redo = {40030, prefixRepetitionCount=true},
       Region = custom.select.innerRegion,
