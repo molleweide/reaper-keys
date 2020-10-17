@@ -314,6 +314,7 @@ return {
       SaveItemSelection = "_SWS_SAVEALLSELITEMS1",
       SaveLoopSelection = "_SWS_SAVELOOP5",
       SaveProject = 40026,
+      SaveProjectAs = 40022,
       SaveTimeSelection = "_SWS_SAVETIME5",
       SaveTrackSelection = "_SWS_SAVESEL",
       SaveTrackTempFromSelected = 40392,

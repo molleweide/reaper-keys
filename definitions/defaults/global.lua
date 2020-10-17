@@ -270,6 +270,7 @@ return {
                   ["n"] = "NextTab",
                   ["p"] = "PrevTab",
                   ["s"] = "SaveProject",
+                  ["S"] = "SaveProjectAs",
                   ["o"] = "OpenProject",
                   ["c"] = "NewProjectTab",
                   ["x"] = "CloseProject",
