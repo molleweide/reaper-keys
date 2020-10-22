@@ -124,6 +124,7 @@ return {
                   ["m"] = "ToggleMuteItem",
                   ["d"] = "DeleteActiveTake",
                   ["s"] = "CropToActiveTake",
+                  ["S"] = "UnselectItems",
                   ["e"] = "OpenMidiEditor",
                   ["n"] = "ItemNormalize",
                   ["f"] = "ItemApplyFx",
