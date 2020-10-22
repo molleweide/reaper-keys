@@ -234,6 +234,7 @@ return {
                  ["f"] = "ResetFeedbackWindow",
       }},
       ["g"] = { "+global", {
+                  ["Q"] = "Quit",
                   ["g"] = "SetGridDivision",
                   ["dr"] = "ResetControlDevices",
                   [","] = "ShowPreferences",
