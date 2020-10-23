@@ -103,6 +103,7 @@ return {
       InsertAutomationItem = 42082,
       InsertClickSource = 40013,
       InsertDefaultSizeNote = {40051, midiCommand=true},
+      InsertEmptyItem = 40142,
       InsertMediaFile = 40018,
       InsertNote = {"MidiTimeSelectionStart", "InsertDefaultSizeNote", "MidiTimeSelectionStart", "SelectNearestNote", "FitNotes"},
       InsertOrExtendMidiItem = 42069,
