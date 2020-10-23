@@ -126,6 +126,7 @@ return {
                   ["s"] = "CropToActiveTake",
                   ["S"] = "UnselectItems",
                   ["e"] = "OpenMidiEditor",
+                  ["T"] = "OpenEmptyItemNoteEditor",
                   ["n"] = "ItemNormalize",
                   ["f"] = "ItemApplyFx",
                   ["g"] = "GroupItems",
