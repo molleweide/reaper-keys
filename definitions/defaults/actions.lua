@@ -294,6 +294,7 @@ return {
       RemoveTimeSelection = 40635,
       RemoveTrack = 40005,
       RenameTrack = 40696,
+      RenameTracks = custom.changeNamesOfSelectedTracks,
       RenameTakeSourceFile = "_XENAKIOS_RENMTAKEANDSOURCE",
       RenameTake = "_XENAKIOS_RENMTAKE",
       RenameTakeAndSourceFile = "_XENAKIOS_RENMTAKEANDSOURCE",

@@ -10,3 +10,9 @@
   create custom insert note action that works the exact same way
   as currently but allow for adding an additional param that is
   note relative to the current note.
+
+- prevent the playCursor from being moved to the end of midi insert motion.
+  Now you cannot program midi during playback because the playCursor is moved
+  every time you insert a note.
+
+  > > > if playBack > only move edit cursor.

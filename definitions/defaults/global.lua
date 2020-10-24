@@ -148,7 +148,7 @@ return {
                   ["i"] = "AddTrackVirtualInstrument",
                   ["I"] = "InsertTrackFromTrackTemplate",
                   ["W"] = "SaveTrackTempFromSelected",
-                  ["r"] = "RenameTrack",
+                  ["r"] = "RenameTracks",
                   ["z"] = "MinimizeTracks",
                   ["M"] = "CycleRecordMonitor",
                   ["f"] = "CycleFolderState",
