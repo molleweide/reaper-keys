@@ -7,6 +7,7 @@ return {
       AddFx = "_S&M_CONSOLE_ADDFX",
       AddNextNoteToSelection = {40422, midiCommand=true},
       AddPrevNoteToSelection = {40421, midiCommand=true},
+      AddTrackRoute = custom.addRouteForSelectedTracks,
       AddTrackVirtualInstrument = 40701,
       AllTrackItems = {"SaveItemSelection", "SelectItemsOnTrack", "SelectedItems", "RestoreItemSelection"},
       AllTracks = 40296,

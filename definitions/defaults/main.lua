@@ -113,6 +113,7 @@ return {
     ["o"] = "EnterTrackBelow",
     ["p"] = "Paste",
     ["P"] = "PasteAbove",
+    ["r"] = "AddTrackRoute",
     ["yy"] = "CopyTrack",
     ["zz"] = "ScrollToSelectedTracks",
     ["|"] = "SplitItemsAtEditCursor",

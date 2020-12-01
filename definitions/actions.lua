@@ -16,6 +16,6 @@ local custom = require('custom_actions')
 
 return {
   FuzzyFx = "_RSd7bf7022d92114682d354e90dbe8aef580a5ef5c",
-  ApplyTrackSyntax = "_RS9fa85a3429c248f238ddf6e3a3397d94c5db98cc",
+  -- ApplyTrackSyntax = "_RS9fa85a3429c248f238ddf6e3a3397d94c5db98cc",
   WriteTrackTable = "_RS8fbab5350ec4397acb20fdd0b90c535ab9558db2" -- ?? why
 }

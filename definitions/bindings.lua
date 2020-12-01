@@ -19,8 +19,10 @@ return {
     timeline_motion = {},
     command = {
       ["<C-,>"] = { "+fx", {
+          ["c"] = "Log", -- custom function test logger
+          ["C"] = "CloseConsole", -- how can I close the console with a key command??
           ["f"] = "FuzzyFx",
-          ["a"] = "ApplyTrackSyntax",
+          -- ["a"] = "ApplyTrackSyntax",
           ["w"] = "WriteTrackTable"
       }}
     },

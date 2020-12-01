@@ -8,11 +8,11 @@ eg. `c - chorus; d - dropHard`
 
 how many possible registers are there?
 
-# text mode ??
+## text mode ??
 
 OpenMidiEditor ->> OpenItemEditor >> if empty open add text???
 
-# programmatically save eg. trackTemplate
+## programmatically save eg. trackTemplate
 
     reaper.Main_openProject(string name)
     `opens a project. will prompt the user to save, etc. if you pass a .RTrackTemplate file then it adds that to the project instead.`
@@ -23,3 +23,9 @@ OpenMidiEditor ->> OpenItemEditor >> if empty open add text???
 # hide track sets???
 
 used in conjuction with syntax?
+
+## add sends.
+
+1. add send
+2. add receive
+3. remove send/receive
