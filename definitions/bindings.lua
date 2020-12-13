@@ -11,19 +11,25 @@ return {
   },
   main = {
     track_motion = {},
-    visual_track_command = {},
+    visual_track_command = {
+      ["<C-,>"] = { "+trkop", {
+          ["d"] = "gCut",
+          ["p"] = "gPut",
+          ["y"] = "gYank",
+      }}
+    },
     track_selector = {},
-    track_operator = {},
+    track_operator = {
+    },
     timeline_operator = {},
     timeline_selector = {},
     timeline_motion = {},
     command = {
-      ["<C-,>"] = { "+fx", {
-          ["c"] = "Log", -- custom function test logger
-          ["C"] = "CloseConsole", -- how can I close the console with a key command??
+      ["<C-,>"] = { "+cmd", {
+          ["c"] = "LogWhatever",
+          ["C"] = "CloseReaConsole",
           ["f"] = "FuzzyFx",
-          -- ["a"] = "ApplyTrackSyntax",
-          ["w"] = "WriteTrackTable"
+          ["w"] = "ApplyConfigs"
       }}
     },
   },

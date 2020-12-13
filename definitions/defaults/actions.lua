@@ -546,7 +546,7 @@ return {
       ZoomOutHoriz = {1011, prefixRepetitionCount=true},
       ZoomOutVert = {40112, prefixRepetitionCount=true},
       ZoomProjectTimeline = 40295,
-      ZoomProject = {"ZoomAllTracks", "ZoomAllItems"},
+      ZoomProject = {"ZoomAllTracks", "ZoomAllItems", "ScrollToSelectedTracks"},
       ZoomRedo = {"_SWS_REDOZOOM", prefixRepetitionCount=true},
       ZoomTimeAndTrackSelection = {"ZoomTrackSelection", "ZoomTimeSelection"},
       ZoomTimeSelection = 40031,

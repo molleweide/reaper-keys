@@ -113,7 +113,7 @@ return {
     ["o"] = "EnterTrackBelow",
     ["p"] = "Paste",
     ["P"] = "PasteAbove",
-    ["r"] = "AddTrackRoute",
+    -- ["r"] = "AddTrackRoute", -- this overwrites global record
     ["yy"] = "CopyTrack",
     ["zz"] = "ScrollToSelectedTracks",
     ["|"] = "SplitItemsAtEditCursor",

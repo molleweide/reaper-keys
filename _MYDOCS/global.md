@@ -29,3 +29,7 @@ used in conjuction with syntax?
 1. add send
 2. add receive
 3. remove send/receive
+
+## switch focus to reaConsole
+
+so that one can close it easilly

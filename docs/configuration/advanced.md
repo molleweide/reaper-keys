@@ -6,11 +6,11 @@ parent: Configuration
 ---
 
 # Advanced Configuration
+
 {: .no_toc}
 
 1. TOC
-{:toc}
-
+   {:toc}
 
 ## Action Sequences and Modes
 
@@ -23,7 +23,6 @@ parent: Configuration
     │   │   ├── main.lua
     │   │   └── midi.lua
 
-
 ### Configuration
 
 If you are interested in changing or creating modes, action types, or action action sequences, take a look at `action_sequence_functions` directory.
@@ -31,10 +30,9 @@ If you are interested in changing or creating modes, action types, or action act
 There you will find all the functions that execute composed actions (excluding
 meta actions). There is a file for each context, and a section for each mode.
 
-Here is an example entry that defines the sequence `'timeline_operator'
-timeline_motion'`, with the accompanying 'glue' function that composes the actions.
+Here is an example entry that defines the sequence `'timeline_operator' timeline_motion'`, with the accompanying 'glue' function that composes the actions.
 
-``` lua
+```lua
 -- in global.lua
 normal = {
   {
@@ -60,7 +58,7 @@ So in this case, if one types `tl`
 
 Reaper keys will find the entries "PlayAndLoop" and "NextBeat" in it's search in the definitions.
 
-``` lua
+```lua
 -- in definitions/global.lua the
   timeline_operator = {
     ["t"] = "Play",
@@ -72,7 +70,7 @@ Reaper keys will find the entries "PlayAndLoop" and "NextBeat" in it's search in
 
 And find the value of the action in actions.lua
 
-``` lua
+```lua
 -- in definitions/actions.lua
 PlayAndLoop = {"SetLoopSelectionToTimeSelection", "LoopStart", "Play", setTimeSelection=true},
 NextBeat = 40841,
@@ -80,18 +78,17 @@ NextBeat = 40841,
 
 and execute the function with
 
-``` lua
+```lua
 function({"SetLoopSelectionToTimeSelection", "LoopStart", "Play", setTimeSelection=true}, 40841)
 ```
 
-Reaper keys prioritizes entries in order of  context, then index in the list.
+Reaper keys prioritizes entries in order of context, then index in the list.
 
 It is enough to define an entry like the above, with a new action type or key
 type sequence, to create a new action type.
 
 To create a new mode, add an entry at the level of 'normal' in the example. Then
 populate it with entries alike the above.
-
 
 ## Custom Actions
 
@@ -106,8 +103,6 @@ populate it with entries alike the above.
 
 ### Configuration
 
-To create a custom action, follow the examples in the `custom_actions` directory. This directory contains all the actions available via the `custom` import in the `actions` file. 
+To create a custom action, follow the examples in the `custom_actions` directory. This directory contains all the actions available via the `custom` import in the `actions` file.
 
 `reaper` is a global which provides access to the [reaper api](https://www.reaper.fm/sdk/reascript/reascripthelp.html#l)
-
-

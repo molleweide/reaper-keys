@@ -9,6 +9,8 @@ local lib = require('library')
 -- search for 'custom' in the default actions file to see examples
 local custom = require('custom_actions')
 
+-- local reaper_syntax = require('reaper_syntax')
+
 -- naming conventions:
 -- a noun implies an action which selects the noun, or a movement to it's position
 -- simple verbs are usually operators, such as 'change'
@@ -16,6 +18,8 @@ local custom = require('custom_actions')
 
 return {
   FuzzyFx = "_RSd7bf7022d92114682d354e90dbe8aef580a5ef5c",
-  -- ApplyTrackSyntax = "_RS9fa85a3429c248f238ddf6e3a3397d94c5db98cc",
-  WriteTrackTable = "_RS8fbab5350ec4397acb20fdd0b90c535ab9558db2" -- ?? why
+  ApplyConfigs = "_RSa338711f729b0a270b849a2a119fd485212279b0",
+  gCut = "_RS7903a906bc188e96b41a1dba76c401faec0bbd07",
+  gPut = "_RSa4785ef14e17a4412c460da932d4930ac2ec1378",
+  gYank = "_RSa451c4c6c528944724f431978115cb7bc73479cd",
 }
