@@ -229,6 +229,7 @@ return {
                  ["v"] = "ToggleLoopSelectionFollowsTimeSelection",
                  ["s"] = "ToggleSnap",
                  ["m"] = "ToggleMetronome", -- 'M' add show metronome and preroll settings
+                 ["M"] = "ShowMetronomeSettings", -- 'M' add show metronome and preroll settings
                  ["t"] = "ToggleStopAtEndOfTimeSelectionIfNoRepeat",
                  ["x"] = "ToggleAutoCrossfade",
                  ["e"] = "ToggleEnvelopePointsMoveWithItems",

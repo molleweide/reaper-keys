@@ -426,6 +426,7 @@ return {
       ShowActionList = 40605,
       ShowItemProps = 40009,
       ShowItemPropsSource = 40011,
+      ShowMetronomeSettings = 40363,
       ShowNextFx= {"_S&M_WNONLY2", prefixRepetitionCount=true},
       ShowPreferences = 40016,
       ShowPrevFx = {"_S&M_WNONLY1", prefixRepetitionCount=true},
