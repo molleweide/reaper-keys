@@ -8,7 +8,7 @@ local lib = require('library')
 -- provides custom functions which make use of the reaper api
 -- search for 'custom' in the default actions file to see examples
 
-local syntax = require('SYNTAX.syntax_actions')
+local syntax = require('SYNTAX.actions')
 
 -- local reaper_syntax = require('reaper_syntax')
 

@@ -5,21 +5,8 @@ https://forum.cockos.com/showthread.php?t=176878
 
 ---
 
-markers 8\*3 >> 8-10 markers per row
-
----
-
 1. add some wierd synth sounds
-2. mv syntax into my reaper_keys fork
-
-- copy over code // which commit?
-- make sure I can access everything.
-- it should run just as normal
-  only diff
-  inside actions.lua import action? make it work the exact same way as normal actions
-  but I import my own functions inside def/actions instead of in `defaults`
-
-3. improve channel splitters
+2. improve channel splitters
 
 ---
 
