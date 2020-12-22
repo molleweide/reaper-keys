@@ -1,0 +1,209 @@
+-----
+
+-- new structure
+--
+--  CONFIG.lua
+--    GENERAL.lua
+--    CLASS 
+--
+--      TRACK_INFO
+--      FX_CHAIN
+--        OPTION
+--
+return {
+   classes = {
+     Z = require('SYNTAX.config.classes.class_z'),
+     G = require('SYNTAX.config.classes.class_g'),
+     M = require('SYNTAX.config.classes.class_m'),
+     C = require('SYNTAX.config.classes.class_c'),
+     A = require('SYNTAX.config.classes.class_a'),
+     B = require('SYNTAX.config.classes.class_b'),
+     S = require('SYNTAX.config.classes.class_s'),
+     T = require('SYNTAX.config.classes.class_t')
+   }
+}
+--
+--
+--
+-- return {
+--   generalConfigs = {
+--     log_level = 'trace',
+--   },
+--   -- ignore prompting to rename tracks that don't conform and put them last
+--   -- classConfigs = {
+--   --    parts = prefix, options, name,
+--   --    div = ':'
+--   -- }
+--   -- rename > classFxConfigs
+--   fxConfigs = {
+--     div = '_', -- put inside FX create name function
+--     -- new stucture : fxConfigs.class.option{pre, mid, post}
+--     -- rename > M
+--     fx_list = { -- class M syntax
+--       default = {},
+--       m = { -- parent option == 'm'
+--         -- can I add prefix here ?? as prefix = 'rstarstarst'
+--         prefix = 'D_MAP_',
+--         [0] = { -- only integer keys are used when computing table #length
+--           fx_type = 'JS: ',
+--           name_prefix = "NOTEFLTR_", -- rename >
+--           search_str = "midi_note_filter",
+--           fx_params = {
+--             [0] = { val = function(note_start_index, range) return note_start_index end }, -- now thresh
+--             [1] = { val = function(note_start_index, range) return note_start_index + range - 1 end} -- high thresh
+--           }
+--         },
+--         [1] = {
+--           fx_type = 'JS: ',
+--           name_prefix = "NOTETRANSP_",
+--           search_str = "midi_transpose",
+--           fx_params = {
+--             [0] = {  val = function(note_start_index, range) return samplerNoteBass - note_start_index end } -- note shift // transpore note
+--           }
+--         },
+--         [2] = {
+--           fx_type = 'VST: ',
+--           spawnByRange = true, -- M has option 'nr'
+--           name_prefix = "RS5K_",
+--           search_str = "ReaSamplOmatic5000",
+--           fx_params = {
+--             [3] = { val = function(note_start_index, range, r) return midiNumToNormalized(samplerNoteBass + r) end }, -- note range start
+--             [4] = { val = function(note_start_index, range, r) return midiNumToNormalized(samplerNoteBass + r) end } -- note range end
+--           }
+--         },
+--       }
+--     }, -- fx_list
+--   },
+--   -- rename > classTrackInfoConfigs
+--   classConfigs = { --
+--     Z = { ------------------------------------------------------------------
+--       prefix = 'Z',
+--       treeProps = { depth = 1, nxt = 'G', rep = false, cont = true, rec = false },
+--       trackProps = {
+--         trackHeight = { attrString = "I_HEIGHTOVERRIDE", attrVal = 100, },
+--         trackColor = { attrString = "I_CUSTOMCOLOR", val = 122, }
+--       },
+--       optionProps = {}
+--     },
+--     G = { ------------------------------------------------------------------
+--       prefix = 'G',
+--       treeProps = { depth = 2, nxt = 'MCABT', rep = false, cont = true, },
+--       trackProps = {
+--         trackHeight = { attrString = "I_HEIGHTOVERRIDE", attrVal = 50, },
+--         trackColor = { attrString = "I_CUSTOMCOLOR", val = 122, }
+--       }, options = {
+--         -- m = ?, -- mapped drum group
+--       }
+--     },
+--     M = { ------------------------------------------------------------------
+--       prefix = 'M',
+--       treeProps = { -- classTreeAttrs
+--         depth = 3, nxt = 'ZGMCABT', rep = true,
+--       },
+--       trackProps = {
+--         trackHeight = { attrString = "I_HEIGHTOVERRIDE", attrVal = 20, },
+--         trackColor = { attrString = "I_CUSTOMCOLOR", val = 122, }
+--       }
+--     },
+--     C = { ------------------------------------------------------------------
+--       prefix = 'C',
+--       treeProps = { -- classTreeAttrs
+--         depth = 3, nxt = 'S', rep = false, cont = true,
+--       },
+--       trackProps = {
+--         trackHeight = { attrString = "I_HEIGHTOVERRIDE", attrVal = 30, },
+--         trackColor = { attrString = "I_CUSTOMCOLOR", val = 122, }
+--       }
+--     },
+--     A = { ------------------------------------------------------------------
+--       prefix = 'A',
+--       treeProps = { -- classTreeAttrs
+--         depth = 3, nxt = 'ZGMCABT', rep = true,
+--       },
+--       trackProps = {
+--         trackHeight = {
+--           attrString = "I_HEIGHTOVERRIDE",
+--           attrVal = 20,
+--         },
+--         trackColor = { attrString = "I_CUSTOMCOLOR", val = 122, }
+--       }
+--     },
+--     B = { ------------------------------------------------------------------
+--       prefix = 'B',
+--       treeProps = { -- classTreeAttrs
+--         depth = 3, nxt = 'ZGMCABT', rep = true,
+--       },
+--       trackProps = {
+--         trackHeight = { attrString = "I_HEIGHTOVERRIDE", attrVal = 20, },
+--         trackColor = { attrString = "I_CUSTOMCOLOR", val = 122, }
+--       }
+--     },
+--     T = { ------------------------------------------------------------------
+--       prefix = 'T',
+--       treeProps = { -- classTreeAttrs
+--         depth = 3, nxt = 'ZGMCABT', rep = true,
+--       },
+--       trackProps = {
+--         trackHeight = { attrString = "I_HEIGHTOVERRIDE", attrVal = 20, },
+--         trackColor = { attrString = "I_CUSTOMCOLOR", val = 122, }
+--       }
+--     },
+--     S = { ------------------------------------------------------------------
+--       prefix = 'S',
+--       treeProps = { -- classTreeAttrs
+--         depth = 4, nxt = 'ZGMCABTS', rep = true,
+--       },
+--       trackProps = {
+--         trackHeight = { attrString = "I_HEIGHTOVERRIDE", attrVal = 20, },
+--         trackColor = { attrString = "I_CUSTOMCOLOR", val = 122, }
+--       }
+--     },
+--   },
+--   fxSpecifix = {
+--     RS5K = {
+--       RS5K_PARAM_MULTIPLIER =  0.0000625002384186,    -- RS5K's internal value == 0.01 semitones
+--     },
+--     Massive = {},
+--   }
+-- }
+--
+--
+-- -- boolean reaper.SetMediaTrackInfo_Value(MediaTrack tr, string parmname, number newvalue)
+-- --
+-- -- B_MUTE : bool * : mute flag
+-- -- B_PHASE : bool * : invert track phase
+-- -- IP_TRACKNUMBER : int : track number (returns zero if not found, -1 for master track) (read-only, returns the int directly)
+-- -- I_SOLO : int * : 0=not soloed, 1=solo, 2=soloed in place. also: 5=solo-safe solo, 6=solo-safe soloed in place
+-- -- I_FXEN : int * : 0=fx bypassed, nonzero = fx active
+-- -- I_RECARM : int * : 0=not record armed, 1=record armed
+-- -- I_RECINPUT : int * : record input. <0 = no input, 0..n = mono hardware input, 512+n = rearoute input, 1024 set for stereo input pair. 4096 set for MIDI input, if set, then low 5 bits represent channel (0=all, 1-16=only chan), then next 6 bits represent physical input (63=all, 62=VKB)
+-- -- I_RECMODE : int * : record mode (0=input, 1=stereo out, 2=none, 3=stereo out w/latcomp, 4=midi output, 5=mono out, 6=mono out w/ lat comp, 7=midi overdub, 8=midi replace
+-- -- I_RECMON : int * : record monitor (0=off, 1=normal, 2=not when playing (tapestyle))
+-- -- I_RECMONITEMS : int * : monitor items while recording (0=off, 1=on)
+-- -- I_AUTOMODE : int * : track automation mode (0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
+-- -- I_NCHAN : int * : number of track channels, must be 2-64, even
+-- -- I_SELECTED : int * : track selected? 0 or 1
+-- -- I_WNDH : int * : current TCP window height (Read-only)
+-- -- I_FOLDERDEPTH : int * : folder depth change (0=normal, 1=track is a folder parent, -1=track is the last in the innermost folder, -2=track is the last in the innermost and next-innermost folders, etc
+-- -- I_FOLDERCOMPACT : int * : folder compacting (only valid on folders), 0=normal, 1=small, 2=tiny children
+-- -- I_MIDIHWOUT : int * : track midi hardware output index (<0 for disabled, low 5 bits are which channels (0=all, 1-16), next 5 bits are output device index (0-31))
+-- -- I_PERFFLAGS : int * : track perf flags (&1=no media buffering, &2=no anticipative FX)
+-- -- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x100000 (i.e. ColorToNative(r,g,b)|0x100000). If you do not |0x100000, then it will not be used (though will store the color anyway).
+-- -- I_HEIGHTOVERRIDE : int * : custom height override for TCP window. 0 for none, otherwise size in pixels
+-- -- B_HEIGHTLOCK : bool * : track height lock (must set I_HEIGHTOVERRIDE before locking)
+-- -- D_VOL : double * : trim volume of track (0 (-inf)..1 (+0dB) .. 2 (+6dB) etc ..)
+-- -- D_PAN : double * : trim pan of track (-1..1)
+-- -- D_WIDTH : double * : width of track (-1..1)
+-- -- D_DUALPANL : double * : dualpan position 1 (-1..1), only if I_PANMODE==6
+-- -- D_DUALPANR : double * : dualpan position 2 (-1..1), only if I_PANMODE==6
+-- -- I_PANMODE : int * : pan mode (0 = classic 3.x, 3=new balance, 5=stereo pan, 6 = dual pan)
+-- -- D_PANLAW : double * : pan law of track. <0 for project default, 1.0 for +0dB, etc
+-- -- P_ENV : read only, returns TrackEnvelope *, setNewValue=<VOLENV, <PANENV, etc
+-- -- B_SHOWINMIXER : bool * : show track panel in mixer -- do not use on master
+-- -- B_SHOWINTCP : bool * : show track panel in tcp -- do not use on master
+-- -- B_MAINSEND : bool * : track sends audio to parent
+-- -- C_MAINSEND_OFFS : char * : track send to parent channel offset
+-- -- B_FREEMODE : bool * : track free-mode enabled (requires UpdateTimeline() after changing etc)
+-- -- C_BEATATTACHMODE : char * : char * to one char of beat attached mode, -1=def, 0=time, 1=allbeats, 2=beatsposonly
+-- -- F_MCP_FXSEND_SCALE : float * : scale of fx+send area in MCP (0.0=smallest allowed, 1=max allowed)
+-- -- F_MCP_SENDRGN_SCALE : float * : scale of send area as proportion of the fx+send total area (0=min allow, 1=max)

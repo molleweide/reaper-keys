@@ -7,7 +7,8 @@
 local lib = require('library')
 -- provides custom functions which make use of the reaper api
 -- search for 'custom' in the default actions file to see examples
-local custom = require('custom_actions')
+
+local syntax = require('SYNTAX.syntax_actions')
 
 -- local reaper_syntax = require('reaper_syntax')
 
@@ -18,8 +19,9 @@ local custom = require('custom_actions')
 
 return {
   FuzzyFx = "_RSd7bf7022d92114682d354e90dbe8aef580a5ef5c",
-  ApplyConfigs = "_RSa338711f729b0a270b849a2a119fd485212279b0",
-  gCut = "_RS7903a906bc188e96b41a1dba76c401faec0bbd07",
+  -- ApplyConfigs = "_RSa338711f729b0a270b849a2a119fd485212279b0", -- syntax.applyConfigs,
+  ApplyConfigs = syntax.applyConfigs,
+  gCut = "_RS7903a906bc188e96b41a1dba76c401faec0bbd07", -- syntax.customGroupYpc("put")
   gPut = "_RSa4785ef14e17a4412c460da932d4930ac2ec1378",
   gYank = "_RSa451c4c6c528944724f431978115cb7bc73479cd",
 }
