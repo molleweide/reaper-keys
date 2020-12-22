@@ -358,7 +358,19 @@ function ypcInsertMidiFromExtState(tr_parent_group, LVL2_parent_obj, T_YPC)
 
 end
 
-function actions.customGroupYpc(ypc_type)
+function actions.gyank()
+  customGroupYpc("yank")
+end
+
+function actions.gcut()
+  customGroupYpc("cut")
+end
+
+function actions.gput()
+  customGroupYpc("put")
+end
+
+function customGroupYpc(ypc_type)
   local vtt = syntax.getVerifiedTree()
   local tr_idx_first, tr_idx_last = util.getTrackIndicesOfTrackSel()
   local LVL2_parent_obj, tr_parent_group, group_tr_idx = util.getParentGroupByTrIdx(vtt, tr_idx_first)
