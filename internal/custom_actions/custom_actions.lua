@@ -61,9 +61,9 @@ function custom_actions.changeNamesOfSelectedTracks()
 
   if num_sel == 0 then return end
   if num_sel == 1 then
-      local track = reaper.GetSelectedTrack(0,0)
-      local _, str = reaper.GetSetMediaTrackInfo_String(track, "P_NAME", new_name_string, 1);
-      return
+    local track = reaper.GetSelectedTrack(0,0)
+    local _, str = reaper.GetSetMediaTrackInfo_String(track, "P_NAME", new_name_string, 1);
+    return
   end
   if num_sel > 1 then
     for i = 1, num_sel do
@@ -150,24 +150,18 @@ function custom_actions.insertSpaceAtEditCursorFromTimeSelection()
   reaper.PreventUIRefresh(-1)
 end
 
-
-
 function custom_actions.repeatShiftAllItemsInTimeSelectionByTrackByTimeSel()
-  -- I need a custom command for repeating all regions on the same track
-  -- by a shift value relative to the time selection
-  -- 
-  -- for each track
-  --    for each item inside time sel
-  --      copy paste
-  --        @ at current pos + time selection length
+  -- 1. if item pos is before time sel start > skip
+  -- 2. add time_sel_len
+  local start_sel, end_sel = reaper.GetSet_LoopTimeRange(0, 0, 0, 0, 0)
+  log.user(end_sel)
 
-  -- implies we select all media in the actions.lua
   local data = {}
   if reaper.CountSelectedMediaItems(0) < 1 then return end
   data = collectMediaItemData(data)
   local measure_shift, end_fullbeatsmax = CalcMeasureShift(data)
   local increment_measure = OverlapCheck(data, measure_shift, end_fullbeatsmax)
-  DuplicateItems(data,measure_shift+increment_measure)
+  -- DuplicateItems(data, end_sel - start_sel)
 end
 
 function collectMediaItemData(data)

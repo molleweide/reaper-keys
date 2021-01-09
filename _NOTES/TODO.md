@@ -16,8 +16,12 @@ recording modes > dummy record as much as possible
 
 # regions
 
-1. need to split items that cross time selection boundaries
-2. add time_selection shift value
+gwatcka issue getset loop time not working for me?!
+i am creating a custom action for repeating the time selection
+region. so that one can for example repeat a region N times.
+i cannot get it to work because the get set function is returning
+nothing for me. when i do type(sel_start) it shows nothing
+cockos question about GETSET time selection
 
 - add ability to save notes to the region. ?
   `-----------------------------------------------------------------`
