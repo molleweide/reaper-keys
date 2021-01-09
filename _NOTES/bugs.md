@@ -11,3 +11,5 @@ if you open eg. change grid user input and escape with am entering text >>> erro
 ## markers and regions
 
 there is somekind of overwriting crosswriting going on between marks and regions
+
+when undoing time selection > previous selection is not restored?

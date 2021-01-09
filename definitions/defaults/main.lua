@@ -111,6 +111,7 @@ return {
     ["aa"] = "ArmTracks",
     ["O"] = "EnterTrackAbove",
     ["o"] = "EnterTrackBelow",
+    ["I"] = "InsertEmptyMeasures",
     ["p"] = "Paste",
     ["P"] = "PasteAbove",
     -- ["r"] = "AddTrackRoute", -- this overwrites global record

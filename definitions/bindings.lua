@@ -29,7 +29,8 @@ return {
           ["c"] = "LogWhatever",
           ["C"] = "CloseReaConsole",
           ["f"] = "FuzzyFx",
-          ["w"] = "ApplyConfigs"
+          ["w"] = "ApplyConfigs",
+          ["R"] = "RepeatInsertTimeSelection"
       }}
     },
   },

@@ -5,8 +5,14 @@ https://forum.cockos.com/showthread.php?t=176878
 
 ---
 
-1. add some wierd synth sounds
-2. improve channel splitters
+1. add fx STATIC / TRANS / HIT
+2. organize synths
+3. set levels
+4. syncthing
+5. improve channel splitters
+6. I need to improve the mouse mode asap.
+7. move new naming function over to SYNTAX/actions
+   - after each naming >> check comparison with previous tack find by GUID
 
 ---
 
