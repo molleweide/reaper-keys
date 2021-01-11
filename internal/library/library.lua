@@ -7,7 +7,8 @@ local library = {
   marks = require('library.marks'),
   state = require('library.state'),
   routing = require('library.routing'),
-  fx = require('library.fx')
+  fx = require('library.fx'),
+  segments = require('library.segments')
 }
 
 function library.matchTrackNameBackward()

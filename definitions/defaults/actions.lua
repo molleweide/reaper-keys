@@ -309,8 +309,8 @@ return {
     "SplitItemsAtTimeSelection",
     "UnselectItems",
     "SelectAllItemsInCurrentTimeSel",
-    custom.insertSpaceAtEditCursorFromTimeSelection,
-    custom.repeatShiftAllItemsInTimeSelectionByTrackByTimeSel
+    lib.segments.insertSpaceAtEditCursorFromTimeSelection,
+    lib.segments.repeatShiftAllItemsInTimeSelectionByTrackByTimeSel
   },
   RepeatLastCommand = {metaCommand=true, prefixRepetitionCount=true},
   RepeatTrackNameMatchBackward = lib.repeatTrackNameMatchBackward,
