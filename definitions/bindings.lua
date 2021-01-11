@@ -30,7 +30,8 @@ return {
           ["C"] = "CloseReaConsole",
           ["f"] = "FuzzyFx",
           ["w"] = "ApplyConfigs",
-          ["R"] = "RepeatInsertTimeSelection"
+          ["R"] = "RepeatInsertTimeSelection",
+          ["S"] = "SaveAllTracksAsTemplate"
       }}
     },
   },

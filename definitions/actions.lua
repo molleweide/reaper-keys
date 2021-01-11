@@ -27,4 +27,11 @@ return {
   gCut = syntax.gcut,
   gPut = syntax.gput,
   gYank = syntax.gyank,
+  SaveAllTracksAsTemplate = {
+    "Reset",
+    "FirstTrack",
+    "SetModeVisualTrack", -- I lose visual???
+    "LastTrack",
+    -- "SaveTrackTempFromSelected"
+  }
 }
