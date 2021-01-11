@@ -33,5 +33,6 @@ return {
     "SetModeVisualTrack", -- I lose visual???
     "LastTrack",
     -- "SaveTrackTempFromSelected"
-  }
+  },
+  SidechainToGhostKick = custom.sidechainToGhostKick,
 }

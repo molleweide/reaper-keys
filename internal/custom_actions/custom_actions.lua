@@ -74,6 +74,20 @@ function custom_actions.changeNamesOfSelectedTracks()
   end
 end
 
+function custom.sidechainToGhostKick()
+  -- TODO
+  --
+  --  1. if track w/name containing 'ghostkick'
+  --  2. check if 3/4 send exists (util)
+  --  2. createSend (util)
+  --  3. add reacomp to track
+  --  4. rename the function to sidechain_to_ghostkick
+  --    take all of my renaming functions etc and move them out to RK lib
+  --    so that my syntax module is completely separated from the lib functions
+  --  5. create generalized send function that works with send_str_input
+end
+
+-- util
 function AddSends(src_t, dest_t)
   -- todo
   -- make this function work
@@ -111,6 +125,7 @@ function AddSends(src_t, dest_t)
   end
 end
 
+-- util
 function GetDestTrGUID()
   local t = {}
   local _, sendidx = reaper.GetUserInputs("Send track dest idx:", 1, "send idx", "")
@@ -119,6 +134,7 @@ function GetDestTrGUID()
   return t
 end
 
+-- util
 function GetSrcTrGUID()
   local t = {}
   for i = 1, reaper.CountSelectedTracks(0) do
@@ -164,6 +180,7 @@ function custom_actions.repeatShiftAllItemsInTimeSelectionByTrackByTimeSel()
   -- DuplicateItems(data, end_sel - start_sel)
 end
 
+-- util
 function collectMediaItemData(data)
   for i = 1, reaper.CountSelectedMediaItems(0) do
     local item = reaper.GetSelectedMediaItem( 0, i-1 )
@@ -191,7 +208,7 @@ function collectMediaItemData(data)
   return data
 end
 
----------------------------------------------------------------------
+-- util
 function CalcMeasureShift(data)
   local meas_min = math.huge
   local meas_max = 0
@@ -204,7 +221,8 @@ function CalcMeasureShift(data)
   local measure_shift = math.max(1,meas_max - meas_min)
   return measure_shift, end_fullbeatsmax
 end
----------------------------------------------------------------------
+
+-- util
 function OverlapCheck(data, measure_shift, end_fullbeatsmax)
   reaper.ClearConsole()
   for i = 1, #data do
@@ -214,7 +232,7 @@ function OverlapCheck(data, measure_shift, end_fullbeatsmax)
   return 0
 end
 
----------------------------------------------------------------------
+-- util
 function DuplicateItems(data,measure_shift)
   for i = 1, #data do
     local new_it = reaper.AddMediaItemToTrack( data[i].src_tr )
