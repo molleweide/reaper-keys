@@ -2,6 +2,8 @@ local format = require('utils.format')
 local log = require('utils.log')
 local util = require('SYNTAX.lib.util')
 
+-- move everything here to the routing library
+
 local sends = {}
 
 local TRACK_INFO_AUDIO_SRC_DISABLED = -1

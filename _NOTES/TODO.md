@@ -1,5 +1,9 @@
 # REAPER KEYS TODO
 
+## sends
+
+mv everything from SYNTAX/lib/sends.lua to library/routing.lua
+
 ## practice
 
 recording modes > dummy record as much as possible
