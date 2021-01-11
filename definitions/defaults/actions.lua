@@ -431,7 +431,7 @@ return {
   SetTimeSelectionStart = 40625,
   SetTimeSelectionToLoopSelection = 40623,
   SetTrackMidiAllChannels = "_S&M_MIDI_INPUT_ALL_CH",
-  AddTrackRoute = custom.addRouteForSelectedTracks,
+  AddTrackRoute = lib.routing.addRouteForSelectedTracks,
   TimeSelectionNudgeLeft = 40039,
   TimeSelectionNudgeRight = 40040,
   TimeSelectionShiftedLeft = 40037,
