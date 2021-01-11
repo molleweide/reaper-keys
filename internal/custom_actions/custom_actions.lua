@@ -92,7 +92,9 @@ end
 function AddSends(route_params, src_t, dest_t)
   log.user(format.block(route_params))
 
-  local dest_tr = reaper.GetTrack(0, math.floor(route_params["d"]-1))
+  if route_params["d"].param_value == nil then return end
+
+  local dest_tr = reaper.GetTrack(0, math.floor(route_params["d"].param_value-1))
   local ret, dest_name = reaper.GetTrackName(dest_tr)
   local help_str = "`"..dest_name .. "` (y/n)"
   local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
@@ -124,16 +126,35 @@ function AddSends(route_params, src_t, dest_t)
 
     -- create send
     if not is_exist then
+
       local new_id = reaper.CreateTrackSend( src_tr, dest_tr )
-    --   SetTrackSendInfo_Value( src_tr, 0, new_id, 'D_VOL', defsendvol)
-    --   SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SENDMODE', defsendflag&255)
-    --
-    --   if dest_tr_ch == 2 then
-    --     SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0)
-    --   else
-    --     SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
-    --   end
-    --   --SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_DSTCHAN', 0)
+
+      for _, p in pairs(route_params) do
+        reaper.SetTrackSendInfo_Value( src_tr, 0, new_id, p.param_name, p.param_value)
+
+        if p.param_name == 'I_SRCCHAN' then
+          if dest_tr_ch == 2 then
+            reaper.SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0)
+          else
+            reaper.SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
+          end
+        end
+      end
+
+
+      -- SetTrackSendInfo_Value( src_tr, 0, new_id, 'D_VOL', route_params["v"])
+      -- SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SENDMODE', route_params["s"])
+      --   SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SENDMODE', defsendflag&255)
+
+      --   if dest_tr_ch == 2 then
+      --     SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0)
+      --   else
+      --     SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
+      --   end
+      --   --SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_DSTCHAN', 0)
+      --
+      -- SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SENDMODE', route_params["s"])
+
     end
 
 
@@ -187,7 +208,7 @@ function getSendParamsFromUserInput(str)
     local s, e = string.find(str, pattern)
     if s ~= nil and e ~= nil then
       -- log.user('key: ' .. string.sub(str,s,s) .. ', val: ' .. string.sub(str,s+1,e))
-      new_route_params[key] = tonumber(string.sub(str,s+1,e))
+      new_route_params[key].param_value = tonumber(string.sub(str,s+1,e))
     end
   end
 
