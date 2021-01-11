@@ -37,7 +37,8 @@ return {
 -- I_SRCCHAN : int *, index,&1024=mono, -1 for none
 -- I_DSTCHAN : int *, index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
 -- I_MIDIFLAGS : int *, low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chanSee CreateTrackSend, RemoveTrackSend, GetTrackNumSends.
---
+
+
 -- number reaper.GetTrackSendInfo_Value(MediaTrack tr, integer category, integer sendidx, string parmname)
 --
 -- Get send/receive/hardware output numerical-value attributes.
@@ -56,3 +57,12 @@ return {
 -- I_MIDIFLAGS : int *, low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chanP_DESTTRACK : read only, returns MediaTrack *, destination track, only applies for sends/recvs
 -- P_SRCTRACK : read only, returns MediaTrack *, source track, only applies for sends/recvs
 -- P_ENV:<envchunkname : read only, returns TrackEnvelope *. Call with :<VOLENV, :<PANENV, etc appended.
+
+
+-- MediaTrack reaper.BR_GetMediaTrackSendInfo_Track(MediaTrack track, integer category, integer sendidx, integer trackType)
+--
+-- [BR] Get source or destination media track for send/receive.
+--
+-- category is <0 for receives, 0=sends
+-- sendidx is zero-based (see GetTrackNumSends to count track sends/receives)
+-- trackType determines which track is returned (0=source track, 1=destination track)

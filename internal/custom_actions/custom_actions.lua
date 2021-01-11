@@ -92,8 +92,7 @@ end
 function AddSends(route_params, src_t, dest_t)
   log.user(format.block(route_params))
 
-  -- only one dest track possible ATM
-  local dest_tr = reaper.GetTrack(0, math.floor(route_params["d"]))
+  local dest_tr = reaper.GetTrack(0, math.floor(route_params["d"]-1))
   local ret, dest_name = reaper.GetTrackName(dest_tr)
   local help_str = "`"..dest_name .. "` (y/n)"
   local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
@@ -101,45 +100,45 @@ function AddSends(route_params, src_t, dest_t)
   if answer ~= "y" then return end
 
   for i = 1, #src_t do
+    --   local src_tr =  BR_GetMediaTrackByGUID( 0, src_t[i] )
+    --   local src_tr_ch = GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
     local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
     local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
+    --   for i = 1, #dest_t do---------------------------------------------------------
+    --     local dest_tr =  BR_GetMediaTrackByGUID( 0, dest_t[i] )
+    --     only one dest track possible ATM
 
-    log.user('tr ch: ' .. src_tr_ch)
+
+    -- increase ch up to src track
+    local dest_tr_ch = reaper.GetMediaTrackInfo_Value( dest_tr, 'I_NCHAN')
+    if dest_tr_ch < src_tr_ch then reaper.SetMediaTrackInfo_Value( dest_tr, 'I_NCHAN', src_tr_ch ) end
+
+    log.user(src_tr_ch, dest_tr_ch)
+
+    -- check for existing sends
+    local is_exist = false
+    for i =1,  reaper.GetTrackNumSends( src_tr, 0 ) do
+      local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, 0, i-1, 1 )
+      if dest_tr_check == dest_tr then is_exist = true break end
+    end
+
+    -- create send
+    if not is_exist then
+      local new_id = reaper.CreateTrackSend( src_tr, dest_tr )
+    --   SetTrackSendInfo_Value( src_tr, 0, new_id, 'D_VOL', defsendvol)
+    --   SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SENDMODE', defsendflag&255)
+    --
+    --   if dest_tr_ch == 2 then
+    --     SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0)
+    --   else
+    --     SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
+    --   end
+    --   --SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_DSTCHAN', 0)
+    end
+
+
+    --   end -----------------------------------------------------------------------------
   end
-
-  -- for i = 1, #src_t do
-  --   local src_tr =  BR_GetMediaTrackByGUID( 0, src_t[i] )
-  --   local src_tr_ch = GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
-  --   for i = 1, #dest_t do---------------------------------------------------------
-  --
-  --     local dest_tr =  BR_GetMediaTrackByGUID( 0, dest_t[i] )
-  --
-  --     -- increase ch up to src track
-  --     local dest_tr_ch = GetMediaTrackInfo_Value( dest_tr, 'I_NCHAN')
-  --     if dest_tr_ch < src_tr_ch then SetMediaTrackInfo_Value( dest_tr, 'I_NCHAN', src_tr_ch ) end
-  --
-  --     -- check for existing sends
-  --     local is_exist = false
-  --     for i =1,  GetTrackNumSends( src_tr, 0 ) do
-  --       local dest_tr_check = BR_GetMediaTrackSendInfo_Track( src_tr, 0, i-1, 1 )
-  --       if dest_tr_check == dest_tr then is_exist = true break end
-  --     end
-  --
-  --     if not is_exist then
-  --       local new_id = CreateTrackSend( src_tr, dest_tr )
-  --       SetTrackSendInfo_Value( src_tr, 0, new_id, 'D_VOL', defsendvol)
-  --       SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SENDMODE', defsendflag&255)
-  --
-  --       if dest_tr_ch == 2 then
-  --         SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0)
-  --       else
-  --         SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
-  --       end
-  --       --SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_DSTCHAN', 0)
-  --
-  --     end
-  --   end -----------------------------------------------------------------------------
-  -- end
 end
 
 -- util
