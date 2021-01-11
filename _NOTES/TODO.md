@@ -12,16 +12,21 @@ recording modes > dummy record as much as possible
 
 ## i need to have full alphabet marks for all types of selection markers
 
-`-----------------------------------------------------------------`
+## Learn RK in depth.
 
-# regions
+1. I have to learn snippets with neovim
+2. Put snippets all over RK to actually get a feel for whats happening.
+3.
 
-gwatcka issue getset loop time not working for me?!
-i am creating a custom action for repeating the time selection
-region. so that one can for example repeat a region N times.
-i cannot get it to work because the get set function is returning
-nothing for me. when i do type(sel_start) it shows nothing
-cockos question about GETSET time selection
+## section management / @ edit cursor
+
+`necessary commands for fast shuffle around project segments`
+
+- insert space
+- paste time sel
+- insert space AND paste time sel
+
+## regions
 
 - add ability to save notes to the region. ?
   `-----------------------------------------------------------------`
@@ -30,6 +35,10 @@ cockos question about GETSET time selection
 
 folder keys f/c/<TAB>
 enter track o/O
+
+## RK internals
+
+how does state_machine get the actual key press sent to it?
 
 `-----------------------------------------------------------------`
 `-----------------------------------------------------------------`
@@ -141,3 +150,11 @@ be used all the time.
 ```
 
 ```
+
+## mix setup
+
+util > ghost_xxxxxxxx
+util > ghost_kick
+util > ghost_snare
+
+action > sidechain to track name > find track with name 'ghost' && 'kick/snare/'
