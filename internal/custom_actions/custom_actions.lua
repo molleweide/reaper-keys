@@ -90,16 +90,28 @@ end
 
 -- util
 function AddSends(route_params, src_t, dest_t)
-  -- local dest_t = GetDestTrGUID()
   log.user(format.block(route_params))
 
+  -- only one dest track possible ATM
+  local dest_tr = reaper.GetTrack(0, math.floor(route_params["d"]))
+  local ret, dest_name = reaper.GetTrackName(dest_tr)
+  local help_str = "`"..dest_name .. "` (y/n)"
+  local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
 
+  if answer ~= "y" then return end
 
+  for i = 1, #src_t do
+    local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
+    local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
+
+    log.user('tr ch: ' .. src_tr_ch)
+  end
 
   -- for i = 1, #src_t do
   --   local src_tr =  BR_GetMediaTrackByGUID( 0, src_t[i] )
   --   local src_tr_ch = GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
-  --   for i = 1, #dest_t do
+  --   for i = 1, #dest_t do---------------------------------------------------------
+  --
   --     local dest_tr =  BR_GetMediaTrackByGUID( 0, dest_t[i] )
   --
   --     -- increase ch up to src track
@@ -126,7 +138,7 @@ function AddSends(route_params, src_t, dest_t)
   --       --SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_DSTCHAN', 0)
   --
   --     end
-  --   end
+  --   end -----------------------------------------------------------------------------
   -- end
 end
 
