@@ -3,7 +3,8 @@ local log = require('utils.log')
 local RS_TrObj = require('SYNTAX.lib.track_obj')
 local class_conf = require('SYNTAX.config.config').classes
 local util = require('SYNTAX.lib.util')
-local fx_util = require('SYNTAX.lib.fx_util')
+-- local fx_util = require('SYNTAX.lib.fx_util')
+local fx_util = require('library.fx')
 
 local fx = {}
 
