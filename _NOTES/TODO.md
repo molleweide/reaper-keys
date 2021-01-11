@@ -181,23 +181,5 @@ for each group
 
 ## RNDM
 
-this is going to be so fucking awesome. because the more I use it the more it becomes like
-an instrument. the new system for managing regions is awesome. and I have access to like
-20-30 marks per row which is absolutely amazing.
-
-oooh, i just realized that I will be able to make my own key map with Hammerspoon? Right?
-And when I have the same types of layer pads then I will have the exact same layout on laptop and on qmk,
-which is pretty much insane.
-
-That could actually be an awesome open source project to have for mirroring layouts between
-qmk and laptop.
-
-I know that if I use reaper keys more and more.
-
-I solve small problems along the way and this will become like a super instrument
-that I will be able to use to create shit so fast the better I become.
-It is actually insane what a nasty exponential learning curve it has.
-But exponential always wins in the long run especially since we can compose
-commands. that is the amazing aspect of this library that if you have a good
-workflow of note taking in parallell then you will always be able to have
-the exact tools that you want.
+and I will do this later, but when these bases are started then mike will probably
+appreciate my work and he might critique my code or refactor it.

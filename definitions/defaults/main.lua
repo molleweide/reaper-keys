@@ -114,7 +114,6 @@ return {
     ["I"] = "InsertEmptyMeasures",
     ["p"] = "Paste",
     ["P"] = "PasteAbove",
-    -- ["r"] = "AddTrackRoute", -- this overwrites global record
     ["yy"] = "CopyTrack",
     ["zz"] = "ScrollToSelectedTracks",
     ["|"] = "SplitItemsAtEditCursor",

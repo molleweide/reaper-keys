@@ -74,7 +74,7 @@ function custom_actions.changeNamesOfSelectedTracks()
   end
 end
 
-function custom.sidechainToGhostKick()
+function custom_actions.sidechainToGhostKick()
   -- TODO
   --
   --  1. if track w/name containing 'ghostkick'
@@ -148,9 +148,51 @@ end
 function custom_actions.addRouteForSelectedTracks()
   local num_sel = reaper.CountSelectedTracks(0)
   if num_sel == 0 then return end
-  local src_GUID = GetSrcTrGUID()
-  local dest_GUID = GetDestTrGUID()
-  AddSends(src_GUID, dest_GUID)
+  local src_GUID = GetSrcTrGUID() -- get table of src tracks
+
+  -- todo
+  --
+  --  get src tracks ( selected tracks... )
+  --    get user input
+  --      regex > get send params
+  --
+  local route_help_str = "route params:\n" ..
+  "\nk int  = category" ..
+  "\ni int  = send idx" -- this is not displaying properly...
+
+
+  local _, input_str = reaper.GetUserInputs("SPECIFY ROUTE:", 1, route_help_str, "")
+
+  local send_params, err = getSendParamsFromUserInput(input_str)
+
+
+  -- local dest_GUID = GetDestTrGUID()
+  -- AddSends(src_GUID, dest_GUID)
+end
+
+function getSendParamsFromUserInput(str)
+  -- defaults > move into def/configs?
+  local send_params = {
+    ["k"] = 0, -- k = category    : int,      is <0 for receives, 0=sends, >0 for hardware outputs
+    ["i"] = 0, -- i = send_idx    : int
+    ["m"] = 0, -- m = B_MUTE      : bool
+    ["f"] = 0, -- f = B_PHASE     : bool,     true to flip phase
+    ["M"] = 0, -- M = B_MONO      : bool
+    ["v"] = 0, -- v = D_VOL       : double,   1.0 = +0dB etc
+    ["p"] = 0, -- p = D_PAN       : double,   -1..+1
+    ["P"] = 0, -- P = D_PANLAW    : double,   1.0=+0.0db, 0.5=-6dB, -1.0 = projdef etc
+    ["s"] = 0, -- s = I_SENDMODE  : int,      0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
+    ["a"] = 0, -- a = I_AUTOMODE  : int :     auto mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
+    ["c"] = 0, -- c = I_SRCCHAN   : int,      index,&1024=mono, -1 for none
+    ["C"] = 0, -- C = I_DSTCHAN   : int,      index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
+    ["I"] = 0, -- I = I_MIDIFLAGS : int,      low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chanSee CreateTrackSend, RemoveTrackSend, GetTrackNumSends.
+  }
+  --  for i in char list,
+  --    find if exists in `str` > return index of char AND index of next char???
+  --      get all following chars int/double // charset = `d.` -- digits and periods???
+  --      replace default
+
+  log.user(format.block(str))
 end
 
 function custom_actions.insertSpaceAtEditCursorFromTimeSelection()
@@ -246,30 +288,3 @@ function DuplicateItems(data,measure_shift)
 end
 
 return custom_actions
-
---  `s15mf`
---
---  rsh = CATEGORY is <0 for receives, 0=sends, >0 for hardware outputs
---    SEND_IDX
---        m = B_MUTE : returns bool *
---        f = B_PHASE : returns bool *, true to flip phase
---        M = B_MONO : returns bool *
---        v = D_VOL : returns double *, 1.0 = +0dB etc
---        p = D_PAN : returns double *, -1..+1
---        P = D_PANLAW : returns double *,1.0=+0.0db, 0.5=-6dB, -1.0 = projdef etc
---        s = I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
---        a = I_AUTOMODE : returns int * : automation mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
---        c = I_SRCCHAN : returns int *, index,&1024=mono, -1 for none
---        C = I_DSTCHAN : returns int *, index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
---        I = I_MIDIFLAGS : returns int *, low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chanSee CreateTrackSend, RemoveTrackSend, GetTrackNumSends.
---
-
--- boolean reaper.SetTrackSendInfo_Value(tr, int categ, int sidx, str pname, num newval)
-
-
--- credit to cfillion
---   This is a wrapper around the native action "Time selection: Insert empty
---   space at time selection (moving later items)". Empty space is inserted at
---   edit cursor instead of at the start of the time selection.
-
-

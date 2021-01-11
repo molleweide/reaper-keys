@@ -34,5 +34,4 @@ return {
     "LastTrack",
     -- "SaveTrackTempFromSelected"
   },
-  SidechainToGhostKick = custom.sidechainToGhostKick,
 }

@@ -31,7 +31,8 @@ return {
           ["f"] = "FuzzyFx",
           ["w"] = "ApplyConfigs",
           ["R"] = "RepeatInsertTimeSelection",
-          ["S"] = "SaveAllTracksAsTemplate"
+          ["S"] = "SaveAllTracksAsTemplate",
+          ["x"] = "AddTrackRoute"
       }}
     },
   },
