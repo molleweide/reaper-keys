@@ -1,5 +1,6 @@
 local log = require('utils.log')
 local format = require('utils.format')
+local routing = require('definitions.routing')
 
 local custom_actions = {}
 
@@ -88,41 +89,45 @@ function custom_actions.sidechainToGhostKick()
 end
 
 -- util
-function AddSends(src_t, dest_t)
-  -- todo
-  -- make this function work
-  for i = 1, #src_t do
-    local src_tr =  BR_GetMediaTrackByGUID( 0, src_t[i] )
-    local src_tr_ch = GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
-    for i = 1, #dest_t do
-      local dest_tr =  BR_GetMediaTrackByGUID( 0, dest_t[i] )
+function AddSends(route_params, src_t, dest_t)
+  -- local dest_t = GetDestTrGUID()
+  log.user(format.block(route_params))
 
-      -- increase ch up to src track
-      local dest_tr_ch = GetMediaTrackInfo_Value( dest_tr, 'I_NCHAN')
-      if dest_tr_ch < src_tr_ch then SetMediaTrackInfo_Value( dest_tr, 'I_NCHAN', src_tr_ch ) end
 
-      -- check for existing sends
-      local is_exist = false
-      for i =1,  GetTrackNumSends( src_tr, 0 ) do
-        local dest_tr_check = BR_GetMediaTrackSendInfo_Track( src_tr, 0, i-1, 1 )
-        if dest_tr_check == dest_tr then is_exist = true break end
-      end
 
-      if not is_exist then
-        local new_id = CreateTrackSend( src_tr, dest_tr )
-        SetTrackSendInfo_Value( src_tr, 0, new_id, 'D_VOL', defsendvol)
-        SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SENDMODE', defsendflag&255)
 
-        if dest_tr_ch == 2 then
-          SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0)
-        else
-          SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
-        end
-        --SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_DSTCHAN', 0)
-
-      end
-    end
-  end
+  -- for i = 1, #src_t do
+  --   local src_tr =  BR_GetMediaTrackByGUID( 0, src_t[i] )
+  --   local src_tr_ch = GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
+  --   for i = 1, #dest_t do
+  --     local dest_tr =  BR_GetMediaTrackByGUID( 0, dest_t[i] )
+  --
+  --     -- increase ch up to src track
+  --     local dest_tr_ch = GetMediaTrackInfo_Value( dest_tr, 'I_NCHAN')
+  --     if dest_tr_ch < src_tr_ch then SetMediaTrackInfo_Value( dest_tr, 'I_NCHAN', src_tr_ch ) end
+  --
+  --     -- check for existing sends
+  --     local is_exist = false
+  --     for i =1,  GetTrackNumSends( src_tr, 0 ) do
+  --       local dest_tr_check = BR_GetMediaTrackSendInfo_Track( src_tr, 0, i-1, 1 )
+  --       if dest_tr_check == dest_tr then is_exist = true break end
+  --     end
+  --
+  --     if not is_exist then
+  --       local new_id = CreateTrackSend( src_tr, dest_tr )
+  --       SetTrackSendInfo_Value( src_tr, 0, new_id, 'D_VOL', defsendvol)
+  --       SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SENDMODE', defsendflag&255)
+  --
+  --       if dest_tr_ch == 2 then
+  --         SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0)
+  --       else
+  --         SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
+  --       end
+  --       --SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_DSTCHAN', 0)
+  --
+  --     end
+  --   end
+  -- end
 end
 
 -- util
@@ -150,49 +155,32 @@ function custom_actions.addRouteForSelectedTracks()
   if num_sel == 0 then return end
   local src_GUID = GetSrcTrGUID() -- get table of src tracks
 
-  -- todo
-  --
-  --  get src tracks ( selected tracks... )
-  --    get user input
-  --      regex > get send params
-  --
   local route_help_str = "route params:\n" ..
   "\nk int  = category" ..
   "\ni int  = send idx" -- this is not displaying properly...
 
+  local test_str = "xxi5c...C555555C5.54v^#$∞¶M1a1.4s5.555d44.456P12.456789"
+  local _, input_str = reaper.GetUserInputs("SPECIFY ROUTE:", 1, route_help_str, test_str)
 
-  local _, input_str = reaper.GetUserInputs("SPECIFY ROUTE:", 1, route_help_str, "")
+  local new_route_params = getSendParamsFromUserInput(input_str)
 
-  local send_params, err = getSendParamsFromUserInput(input_str)
-
-
-  -- local dest_GUID = GetDestTrGUID()
-  -- AddSends(src_GUID, dest_GUID)
+  AddSends(new_route_params, src_GUID)
 end
 
 function getSendParamsFromUserInput(str)
-  -- defaults > move into def/configs?
-  local send_params = {
-    ["k"] = 0, -- k = category    : int,      is <0 for receives, 0=sends, >0 for hardware outputs
-    ["i"] = 0, -- i = send_idx    : int
-    ["m"] = 0, -- m = B_MUTE      : bool
-    ["f"] = 0, -- f = B_PHASE     : bool,     true to flip phase
-    ["M"] = 0, -- M = B_MONO      : bool
-    ["v"] = 0, -- v = D_VOL       : double,   1.0 = +0dB etc
-    ["p"] = 0, -- p = D_PAN       : double,   -1..+1
-    ["P"] = 0, -- P = D_PANLAW    : double,   1.0=+0.0db, 0.5=-6dB, -1.0 = projdef etc
-    ["s"] = 0, -- s = I_SENDMODE  : int,      0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
-    ["a"] = 0, -- a = I_AUTOMODE  : int :     auto mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
-    ["c"] = 0, -- c = I_SRCCHAN   : int,      index,&1024=mono, -1 for none
-    ["C"] = 0, -- C = I_DSTCHAN   : int,      index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
-    ["I"] = 0, -- I = I_MIDIFLAGS : int,      low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chanSee CreateTrackSend, RemoveTrackSend, GetTrackNumSends.
-  }
-  --  for i in char list,
-  --    find if exists in `str` > return index of char AND index of next char???
-  --      get all following chars int/double // charset = `d.` -- digits and periods???
-  --      replace default
+  local new_route_params = routing.default_params
+  for key, val in pairs(new_route_params) do
 
-  log.user(format.block(str))
+    local pattern = key .. "%d+%.?%d?%d?"
+
+    local s, e = string.find(str, pattern)
+    if s ~= nil and e ~= nil then
+      -- log.user('key: ' .. string.sub(str,s,s) .. ', val: ' .. string.sub(str,s+1,e))
+      new_route_params[key] = tonumber(string.sub(str,s+1,e))
+    end
+  end
+
+  return new_route_params
 end
 
 function custom_actions.insertSpaceAtEditCursorFromTimeSelection()
