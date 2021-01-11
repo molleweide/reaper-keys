@@ -1,6 +1,6 @@
 -- local project_state = require('utils.project_state')
 -- local state_interface = require('state_machine.state_interface')
--- local reaper_utils = require('custom_actions.utils')
+local reaper_utils = require('custom_actions.utils')
 local log = require('utils.log')
 local format = require('utils.format')
 local routing_defaults = require('definitions.routing')
@@ -8,19 +8,6 @@ local routing_defaults = require('definitions.routing')
 -- local serpent = require('serpent')
 
 local routing = {}
-
-function routing.sidechainToGhostKick()
-  -- TODO
-  --
-  --  1. if track w/name containing 'ghostkick'
-  --  2. check if 3/4 send exists (util)
-  --  2. createSend (util)
-  --  3. add reacomp to track
-  --  4. rename the function to sidechain_to_ghostkick
-  --    take all of my renaming functions etc and move them out to RK lib
-  --    so that my syntax module is completely separated from the lib functions
-  --  5. create generalized send function that works with send_str_input
-end
 
 function routing.addRouteForSelectedTracks()
   local num_sel = reaper.CountSelectedTracks(0)
@@ -37,6 +24,28 @@ function routing.addRouteForSelectedTracks()
   local new_route_params = getSendParamsFromUserInput(input_str)
 
   addRoutes(new_route_params, src_GUID)
+end
+
+function routing.sidechainSelTrkToGhostSnareTrack()
+ sidechainToTrackWithNameString('ghostsnare')
+end
+
+function routing.sidechainSelTrkToGhostKickTrack()
+ sidechainToTrackWithNameString('ghostkick')
+end
+
+function sidechainToTrackWithNameString(str)
+  --  1. if track w/name containing 'ghostkick'
+      -- if not has_no_name and current_name:match(search_name:lower()) then
+      --   return track
+      -- end
+  --  2. check if 3/4 send exists (util)
+  --  2. createSend (util)
+  --  3. add reacomp to track
+  --  4. rename the function to sidechain_to_ghostkick
+  --    take all of my renaming functions etc and move them out to RK lib
+  --    so that my syntax module is completely separated from the lib functions
+  --  5. create generalized send function that works with send_str_input
 end
 
 function addRoutes(route_params, src_t, dest_t)
@@ -94,14 +103,13 @@ function addRoutes(route_params, src_t, dest_t)
   end
 end
 
--- util
--- function GetDestTrGUID()
---   local t = {}
---   local _, sendidx = reaper.GetUserInputs("Send track dest idx:", 1, "send idx", "")
---   local dest_track = reaper.GetTrack(0, sendidx-1)
---   if dest_track  then t[1] = reaper.GetTrackGUID( dest_track  ) end
---   return t
--- end
+function GetDestTrGUID()
+  --   local t = {}
+  --   local _, sendidx = reaper.GetUserInputs("Send track dest idx:", 1, "send idx", "")
+  --   local dest_track = reaper.GetTrack(0, sendidx-1)
+  --   if dest_track  then t[1] = reaper.GetTrackGUID( dest_track  ) end
+  --   return t
+end
 
 function GetSrcTrGUID()
   local t = {}
@@ -111,8 +119,6 @@ function GetSrcTrGUID()
   end
   return t
 end
-
-
 
 function getSendParamsFromUserInput(str)
   local new_route_params = routing_defaults.default_params
