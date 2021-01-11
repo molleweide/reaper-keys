@@ -6,7 +6,14 @@ return {
       param_name = 'DEST_TRKS',
       param_value = nil -- int REQUIRED
     },
-
+    ["v"] = {
+      param_name = 'D_VOL',
+      param_value = 0.8 -- double,   1.0 = +0dB etc
+    },
+    ["s"] = {
+      param_name = 'I_SENDMODE',
+      param_value = 3 -- int,      0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
+    },
     -- ["k"] = {
     --   param_name = 'CATEGORY',
     --   param_value = 0, -- int, is <0 for receives, 0=sends, >0 for hardware outputs
@@ -27,10 +34,6 @@ return {
     --   param_name = 'B_MONO',
     --   param_value = 0, -- bool
     -- },
-    ["v"] = {
-      param_name = 'D_VOL',
-      param_value = 0.8 -- double,   1.0 = +0dB etc
-    },
     -- ["p"] = {
     --   param_name = 'D_PAN',
     --   param_value = 0, -- double,   -1..+1
@@ -39,10 +42,6 @@ return {
     --   param_name = 'D_PANLAW',
     --   param_value = 0, -- double,   1.0=+0.0db, 0.5=-6dB, -1.0 = projdef etc
     -- },
-    ["s"] = {
-      param_name = 'I_SENDMODE',
-      param_value = 3 -- int,      0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
-    },
     -- ["a"] = {
     --   param_name = 'I_AUTOMODE',
     --   param_value = 0, -- int :     auto mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)

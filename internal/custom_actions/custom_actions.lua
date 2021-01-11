@@ -106,10 +106,9 @@ function AddSends(route_params, src_t, dest_t)
     --   local src_tr_ch = GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
     local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
     local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
-    --   for i = 1, #dest_t do---------------------------------------------------------
-    --     local dest_tr =  BR_GetMediaTrackByGUID( 0, dest_t[i] )
-    --     only one dest track possible ATM
 
+    --   for i = 1, #dest_t do
+    -- !!! only one dest track possible !!!
 
     -- increase ch up to src track
     local dest_tr_ch = reaper.GetMediaTrackInfo_Value( dest_tr, 'I_NCHAN')
@@ -140,24 +139,7 @@ function AddSends(route_params, src_t, dest_t)
           end
         end
       end
-
-
-      -- SetTrackSendInfo_Value( src_tr, 0, new_id, 'D_VOL', route_params["v"])
-      -- SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SENDMODE', route_params["s"])
-      --   SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SENDMODE', defsendflag&255)
-
-      --   if dest_tr_ch == 2 then
-      --     SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0)
-      --   else
-      --     SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
-      --   end
-      --   --SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_DSTCHAN', 0)
-      --
-      -- SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SENDMODE', route_params["s"])
-
     end
-
-
     --   end -----------------------------------------------------------------------------
   end
 end
