@@ -2,10 +2,15 @@
 
 ## TODO
 
-- routing > mv sends.lua into library/routing
+- routing.lua
 
-  fix rm usage of syntax objects inside of createMidiSends.
-  otherwise it becomes locked to syntax and not modular.
+  1. clean up code as much as possible.
+
+     - put all vars on top.
+     - what can be put in configs?
+
+  2. fix rm usage of syntax objects inside of createMidiSends.
+     otherwise it becomes locked to syntax and not modular.
 
 - routing > fix sidechain function > make pr > comment about my ideas + fuzzy
 

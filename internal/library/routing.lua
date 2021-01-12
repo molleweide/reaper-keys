@@ -1,13 +1,33 @@
--- local project_state = require('utils.project_state')
--- local state_interface = require('state_machine.state_interface')
 local reaper_utils = require('custom_actions.utils')
 local log = require('utils.log')
 local format = require('utils.format')
 local routing_defaults = require('definitions.routing')
 
--- local serpent = require('serpent')
-
 local routing = {}
+
+-- ## todo
+--
+--    1. clean up code as much as possible.
+--
+--        - needs to be renamed into syntaxAddMidiSend so that I don't mix things up
+--        - put all vars on top.
+--        - what can be put in configs?
+--
+--    2. fix rm usage of syntax objects inside of createMidiSends.
+--      otherwise it becomes locked to syntax and not modular.
+--
+--    3.
+--
+
+--------------------------------------------------
+
+local TRACK_INFO_AUDIO_SRC_DISABLED = -1
+local TRACK_INFO_MIDIFLAGS_ALL_CHANS = 0
+local TRACK_INFO_MIDIFLAGS_DISABLED = 4177951
+local TRACK_INFO_SEND_CATEGORY = 0 -- send
+
+-----------------------------------------------
+-- public
 
 function routing.addRouteForSelectedTracks()
   local num_sel = reaper.CountSelectedTracks(0)
@@ -34,6 +54,59 @@ end
 -- mv to custom_actions?
 function routing.sidechainSelTrkToGhostKickTrack()
   sidechainToTrackWithNameString('ghostKick')
+end
+
+--  !!! needs to be renamed into syntaxAddMidiSend so that I don't mix things up
+--  - add default source channel = all or 1?
+function routing.createSend(src_obj,dest_obj,dest_chan)
+  -- log.user('>'..src_obj.name)
+  -- log.user(dest_obj)
+  local src_obj_trk, src_idx  =  reaper_utils.getTrackByGUID(src_obj.guid)-- reaper.GetTrack(0,src_obj.trackIndex)
+  local dest_obj_trk, dst_idx = reaper_utils.getTrackByGUID(dest_obj.guid)--reaper.GetTrack(0,dest_obj.trackIndex)
+  -- log.user('createSend() for: ' .. src_obj.name)
+
+  local midi_send = reaper.CreateTrackSend(src_obj_trk, dest_obj_trk) -- create send; return sendidx for reference
+
+  local new_midi_flags = create_send_flags(0, dest_chan) -- create new incremented midi channel
+
+  reaper.SetTrackSendInfo_Value(src_obj_trk, TRACK_INFO_SEND_CATEGORY, midi_send, "I_MIDIFLAGS", new_midi_flags) -- set midi_flags on reference
+  reaper.SetTrackSendInfo_Value(src_obj_trk, TRACK_INFO_SEND_CATEGORY, midi_send, "I_SRCCHAN", TRACK_INFO_AUDIO_SRC_DISABLED)
+end
+
+
+function routing.removeAllSends(trk_obj)
+  local tr, tr_idx = reaper_utils.getTrackByGUID(trk_obj.guid)--reaper.GetTrack(0,trk_obj.trackIndex)
+  local num_sends = reaper.GetTrackNumSends(tr, TRACK_INFO_SEND_CATEGORY)
+  -- log.user('rm all s: ' .. trk_obj.trackIndex .. '|' .. trk_obj.name .. ' | num_s: ' .. num_sends)
+
+  if num_sends == 0 then return end
+
+  while(num_sends > 0)
+    do
+      for si=0, num_sends-1 do
+        local rm = reaper.RemoveTrackSend(tr, TRACK_INFO_SEND_CATEGORY, si)
+        --log.user('rm si: ' .. si ..', ' .. tostring(rm))
+      end
+      num_sends = reaper.GetTrackNumSends(tr, TRACK_INFO_SEND_CATEGORY)
+    end
+    --log.user('<DONE!>')
+    return true
+end
+
+
+------------------------------------------------------------------------
+-- internal
+
+function get_send_flags_dest(flags)
+  return flags >> 5
+end
+
+function get_send_flags_src(flags)
+  return flag & ((1 << 5) - 1) -- flag & 0x11111
+end
+
+function create_send_flags(src_chan, dest_chan)
+  return (dest_chan << 5) | src_chan
 end
 
 -- mv to custom_actions?
@@ -105,6 +178,7 @@ function addRoutes(route_params, src_t, dest_t)
   end
 end
 
+-- mv util
 function GetDestTrGUID()
   --   local t = {}
   --   local _, sendidx = reaper.GetUserInputs("Send track dest idx:", 1, "send idx", "")
@@ -113,6 +187,7 @@ function GetDestTrGUID()
   --   return t
 end
 
+-- mv util
 function GetSrcTrGUID()
   local t = {}
   for i = 1, reaper.CountSelectedTracks(0) do
@@ -137,66 +212,5 @@ function getSendParamsFromUserInput(str)
 
   return new_route_params
 end
-
-------------------------------------------------------------------------
--- create midi sends
-
-local TRACK_INFO_AUDIO_SRC_DISABLED = -1
-local TRACK_INFO_MIDIFLAGS_ALL_CHANS = 0
-local TRACK_INFO_MIDIFLAGS_DISABLED = 4177951
-local TRACK_INFO_SEND_CATEGORY = 0 -- send
-
-
-function get_send_flags_dest(flags)
-  return flags >> 5
-end
-
-function get_send_flags_src(flags)
-  return flag & ((1 << 5) - 1) -- flag & 0x11111
-end
-
-function create_send_flags(src_chan, dest_chan)
-  return (dest_chan << 5) | src_chan
-end
-
--- TODO
---  - move this to library function?
---  - add default source channel = all or 1?
-function routing.createSend(src_obj,dest_obj,dest_chan)
-  -- log.user('>'..src_obj.name)
-  -- log.user(dest_obj)
-  local src_obj_trk, src_idx  =  reaper_utils.getTrackByGUID(src_obj.guid)-- reaper.GetTrack(0,src_obj.trackIndex)
-  local dest_obj_trk, dst_idx = reaper_utils.getTrackByGUID(dest_obj.guid)--reaper.GetTrack(0,dest_obj.trackIndex)
-  -- log.user('createSend() for: ' .. src_obj.name)
-
-  local midi_send = reaper.CreateTrackSend(src_obj_trk, dest_obj_trk) -- create send; return sendidx for reference
-
-  local new_midi_flags = create_send_flags(0, dest_chan) -- create new incremented midi channel
-
-  reaper.SetTrackSendInfo_Value(src_obj_trk, TRACK_INFO_SEND_CATEGORY, midi_send, "I_MIDIFLAGS", new_midi_flags) -- set midi_flags on reference
-  reaper.SetTrackSendInfo_Value(src_obj_trk, TRACK_INFO_SEND_CATEGORY, midi_send, "I_SRCCHAN", TRACK_INFO_AUDIO_SRC_DISABLED)
-end
-
-
-function routing.removeAllSends(trk_obj)
-  local tr, tr_idx = reaper_utils.getTrackByGUID(trk_obj.guid)--reaper.GetTrack(0,trk_obj.trackIndex)
-  local num_sends = reaper.GetTrackNumSends(tr, TRACK_INFO_SEND_CATEGORY)
-  -- log.user('rm all s: ' .. trk_obj.trackIndex .. '|' .. trk_obj.name .. ' | num_s: ' .. num_sends)
-
-  if num_sends == 0 then return end
-
-  while(num_sends > 0)
-    do
-      for si=0, num_sends-1 do
-        local rm = reaper.RemoveTrackSend(tr, TRACK_INFO_SEND_CATEGORY, si)
-        --log.user('rm si: ' .. si ..', ' .. tostring(rm))
-      end
-      num_sends = reaper.GetTrackNumSends(tr, TRACK_INFO_SEND_CATEGORY)
-    end
-    --log.user('<DONE!>')
-    return true
-end
-
--- return sends
 ------------------------------------------------------------------------
 return routing

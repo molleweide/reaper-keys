@@ -1,18 +1,21 @@
 -- default values when creating routes
 return {
+    -- SetTrackSendInfo_Value below --------------
   default_params = {
-
     ["d"] = {
-      param_name = 'DEST_TRKS',
+      description = 'DESTINATION TRACK INDEX | int required',
+      param_name  = 'DEST_TRKS',
       param_value = nil -- int REQUIRED
     },
     ["v"] = {
+      description = 'VOLUME | double, 1.0 = +0dB',
       param_name = 'D_VOL',
-      param_value = 0.8 -- double,   1.0 = +0dB etc
+      param_value = 0.8
     },
     ["s"] = {
+      description = 'SENDMODE | int, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx',
       param_name = 'I_SENDMODE',
-      param_value = 3 -- int,      0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
+      param_value = 3
     },
     -- ["k"] = {
     --   param_name = 'CATEGORY',
