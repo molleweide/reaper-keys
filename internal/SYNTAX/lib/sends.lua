@@ -1,6 +1,6 @@
 local format = require('utils.format')
 local log = require('utils.log')
-local util = require('library.utils')
+local utils = require('custom_actions.utils')
 
 -- move everything here to the routing library
 
@@ -30,8 +30,8 @@ end
 function sends.createSend(src_obj,dest_obj,dest_chan)
   -- log.user('>'..src_obj.name)
   -- log.user(dest_obj)
-  local src_obj_trk, src_idx  =  util.getTrackByGUID(src_obj.guid)-- reaper.GetTrack(0,src_obj.trackIndex)
-  local dest_obj_trk, dst_idx = util.getTrackByGUID(dest_obj.guid)--reaper.GetTrack(0,dest_obj.trackIndex)
+  local src_obj_trk, src_idx  =  utils.getTrackByGUID(src_obj.guid)-- reaper.GetTrack(0,src_obj.trackIndex)
+  local dest_obj_trk, dst_idx = utils.getTrackByGUID(dest_obj.guid)--reaper.GetTrack(0,dest_obj.trackIndex)
   -- log.user('createSend() for: ' .. src_obj.name)
 
   local midi_send = reaper.CreateTrackSend(src_obj_trk, dest_obj_trk) -- create send; return sendidx for reference
@@ -44,7 +44,7 @@ end
 
 
 function sends.removeAllSends(trk_obj)
-  local tr, tr_idx = util.getTrackByGUID(trk_obj.guid)--reaper.GetTrack(0,trk_obj.trackIndex)
+  local tr, tr_idx = utils.getTrackByGUID(trk_obj.guid)--reaper.GetTrack(0,trk_obj.trackIndex)
   local num_sends = reaper.GetTrackNumSends(tr, TRACK_INFO_SEND_CATEGORY)
   -- log.user('rm all s: ' .. trk_obj.trackIndex .. '|' .. trk_obj.name .. ' | num_s: ' .. num_sends)
 

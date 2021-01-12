@@ -46,7 +46,7 @@ function sidechainToTrackWithNameString(str)
   --  2. add receive into ch 3/4 on sel track
   --  3. add reacomp on sel track
   --  4. rename fx to 'SIDECHAIN_TO_GHOSTKICK'
-  --  5. create check for name. if exists don't create 
+  --  5. create check for name. if exists don't create
   --
 end
 

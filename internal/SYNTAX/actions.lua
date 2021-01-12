@@ -6,7 +6,7 @@ local trackObj = require('SYNTAX.lib.track_obj')
 local syntax = require('SYNTAX.syntax.syntax')
 local fx = require('SYNTAX.lib.fx')
 local midi = require('SYNTAX.lib.midi')
-local utils = require('library.utils')
+local utils = require('custom_actions.utils')
 local syntax_utils = require('SYNTAX.lib.util')
 local config = require('SYNTAX.config.config')
 

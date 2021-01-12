@@ -2,6 +2,8 @@
 local log = require('utils.log')
 local RS_TrObj = require('SYNTAX.lib.track_obj')
 local class_conf = require('SYNTAX.config.config').classes
+
+local reaper_utils = require('custom_actions.utils')
 local util = require('SYNTAX.lib.util')
 -- local fx_util = require('SYNTAX.lib.fx_util')
 local fx_util = require('library.fx')
@@ -9,7 +11,7 @@ local fx_util = require('library.fx')
 local fx = {}
 
 function fx.applyConfFxToChildObj(child_obj, proll_start_idx, opt_type) -- change to drum_map_note_start
-  local tr, tr_idx    = util.VF_GetTrackByGUID(child_obj.guid)
+  local tr, tr_idx    = reaper_utils.getTrackByGUID(child_obj.guid)
   if tr == nil then return end
   local tr_range      = 1
   local tr_has_range  = RS_TrObj.trackHasOption(child_obj, 'nr')

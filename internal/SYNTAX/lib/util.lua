@@ -1,11 +1,12 @@
 -- local format = require('utils.format')
+local reaper_utils = require('custom_actions.utils')
 local log = require('utils.log')
 
 local util = {}
 
 function util.setClassTrackInfo(class_conf, trk_obj)
     -- local trk = reaper.GetTrack(0,trk_obj.trackIndex)
-    local trk, i = util.VF_GetTrackByGUID(trk_obj.guid)
+    local trk, i = reaper_utils.getTrackByGUID(trk_obj.guid)
     local trkh = class_conf[trk_obj.class].trackProps.trackHeight
 
     -- log.user(trk_obj.name, trk_obj.trackIndex, trk)
@@ -38,7 +39,7 @@ function util.trackObjHasOption(trk_obj, opt)
   end
 end
 
--- mv to main util??
+-- MV TO MAIN UTIL?? ALSO rename to getSelEdgeIndices !!!
 function util.getTrackIndicesOfTrackSel()
   local seltr = reaper.CountSelectedTracks()
   local trFirst = reaper.GetSelectedTrack(0, 0)
@@ -65,15 +66,6 @@ function util.getTrackIndicesOfTrackSel()
   return low_idx, high_idx
 end
 
--- -- tr, tr_index // move this to RK main util???
--- function util.VF_GetTrackByGUID(giv_guid)
---   for i = 0, reaper.CountTracks(0) - 1 do
---     local tr = reaper.GetTrack(0,i)
---     local GUID = reaper.GetTrackGUID( tr )
---     if GUID == giv_guid then return tr, i end
---   end
--- end
-
 function util.getParentGroupByTrIdx(vtt, child_idx)
   local tr_count      = reaper.CountTracks(0)
   local prevGroup         = nil
@@ -85,7 +77,7 @@ function util.getParentGroupByTrIdx(vtt, child_idx)
   local last_g        = false
   -- reaper.CountTracks(0)
   -- local guid = reaper.GetTrackGUID(tr)
-  -- util.VF_GetTrackByGUID(giv_guid)
+  -- reaper_utils.getTrackByGUID(giv_guid)
 
   for i, LVL1_obj in pairs(vtt) do
     last_g = false -- reset
@@ -93,7 +85,7 @@ function util.getParentGroupByTrIdx(vtt, child_idx)
     -- log.user(i, LVL1_obj.name, #vtt, last_z)
 
     for j, LVL2_obj in pairs(LVL1_obj.children) do
-      local LVL2_tr, LVL2_tr_idx = util.VF_GetTrackByGUID(LVL2_obj.guid)
+      local LVL2_tr, LVL2_tr_idx = reaper_utils.getTrackByGUID(LVL2_obj.guid)
       -- log.user(LVL2_tr, LVL2_tr_idx, #LVL1_obj.children)
       --
       --
