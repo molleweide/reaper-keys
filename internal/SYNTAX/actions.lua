@@ -6,7 +6,8 @@ local trackObj = require('SYNTAX.lib.track_obj')
 local syntax = require('SYNTAX.syntax.syntax')
 local fx = require('SYNTAX.lib.fx')
 local midi = require('SYNTAX.lib.midi')
-local util = require('SYNTAX.lib.util')
+local utils = require('library.utils')
+local syntax_utils = require('SYNTAX.lib.util')
 local config = require('SYNTAX.config.config')
 
 local actions = {}
@@ -17,18 +18,18 @@ function actions.applyConfigs()
   -- log.user(format.vtt(vtt))
 
   for i, LVL1_obj in pairs(vtt) do ------------------------------ lvl 1 ------------
-    util.setClassTrackInfo(config.classes, LVL1_obj)
+    syntax_utils.setClassTrackInfo(config.classes, LVL1_obj)
 
     for j, LVL2_obj in pairs(LVL1_obj.children) do ------------- lvl 2 ------------
       local count_w_range     = 24 -- put in config
-      util.setClassTrackInfo(config.classes, LVL2_obj)
+      syntax_utils.setClassTrackInfo(config.classes, LVL2_obj)
 
       local opt_m_children = {}
 
       for k, LVL3_obj in pairs(LVL2_obj.children) do ----------- lvl 3 ------------
-        util.setClassTrackInfo(config.classes, LVL3_obj) -- why pass config? stupid..
+        syntax_utils.setClassTrackInfo(config.classes, LVL3_obj) -- why pass config? stupid..
 
-        if util.strHasOneOfChars(LVL3_obj.class, 'MC') and util.trackObjHasOption(LVL2_obj, 'm') then
+        if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MC') and syntax_utils.trackObjHasOption(LVL2_obj, 'm') then
           sends.removeAllSends(LVL2_obj) -- reset sends
           opt_m_children[#opt_m_children+1] = LVL3_obj -- collect m_opt_obj for reverse looping later
         end
@@ -69,12 +70,12 @@ function ypcMidiSegments(LVL2_parent_obj, tr_idx_first, tr_idx_last, MIDI_LOW_bt
   -- log.user('LVL2_parent_obj', format.block(LVL2_parent_obj))
 
   for k, LVL3_obj in pairs(LVL2_parent_obj.children) do ----------- lvl 3 ------------
-    if util.strHasOneOfChars(LVL3_obj.class, 'MC') then
+    if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MC') then
       local LVL3_obj = LVL2_parent_obj.children[k]
-      local LVL3_tr, LVL3_tr_idx = util.VF_GetTrackByGUID(LVL3_obj.guid)
+      local LVL3_tr, LVL3_tr_idx = utils.getTrackByGUID(LVL3_obj.guid)
       -- log.user(LVL3_tr, LVL3_tr_idx)
       local range = 1
-      if util.trackObjHasOption(LVL3_obj, 'nr') then range = LVL3_obj.options.nr end
+      if syntax_utils.trackObjHasOption(LVL3_obj, 'nr') then range = LVL3_obj.options.nr end
 
       -- log.user(LVL3_tr_idx, tr_idx_first, tr_idx_last)
 
@@ -372,14 +373,14 @@ end
 
 function customGroupYpc(ypc_type)
   local vtt = syntax.getVerifiedTree()
-  local tr_idx_first, tr_idx_last = util.getTrackIndicesOfTrackSel()
-  local LVL2_parent_obj, tr_parent_group, group_tr_idx = util.getParentGroupByTrIdx(vtt, tr_idx_first)
+  local tr_idx_first, tr_idx_last = syntax_utils.getTrackIndicesOfTrackSel()
+  local LVL2_parent_obj, tr_parent_group, group_tr_idx = syntax_utils.getParentGroupByTrIdx(vtt, tr_idx_first)
   local T_YPC = { ypc_type = ypc_type }
   log.user(
     '\n\n >>> YPC: ' .. ypc_type .. ' --------------------\n\n' --..
     --   'LVL2 PARENT OBJ: ' .. format.block(LVL2_parent_obj)
     )
-  if not util.trackObjHasOption(LVL2_parent_obj, 'm') then
+  if not syntax_utils.trackObjHasOption(LVL2_parent_obj, 'm') then
     log.user('YpcError; requires opt \'m\'') return
   end
   T_YPC["t_ypc_segments"] = ypcMidiSegments(LVL2_parent_obj, tr_idx_first, tr_idx_last, MIDI_LOW_btm)

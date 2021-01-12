@@ -141,6 +141,15 @@ function utils.getMatchedTrack(search_name, forward)
   return nil
 end
 
+-- tr, tr_index // move this to RK main util???
+function utils.getTrackByGUID(search_guid)
+  for i = 0, reaper.CountTracks(0) - 1 do
+    local tr = reaper.GetTrack(0,i)
+    local GUID = reaper.GetTrackGUID( tr )
+    if GUID == search_guid then return tr, i end
+  end
+end
+
 function utils.getTrackPosition()
   local last_touched_track = reaper.GetLastTouchedTrack()
   if last_touched_track then

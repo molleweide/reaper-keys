@@ -2,17 +2,15 @@
 
 ## TODO
 
+- routing > mv sends.lua into library/routing
+
 - routing > fix sidechain function > make pr > comment about my ideas + fuzzy
 
 - segments > bug
 
 - midi > learn how to program
 
-## NEW IDEAS ACTIONS =======================================
-
-- create new additional take in selected region
-
-- match tr idx >> add scroll to position
+- syntax > auto fallback routing
 
 ## regions =================================================
 

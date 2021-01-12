@@ -65,14 +65,14 @@ function util.getTrackIndicesOfTrackSel()
   return low_idx, high_idx
 end
 
--- tr, tr_index // move this to RK main util???
-function util.VF_GetTrackByGUID(giv_guid)
-  for i = 0, reaper.CountTracks(0) - 1 do
-    local tr = reaper.GetTrack(0,i)
-    local GUID = reaper.GetTrackGUID( tr )
-    if GUID == giv_guid then return tr, i end
-  end
-end
+-- -- tr, tr_index // move this to RK main util???
+-- function util.VF_GetTrackByGUID(giv_guid)
+--   for i = 0, reaper.CountTracks(0) - 1 do
+--     local tr = reaper.GetTrack(0,i)
+--     local GUID = reaper.GetTrackGUID( tr )
+--     if GUID == giv_guid then return tr, i end
+--   end
+-- end
 
 function util.getParentGroupByTrIdx(vtt, child_idx)
   local tr_count      = reaper.CountTracks(0)

@@ -5,16 +5,27 @@ https://forum.cockos.com/showthread.php?t=176878
 
 ---
 
-7. move new naming function over to SYNTAX/actions
+- move new naming function over to SYNTAX/actions
 
-   - after each naming >> check comparison with previous tack find by GUID
-     create a true diff check a la REACT
+  - after each naming >> check comparison with previous tack find by GUID
+    create a true diff check a la REACT
 
-     ***
+    ***
 
-     change name > only change name / preserve prefix/opt
-     change class
-     change option
+    change name > only change name / preserve prefix/opt
+    change class
+    change option
+
+## fallback routes
+
+- new group option 's'
+
+  send new sub tracks to `B::<group_name>_sum`
+  create if doesn't exist
+
+> make sure a track is always routed somehow
+
+priority list???
 
 ## YPCI
 
