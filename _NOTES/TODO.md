@@ -1,5 +1,13 @@
 # REAPER KEYS TODO
 
+## TODO
+
+- routing > fix sidechain function > make pr > comment about my ideas + fuzzy
+
+- segments > bug
+
+- midi > learn how to program
+
 ## NEW IDEAS ACTIONS =======================================
 
 - create new additional take in selected region

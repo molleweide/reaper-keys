@@ -26,26 +26,28 @@ function routing.addRouteForSelectedTracks()
   addRoutes(new_route_params, src_GUID)
 end
 
+-- mv to custom_actions?
 function routing.sidechainSelTrkToGhostSnareTrack()
- sidechainToTrackWithNameString('ghostsnare')
+  sidechainToTrackWithNameString('ghostSnare')
 end
 
+-- mv to custom_actions?
 function routing.sidechainSelTrkToGhostKickTrack()
- sidechainToTrackWithNameString('ghostkick')
+  sidechainToTrackWithNameString('ghostKick')
 end
 
+-- mv to custom_actions?
 function sidechainToTrackWithNameString(str)
-  --  1. if track w/name containing 'ghostkick'
-      -- if not has_no_name and current_name:match(search_name:lower()) then
-      --   return track
-      -- end
-  --  2. check if 3/4 send exists (util)
-  --  2. createSend (util)
-  --  3. add reacomp to track
-  --  4. rename the function to sidechain_to_ghostkick
-  --    take all of my renaming functions etc and move them out to RK lib
-  --    so that my syntax module is completely separated from the lib functions
-  --  5. create generalized send function that works with send_str_input
+  --  1. find track w name containing 'str'
+  --    if not has_no_name and current_name:match(search_name:lower()) then
+  --      return track
+  --    end
+  --  x. if doesn't exist >> prompt ghostKick doesn't exist
+  --  2. add receive into ch 3/4 on sel track
+  --  3. add reacomp on sel track
+  --  4. rename fx to 'SIDECHAIN_TO_GHOSTKICK'
+  --  5. create check for name. if exists don't create 
+  --
 end
 
 function addRoutes(route_params, src_t, dest_t)
