@@ -4,6 +4,9 @@
 
 - routing > mv sends.lua into library/routing
 
+  fix rm usage of syntax objects inside of createMidiSends.
+  otherwise it becomes locked to syntax and not modular.
+
 - routing > fix sidechain function > make pr > comment about my ideas + fuzzy
 
 - segments > bug

@@ -1,7 +1,7 @@
 local reaper_state = require('utils.reaper_state')
 local format = require('utils.format')
 local log = require('utils.log')
-local sends = require('SYNTAX.lib.sends')
+local routing = require('library.routing')
 local trackObj = require('SYNTAX.lib.track_obj')
 local syntax = require('SYNTAX.syntax.syntax')
 local fx = require('SYNTAX.lib.fx')
@@ -30,14 +30,14 @@ function actions.applyConfigs()
         syntax_utils.setClassTrackInfo(config.classes, LVL3_obj) -- why pass config? stupid..
 
         if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MC') and syntax_utils.trackObjHasOption(LVL2_obj, 'm') then
-          sends.removeAllSends(LVL2_obj) -- reset sends
+          routing.removeAllSends(LVL2_obj) -- reset sends
           opt_m_children[#opt_m_children+1] = LVL3_obj -- collect m_opt_obj for reverse looping later
         end
 
         if LVL3_obj.class == 'C' then
-          sends.removeAllSends(LVL3_obj)
+          routing.removeAllSends(LVL3_obj)
           for l, split_obj in pairs(LVL3_obj.children) do
-            sends.createSend(LVL3_obj, split_obj, l)
+            routing.createSend(LVL3_obj, split_obj, l)
           end
         end
       end -- LEVEL 3
@@ -46,7 +46,7 @@ function actions.applyConfigs()
       for k=1, #opt_m_children do
         local rev_idx = #opt_m_children + 1 - k -- reverse idx !!!
         local trk_obj = opt_m_children[rev_idx]
-        sends.createSend(LVL2_obj, trk_obj, 0) -- 0 = all ch
+        routing.createSend(LVL2_obj, trk_obj, 0) -- 0 = all ch
         fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
         count_w_range = midi.updatePianoRoll(LVL2_obj, trk_obj, count_w_range)
       end
