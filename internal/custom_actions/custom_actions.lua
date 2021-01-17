@@ -75,4 +75,14 @@ function custom_actions.changeNamesOfSelectedTracks()
   end
 end
 
+-- how can I make this action work with movement in reaper??
+function custom_actions.hookUpMidiRouter()
+  -- connect router to selected track I want to record to.
+  -- if name of selected is midi_router DONT connect.
+  --
+  local tr = reaper.GetSelectedTrack(0, 0)
+  local _, name = reaper.GetTrackName(tr, "")
+  log.user(name)
+end
+
 return custom_actions

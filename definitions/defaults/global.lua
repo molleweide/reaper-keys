@@ -197,6 +197,8 @@ return {
                  }},
       }},
       ["f"] = { "+fx", {
+                  -- bypass fx
+                  -- move fx up/down in chain.
                   ["a"] = "AddFx",
                   ["c"] = "ToggleShowFxChain",
                   ["x"] = "CloseFx",
@@ -204,6 +206,8 @@ return {
                   ["y"] = "CopyFxChain",
                   ["p"] = "PasteFxChain",
                   ["b"] = "ToggleFxBypass",
+                  -- ["B"] = "ToggleSelectedFxBypass",
+                  ["B"] = "ToggleLastTouchedFxBypass",
                   ["M"] = "ModulateLastTouchedFxParam",
                   ["m"] = "MidiLearnLastTouchedFxParam",
                   ["i"] = {"+input", {
@@ -228,6 +232,9 @@ return {
                  ["z"] = "TogglePlaybackAutoScroll",
                  ["v"] = "ToggleLoopSelectionFollowsTimeSelection",
                  ["s"] = "ToggleSnap",
+                 -- todo
+                 -- 1. add turn on metro during playb
+                 -- 2. turn on metro for rec.
                  ["m"] = "ToggleMetronome", -- 'M' add show metronome and preroll settings
                  ["M"] = "ShowMetronomeSettings", -- 'M' add show metronome and preroll settings
                  ["t"] = "ToggleStopAtEndOfTimeSelectionIfNoRepeat",
@@ -255,7 +262,7 @@ return {
                             ["t"] = "ToggleShowAllEnvelopeGlobal",
                   }},
                   ["t"] = { "+track", {
-                            ["a"] = "ClearAllRecordArm",
+                            ["a"] = "ClearAllRecordArm", -- I need remove midi router..
                             ["s"] = "UnsoloAllTracks",
                             ["m"] = "UnmuteAllTracks",
                   }},

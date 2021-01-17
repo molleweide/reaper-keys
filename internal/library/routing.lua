@@ -7,6 +7,26 @@ local routing = {}
 
 -- ## todo
 --
+--    function
+--
+--      put all track send info into table that is easy to use func.
+--        getAllTrackSendParams(tr)
+--          local tr_send_params = {}
+--          tr_send_params["param_name"] = 
+--          return tr_send_params
+--        end
+--
+--
+--    >>>> how can I log and learn intuition for the channel based params
+--    i need to understand this so that it becomes easy to do this.
+--    otherwise I wwill always be a little confused.
+--
+--    5       4     3     2     1
+--
+--    16-32   8-15  4-8   2-3   0-1
+--
+--
+--
 --    1. clean up code as much as possible.
 --
 --        - needs to be renamed into syntaxAddMidiSend so that I don't mix things up
@@ -20,6 +40,17 @@ local routing = {}
 --
 
 --------------------------------------------------
+
+  -- 0   = 0
+  -- 5   = 32
+  -- 3   = 8
+  -- 6   = 64
+  -- 7   = 128
+  -- 8   = 256
+  -- 9   = 512
+  -- 10  = 1024
+  -- 11  = 2048
+  -- 12  = 4096
 
 local TRACK_INFO_AUDIO_SRC_DISABLED = -1
 local TRACK_INFO_MIDIFLAGS_ALL_CHANS = 0

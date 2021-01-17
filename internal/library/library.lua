@@ -8,6 +8,7 @@ local library = {
   state = require('library.state'),
   routing = require('library.routing'),
   segments = require('library.segments'),
+  midi = require('library.midi'),
   fx = require('library.fx')
 }
 

@@ -49,14 +49,16 @@ return {
     --   param_name = 'I_AUTOMODE',
     --   param_value = 0, -- int :     auto mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
     -- },
-    -- ["c"] = {
-    --   param_name = 'I_SRCCHAN',
-    --   param_value = 0, -- int,      index,&1024=mono, -1 for none
-    -- },
-    -- ["C"] = {
-    --   param_name = 'I_DSTCHAN',
-    --   param_value = 0, -- int,      index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
-    -- },
+    ["c"] = {
+      description = 'SOURCE CHAN | int, index, &1024=mono, -1 for none',
+      param_name = 'I_SRCCHAN',
+      param_value = 0,
+    },
+    ["C"] = {
+      description = 'DEST CHAN | int, index, &1024=mono, -1 for none',
+      param_name = 'I_DSTCHAN',
+      param_value = 0, -- int,      index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
+    },
     -- ["I"] = {
     --   param_name = 'I_MIDIFLAGS',
     --   param_value = 0, -- int,      low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chan

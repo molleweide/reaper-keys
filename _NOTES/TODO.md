@@ -1,24 +1,43 @@
 # REAPER KEYS TODO
 
+`always always always handle tracks by ID, never track indeces.`
+
 ## TODO
+
+hook setup midi router when pressing record.
 
 - routing.lua
 
-  1. clean up code as much as possible.
+- segments
 
-     - put all vars on top.
-     - what can be put in configs?
+- midi
 
-  2. fix rm usage of syntax objects inside of createMidiSends.
-     otherwise it becomes locked to syntax and not modular.
+- fx > toggle bypass fx super important.
 
-- routing > fix sidechain function > make pr > comment about my ideas + fuzzy
+  A new track fx mode would be ideal i think. So that I can use regular
+  up down commands to navigate the fx list.
 
-- segments > bug
+- fx > config state > log touched parameter
 
-- midi > learn how to program
+  very interesting config variable for ui dev
 
-- syntax > auto fallback routing
+## QUESTIONS
+
+`can I rename the reaper.app file. eg. duplicate and rename reaper dir when new version??`
+
+- parent track (A) | don't record any midi to here. no midi items
+
+  input from midi keyboard
+
+  note repeater < has no effect?!
+
+- child track (B) | I want to record midi to this track, i.e. create midi items here
+
+  arpegiator
+
+- grand child track (C)
+
+  midi synth
 
 ## regions =================================================
 
@@ -52,12 +71,12 @@ how does state_machine get the actual key press sent to it?
   music
   fx
 
-```lua
--- auto store and create importable modules of the current project
--- increment names in
-for each zone
-for each group
-```
+  ```lua
+  -- auto store and create importable modules of the current project
+  -- increment names in
+  for each zone
+  for each group
+  ```
 
 ## RNDM ====================================================
 
