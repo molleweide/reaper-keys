@@ -6,10 +6,7 @@
 
 - collect all routing examples that make sense into a dir.
 
-- hook setup midi router when pressing record.
-
 - create definitions/defaults/fx.lua
-
   is there something basic that I can do with an fx mode.
 
 - routing.lua
