@@ -26,7 +26,7 @@ return {
     timeline_selector = {},
     timeline_motion = {},
     command = {
-      ["aa"] = "ArmTracksWithMidiRouter", -- only works for command right now.
+      -- ["aa"] = "ArmTracksWithMidiRouter", -- only works for command right now.
       ["<C-,>"] = { "+cmd", {
           ["c"] = "LogWhatever",
           ["C"] = "CloseReaConsole",

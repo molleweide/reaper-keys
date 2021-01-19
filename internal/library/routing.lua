@@ -90,11 +90,10 @@ end
 --  !!! needs to be renamed into syntaxAddMidiSend so that I don't mix things up
 --  - add default source channel = all or 1?
 function routing.createSend(src_obj,dest_obj,dest_chan)
-  -- log.user('>'..src_obj.name)
-  -- log.user(dest_obj)
-  local src_obj_trk, src_idx  =  reaper_utils.getTrackByGUID(src_obj.guid)-- reaper.GetTrack(0,src_obj.trackIndex)
-  local dest_obj_trk, dst_idx = reaper_utils.getTrackByGUID(dest_obj.guid)--reaper.GetTrack(0,dest_obj.trackIndex)
-  -- log.user('createSend() for: ' .. src_obj.name)
+
+  -- these functions should recieve the tracks I want to make sends for.
+  local src_obj_trk, src_idx  =  reaper_utils.getTrackByGUID(src_obj.guid)
+  local dest_obj_trk, dst_idx = reaper_utils.getTrackByGUID(dest_obj.guid)
 
   local midi_send = reaper.CreateTrackSend(src_obj_trk, dest_obj_trk) -- create send; return sendidx for reference
 
@@ -207,6 +206,9 @@ function addRoutes(route_params, src_t, dest_t)
     end
     --   end -----------------------------------------------------------------------------
   end
+end
+
+function doesRouteAlreadyExist()
 end
 
 -- mv util

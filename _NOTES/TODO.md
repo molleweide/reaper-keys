@@ -2,15 +2,25 @@
 
 `always always always handle tracks by ID, never track indeces.`
 
-## TODO
+## TODO priority list.
 
-hook setup midi router when pressing record.
+- collect all routing examples that make sense into a dir.
+
+- hook setup midi router when pressing record.
+
+- create definitions/defaults/fx.lua
+
+  is there something basic that I can do with an fx mode.
 
 - routing.lua
+
+  take code from mpl > finish the `checkItRouteExists()` func
 
 - segments
 
 - midi
+
+- add special track names >> eg `MIDI_ROUTER`, no prefixes??
 
 - fx > toggle bypass fx super important.
 
@@ -21,23 +31,11 @@ hook setup midi router when pressing record.
 
   very interesting config variable for ui dev
 
+- hide tracks?!
+
 ## QUESTIONS
 
 `can I rename the reaper.app file. eg. duplicate and rename reaper dir when new version??`
-
-- parent track (A) | don't record any midi to here. no midi items
-
-  input from midi keyboard
-
-  note repeater < has no effect?!
-
-- child track (B) | I want to record midi to this track, i.e. create midi items here
-
-  arpegiator
-
-- grand child track (C)
-
-  midi synth
 
 ## regions =================================================
 
