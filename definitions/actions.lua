@@ -32,5 +32,7 @@ return {
     "LastTrack",
     -- "SaveTrackTempFromSelected"
   },
-  ArmTracksWithMidiRouter = { "ArmTracks", custom.hookUpMidiRouter }, -- hook setup midi router.
+  ZoomProject = {"ZoomAllTracks", "ZoomAllItems", "ScrollToSelectedTracks", "ApplyConfigs"},
+  -- custom zoom project where I always call apply tree after zoom + scroll
+  -- ArmTracksWithMidiRouter = { "ArmTracks", custom.hookUpMidiRouter }, -- hook setup midi router.
 }

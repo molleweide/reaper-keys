@@ -27,6 +27,7 @@ return {
     timeline_motion = {},
     command = {
       -- ["aa"] = "ArmTracksWithMidiRouter", -- only works for command right now.
+      ["zp"] = "ZoomProject",
       ["<C-,>"] = { "+cmd", {
           ["c"] = "LogWhatever",
           ["C"] = "CloseReaConsole",
@@ -39,9 +40,9 @@ return {
     },
   },
   midi = {
-      timeline_selector = {},
-      timeline_operator = {},
-      timeline_motion = {},
-      command = {},
-    },
-  }
+    timeline_selector = {},
+    timeline_operator = {},
+    timeline_motion = {},
+    command = {},
+  },
+}
