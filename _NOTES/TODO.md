@@ -4,6 +4,10 @@
 
 ## TODO priority list.
 
+1. try out midi plugins / make basic single output midi note
+2. vim syntax eel
+3. create custom action for bypassing currently highlighted and active window fx.
+
 - collect all routing examples that make sense into a dir.
 
 - create definitions/defaults/fx.lua
@@ -17,12 +21,8 @@
 
 - midi
 
-- add special track names >> eg `MIDI_ROUTER`, no prefixes??
-
-- fx > toggle bypass fx super important.
-
-  A new track fx mode would be ideal i think. So that I can use regular
-  up down commands to navigate the fx list.
+A new track fx mode would be ideal i think. So that I can use regular
+up down commands to navigate the fx list.
 
 - fx > config state > log touched parameter
 

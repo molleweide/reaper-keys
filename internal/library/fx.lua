@@ -96,4 +96,10 @@ function fx_util.getSetTrackFxNameByFxChainIndex(tr,idx_fx,newName)
   return trFxNameStr
 end
 
+function fx_util.bypassFX()
+  --  TODO
+  --
+  --    - arspt
+end
+
 return fx_util
