@@ -4,9 +4,7 @@
 
 ## TODO priority list.
 
-- midi switch mode with qmk / grand piano
-
-- lua > update track `MIDI INPUTE JSFX` if I change midi input device.
+- io_device > finish implement input midi fx
 
 * create custom action for bypassing currently highlighted and active window fx.
 
