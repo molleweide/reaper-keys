@@ -32,9 +32,12 @@ return {
           ["c"] = "LogWhatever",
           ["C"] = "CloseReaConsole",
           ["f"] = "FuzzyFx",
-          ["w"] = "ApplyConfigs",
+          ["mq"] = "TrackInputSet_QMK",
+          ["mg"] = "TrackInputSet_GRAND_ROLAND",
+          ["mv"] = "TrackInputSet_VIRTUAL",
           ["R"] = "RepeatInsertTimeSelection",
           ["S"] = "SaveAllTracksAsTemplate",
+          ["w"] = "ApplyConfigs",
           ["x"] = "AddTrackRoute"
       }}
     },

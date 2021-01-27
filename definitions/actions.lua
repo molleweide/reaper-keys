@@ -22,6 +22,9 @@ local syntax = require('SYNTAX.actions')
 return {
   FuzzyFx = "_RSd7bf7022d92114682d354e90dbe8aef580a5ef5c",
   ApplyConfigs = syntax.applyConfigs,
+  TrackInputSet_QMK = lib.io_device.setInputTo_MIDI_QMK,
+  TrackInputSet_GRAND_ROLAND = lib.io_device.setInputTo_MIDI_GRAND_ROLAND,
+  TrackInputSet_VIRTUAL = lib.io_device.setInputTo_MIDI_VIRTUAL,
   gCut = syntax.gcut,
   gPut = syntax.gput,
   gYank = syntax.gyank,

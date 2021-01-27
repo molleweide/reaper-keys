@@ -4,9 +4,7 @@
 
 ## TODO priority list.
 
-1. try out midi plugins / make basic single output midi note
-2. vim syntax eel
-3. create custom action for bypassing currently highlighted and active window fx.
+- create custom action for bypassing currently highlighted and active window fx.
 
 - collect all routing examples that make sense into a dir.
 
@@ -19,16 +17,18 @@
 
 - segments
 
+- virtual keyb > shouldn't be that hard!!
+
 - midi
 
-A new track fx mode would be ideal i think. So that I can use regular
-up down commands to navigate the fx list.
+  A new track fx mode would be ideal i think. So that I can use regular
+  up down commands to navigate the fx list.
 
-- fx > config state > log touched parameter
+* fx > config state > log touched parameter
 
   very interesting config variable for ui dev
 
-- hide tracks?!
+* hide tracks?!
 
 ## QUESTIONS
 
@@ -75,5 +75,8 @@ how does state_machine get the actual key press sent to it?
 
 ## RNDM ====================================================
 
-and I will do this later, but when these bases are started then mike will probably
-appreciate my work and he might critique my code or refactor it.
+this is going to be so fucking awesome. the insane thing about
+reaper keys markers is that you can make marks for any type of char,
+which gives you a lot of marks, you don't have to worry.
+and so this makes it possible for you to jump between a monstrous amount
+of sound sources and tracks.

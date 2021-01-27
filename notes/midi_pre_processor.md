@@ -2,11 +2,6 @@
 
 plug Js: MIDI EXAMINER >>> log events
 
-1. find a jsfx that I can use as base
-2. save it as a new jstx called `my_midi_preprocessor.jsfx`
-3. create input fx syntax for it.
-4. if on all midi tracks and G mapped add my_midi_preprocessor as input fx syntax.
-
 - either I can use a single track as arouter with only one pre processor, OR I
   can quite easilly fix this by adding the preprocessor to my syntax fx. Then
   the problem is solved. And then later if reaper updates with this ability I can

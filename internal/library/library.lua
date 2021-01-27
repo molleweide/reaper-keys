@@ -9,7 +9,8 @@ local library = {
   routing = require('library.routing'),
   segments = require('library.segments'),
   midi = require('library.midi'),
-  fx = require('library.fx')
+  fx = require('library.fx'),
+  io_device = require('library.io_device')
 }
 
 function library.matchTrackNameBackward()

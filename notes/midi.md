@@ -1,5 +1,8 @@
 # midi ideas for RK
 
+- virtual midi keyb
+  https://www.reaper.fm/sdk/reascript/reascripthelp.html#StuffMIDIMessage
+
 - ability to jump to a note by number / pitch name
 
   eg. 48 -> move to C3

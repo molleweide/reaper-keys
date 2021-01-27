@@ -104,6 +104,8 @@ return {
     ["<M-k>"] = "PrevEnvelope",
     ["<C-+>"] = "ZoomInVert",
     ["<C-->"] = "ZoomOutVert",
+    ["<CM-+>"] = "ZoomInTrackVert",
+    ["<CM-->"] = "ZoomOutTrackVert",
     ["+"] = "ZoomInHoriz",
     ["-"] = "ZoomOutHoriz",
     ["<C-m>"] = "TapTempo",
