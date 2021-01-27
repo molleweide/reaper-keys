@@ -4,31 +4,35 @@
 
 ## TODO priority list.
 
-- create custom action for bypassing currently highlighted and active window fx.
+- midi switch mode with qmk / grand piano
 
-- collect all routing examples that make sense into a dir.
+- lua > update track `MIDI INPUTE JSFX` if I change midi input device.
 
-- create definitions/defaults/fx.lua
+* create custom action for bypassing currently highlighted and active window fx.
+
+* collect all routing examples that make sense into a dir.
+
+* create definitions/defaults/fx.lua
   is there something basic that I can do with an fx mode.
 
-- routing.lua
+* routing.lua
 
   take code from mpl > finish the `checkItRouteExists()` func
 
-- segments
+* segments
 
-- virtual keyb > shouldn't be that hard!!
+* virtual keyb > shouldn't be that hard!!
 
-- midi
+* midi
 
   A new track fx mode would be ideal i think. So that I can use regular
   up down commands to navigate the fx list.
 
-* fx > config state > log touched parameter
+- fx > config state > log touched parameter
 
   very interesting config variable for ui dev
 
-* hide tracks?!
+- hide tracks?!
 
 ## QUESTIONS
 
