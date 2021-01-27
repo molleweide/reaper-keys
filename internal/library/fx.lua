@@ -4,8 +4,7 @@ local log = require('utils.log')
 
 local fx_util = {}
 
-function fx_util.insertFxAtIndex(child_obj, fx_str, fx_insertTo_idx)
-  local tr     = reaper.GetTrack(0, child_obj.trackIndex)
+function fx_util.insertFxAtIndex(tr, fx_str, fx_insertTo_idx)
   local is_move_flag = true
   reaper.TrackFX_AddByName(tr, fx_str, false, -1) -- add to last index
   local fx_idx_last = reaper.TrackFX_GetCount(tr) - 1
@@ -14,25 +13,23 @@ function fx_util.insertFxAtIndex(child_obj, fx_str, fx_insertTo_idx)
   end
 end
 
-function fx_util.replaceFxAtIndex(child_obj, fx_str, fx_insertTo_idx)
-  removeFxAtIndex(child_obj, fx_insertTo_idx)
-  insertFxAtIndex(child_obj, fx_str, fx_insertTo_idx)
+function fx_util.replaceFxAtIndex(tr, fx_str, fx_insertTo_idx)
+  removeFxAtIndex(tr, fx_insertTo_idx)
+  insertFxAtIndex(tr, fx_str, fx_insertTo_idx)
 end
 
-function fx_util.removeFxAtIndex(child_obj, fx_rm_idx)
-  local tr = reaper.GetTrack(0, child_obj.trackIndex)
+function fx_util.removeFxAtIndex(tr, fx_rm_idx)
   reaper.TrackFX_Delete(tr, fx_rm_idx)
 end
 
-function fx_util.removeAllFXAfterIndex(child_obj, index)
-  local trk     = reaper.GetTrack(0, child_obj.trackIndex)
-  local tc = reaper.TrackFX_GetCount(trk)
+function fx_util.removeAllFXAfterIndex(tr, index)
+  local tc = reaper.TrackFX_GetCount(tr)
   local num_fx_after_i = tc - index
   while(num_fx_after_i > 0 ) do
     for i = index, tc - 1 do
-      reaper.TrackFX_Delete(trk, i)
+      reaper.TrackFX_Delete(tr, i)
     end
-    tc = reaper.TrackFX_GetCount(trk)
+    tc = reaper.TrackFX_GetCount(tr)
     num_fx_after_i = tc - index
   end
 end

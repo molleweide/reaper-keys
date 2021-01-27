@@ -4,7 +4,7 @@ local RS_TrObj = require('SYNTAX.lib.track_obj')
 local class_conf = require('SYNTAX.config.config').classes
 
 local reaper_utils = require('custom_actions.utils')
-local util = require('SYNTAX.lib.util')
+local util = require('SYNTAX.lib.util') -- rename to sxutil
 -- local fx_util = require('SYNTAX.lib.fx_util')
 local fx_util = require('library.fx')
 
@@ -69,15 +69,18 @@ function fx.applyConfFxToChildObj(child_obj, proll_start_idx, opt_type) -- chang
       if RSFX_LIST[RSFX_IDX].code ~= nil then
         if old_has_div then
           if not rsfx_str_match then -- missmatch
-            util.replaceFxAtIndex(child_obj, RSFX_LIST[RSFX_IDX].search_str, new_fx_chain_idx) -- after existing
+            local tr = reaper.GetTrack(0, child_obj.trackIndex)
+            util.replaceFxAtIndex(tr, RSFX_LIST[RSFX_IDX].search_str, new_fx_chain_idx) -- after existing
           end
         else -- prev not pre, but still pre syntax > insert at end of pre
-          fx_util.insertFxAtIndex(child_obj, RSFX_LIST[RSFX_IDX].search_str, new_fx_chain_idx) -- after existing
+          -- local tr = reaper.GetTrack(0, child_obj.trackIndex)
+          fx_util.insertFxAtIndex(util.gt(child_obj), RSFX_LIST[RSFX_IDX].search_str, new_fx_chain_idx) -- after existing
         end
         rs_fx_pre_count = new_fx_chain_idx + 1
       else
         if old_has_div then
-          util.removeFxAtIndex(child_obj, new_fx_chain_idx)
+          local tr = reaper.GetTrack(0, child_obj.trackIndex)
+          util.removeFxAtIndex(tr, new_fx_chain_idx)
         end
       end -- A, then B,C
 
@@ -103,7 +106,8 @@ function fx.applyConfFxToChildObj(child_obj, proll_start_idx, opt_type) -- chang
         end
       end
       if old_has_div then
-        fx_util.removeFxAtIndex(child_obj, new_fx_chain_idx) -- don't increment index if we remove
+        local tr = reaper.GetTrack(0, child_obj.trackIndex)
+        fx_util.removeFxAtIndex(tr, new_fx_chain_idx) -- don't increment index if we remove
         -- log.user('rm excess pre')
       else
         new_fx_chain_idx = new_fx_chain_idx + 1

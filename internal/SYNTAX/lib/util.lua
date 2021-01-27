@@ -4,6 +4,11 @@ local log = require('utils.log')
 
 local util = {}
 
+function util.gt(child_obj)
+  local tr = reaper.GetTrack(0, child_obj.trackIndex)
+  return tr
+end
+
 function util.setClassTrackInfo(class_conf, trk_obj)
     -- local trk = reaper.GetTrack(0,trk_obj.trackIndex)
     local trk, i = reaper_utils.getTrackByGUID(trk_obj.guid)
