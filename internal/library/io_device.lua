@@ -9,37 +9,7 @@ io_device = {}
 --    on start up look for midi devices / audio devices and
 --    enable the ones I prefer
 
---  TODO
---
---  SEARCH STRINGS
---
---  1. library fx > remove child objects !!!!!! only use `tr`
---
---    this should be super easy actually
---
---  2. update my fx functions to account for rec/input fx.
---      use a bool flag function param
---
---  3. use my already existing functions
---      >>> create custom command for adding my MIDI plugin
---      loop over input fx
---        is there an fx with same name as I have specified `REAPER_KEYS_MIDI_PRE_PROCESSOR`
---          create
---          else
---          check is value is different > update
---
---    trackfx_
---
---   refresh memory how do I add effects in syntax??
---
---    track input effects chain
---      check if has PLUGIN
---        true    ->  device_param != argument -> set device AND default (first) mode
---        false   ->  add plugin -> set device AND default (first) mode
---
-
 function setMidiInForSingleTrack(tr, chan, dev_name)
-
   if not tr then return end
   if not chan then chan = 0 end
   if not dev_name then dev_name = 'Virtual Midi Keyboard' end -- config.default_midi_device

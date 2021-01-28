@@ -1,5 +1,6 @@
 local log = require('utils.log')
 local format = require('utils.format')
+local fx = require('library.fx')
 -- local routing = require('definitions.routing')
 
 local custom_actions = {}
@@ -75,14 +76,59 @@ function custom_actions.changeNamesOfSelectedTracks()
   end
 end
 
--- how can I make this action work with movement in reaper??
-function custom_actions.hookUpMidiRouter()
-  -- connect router to selected track I want to record to.
-  -- if name of selected is midi_router DONT connect.
-  --
-  local tr = reaper.GetSelectedTrack(0, 0)
-  local _, name = reaper.GetTrackName(tr, "")
-  log.user(name)
+function custom_actions.setupMidiInputPreProcessorOnSelTrks()
+  for i = 1, reaper.CountSelectedTracks(0) do
+    local tr = reaper.GetSelectedTrack(0,i-1)
+    local _, name = reaper.GetTrackName(tr, "")
+    -- log.user('attempting to setup jsfx for track name: ' .. name)
+
+    local zeroth_idx_name = fx.getSetTrackFxNameByFxChainIndex(tr,0)
+    if zeroth_idx_name == 'RK_MIDI_PRE_PROCESSOR' then
+      log.user('RK_MIDI')
+
+      -- TODO
+      --
+      -- get recFX params > might require a new statechunk function `getFXParamValue`
+      --    compare params > update if difference
+
+
+
+      -- how do I get the device for selected track?
+
+
+      local list_of_devices = {
+        ''
+      }
+
+
+
+      -- set device
+      reaper.TrackFX_SetParam(
+        tr,
+        0,
+        p,  -- param
+        v   -- valu
+        )
+
+      -- set mode
+      reaper.TrackFX_SetParam(
+        tr,
+        0,
+        p,  -- param
+        v   -- valu
+        )
+
+    else
+      log.user('!RK_MIDI')
+      local fx_str = '???' -- TODO
+      fx.insertFxAtIndex(tr, fx_str, 0, true)
+      fx.getSetTrackFxNameByFxChainIndex(tr,0, 'RK_MIDI_PRE_PROCESSOR', true)
+
+    end
+
+  end
+
+
 end
 
 return custom_actions

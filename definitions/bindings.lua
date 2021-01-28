@@ -32,6 +32,7 @@ return {
           ["c"] = "LogWhatever",
           ["C"] = "CloseReaConsole",
           ["f"] = "FuzzyFx",
+          ["l"] = "LogLastTouchFxParams",
           ["mq"] = "TrackInSet_MIDI_QMK",
           ["mg"] = "TrackInSet_MIDI_GRAND_ROLAND",
           ["mv"] = "TrackInSet_MIDI_VIRTUAL",

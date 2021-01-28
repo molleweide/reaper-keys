@@ -9,6 +9,8 @@ local custom = require('custom_actions')
 -- provides custom functions which make use of the reaper api
 -- search for 'custom' in the default actions file to see examples
 
+local dev = require('utils.dev')
+
 
 local syntax = require('SYNTAX.actions')
 
@@ -19,15 +21,15 @@ local syntax = require('SYNTAX.actions')
 -- simple verbs are usually operators, such as 'change'
 -- longer verbs are usually commands
 
+
 return {
   FuzzyFx = "_RSd7bf7022d92114682d354e90dbe8aef580a5ef5c",
   ApplyConfigs = syntax.applyConfigs,
-  TrackInSet_MIDI_QMK = lib.io_device.setInputTo_MIDI_QMK,
-  TrackInSet_MIDI_GRAND_ROLAND = lib.io_device.setInputTo_MIDI_GRAND_ROLAND,
-  TrackInSet_MIDI_VIRTUAL = lib.io_device.setInputTo_MIDI_VIRTUAL,
-  TrackInSet_MIDI_DEFAULT = lib.io_device.setInputTo_MIDI_DEFAULT,
-
-  
+  LogLastTouchFxParams = dev.logLastTouchedFxParams,
+  TrackInSet_MIDI_QMK = {lib.io_device.setInputTo_MIDI_QMK, custom.setupMidiInputPreProcessor},
+  TrackInSet_MIDI_GRAND_ROLAND = {lib.io_device.setInputTo_MIDI_GRAND_ROLAND, custom.setupMidiInputPreProcessor},
+  TrackInSet_MIDI_VIRTUAL = {lib.io_device.setInputTo_MIDI_VIRTUAL, custom.setupMidiInputPreProcessor},
+  TrackInSet_MIDI_DEFAULT = {lib.io_device.setInputTo_MIDI_DEFAULT, custom.setupMidiInputPreProcessor},
   gCut = syntax.gcut,
   gPut = syntax.gput,
   gYank = syntax.gyank,
