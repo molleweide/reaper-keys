@@ -128,11 +128,12 @@ end
 
 
 function custom_actions.setupMidiInputPreProcessorOnSelTrks()
+  --log.clear()
   for i = 1, reaper.CountSelectedTracks(0) do
     local tr = reaper.GetSelectedTrack(0,i-1)
     local _, name = reaper.GetTrackName(tr, "")
 
-    local zeroth_idx_name = fx.getSetTrackFxNameByFxChainIndex(tr,0) -- TODO rec fx
+    local zeroth_idx_name = fx.getSetTrackFxNameByFxChainIndex(tr, 0, true) -- TODO rec fx
     if zeroth_idx_name == 'RK_MIDI_PRE_PROCESSOR' then
       log.user('RK_MIDI')
 
@@ -148,7 +149,7 @@ function custom_actions.setupMidiInputPreProcessorOnSelTrks()
       -- INSERT MIDI PRE PROCESSOR JSFX
       local fx_str = 'mid_main.jsfx'
       fx.insertFxAtIndex(tr, fx_str, 0, true)
-      fx.getSetTrackFxNameByFxChainIndex(tr,0, 'RK_MIDI_PRE_PROCESSOR', true)
+      fx.getSetTrackFxNameByFxChainIndex(tr,0, true, 'RK_MIDI_PRE_PROCESSOR')
 
       updateMidiPreProcessorByInputDevice(tr)
     end

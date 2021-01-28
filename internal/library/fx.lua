@@ -99,7 +99,7 @@ end
 
 
 -- TODO is_rec_fx needs to come before newName
-function fx_util.getSetTrackFxNameByFxChainIndex(tr,idx_fx,newName, is_rec_fx)
+function fx_util.getSetTrackFxNameByFxChainIndex(tr,idx_fx,is_rec_fx, newName)
   local strT, found, slot = {}
   local Pcall
   local FXGUID

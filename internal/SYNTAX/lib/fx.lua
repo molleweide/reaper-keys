@@ -29,7 +29,7 @@ function fx.applyConfFxToChildObj(child_obj, proll_start_idx, opt_type) -- chang
     if tr_has_range and rsfx_use_spawn then spawn_num = child_obj.options.nr end
 
     for i1=0, spawn_num - 1 do -- syntax spawn num =============================
-      local old_fx_name   = fx_util.getSetTrackFxNameByFxChainIndex(tr, new_fx_chain_idx)
+      local old_fx_name   = fx_util.getSetTrackFxNameByFxChainIndex(tr, new_fx_chain_idx, false)
       -- log.user('##chob/old_fx_name: ' .. child_obj.name .. ' | '.. tostring(old_fx_name))
       local old_has_div = false
       if type(old_fx_name) == 'string' then
@@ -85,7 +85,7 @@ function fx.applyConfFxToChildObj(child_obj, proll_start_idx, opt_type) -- chang
       end -- A, then B,C
 
       if not tr_name_match or not rsfx_str_match then -- update name
-        fx_util.getSetTrackFxNameByFxChainIndex(tr, new_fx_chain_idx , new_fx_name) -- update fxc name
+        fx_util.getSetTrackFxNameByFxChainIndex(tr, new_fx_chain_idx, false, new_fx_name) -- update fxc name
       end
 
       for k,rsfx_parm in pairs(RSFX_LIST[RSFX_IDX].fx_params) do
@@ -98,7 +98,7 @@ function fx.applyConfFxToChildObj(child_obj, proll_start_idx, opt_type) -- chang
   -- post syntax fx --
   if 0 < old_fx_chain_count - new_fx_chain_idx then
     for p1=new_fx_chain_idx, old_fx_chain_count - 1 do
-      local ofxn = fx_util.getSetTrackFxNameByFxChainIndex(tr, new_fx_chain_idx)
+      local ofxn = fx_util.getSetTrackFxNameByFxChainIndex(tr, new_fx_chain_idx, false)
       local old_has_div = false
       if type(ofxn) == 'string' then
         if ofxn:match('_A_') then
