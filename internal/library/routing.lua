@@ -5,52 +5,11 @@ local routing_defaults = require('definitions.routing')
 
 local routing = {}
 
--- ## todo
+-- ## TODO
 --
---    function
+--      put internal functions on top
 --
---      put all track send info into table that is easy to use func.
---        getAllTrackSendParams(tr)
---          local tr_send_params = {}
---          tr_send_params["param_name"] =
---          return tr_send_params
---        end
---
---
---    >>>> how can I log and learn intuition for the channel based params
---    i need to understand this so that it becomes easy to do this.
---    otherwise I wwill always be a little confused.
---
---    5       4     3     2     1
---
---    16-32   8-15  4-8   2-3   0-1
---
---
---
---    1. clean up code as much as possible.
---
---        - needs to be renamed into syntaxAddMidiSend so that I don't mix things up
---        - put all vars on top.
---        - what can be put in configs?
---
---    2. fix rm usage of syntax objects inside of createMidiSends.
---      otherwise it becomes locked to syntax and not modular.
---
---    3.
---
-
---------------------------------------------------
-
-  -- 0   = 0
-  -- 5   = 32
-  -- 3   = 8
-  -- 6   = 64
-  -- 7   = 128
-  -- 8   = 256
-  -- 9   = 512
-  -- 10  = 1024
-  -- 11  = 2048
-  -- 12  = 4096
+--      write flags descriptions
 
 local TRACK_INFO_AUDIO_SRC_DISABLED = -1
 local TRACK_INFO_MIDIFLAGS_ALL_CHANS = 0
@@ -87,45 +46,36 @@ function routing.sidechainSelTrkToGhostKickTrack()
   sidechainToTrackWithNameString('ghostKick')
 end
 
---  !!! needs to be renamed into syntaxAddMidiSend so that I don't mix things up
 --  - add default source channel = all or 1?
-function routing.createSend(src_obj,dest_obj,dest_chan)
-
-  -- these functions should recieve the tracks I want to make sends for.
-  local src_obj_trk, src_idx  =  reaper_utils.getTrackByGUID(src_obj.guid)
-  local dest_obj_trk, dst_idx = reaper_utils.getTrackByGUID(dest_obj.guid)
-
-  local midi_send = reaper.CreateTrackSend(src_obj_trk, dest_obj_trk) -- create send; return sendidx for reference
-
-  local new_midi_flags = create_send_flags(0, dest_chan) -- create new incremented midi channel
-
-  reaper.SetTrackSendInfo_Value(src_obj_trk, TRACK_INFO_SEND_CATEGORY, midi_send, "I_MIDIFLAGS", new_midi_flags) -- set midi_flags on reference
-  reaper.SetTrackSendInfo_Value(src_obj_trk, TRACK_INFO_SEND_CATEGORY, midi_send, "I_SRCCHAN", TRACK_INFO_AUDIO_SRC_DISABLED)
+function routing.createSend(src_obj_trk,dest_obj_trk,dest_chan)
+  local midi_send_id = reaper.CreateTrackSend(src_obj_trk, dest_obj_trk) -- create send; return sendidx for reference
+  local new_midi_flags = create_send_flags(0, dest_chan)
+  reaper.SetTrackSendInfo_Value(src_obj_trk, TRACK_INFO_SEND_CATEGORY, midi_send_id, "I_MIDIFLAGS", new_midi_flags) -- set midi_flags on reference
+  reaper.SetTrackSendInfo_Value(src_obj_trk, TRACK_INFO_SEND_CATEGORY, midi_send_id, "I_SRCCHAN", TRACK_INFO_AUDIO_SRC_DISABLED)
 end
 
 
-function routing.removeAllSends(trk_obj)
-  local tr, tr_idx = reaper_utils.getTrackByGUID(trk_obj.guid)--reaper.GetTrack(0,trk_obj.trackIndex)
+function routing.removeAllSends(tr)
   local num_sends = reaper.GetTrackNumSends(tr, TRACK_INFO_SEND_CATEGORY)
-  -- log.user('rm all s: ' .. trk_obj.trackIndex .. '|' .. trk_obj.name .. ' | num_s: ' .. num_sends)
-
   if num_sends == 0 then return end
-
-  while(num_sends > 0)
-    do
-      for si=0, num_sends-1 do
-        local rm = reaper.RemoveTrackSend(tr, TRACK_INFO_SEND_CATEGORY, si)
-        --log.user('rm si: ' .. si ..', ' .. tostring(rm))
-      end
-      num_sends = reaper.GetTrackNumSends(tr, TRACK_INFO_SEND_CATEGORY)
+  while(num_sends > 0) do
+    for si=0, num_sends-1 do
+      local rm = reaper.RemoveTrackSend(tr, TRACK_INFO_SEND_CATEGORY, si)
     end
-    --log.user('<DONE!>')
-    return true
+    num_sends = reaper.GetTrackNumSends(tr, TRACK_INFO_SEND_CATEGORY)
+  end
+  return true
 end
 
 
 ------------------------------------------------------------------------
--- internal
+
+-- TODO
+--
+--  write description of what happens in these functions
+--
+--
+--  >>> convert channels into midi byte data
 
 function get_send_flags_dest(flags)
   return flags >> 5
@@ -169,18 +119,23 @@ function addRoutes(route_params, src_t, dest_t)
     --   local src_tr =  BR_GetMediaTrackByGUID( 0, src_t[i] )
     --   local src_tr_ch = GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
     local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
+
+
+    -- mv util track.lua > `module.getTrackNumChan()`
     local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
 
     --   for i = 1, #dest_t do
     -- !!! only one dest track possible !!!
 
     -- increase ch up to src track
+    -- >>> TODO refactor into function??
     local dest_tr_ch = reaper.GetMediaTrackInfo_Value( dest_tr, 'I_NCHAN')
     if dest_tr_ch < src_tr_ch then reaper.SetMediaTrackInfo_Value( dest_tr, 'I_NCHAN', src_tr_ch ) end
 
     log.user(src_tr_ch, dest_tr_ch)
 
     -- check for existing sends
+    -- TODO refactor into function
     local is_exist = false
     for i =1,  reaper.GetTrackNumSends( src_tr, 0 ) do
       local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, 0, i-1, 1 )
@@ -188,6 +143,7 @@ function addRoutes(route_params, src_t, dest_t)
     end
 
     -- create send
+    -- TODO refactor into function
     if not is_exist then
 
       local new_id = reaper.CreateTrackSend( src_tr, dest_tr )
@@ -211,7 +167,7 @@ end
 function doesRouteAlreadyExist()
 end
 
--- mv util
+-- TODO mv into util
 function GetDestTrGUID()
   --   local t = {}
   --   local _, sendidx = reaper.GetUserInputs("Send track dest idx:", 1, "send idx", "")
@@ -220,7 +176,7 @@ function GetDestTrGUID()
   --   return t
 end
 
--- mv util
+-- TODO mv into util
 function GetSrcTrGUID()
   local t = {}
   for i = 1, reaper.CountSelectedTracks(0) do
