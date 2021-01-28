@@ -96,9 +96,6 @@ function fx_util.setParamForFxAtIndex(tr, fx_idx, param, value, is_rec_fx)
   end
 end
 
-
-
--- TODO is_rec_fx needs to come before newName
 function fx_util.getSetTrackFxNameByFxChainIndex(tr,idx_fx,is_rec_fx, newName)
   local strT, found, slot = {}
   local Pcall

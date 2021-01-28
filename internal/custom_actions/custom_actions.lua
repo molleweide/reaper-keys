@@ -101,28 +101,37 @@ function updateMidiPreProcessorByInputDevice(tr)
   if enabled_device == nil then return end
 
 
+  -- // DEVICES ..............
+  -- DEVICE_VIRTUAL = 0;
+  -- DEVICE_QMK = 1;
+  -- DEVICE_PIANO_FULL = 2;
+
+  -- // DEVICE MODES..........
+  -- MODE_VIRTUAL_KEYBOARD = 0;
+  -- MODE_QMK_SINGLE       = 1;
+  -- MODE_QMK_FULL         = 2;
+  -- MODE_QMK_SPLIT        = 3;
+  -- MODE_QMK_SPLIT_CH     = 4;
+  -- MODE_QMK_KIT          = 5;
+  -- MODE_PIANO_FULL       = 6;
+  -- MODE_PIANO_FULL_SPLIT = 7;
+
   if enabled_device == 'Virtual Midi Keyboard' then
     log.user('using Virtual')
-    --    -- -- set device
-    --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
-    --    -- -- set mode
-    --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
+    fx.setParamForFxAtIndex(tr, 0, 1, 0, true) -- set device
+    fx.setParamForFxAtIndex(tr, 0, 2, 0, true) -- set mode
   end
 
   if enabled_device == 'Ergodox EZ' then
     log.user('using EZ')
-    --    -- -- set device
-    --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
-    --    -- -- set mode
-    --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
+    fx.setParamForFxAtIndex(tr, 0, 1, 1, true) -- set device
+    fx.setParamForFxAtIndex(tr, 0, 2, 1, true) -- set mode
   end
 
   if enabled_device == '- port 1' then
     log.user('using GRAND')
-    --    -- -- set device
-    --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
-    --    -- -- set mode
-    --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
+    fx.setParamForFxAtIndex(tr, 0, 1, 2, true) -- set device
+    fx.setParamForFxAtIndex(tr, 0, 2, 6, true) -- set mode
   end
 end
 
