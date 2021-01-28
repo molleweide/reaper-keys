@@ -1,7 +1,6 @@
 local log = require('utils.log')
 local format = require('utils.format')
 local fx = require('library.fx')
--- local routing = require('definitions.routing')
 
 local custom_actions = {}
 
@@ -76,9 +75,6 @@ function custom_actions.changeNamesOfSelectedTracks()
   end
 end
 
-
-
-
 function updateMidiPreProcessorByInputDevice(tr)
   local tr_rec_in = reaper.GetMediaTrackInfo_Value(tr, 'I_RECINPUT')
   local midi_device_offset = 4096
@@ -99,37 +95,17 @@ function updateMidiPreProcessorByInputDevice(tr)
   end
 
   if enabled_device == nil then return end
-
-
-  -- // DEVICES ..............
-  -- DEVICE_VIRTUAL = 0;
-  -- DEVICE_QMK = 1;
-  -- DEVICE_PIANO_FULL = 2;
-
-  -- // DEVICE MODES..........
-  -- MODE_VIRTUAL_KEYBOARD = 0;
-  -- MODE_QMK_SINGLE       = 1;
-  -- MODE_QMK_FULL         = 2;
-  -- MODE_QMK_SPLIT        = 3;
-  -- MODE_QMK_SPLIT_CH     = 4;
-  -- MODE_QMK_KIT          = 5;
-  -- MODE_PIANO_FULL       = 6;
-  -- MODE_PIANO_FULL_SPLIT = 7;
-
   if enabled_device == 'Virtual Midi Keyboard' then
-    log.user('using Virtual')
     fx.setParamForFxAtIndex(tr, 0, 1, 0, true) -- set device
     fx.setParamForFxAtIndex(tr, 0, 2, 0, true) -- set mode
   end
 
   if enabled_device == 'Ergodox EZ' then
-    log.user('using EZ')
     fx.setParamForFxAtIndex(tr, 0, 1, 1, true) -- set device
     fx.setParamForFxAtIndex(tr, 0, 2, 1, true) -- set mode
   end
 
   if enabled_device == '- port 1' then
-    log.user('using GRAND')
     fx.setParamForFxAtIndex(tr, 0, 1, 2, true) -- set device
     fx.setParamForFxAtIndex(tr, 0, 2, 6, true) -- set mode
   end
@@ -137,35 +113,19 @@ end
 
 
 function custom_actions.setupMidiInputPreProcessorOnSelTrks()
-  --log.clear()
   for i = 1, reaper.CountSelectedTracks(0) do
     local tr = reaper.GetSelectedTrack(0,i-1)
     local _, name = reaper.GetTrackName(tr, "")
-
     local zeroth_idx_name = fx.getSetTrackFxNameByFxChainIndex(tr, 0, true) -- TODO rec fx
     if zeroth_idx_name == 'RK_MIDI_PRE_PROCESSOR' then
-      log.user('RK_MIDI')
-
-      -- TODO
-      --
-      -- get recFX params > might require a new statechunk function `getFXParamValue`
-      --    compare params > update if difference
-
       updateMidiPreProcessorByInputDevice(tr)
     else
-      log.user('!RK_MIDI')
-
-      -- INSERT MIDI PRE PROCESSOR JSFX
-      local fx_str = 'mid_main.jsfx'
+      local fx_str = 'mid_main.jsfx' -- INSERT MIDI PRE PROCESSOR JSFX
       fx.insertFxAtIndex(tr, fx_str, 0, true)
       fx.getSetTrackFxNameByFxChainIndex(tr,0, true, 'RK_MIDI_PRE_PROCESSOR')
-
       updateMidiPreProcessorByInputDevice(tr)
     end
-
   end
-
-
 end
 
 return custom_actions
