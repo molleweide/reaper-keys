@@ -13,11 +13,8 @@ function setMidiInForSingleTrack(tr, chan, dev_name)
   if not tr then return end
   if not chan then chan = 0 end
   if not dev_name then dev_name = 'Virtual Midi Keyboard' end -- config.default_midi_device
-
-  -- log.user('\n\nMIDI DEVICE SET: ' .. dev_name .. '\n')
   for i = 0, 64 do
     local retval, nameout = reaper.GetMIDIInputName( i, '' )
-    -- if nameout ~= '' then log.user('\t'..nameout) end
     if nameout:lower():match(dev_name:lower()) then dev_id = i end
   end
 
@@ -25,24 +22,9 @@ function setMidiInForSingleTrack(tr, chan, dev_name)
     -- log.user('device not found')
     return
   end
+
   val = 4096+ chan + ( dev_id << 5  )
 
-  --  I_RECINPUT : int * : record input,
-  --
-  --      <0=no input.
-  --
-  --      if 4096 set,
-  --        input is MIDI and low 5 bits represent channel (0=all, 1-16=only chan),
-  --        next 6 bits represent physical input (63=all, 62=VKB).
-  --
-  --      If 4096 is not set,
-  --        low 10 bits (0..1023) are input start channel (ReaRoute/Loopback start at 512).
-  --
-  --      If 2048 is set,
-  --        input is multichannel input (using track channel count),
-  --
-  --      or if 1024 is set,
-  --        input is stereo input, otherwise input is mono.
   reaper.SetMediaTrackInfo_Value( tr, 'I_RECINPUT',val)
 end
 

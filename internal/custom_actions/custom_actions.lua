@@ -80,67 +80,50 @@ end
 
 
 function updateMidiPreProcessorByInputDevice(tr)
-
-  -- TODO
-  --
-  --
-  -- 1.   if 4096 midi input
-  -- 2.   extract dev_id input
-  -- 3.   get midiinput name by dev_id
-
-  -- I_RECINPUT : int * : record input,
-  --
-  --    if 4096 set, input is
-  --    MIDI and low 5 bits represent channel (0=all, 1-16=only chan), next 6
-  --    bits represent physical input (63=all, 62=VKB).
-  --
-  --    If 4096 is not set,
-  --    low 10 bits (0..1023) are input start channel (ReaRoute/Loopback start
-  --    at 512).
-
   local tr_rec_in = reaper.GetMediaTrackInfo_Value(tr, 'I_RECINPUT')
-
-  -- val = 4096+ chan + ( dev_id << 5  ) -- chan is regular int
-  -- local dev_id =
-
+  local midi_device_offset = 4096
+  local device_mask = 2016
+  local dev_id = ((tr_rec_in - midi_device_offset) & device_mask) >> 5
   local retval, nameout = reaper.GetMIDIInputName( dev_id, '' )
 
+  -- put into my configs ??
+  local device_search_strings = {
+    'Virtual Midi Keyboard',
+    'Ergodox EZ',
+    '- port 1' -- tmp roland RD grand
+  }
 
-  -- TODO
-  --
-  --  loop over my list of available pre processor devices
-  --    if match
-  --      sep fx param to
+  local enabled_device
+  for k,device_str in pairs(device_search_strings) do
+    if nameout:lower():match(device_str:lower()) then enabled_device = device_str end
+  end
 
-  -- for i = 0, 64 do
-  --    if nameout:lower():match(LOOP_MY_DEVICE_NAMES:lower()) then
-  --      enabled_device = LOOP_MY_DEVICE_NAMES
-  --    end
-  --
-  --  if virtual
-  --    -- -- set device
-  --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
-  --    -- -- set mode
-  --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
-  --
-  --  if qmk
-  --    -- -- set device
-  --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
-  --    -- -- set mode
-  --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
-  --
-  --  if grand
-  --    -- -- set device
-  --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
-  --    -- -- set mode
-  --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
-  --
-  -- end
+  if enabled_device == nil then return end
 
-  -- if not dev_id then
-  --   -- log.user('device not found')
-  --   return
-  -- end
+
+  if enabled_device == 'Virtual Midi Keyboard' then
+    log.user('using Virtual')
+    --    -- -- set device
+    --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
+    --    -- -- set mode
+    --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
+  end
+
+  if enabled_device == 'Ergodox EZ' then
+    log.user('using EZ')
+    --    -- -- set device
+    --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
+    --    -- -- set mode
+    --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
+  end
+
+  if enabled_device == '- port 1' then
+    log.user('using GRAND')
+    --    -- -- set device
+    --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
+    --    -- -- set mode
+    --    -- fx.setParamForFxAtIndex(tr, 0, 0, 0)
+  end
 end
 
 
@@ -149,7 +132,7 @@ function custom_actions.setupMidiInputPreProcessorOnSelTrks()
     local tr = reaper.GetSelectedTrack(0,i-1)
     local _, name = reaper.GetTrackName(tr, "")
 
-    local zeroth_idx_name = fx.getSetTrackFxNameByFxChainIndex(tr,0,) -- TODO rec fx
+    local zeroth_idx_name = fx.getSetTrackFxNameByFxChainIndex(tr,0) -- TODO rec fx
     if zeroth_idx_name == 'RK_MIDI_PRE_PROCESSOR' then
       log.user('RK_MIDI')
 
@@ -163,7 +146,7 @@ function custom_actions.setupMidiInputPreProcessorOnSelTrks()
       log.user('!RK_MIDI')
 
       -- INSERT MIDI PRE PROCESSOR JSFX
-      local fx_str = 'mid_main'
+      local fx_str = 'mid_main.jsfx'
       fx.insertFxAtIndex(tr, fx_str, 0, true)
       fx.getSetTrackFxNameByFxChainIndex(tr,0, 'RK_MIDI_PRE_PROCESSOR', true)
 
