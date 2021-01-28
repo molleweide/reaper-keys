@@ -42,7 +42,7 @@ function actions.applyConfigs()
 
             local lvl2_tr = utils.getTrackByGUID(LVL2_obj.guid)
             local tr = utils.getTrackByGUID(split_obj.guid)
-            routing.createSend(lvl2_tr, tr, l)
+            routing.createMIDISend(lvl2_tr, tr, l)
           end
         end
       end -- LEVEL 3
@@ -55,7 +55,7 @@ function actions.applyConfigs()
 
         local lvl2_tr = utils.getTrackByGUID(LVL2_obj.guid)
         local tr = utils.getTrackByGUID(trk_obj.guid)
-        routing.createSend(lvl2_tr, tr, 0) -- 0 = all ch
+        routing.createMIDISend(lvl2_tr, tr, 0) -- 0 = all ch
 
         fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
         count_w_range = midi.updatePianoRoll(LVL2_obj, trk_obj, count_w_range)
