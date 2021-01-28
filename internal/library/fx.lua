@@ -88,8 +88,17 @@ function fx_util.removeAllFXAfterIndex(tr, index)
   end
 end
 
+function fx_util.setParamForFxAtIndex(tr, fx_idx, param, value, is_rec_fx)
+  if is_rec_fx then
+      reaper.TrackFX_SetParam(tr, REC_FX + fx_idx, param, value)
+  else
+      reaper.TrackFX_SetParam(tr, fx_idx, param, value)
+  end
+end
 
---  descr: newName == nil >>> only return name
+
+
+-- TODO is_rec_fx needs to come before newName
 function fx_util.getSetTrackFxNameByFxChainIndex(tr,idx_fx,newName, is_rec_fx)
   local strT, found, slot = {}
   local Pcall
