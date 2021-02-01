@@ -79,7 +79,6 @@ function create_send_flags(src_ch, dest_ch) return (dest_ch << 5) | src_ch end
 
 function isSel() return reaper.CountSelectedTracks(0) ~= 0 end
 
--- TODO rename
 function routing.create()
   log.clear()
   log.user('createRouteFromUserInput')
@@ -127,7 +126,7 @@ function routing.removeAll(tr, kind)
   log.user('removeAll')
   local target_t = {}
   target_t[#target_t] = tr
-  if not doubleParen then target_t = GetSrcTrGUID() end -- get table of src tracks
+  if not doubleParen then target_t = ru.getSelectedTracksGUIDs() end -- get table of src tracks
 
   log.user(format.block(target_t))
   for i = 1, #target_t do
@@ -194,7 +193,9 @@ function createTheActualRoute(route_params, src_tr, src_tr_ch, dest_tr, dest_tr_
   end
 end
 
--- TODO rename to prepare
+--------------------------------------------------
+
+-- if no destination >>> return
 function prepareRouteComponents(route_params)
   log.user('prepareRouteComponents')
 
@@ -202,13 +203,14 @@ function prepareRouteComponents(route_params)
 
   -- if not eg. input was (src)(dest) use sel as fallback
   local doubleParen = false
-  if not doubleParen then src_t = GetSrcTrGUID() end -- get table of src tracks
+  if not doubleParen then src_t = ru.getSelectedTracksGUIDs() end -- get table of src tracks
 
   -- log.user(format.block(route_params))
 
   if route_params["d"].param_value == nil then return end
   local dest_tr = reaper.GetTrack(0, math.floor(route_params["d"].param_value-1))
   local ret, dest_name = reaper.GetTrackName(dest_tr)
+  log.user('>>> confirm route creation y/n')
   local help_str = "`"..dest_name .. "` (y/n)"
   local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
   if answer ~= "y" then return end
@@ -227,46 +229,82 @@ end
 function doesRouteAlreadyExist()
 end
 
--- this would be if I wanted to send tracks in bulk?
--- ooh! or if I want to send one to many. That actually makes a lot of sense.
-function GetDestTrGUID()
-  log.user('GetDestTrGuids')
-  --   local t = {}
-  --   local _, sendidx = reaper.GetUserInputs("Send track dest idx:", 1, "send idx", "")
-  --   local dest_track = reaper.GetTrack(0, sendidx-1)
-  --   if dest_track  then t[1] = reaper.GetTrackGUID( dest_track  ) end
-  --   return t
-end
+-------------------------------------------------
 
--- TODO
--- rename >>> getSelectedTrackGUIDs()
-function GetSrcTrGUID()
-  log.user('GetSrcTrGuid')
+function getMatchedTrackGUIDs(search_name)
+  if not search_name then return nil end
   local t = {}
-  for i = 1, reaper.CountSelectedTracks(0) do
-    local tr = reaper.GetSelectedTrack(0,i-1)
-    t[#t+1] = reaper.GetTrackGUID( tr )
+  for i=0, reaper.CountTracks(0) - 1 do
+    local tr = reaper.GetTrack(0, i)
+    local _, current_name = reaper.GetTrackName(tr)
+    if current_name:match(search_name) then
+      t[#t+1] = reaper.GetTrackGUID( tr )
+    end
   end
   return t
 end
 
 -- TODO
 --
---  - use gmatch
+--  - assign search results to new route params
 --
---  - look for ()s
+--  - inside prepareRouteComponents
+--
+--    if src/dest search guids are more than one
+--
+--      prompt user ?????
+--
+--        n = quit
+--        y = go ahead
 
 function extractSendParamsFromUserInput(str)
   log.user('extractSendParamsFromUserInput')
   local new_route_params = routing_defaults.default_params
+  local pcount = 0
+  local pSrc
+  local pDest
+  for p in str:gmatch "%b()" do
+    pcount = pcount + 1
+    -- remove enclosing `()`
+    if pcount == 1 then pDest = str.sub(p, 2, str.len(p) - 1) end
+    if pcount == 2 then
+      pSrc = pDest
+      pDest = str.sub(p, 2, str.len(p) - 1)
+      break
+    end
+  end
+
+  for r in str:gmatch "%b()" do
+    str = str:gsub("%("..r.."%)", "")
+  end
+
+  log.user('STRING AFTER REMOVINT (): `' .. str .. '`')
+  log.user('\n\tP_SRC: ' .. tostring(pSrc).. '\n\tP_DEST: ' .. tostring(pDest))
+
+  local searched_src_guids = getMatchedTrackGUIDs(pSrc)
+  local searched_dest_guids = getMatchedTrackGUIDs(pDest)
+
+  log.user(#searched_src_guids, format.block(searched_src_guids))
+  log.user(#searched_dest_guids, format.block(searched_dest_guids))
+
+  -- TODO
+  --
+  --
+  -- add list of guids here
+
+
   for key, val in pairs(new_route_params) do
+    -- create uniq pattern for each config key
     local pattern = key .. "%d+%.?%d?%d?"
     local s, e = string.find(str, pattern)
+
     if s ~= nil and e ~= nil then
-      -- log.user('key: ' .. string.sub(str,s,s) .. ', val: ' .. string.sub(str,s+1,e))
+      log.user('\n\tkey: ' .. string.sub(str,s,s) .. ', val: ' .. string.sub(str,s+1,e) .. '\n')
       new_route_params[key].param_value = tonumber(string.sub(str,s+1,e))
     end
   end
+
+
 
   return new_route_params
 end

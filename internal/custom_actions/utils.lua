@@ -174,6 +174,16 @@ function utils.getSelectedTracks()
   return selected_tracks
 end
 
+function utils.getSelectedTracksGUIDs()
+  log.user('getSelectedTracksGUIDs')
+  local t = {}
+  for i = 1, reaper.CountSelectedTracks(0) do
+    local tr = reaper.GetSelectedTrack(0,i-1)
+    t[#t+1] = reaper.GetTrackGUID( tr )
+  end
+  return t
+end
+
 function utils.setTrackSelection(indices)
   local ScrollToSelectedTracks = 40913
   utils.unselectTracks()
