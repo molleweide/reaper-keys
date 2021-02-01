@@ -18,25 +18,6 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 
 -- ## TODO
 --
---    - gmatch extract search params
---
---    - add > look for `(<uniqueTrackName)`
---
---    - if two ()
---      use first as Source track guid
---      else use single () as dest_guid
---
---
---    3. log!!!!!!!!
---      log src data
---      log dest data
---      log required route info.
---        what do I want to do
---      log exists???
---
---    4. audio / midi
---
---
 --  ## RNDM
 --
 --    function checkForFeedback()
@@ -175,12 +156,23 @@ end
 --   return false
 -- end
 
+
+
 -- create track route by `routeparams`
+
+-- TODO
+--
+--    handle dest match case
+--
+--        i need to ignore / remove the `d` param
+
 function createTheActualRoute(route_params, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
   log.user('createTrackSend')
   local new_id = reaper.CreateTrackSend( src_tr, dest_tr )
+  log.user(format.block(route_params))
 
-  for _, p in pairs(route_params) do
+  for _, p in pairs(route_params.default_params) do
+    log.user(format.block(p))
     reaper.SetTrackSendInfo_Value( src_tr, 0, new_id, p.param_name, p.param_value)
 
     if p.param_name == 'I_SRCCHAN' then
@@ -198,17 +190,27 @@ end
 -- if no destination >>> return
 function prepareRouteComponents(route_params)
   log.user('prepareRouteComponents')
-
   local src_t
+  local dest_t
+  local dest_tr
 
-  -- if not eg. input was (src)(dest) use sel as fallback
-  local doubleParen = false
-  if not doubleParen then src_t = ru.getSelectedTracksGUIDs() end -- get table of src tracks
+  -- GET SRC TRACKS
+  local singleMatchedSource = #route_params.src_guids == 1
+  if not singleMatchedSource then
+    src_t = ru.getSelectedTracksGUIDs()
+  else
+    src_t = route_params.src_guids
+  end
 
-  -- log.user(format.block(route_params))
+  -- GET DEST TRACKS
+  local singleMatchedDest = #route_params.dest_guids == 1
+  if not singleMatchedDest then
+    if route_params.default_params["d"].param_value == nil then return end
+    dest_tr = reaper.GetTrack(0, math.floor(route_params.default_params["d"].param_value-1))
+  else
+    dest_tr = ru.getTrackByGUID(route_params.dest_guids[1])
+  end
 
-  if route_params["d"].param_value == nil then return end
-  local dest_tr = reaper.GetTrack(0, math.floor(route_params["d"].param_value-1))
   local ret, dest_name = reaper.GetTrackName(dest_tr)
   log.user('>>> confirm route creation y/n')
   local help_str = "`"..dest_name .. "` (y/n)"
@@ -244,22 +246,9 @@ function getMatchedTrackGUIDs(search_name)
   return t
 end
 
--- TODO
---
---  - assign search results to new route params
---
---  - inside prepareRouteComponents
---
---    if src/dest search guids are more than one
---
---      prompt user ?????
---
---        n = quit
---        y = go ahead
-
 function extractSendParamsFromUserInput(str)
   log.user('extractSendParamsFromUserInput')
-  local new_route_params = routing_defaults.default_params
+  local new_route_params = routing_defaults
   local pcount = 0
   local pSrc
   local pDest
@@ -273,38 +262,21 @@ function extractSendParamsFromUserInput(str)
       break
     end
   end
-
   for r in str:gmatch "%b()" do
     str = str:gsub("%("..r.."%)", "")
   end
-
-  log.user('STRING AFTER REMOVINT (): `' .. str .. '`')
-  log.user('\n\tP_SRC: ' .. tostring(pSrc).. '\n\tP_DEST: ' .. tostring(pDest))
-
-  local searched_src_guids = getMatchedTrackGUIDs(pSrc)
-  local searched_dest_guids = getMatchedTrackGUIDs(pDest)
-
-  log.user(#searched_src_guids, format.block(searched_src_guids))
-  log.user(#searched_dest_guids, format.block(searched_dest_guids))
-
-  -- TODO
-  --
-  --
-  -- add list of guids here
-
-
-  for key, val in pairs(new_route_params) do
+  routing_defaults['src_guids'] = getMatchedTrackGUIDs(pSrc)
+  routing_defaults['dest_guids'] = getMatchedTrackGUIDs(pDest)
+  for key, val in pairs(new_route_params.default_params) do
     -- create uniq pattern for each config key
     local pattern = key .. "%d+%.?%d?%d?"
     local s, e = string.find(str, pattern)
 
     if s ~= nil and e ~= nil then
       log.user('\n\tkey: ' .. string.sub(str,s,s) .. ', val: ' .. string.sub(str,s+1,e) .. '\n')
-      new_route_params[key].param_value = tonumber(string.sub(str,s+1,e))
+      new_route_params.default_params[key].param_value = tonumber(string.sub(str,s+1,e))
     end
   end
-
-
 
   return new_route_params
 end
