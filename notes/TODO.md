@@ -6,31 +6,33 @@
 
 - io_device >> the reason why no match for roland is because I need to escape chars, eg. `-`???!!!
 
-- create custom action for bypassing currently highlighted and active window fx.
+- add default route for syntax
 
-- collect all routing examples that make sense into a dir.
+* create custom action for bypassing currently highlighted and active window fx.
 
-- create definitions/defaults/fx.lua
+* collect all routing examples that make sense into a dir.
+
+* create definitions/defaults/fx.lua
   is there something basic that I can do with an fx mode.
 
-- routing.lua
+* routing.lua
 
   take code from mpl > finish the `checkItRouteExists()` func
 
-- segments
+* segments
 
-- virtual keyb > shouldn't be that hard!!
+* virtual keyb > shouldn't be that hard!!
 
-- midi
+* midi
 
   A new track fx mode would be ideal i think. So that I can use regular
   up down commands to navigate the fx list.
 
-* fx > config state > log touched parameter
+- fx > config state > log touched parameter
 
   very interesting config variable for ui dev
 
-* hide tracks?!
+- hide tracks?!
 
 ## QUESTIONS
 

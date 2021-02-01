@@ -18,17 +18,28 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 
 -- ## TODO
 --
---  ## RNDM
+--  - add number selection for source as well.
 --
+--  - prompt no tracks matched
+--
+--  - prompt if matched mult. tr
+--
+--  - create midi send
+--    need change >> how take in midi params?
+--
+--  - create midi and audio send in on command
+--
+--  - list src/dest in confirmation prompt
+--
+--  - update already existing sends
+--      mute/mono/stereo/
+--
+--        if SEND_IDX then update that if it exists
+--
+--
+--  ## RNDM
 --    function checkForFeedback()
 --      how do I handle this problem.
---
---    if two sets of closed ()() are used.
---      search for both names. src -> dest
---
---    SEARCH function > if return more that 1 for each
---      term >>> prompt are you intending to creat XYZ mult routes???
---
 
 -----------------------------------------------
 -- SAFETY FUNCTIONS
@@ -147,25 +158,7 @@ function incrementDestChanToSrc(dest_tr, src_tr_ch)
   return dest_tr_ch
 end
 
--- function checkIfSendExists(src_tr, dest_tr)
---   log.user('checkIfSendExists')
---   for i =1,  reaper.GetTrackNumSends( src_tr, 0 ) do
---     local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, 0, i-1, 1 )
---     if dest_tr_check == dest_tr then return true end
---   end
---   return false
--- end
-
-
-
 -- create track route by `routeparams`
-
--- TODO
---
---    handle dest match case
---
---        i need to ignore / remove the `d` param
-
 function createTheActualRoute(route_params, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
   log.user('createTrackSend')
   local new_id = reaper.CreateTrackSend( src_tr, dest_tr )

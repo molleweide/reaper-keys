@@ -12,10 +12,13 @@ return {
       param_name = 'I_SENDMODE',
       param_value = 3
     },
+
+    -- commented >>> always default to send
     -- ["k"] = {
     --   param_name = 'CATEGORY',
     --   param_value = 0, -- int, is <0 for receives, 0=sends, >0 for hardware outputs
     -- },
+
     -- ["i"] = {
     --   param_name = 'SEND_IDX',
     --   param_value = 0,
