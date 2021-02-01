@@ -2,11 +2,6 @@
 return {
     -- SetTrackSendInfo_Value below --------------
   default_params = {
-    ["d"] = {
-      description = 'DESTINATION TRACK INDEX | int required',
-      param_name  = 'DEST_TRKS',
-      param_value = nil -- int REQUIRED
-    },
     ["v"] = {
       description = 'VOLUME | double, 1.0 = +0dB',
       param_name = 'D_VOL',

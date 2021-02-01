@@ -194,13 +194,20 @@ function prepareRouteComponents(route_params)
   local dest_t
   local dest_tr
 
+  log.user(format.block(route_params))
+
   -- GET SRC TRACKS
-  local singleMatchedSource = #route_params.src_guids == 1
-  if not singleMatchedSource then
-    src_t = ru.getSelectedTracksGUIDs()
+  if route_params.src_guids ~= nil then
+    local singleMatchedSource = #route_params.src_guids == 1
+    if not singleMatchedSource then
+      src_t = ru.getSelectedTracksGUIDs()
+    else
+      src_t = route_params.src_guids
+    end
   else
-    src_t = route_params.src_guids
+    src_t = ru.getSelectedTracksGUIDs()
   end
+
 
   -- GET DEST TRACKS
   local singleMatchedDest = #route_params.dest_guids == 1
@@ -265,8 +272,19 @@ function extractSendParamsFromUserInput(str)
   for r in str:gmatch "%b()" do
     str = str:gsub("%("..r.."%)", "")
   end
+
   routing_defaults['src_guids'] = getMatchedTrackGUIDs(pSrc)
+  if tonumber(pDest) ~= nil then
+    -- use tr index for dest
+    local tr = reaper.GetTrack(0, tonumber(pDest) - 1)
+    routing_defaults['dest_guids'] = { reaper.GetTrackGUID( tr ) }
+  else
   routing_defaults['dest_guids'] = getMatchedTrackGUIDs(pDest)
+  end
+
+
+
+
   for key, val in pairs(new_route_params.default_params) do
     -- create uniq pattern for each config key
     local pattern = key .. "%d+%.?%d?%d?"
