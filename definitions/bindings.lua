@@ -40,7 +40,10 @@ return {
           ["R"] = "RepeatInsertTimeSelection",
           ["S"] = "SaveAllTracksAsTemplate",
           ["w"] = "ApplyConfigs",
-          ["x"] = "AddTrackRoute"
+          ["xx"] = "TrackRouteCreate",
+          -- ["xr"] = "TrackRouteRemove",
+          ["x!"] = "TrackRouteRemoveAll"
+
       }}
     },
   },

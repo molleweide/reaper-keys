@@ -1,7 +1,7 @@
 local reaper_state = require('utils.reaper_state')
 local format = require('utils.format')
 local log = require('utils.log')
-local routing = require('library.routing')
+local trr = require('library.routing')
 local trackObj = require('SYNTAX.lib.track_obj')
 local syntax = require('SYNTAX.syntax.syntax')
 local fx = require('SYNTAX.lib.fx')
@@ -31,18 +31,18 @@ function actions.applyConfigs()
 
         if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MC') and syntax_utils.trackObjHasOption(LVL2_obj, 'm') then
           local lvl2_tr = utils.getTrackByGUID(LVL2_obj.guid)
-          routing.removeAllSends(lvl2_tr) -- reset sends
+          trr.removeAll(lvl2_tr) -- reset sends
           opt_m_children[#opt_m_children+1] = LVL3_obj -- collect m_opt_obj for reverse looping later
         end
 
         if LVL3_obj.class == 'C' then
           local lvl3_tr = utils.getTrackByGUID(LVL3_obj.guid)
-          routing.removeAllSends(lvl3_tr)
+          trr.removeAll(lvl3_tr)
           for l, split_obj in pairs(LVL3_obj.children) do
 
             local lvl2_tr = utils.getTrackByGUID(LVL2_obj.guid)
             local tr = utils.getTrackByGUID(split_obj.guid)
-            routing.createMIDISend(lvl2_tr, tr, l)
+            trr.createSingleMIDISend(lvl2_tr, tr, l)
           end
         end
       end -- LEVEL 3
@@ -55,7 +55,7 @@ function actions.applyConfigs()
 
         local lvl2_tr = utils.getTrackByGUID(LVL2_obj.guid)
         local tr = utils.getTrackByGUID(trk_obj.guid)
-        routing.createMIDISend(lvl2_tr, tr, 0) -- 0 = all ch
+        trr.createSingleMIDISend(lvl2_tr, tr, 0) -- 0 = all ch
 
         fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
         count_w_range = midi.updatePianoRoll(LVL2_obj, trk_obj, count_w_range)
@@ -165,7 +165,7 @@ function ypcGetNotesInSelFromTake(LVL2_parent_take, T_YPC, i1)
 end
 
 function ypcPutShiftInsert2(take, midi_notes, shift)
-  log.user('insert item midi..')
+  -- log.user('insert item midi..')
   for i, note in ipairs(midi_notes) do
     reaper.MIDI_InsertNote(
       take,
@@ -339,7 +339,7 @@ function ypcInsertMidiFromExtState(tr_parent_group, LVL2_parent_obj, T_YPC)
       local sE = sS + sourceItem.item_length
 
       for d1 = target_tr_media_cnt-1, 0, -1 do
-        log.user(d1)
+        -- log.user(d1)
         local d_item  = reaper.GetTrackMediaItem(tr_parent_group, d1)
         local d_item_take  = reaper.GetMediaItemTake(d_item,0); -- active take?
         local take_is_midi  = reaper.TakeIsMIDI(d_item_take);
@@ -350,7 +350,7 @@ function ypcInsertMidiFromExtState(tr_parent_group, LVL2_parent_obj, T_YPC)
         local dest_rel_status = getDestItemRelativeInfo(sS,sE,dS,dE)
 
         if take_is_midi then
-          log.user('status: ' .. dest_rel_status)
+          -- log.user('status: ' .. dest_rel_status)
 
           if dest_rel_status == 'RIGHT' or
             dest_rel_status == 'LEFT' or
@@ -386,16 +386,13 @@ function customGroupYpc(ypc_type)
   local tr_idx_first, tr_idx_last = syntax_utils.getTrackIndicesOfTrackSel()
   local LVL2_parent_obj, tr_parent_group, group_tr_idx = syntax_utils.getParentGroupByTrIdx(vtt, tr_idx_first)
   local T_YPC = { ypc_type = ypc_type }
-  log.user(
-    '\n\n >>> YPC: ' .. ypc_type .. ' --------------------\n\n' --..
-    --   'LVL2 PARENT OBJ: ' .. format.block(LVL2_parent_obj)
-    )
+  -- log.user('\n\n >>> YPC: ' .. ypc_type .. ' --------------------\n\n')
   if not syntax_utils.trackObjHasOption(LVL2_parent_obj, 'm') then
     log.user('YpcError; requires opt \'m\'') return
   end
   T_YPC["t_ypc_segments"] = ypcMidiSegments(LVL2_parent_obj, tr_idx_first, tr_idx_last, MIDI_LOW_btm)
   ypcReaperMainCommands(ypc_type) -- where can I run this best??
-  log.user('T_YPC: ' .. format.block(T_YPC))
+  --log.user('T_YPC: ' .. format.block(T_YPC))
   T_YPC["parent_items"] = ypcHandleParentItems(tr_parent_group, T_YPC)
   ypcInsertMidiFromExtState(tr_parent_group, LVL2_parent_obj, T_YPC)
 

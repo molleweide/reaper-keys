@@ -141,7 +141,12 @@ function utils.getMatchedTrack(search_name, forward)
   return nil
 end
 
+-- TODO
+--
 -- tr, tr_index // move this to RK main util???
+--
+-- or should there maybe be a `track` file under lib/ where we'd put
+-- any kind of base track functions.
 function utils.getTrackByGUID(search_guid)
   for i = 0, reaper.CountTracks(0) - 1 do
     local tr = reaper.GetTrack(0,i)
@@ -222,6 +227,7 @@ function utils.unselectAllButLastTouchedTrack()
   end
 end
 
+-- why not use tr GUIDs instead???
 function utils.getSelectedTrackIndices()
   local selected_tracks = utils.getSelectedTracks()
   local selected_track_indices = {}
