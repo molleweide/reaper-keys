@@ -44,7 +44,7 @@ return {
           -- ["xr"] = "TrackRouteRemove",
           ["xq"] = "TrackRouteRemoveAllSends",
           ["xQ"] = "TrackRouteRemoveAllRecieves",
-
+          ["xl"] = "TrackRouteLogSelection"
       }}
     },
   },

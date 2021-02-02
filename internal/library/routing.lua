@@ -7,8 +7,11 @@ local routing_defaults = require('definitions.routing')
 
 local routing = {}
 
+local div = '##########################################'
+local div2 = '---------------------------------'
+
 local TRACK_INFO_AUDIO_SRC_DISABLED = -1
-local TRACK_INFO_MIDIFLAGS_ALL_CHANS = 0
+local TRACK_INFO_MIDIFLAGS_ALL_CH = 0
 local TRACK_INFO_MIDIFLAGS_DISABLED = 4177951
 local TRACK_INFO_CATEGORY_SEND = 0 -- send
 local TRACK_INFO_CATEGORY_RECIEVE = -1 -- send
@@ -18,17 +21,12 @@ local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
 -- ROUTE VARIABLES
 local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
 
-
-
-
 -- ## TODO
 --
 --  - exists > update
 --    !exist > create
 --
 --  - if no src/dest log >>
---
---  - before confirm log src / dest name list
 --
 --  - prompt no tracks matched
 --
@@ -66,7 +64,7 @@ function preventRouteFeedback()
 end
 
 -- GET FIRST 5 BITS
-function get_send_flags_src(flags) return flag & ((1 << 5)- 1) end
+function get_send_flags_src(flags) return flags & ((1 << 5)- 1) end
 
 -- GET SECOND 5 BITS
 function get_send_flags_dest(flags) return flags >> 5 end
@@ -101,9 +99,7 @@ end
 --  - add default source channel = all or 1?
 function routing.createSingleMIDISend(src_tr,dest_tr,dest_chan)
   log.user('createSingleMIDISend')
-
   local is_exist = checkIfSendExists(src_tr, dest_tr)
-
 
   log.user('midi sends exists ???????  : ' .. tostring(is_exist))
   if not is_exist then
@@ -112,8 +108,75 @@ function routing.createSingleMIDISend(src_tr,dest_tr,dest_chan)
     reaper.SetTrackSendInfo_Value(src_tr, TRACK_INFO_CATEGORY_SEND, midi_send_id, "I_MIDIFLAGS", new_midi_flags) -- set midi_flags on reference
     reaper.SetTrackSendInfo_Value(src_tr, TRACK_INFO_CATEGORY_SEND, midi_send_id, "I_SRCCHAN", TRACK_INFO_AUDIO_SRC_DISABLED)
   end
+end
+
+-- hardware not working....
+function getOtherTrack(tr, cat, si)
+  local other_tr
+  if cat == 0 then
+    other_tr = reaper.BR_GetMediaTrackSendInfo_Track(tr, cat, si, 1)
+  else
+    other_tr = reaper.BR_GetMediaTrackSendInfo_Track(tr, cat, si, 0)
+  end
+  local other_tr_idx = reaper.GetMediaTrackInfo_Value(other_tr, "IP_TRACKNUMBER") - 1
+
+  return other_tr, other_tr_idx
+end
+
+-- LINK > format numbers/decimals ::: https://stackoverflow.com/questions/18313171/lua-rounding-numbers-and-then-truncate
+function logRoutesByCategory(tr, cat)
+  local num_sends = reaper.GetTrackNumSends(tr, cat)
+  if num_sends == 0 then
+    -- log.user('\t\t--')
+    return
+  end
+  for si = 0, num_sends-1 do
+
+    if cat <= 0 then
+      local other_tr, other_tr_idx = getOtherTrack(tr, cat, si)
+      local _, other_tr_name = reaper.GetTrackName(other_tr)
+      log.user('\n\t\t' .. si .. ' #' .. other_tr_idx .. ' ' .. tostring(other_tr_name))
+
+      if cat == 0 then
+        -- SEND ---------------------------------------------------
+        local audio_out = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
+        local send_in = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
+        local midi_flags_tr = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
+        log.user('\t\t\tAUDIO_OUT ' .. tostring(audio_out) .. ' \t-> S_IN \t' .. send_in)
+        log.user('\t\t\tMIDI_OUT: ' .. get_send_flags_src(midi_flags_tr) ..
+          ' \t\t-> MS_IN \t' .. get_send_flags_dest(midi_flags_tr))
+      elseif cat < 0 then
+        -- RECIEVE ------------------------------------------------
+        local rec_out = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
+        local audio_in =  reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
+        local midi_flags_tr = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
+        log.user('\t\t\tSRC_OUT ' .. tostring(rec_out) .. ' \t\t-> AUDIO_IN ' .. audio_in)
+        log.user('\t\t\tMSRC_OUT: ' .. get_send_flags_src(midi_flags_tr) ..
+          ' \t\t-> MIDI_IN ' .. get_send_flags_dest(midi_flags_tr))
+      end
+    elseif cat > 0 then
+      -- HARDWARE -------------------------------------
+      -- TODO
+    end
+  end
+end
 
 
+function routing.logRoutingInfoForSelectedTracks()
+  log.clear()
+  local log_t = ru.getSelectedTracksGUIDs()
+  for i = 1, #log_t do
+    local tr, tr_idx = ru.getTrackByGUID(log_t[i])
+    local _, current_name = reaper.GetTrackName(tr)
+    log.user('\n\n'..div..'\n:: routes for track #' .. tr_idx+1 .. ' `' .. current_name .. '`:')
+
+    log.user('\n\tSENDs:')
+    logRoutesByCategory(tr, TRACK_INFO_CATEGORY_SEND)
+    log.user('\n\tRECIEVEs:')
+    logRoutesByCategory(tr, TRACK_INFO_CATEGORY_RECIEVE)
+    log.user('\n\tHARDWARE:')
+    logRoutesByCategory(tr, TRACK_INFO_CATEGORY_HARDWARE)
+  end
 end
 
 function routing.removeSingle(send_idx)

@@ -532,6 +532,7 @@ return {
   ToggleViewMixer = 40078,
   ToggleVolumeEnvelope = 40406,
   TrackRouteCreate = lib.routing.create,
+  TrackRouteLogSelection = lib.routing.logRoutingInfoForSelectedTracks,
   TrackRouteRemove = lib.routing.remove,
   TrackRouteRemoveAllSends = lib.routing.removeAllSends,
   TrackRouteRemoveAllRecieves = lib.routing.removeAllRecieves,
