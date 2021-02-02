@@ -1,17 +1,16 @@
--- default values when creating routes
 return {
     -- SetTrackSendInfo_Value below --------------
   default_params = {
-    ["v"] = {
-      description = 'VOLUME | double, 1.0 = +0dB',
-      param_name = 'D_VOL',
-      param_value = 0.8
-    },
-    ["s"] = {
-      description = 'SENDMODE | int, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx',
-      param_name = 'I_SENDMODE',
-      param_value = 3
-    },
+    -- ["v"] = {
+    --   description = 'VOLUME | double, 1.0 = +0dB',
+    --   param_name = 'D_VOL',
+    --   param_value = 0.8
+    -- },
+    -- ["s"] = {
+    --   description = 'SENDMODE | int, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx',
+    --   param_name = 'I_SENDMODE',
+    --   param_value = 3
+    -- },
 
     -- commented >>> always default to send
     -- ["k"] = {
@@ -47,16 +46,16 @@ return {
     --   param_name = 'I_AUTOMODE',
     --   param_value = 0, -- int :     auto mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
     -- },
-    ["c"] = {
-      description = 'SOURCE CHAN | int, index, &1024=mono, -1 for none',
-      param_name = 'I_SRCCHAN',
-      param_value = 0,
-    },
-    ["C"] = {
-      description = 'DEST CHAN | int, index, &1024=mono, -1 for none',
-      param_name = 'I_DSTCHAN',
-      param_value = 0, -- int,      index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
-    },
+    -- ["c"] = {
+    --   description = 'SOURCE CHAN | int, index, &1024=mono, -1 for none',
+    --   param_name = 'I_SRCCHAN',
+    --   param_value = 0,
+    -- },
+    -- ["C"] = {
+    --   description = 'DEST CHAN | int, index, &1024=mono, -1 for none',
+    --   param_name = 'I_DSTCHAN',
+    --   param_value = 0, -- int,      index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
+    -- },
     -- ["I"] = {
     --   param_name = 'I_MIDIFLAGS',
     --   param_value = 0, -- int,      low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chan

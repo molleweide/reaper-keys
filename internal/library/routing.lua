@@ -23,28 +23,30 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 
 -- ## TODO
 --
---  - exists > update
---    !exist > create
+-- 1.
 --
---  - if no src/dest log >>
+--  a = audio
+--  m = midi
 --
---  - prompt no tracks matched
+--  if not (a or b) >>> send only audio by default
+--  if m >> only midi
+--  if am both
+--  if a >> same as default
 --
---  - bug > are there more midi sends being created than I expect???
+-- 2.
+--      category / src / dest / mute / phase / mono / pan / automode / volume / sendmode
+--      most important
 --
---  - prompt if matched mult. tr
---
---  - create midi send
---    need change >> how take in midi params?
---
---  - create midi and audio send in on command
---
---  - list src/dest in confirmation prompt
---
---  - update already existing sends
---      mute/mono/stereo/
---
---        if SEND_IDX then update that if it exists
+--        - category (c)
+--        - audio (a)
+--        - midi (m)
+--        - mute (M)
+--        - mono (b)
+--        - phase (p)
+--        - pan (P)
+--        - volume (v)
+--        - automode (A)
+--        - sendmode (S)
 --
 --  - mult src/dest comma sep mix strings and numbers
 
