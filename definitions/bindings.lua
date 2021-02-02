@@ -42,7 +42,8 @@ return {
           ["w"] = "ApplyConfigs",
           ["xx"] = "TrackRouteCreate",
           -- ["xr"] = "TrackRouteRemove",
-          ["x!"] = "TrackRouteRemoveAll"
+          ["xq"] = "TrackRouteRemoveAllSends",
+          ["xQ"] = "TrackRouteRemoveAllRecieves",
 
       }}
     },

@@ -31,13 +31,13 @@ function actions.applyConfigs()
 
         if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MC') and syntax_utils.trackObjHasOption(LVL2_obj, 'm') then
           local lvl2_tr = utils.getTrackByGUID(LVL2_obj.guid)
-          trr.removeAll(lvl2_tr) -- reset sends
+          trr.removeAllSends(lvl2_tr) -- reset sends
           opt_m_children[#opt_m_children+1] = LVL3_obj -- collect m_opt_obj for reverse looping later
         end
 
         if LVL3_obj.class == 'C' then
           local lvl3_tr = utils.getTrackByGUID(LVL3_obj.guid)
-          trr.removeAll(lvl3_tr)
+          trr.removeAllSends(lvl3_tr)
           for l, split_obj in pairs(LVL3_obj.children) do
 
             local lvl2_tr = utils.getTrackByGUID(LVL2_obj.guid)

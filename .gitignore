@@ -2,3 +2,8 @@ internal/saved/data/*
 internal/gui/feedback/model_data.lua
 !/internal/saved/data/.gitkeep
 internal/state_machine/state.lua
+
+
+# macos
+.DS_STORE
+
