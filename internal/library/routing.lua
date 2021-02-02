@@ -23,6 +23,11 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 
 -- ## TODO
 --
+--  - exists > update
+--    !exist > create
+--
+--  - if no src/dest log >>
+--
 --  - before confirm log src / dest name list
 --
 --  - prompt no tracks matched
@@ -73,7 +78,7 @@ function isSel() return reaper.CountSelectedTracks(0) ~= 0 end
 
 function routing.create()
   log.clear()
-  log.user('createRouteFromUserInput')
+  log.user('create()')
   if not isSel() then return end
   local _, input_str = reaper.GetUserInputs("SPECIFY ROUTE:", 1, route_help_str, "")
   local new_route_params = extractSendParamsFromUserInput(input_str)
@@ -174,7 +179,7 @@ function incrementDestChanToSrc(dest_tr, src_tr_ch)
 end
 
 -- create track route by `routeparams`
-function createTheActualRoute(route_params, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
+function createTrackRouteForSingleTrack(route_params, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
   log.user('createTrackSend')
   local new_id = reaper.CreateTrackSend( src_tr, dest_tr )
   log.user(format.block(route_params))
@@ -199,8 +204,9 @@ function prepareRouteComponents(route_params)
   local src_t
   local dest_t
   local dest_tr
+  local dest_idx
 
-  log.user(format.block(route_params))
+  -- log.user(format.block(route_params))
 
   -- GET SRC TRACKS
   if route_params.src_guids ~= nil then
@@ -215,19 +221,35 @@ function prepareRouteComponents(route_params)
   end
 
 
+  log.user('list SRC tracks >>>>> \n')
+  for i = 1, #src_t do
+    local tr, tr_idx = ru.getTrackByGUID(src_t[i])
+    local ret, src_name = reaper.GetTrackName(tr)
+    log.user('\t' .. tr_idx .. ' - ' .. src_name)
+  end
+
+
   -- GET DEST TRACKS
   local singleMatchedDest = #route_params.dest_guids == 1
   if not singleMatchedDest then
     -- this is obsolete
-    if route_params.default_params["d"].param_value == nil then return end
-    dest_tr = reaper.GetTrack(0, math.floor(route_params.default_params["d"].param_value-1))
+    -- if route_params.default_params["d"].param_value == nil then return end
+    -- dest_tr = reaper.GetTrack(0, math.floor(route_params.default_params["d"].param_value-1))
   else
-    dest_tr = ru.getTrackByGUID(route_params.dest_guids[1])
+    dest_tr, dest_idx = ru.getTrackByGUID(route_params.dest_guids[1])
   end
   local ret, dest_name = reaper.GetTrackName(dest_tr)
 
+  log.user('\nlist DEST tracks >>>>> \n')
+  log.user('\t' .. dest_idx .. ' - ' .. dest_name)
+  -- for i = 1, #src_t do
+  --   local tr = ru.getTrackByGUID(route_params.dest_guids[1])
+  --   log.user('\t' .. reaper.GetTrackName(tr))
+  -- end
+
+
   -- CONFIRM ROUTE CREATION
-  log.user('>>> confirm route creation y/n')
+  log.user('\n>>> confirm route creation y/n')
   local help_str = "` #src: `" .. tostring(#src_t) ..
   "` #dest: `" .. tostring(#route_params.dest_guids) ..
   "` dest[0]: "..dest_name .. "` (y/n)"
@@ -243,7 +265,7 @@ function prepareRouteComponents(route_params)
     local dest_tr_ch = incrementDestChanToSrc(dest_tr, src_tr_ch)
     local is_exist = checkIfSendExists(src_tr, dest_tr)
     if not is_exist then
-      createTheActualRoute(route_params, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
+      createTrackRouteForSingleTrack(route_params, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
     end
     --   end -----------------------------------------------------------------------------
   end
