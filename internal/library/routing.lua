@@ -23,8 +23,6 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 
 -- ## TODO
 --
---  - midi > !!!! check if route already exists
---
 --  - before confirm log src / dest name list
 --
 --  - prompt no tracks matched
