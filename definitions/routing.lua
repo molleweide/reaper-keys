@@ -1,11 +1,11 @@
 return {
     -- SetTrackSendInfo_Value below --------------
   default_params = {
-    -- ["v"] = {
-    --   description = 'VOLUME | double, 1.0 = +0dB',
-    --   param_name = 'D_VOL',
-    --   param_value = 0.8
-    -- },
+    ["v"] = {
+      description = 'VOLUME | double, 1.0 = +0dB',
+      param_name = 'D_VOL',
+      param_value = 0.8
+    },
     -- ["s"] = {
     --   description = 'SENDMODE | int, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx',
     --   param_name = 'I_SENDMODE',

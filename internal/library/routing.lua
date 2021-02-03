@@ -3,8 +3,6 @@ local log = require('utils.log')
 local format = require('utils.format')
 local routing_defaults = require('definitions.routing')
 
-
-
 local routing = {}
 
 local div = '##########################################'
@@ -23,7 +21,12 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 
 -- ## TODO
 --
--- 1.
+-- 0. two sub tables
+--
+--    -> default_params
+--    -> user_input_params
+--
+-- 1. audio / midi sends // only sends for now
 --
 --  a = audio
 --  m = midi
@@ -48,7 +51,10 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 --        - automode (A)
 --        - sendmode (S)
 --
---  - mult src/dest comma sep mix strings and numbers
+--  3. update (requires a good way of visualizing routes first)
+--      u<send_idx> >>> update send_idx with given params
+--
+--  4. mult src/dest comma sep mix strings and numbers
 
 -----------------------------------------------
 -- SAFETY FUNCTIONS
@@ -96,7 +102,6 @@ end
 -- TODO
 --
 --  check if route exists already
---
 --
 --  - add default source channel = all or 1?
 function routing.createSingleMIDISend(src_tr,dest_tr,dest_chan)
@@ -271,8 +276,6 @@ function prepareRouteComponents(route_params)
   local dest_tr
   local dest_idx
 
-  -- log.user(format.block(route_params))
-
   -- GET SRC TRACKS
   if route_params.src_guids ~= nil then
     local singleMatchedSource = #route_params.src_guids == 1
@@ -284,8 +287,6 @@ function prepareRouteComponents(route_params)
   else
     src_t = ru.getSelectedTracksGUIDs()
   end
-
-
   log.user('list SRC tracks >>>>> \n')
   for i = 1, #src_t do
     local tr, tr_idx = ru.getTrackByGUID(src_t[i])
@@ -293,24 +294,42 @@ function prepareRouteComponents(route_params)
     log.user('\t' .. tr_idx .. ' - ' .. src_name)
   end
 
-
   -- GET DEST TRACKS
-  local singleMatchedDest = #route_params.dest_guids == 1
-  if not singleMatchedDest then
-    -- this is obsolete
-    -- if route_params.default_params["d"].param_value == nil then return end
-    -- dest_tr = reaper.GetTrack(0, math.floor(route_params.default_params["d"].param_value-1))
-  else
-    dest_tr, dest_idx = ru.getTrackByGUID(route_params.dest_guids[1])
-  end
+  dest_tr, dest_idx = ru.getTrackByGUID(route_params.dest_guids[1])
   local ret, dest_name = reaper.GetTrackName(dest_tr)
 
   log.user('\nlist DEST tracks >>>>> \n')
   log.user('\t' .. dest_idx .. ' - ' .. dest_name)
-  -- for i = 1, #src_t do
-  --   local tr = ru.getTrackByGUID(route_params.dest_guids[1])
-  --   log.user('\t' .. reaper.GetTrackName(tr))
+
+  -- AUDIO OR MIDI
+  --
+  -- ## TODO
+  --
+  --  MOVE TO TOP
+  --  local r_default  = routing.default_params
+  --  local r_input    = routing.input_params
+  --
+  --  audio / midi sends // only sends for now
+  --
+  --  a = audio
+  --  m = midi
+
+
+
+
+  -- if u then
+  --    -- update `si` and return
   -- end
+  -- if neither or a then
+  --    -- default to ONLY audio send
+  -- end
+  -- if m then
+  --    -- only midi
+  -- end
+  -- if m and a then
+  --    -- audio and midi
+  -- end
+
 
 
   -- CONFIRM ROUTE CREATION
@@ -320,8 +339,6 @@ function prepareRouteComponents(route_params)
   "` dest[0]: "..dest_name .. "` (y/n)"
   local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
   if answer ~= "y" then return end
-
-
 
   -- FOR EACH SOURCE CREATE ROUTE TO ALL DEST TRACKS
   for i = 1, #src_t do
@@ -358,6 +375,10 @@ function extractSendParamsFromUserInput(str)
   local pcount = 0
   local pSrc
   local pDest
+
+  new_route_params['input_params'] = {}
+
+  -- A. HANDLE SOURCE /DESTINATION
   for p in str:gmatch "%b()" do
     pcount = pcount + 1
     -- remove enclosing `()`
@@ -388,17 +409,22 @@ function extractSendParamsFromUserInput(str)
     routing_defaults['dest_guids'] = getMatchedTrackGUIDs(pDest)
   end
 
+  -- B. HANDLE SEND PARAMS
   for key, val in pairs(new_route_params.default_params) do
-    -- create uniq pattern for each config key
-    local pattern = key .. "%d+%.?%d?%d?"
+    -- check for possible choices.
+    local pattern = key .. "%d?%.?%d?%d?"
     local s, e = string.find(str, pattern)
-
     if s ~= nil and e ~= nil then
-      log.user('\n\tkey: ' .. string.sub(str,s,s) .. ', val: ' .. string.sub(str,s+1,e) .. '\n')
-      new_route_params.default_params[key].param_value = tonumber(string.sub(str,s+1,e))
+      new_route_params.input_params[key] = {
+        description = val.description,
+        param_name = val.param_name,
+        param_value = tonumber(string.sub(str,s+1,e))
+      }
+    else
+      -- don't exist
     end
   end
-
+  log.user(format.block(new_route_params.input_params))
   return new_route_params
 end
 ------------------------------------------------------------------------

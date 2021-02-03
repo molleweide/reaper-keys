@@ -21,6 +21,8 @@
 
 * segments
 
+* denite >>> ability to set configs on the fly just like `:set` in vim?
+
 * virtual keyb > shouldn't be that hard!!
 
 * midi
