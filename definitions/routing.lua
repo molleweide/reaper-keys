@@ -1,21 +1,58 @@
+local TRACK_INFO_AUDIO_SRC_DISABLED = -1
+local TRACK_INFO_MIDIFLAGS_ALL_CH = 0
+local TRACK_INFO_MIDIFLAGS_DISABLED = 4177951
+local TRACK_INFO_CATEGORY_SEND = 0 -- send
+local TRACK_INFO_CATEGORY_RECIEVE = -1 -- send
+local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
+
+
+
+
+
 return {
     -- SetTrackSendInfo_Value below --------------
   default_params = {
+
+
+    -- nudge params //////////////////////////////////////////////////////
+    --
+    --    0 = do nothing
+    --    + = nudge
+    --
+    --    TODO this would require a dedicated match-pattern
+
     ["v"] = {
-      description = 'VOLUME | double, 1.0 = +0dB',
+      description = 'VOLUME | TODO.. double, 1.0 = +0dB',
       param_name = 'D_VOL',
       param_value = 0.8
     },
+    -- ["P"] = {
+    --  description = 'update pan | -+int (max/min) (default=0)'
+    --   param_name = 'D_PAN',
+    --   param_value = 0, -- double,   -1..+1
+    -- },
+
+
+    -- WHICH TYPE ///////////////////////////////////////////////////////////
+
     ["a"] = {
-      description = 'CREATE AUDIO SEND',
-      -- param_name = 'D_VOL',
-      -- param_value = 0.8
+      description = 'SOURCE CHAN | int, index, &1024=mono, -1 for none',
+      param_name = 'I_SRCCHAN',
+      param_value = 0,
     },
+    -- ["a"] = {
+    --   description = 'CREATE AUDIO SEND',
+    --   -- param_name = 'D_VOL',
+    --   -- param_value = 0.8
+    -- },
     ["m"] = {
-      description = 'CREATE MIDI SEND',
-      -- param_name = 'D_VOL',
-      -- param_value = 0.8
+      description = 'CREATE MIDI SEND | self ch / dest ch (default = ALL)',
+      param_name = 'I_MIDIFLAGS',
+      param_value = TRACK_INFO_MIDIFLAGS_ALL_CH
     },
+
+    -- SEND MODE ///////////////////////////////////////////////////
+
     -- ["s"] = {
     --   description = 'SENDMODE | int, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx',
     --   param_name = 'I_SENDMODE',
@@ -23,30 +60,35 @@ return {
     -- },
 
     -- commented >>> always default to send
-    -- ["k"] = {
-    --   param_name = 'CATEGORY',
-    --   param_value = 0, -- int, is <0 for receives, 0=sends, >0 for hardware outputs
-    -- },
+    ["k"] = {
+      description = 'route type | int, is <0 for receives, 0=sends, >0 for hardware outputs',
+      param_name = 'CATEGORY',
+      param_value = 0,
+    },
 
-    -- ["i"] = {
+    -- TOGGLES //////////////////////////////////////////////////////////////////////
+    --
+    --  > you don't have to submit params
+    --
+    --  > 1 = flip
+
+    -- ["u"] = {
     --   param_name = 'SEND_IDX',
     --   param_value = 0,
     -- }, -- send_idx    : int
-    -- ["m"] = {
+    -- ["M"] = {
     --   param_name = 'B_MUTE',
     --   param_value = 0, -- bool
     -- },
-    -- ["f"] = {
+    -- ["p"] = {
+    --  description = 'flip phase (p)'
     --   param_name = 'B_PHASE',
     --   param_value = 0, -- bool
     -- },
-    -- ["M"] = {
+    -- ["n"] = {
+    --    description = 'TOGGLE MONO/STEREO'
     --   param_name = 'B_MONO',
     --   param_value = 0, -- bool
-    -- },
-    -- ["p"] = {
-    --   param_name = 'D_PAN',
-    --   param_value = 0, -- double,   -1..+1
     -- },
     -- ["P"] = {
     --   param_name = 'D_PANLAW',
@@ -56,16 +98,22 @@ return {
     --   param_name = 'I_AUTOMODE',
     --   param_value = 0, -- int :     auto mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
     -- },
-    -- ["c"] = {
-    --   description = 'SOURCE CHAN | int, index, &1024=mono, -1 for none',
-    --   param_name = 'I_SRCCHAN',
-    --   param_value = 0,
-    -- },
+
+
+    -- TODO
+    --
+    --  code into one param, just like midi
+    --
     -- ["C"] = {
     --   description = 'DEST CHAN | int, index, &1024=mono, -1 for none',
     --   param_name = 'I_DSTCHAN',
     --   param_value = 0, -- int,      index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
     -- },
+
+
+    -- MIDI ///////////////////////////////////////////////////////
+
+
     -- ["I"] = {
     --   param_name = 'I_MIDIFLAGS',
     --   param_value = 0, -- int,      low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chan

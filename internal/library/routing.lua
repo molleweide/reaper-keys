@@ -22,15 +22,28 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 
 -- ## TODO
 --
--- 1. audio / midi sends // only sends for now
+-- CHECK IF EXISTS
 --
---  a = audio
---  m = midi
+--    how do I tackle this problem. i feel like i should write for a moment
+--    now and allow for the problem to become more cleare. i am going to try to
+--    brace my core as much as possoble and see how that makes me feel because in the
+--    end that is the goal.
 --
---  if not (a or b) >>> send only audio by default
---  if m >> only midi
---  if am both
---  if a >> same as default
+--    ths routing thing is going to become awesome. but now I have to think about whqt
+--    routing combinations are actually pbossible.
+--
+--    i can send audio from track A to track B
+--    and send midi from A to B.
+--    i can also send from multible different channels
+--
+--    how do I handle this large numper of possibilities. what is a simple way of starting
+--    this.
+--
+--    if has midi >>> if midiflag ~= midi disable
+--    if has audio >>> if i_srcchan ~ = audio disable ?
+--
+--    midi/audio is already send from A to B.
+--      update or create new route?
 --
 -- 2.
 --      category / src / dest / mute / phase / mono / pan / automode / volume / sendmode
@@ -53,7 +66,8 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 --  4. mult src/dest comma sep mix strings and numbers
 
 -----------------------------------------------
--- SAFETY FUNCTIONS
+-- basically just compare tr == tr
+-- it doesn't do any detailed comparison
 function checkIfSendExists(src_tr, dest_tr)
   log.user('checkIfSendsExist')
   for i =1,  reaper.GetTrackNumSends( src_tr, 0 ) do
@@ -97,12 +111,98 @@ end
 
 -- TODO
 --
+--
+-- loop all tr to tr combinations here and apply params to each relation
+
+function routing.createRoutesLoop(rp, src_t, dest_tr)
+  local df = routing_defaults.default_params
+
+  for i = 1, #src_t do
+    local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
+
+
+    -- TODO
+    --
+    -- why are these two put here. can they be put inside of  createisingle funcs??
+    local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
+    local dest_tr_ch = incrementDestChanToSrc(dest_tr, src_tr_ch)
+
+    -- todo > make more detailed | only checks if tracks are connected somehow atm
+    local is_exist = checkIfSendExists(src_tr, dest_tr)
+    if not is_exist then
+
+      local new_route_id = reaper.CreateTrackSend(src_tr, dest_tr)
+
+      -- only audio
+      if rp.INP['a'] ~= nil and rp.INP['m'] == nil then
+        rp.INP['m'] = df['m']
+        rp.INP['m'].param_value = TRACK_INFO_MIDIFLAGS_DISABLED
+
+        createSingleTrackAudioRoute(new_route_id, rp, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
+      end
+
+      -- only midi
+      if  rp.INP['a'] == nil and rp.INP['m'] ~= nil then
+        rp.INP['a'] = df['a']
+        rp.INP['a'].param_value = TRACK_INFO_AUDIO_SRC_DISABLED
+
+        createSingleTrackAudioRoute(new_route_id, rp, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
+        -- createSingleTrackMidiRoute(new_route_id, route_params, src_tr, dest_tr)
+      end
+
+      -- audio and midi
+      if  rp.INP['a'] ~= nil and rp.INP['m'] ~= nil then
+        createSingleTrackAudioRoute(new_route_id, rp, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
+        -- createSingleTrackMidiRoute(new_route_id, route_params, src_tr, dest_tr)
+      end
+    else
+      -- exists and update????
+      --
+      --  should `u` be placed here???
+      -- update send index w/params
+      -- if rp.INP['u'] ~= nil then end
+    end
+
+    --   end -----------------------------------------------------------------------------
+  end
+end
+
+-- function routing.createMidiRoutesLoop(rp, src_t, dest_tr)
+--   for i = 1, #src_t do
+--     local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
+--     -- local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN') -- doesn'applytomidi
+--     -- local dest_tr_ch = incrementDestChanToSrc(dest_tr, src_tr_ch)
+--
+--     -- im not sure if this one even works that well?!
+--     -- i think that checkIfSendExists has to be updated to take more params...
+--     local is_exist = checkIfSendExists(src_tr, dest_tr)
+--     if not is_exist then
+--     end
+--     --   end -----------------------------------------------------------------------------
+--   end
+-- end
+-- TODO
+--
+-- if dest_chan == nil then set to 0 (ALL)
+--
+-- rename `ForTrack` so that is explicit and cleare
+--
 --  check if route exists already
 --
 --  - add default source channel = all or 1?
+--
+-- new params
+--    src_ch
+--    cat
+--
+
 function routing.createSingleMIDISend(src_tr,dest_tr,dest_chan)
   log.user('createSingleMIDISend')
   local is_exist = checkIfSendExists(src_tr, dest_tr)
+
+  -- TODO
+  -- if dest_chan == nil then set to 0 (ALL)
+  --
 
   log.user('midi sends exists ???????  : ' .. tostring(is_exist))
   if not is_exist then
@@ -244,22 +344,55 @@ function incrementDestChanToSrc(dest_tr, src_tr_ch)
   return dest_tr_ch
 end
 
+-- function routing.createSingleMIDISend(src_tr,dest_tr,dest_chan)
+--   log.user('createSingleMIDISend')
+--   local is_exist = checkIfSendExists(src_tr, dest_tr)
+--
+--   -- TODO
+--   -- if dest_chan == nil then set to 0 (ALL)
+--   --
+--
+--   log.user('midi sends exists ???????  : ' .. tostring(is_exist))
+--   if not is_exist then
+--     local midi_send_id = reaper.CreateTrackSend(src_tr, dest_tr) -- create send; return sendidx for reference
+--     local new_midi_flags = create_send_flags(0, dest_chan)
+--     reaper.SetTrackSendInfo_Value(src_tr, TRACK_INFO_CATEGORY_SEND, midi_send_id, "I_MIDIFLAGS", new_midi_flags) -- set midi_flags on reference
+--     reaper.SetTrackSendInfo_Value(src_tr, TRACK_INFO_CATEGORY_SEND, midi_send_id, "I_SRCCHAN", TRACK_INFO_AUDIO_SRC_DISABLED)
+--   end
+-- end
+
+-- function createSingleTrackMidiRoute(new_rid, rp, src_tr, dest_tr)
+--   log.user('createSingleTrackMidiRoute')
+--   local midi_flags
+--   midi_flags = rp.INP['m'].param_value
+--   reaper.SetTrackSendInfo_Value(src_tr, TRACK_INFO_CATEGORY_SEND, new_rid, "I_MIDIFLAGS", midi_flags)
+-- end
+
 -- create track route by `routeparams`
-function createTrackRouteForSingleTrack(route_params, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
+function createSingleTrackAudioRoute(new_rid, route_params, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
   log.user('createTrackSend')
-  local new_id = reaper.CreateTrackSend( src_tr, dest_tr )
-  log.user(format.block(route_params))
+  local df = routing_defaults.default_params
 
-  for _, p in pairs(route_params.default_params) do
-    log.user(format.block(p))
-    reaper.SetTrackSendInfo_Value( src_tr, 0, new_id, p.param_name, p.param_value)
+  log.user(format.block(route_params.INP))
 
-    if p.param_name == 'I_SRCCHAN' then
+  for n, p in pairs(route_params.INP) do
+
+
+
+    if p.param_name == 'I_SRCCHAN' and p.param_value ~= TRACK_INFO_AUDIO_SRC_DISABLED then
       if dest_tr_ch == 2 then
-        reaper.SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0)
+        reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0)
       else
-        reaper.SetTrackSendInfo_Value( src_tr, 0, new_id, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
+        reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
       end
+
+
+    else
+        if p.param_value ~= nil then
+          reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, p.param_name, p.param_value)
+        else
+          reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, p.param_name, df[n].param_value)
+        end
     end
   end
 end
@@ -297,36 +430,6 @@ function prepareRouteComponents(rp)
   log.user('\nlist DEST tracks >>>>> \n')
   log.user('\t' .. dest_idx .. ' - ' .. dest_name)
 
-  -- update send index w/params
-  if rp.INP['u'] ~= nil then end
-
-  -- only audio
-  if rp.INP['a'] ~= nil and rp.INP['m'] == nil then
-  end
-
-  -- only midi
-  if  rp.INP['a'] == nil and rp.INP['m'] ~= nil then
-  end
-
-  -- audio and midi
-  if  rp.INP['a'] ~= nil and rp.INP['m'] ~= nil then
-  end
-
-  -- if u then
-  --    -- update `si` and return
-  -- end
-  -- if neither or a then
-  --    -- default to ONLY audio send
-  -- end
-  -- if m then
-  --    -- only midi
-  -- end
-  -- if m and a then
-  --    -- audio and midi
-  -- end
-
-
-
   -- CONFIRM ROUTE CREATION
   log.user('\n>>> confirm route creation y/n')
   local help_str = "` #src: `" .. tostring(#src_t) ..
@@ -335,17 +438,53 @@ function prepareRouteComponents(rp)
   local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
   if answer ~= "y" then return end
 
-  -- FOR EACH SOURCE CREATE AUDIO SEND ROUTE TO ALL DEST TRACKS
-  for i = 1, #src_t do
-    local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
-    local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
-    local dest_tr_ch = incrementDestChanToSrc(dest_tr, src_tr_ch)
-    local is_exist = checkIfSendExists(src_tr, dest_tr)
-    if not is_exist then
-      createTrackRouteForSingleTrack(rp, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
-    end
-    --   end -----------------------------------------------------------------------------
-  end
+
+  -- EXECUTE / UPDATE ROUTING STATE
+  --
+  -- TODO
+  --
+  --    1. get track num sends
+  --    2. for each num check if one is === rp.user_inp AND defaults
+  --    3. if doesn't exist
+  --    4. create new send id
+  --    5. pass this
+
+  routing.createRoutesLoop(rp, src_t, dest_tr)
+
+  -- -- update send index w/params
+  -- if rp.INP['u'] ~= nil then end
+  --
+  -- -- only audio
+  -- if rp.INP['a'] ~= nil and rp.INP['m'] == nil then
+  --   routing.createRoutesLoop(rp, src_t, dest_tr)
+  -- end
+  --
+  -- -- only midi
+  -- if  rp.INP['a'] == nil and rp.INP['m'] ~= nil then
+  --   routing.createMidiRoutesLoop(rp, src_t, dest_tr) -- 3rd param is dest_chan
+  -- end
+  --
+  -- -- audio and midi
+  -- if  rp.INP['a'] ~= nil and rp.INP['m'] ~= nil then
+  --   routing.createRoutesLoop(rp, src_t, dest_tr)
+  --   routing.createMidiRoutesLoop(rp, src_t, dest_tr) -- 3rd param is dest_chan
+  -- end
+
+
+
+  -- TODO
+  --
+  -- mv into createRoutesLoop(rp, src_t, dest_tr)
+  -- for i = 1, #src_t do
+  --   local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
+  --   local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
+  --   local dest_tr_ch = incrementDestChanToSrc(dest_tr, src_tr_ch)
+  --   local is_exist = checkIfSendExists(src_tr, dest_tr)
+  --   if not is_exist then
+  --     createSingleTrackAudioRoute(rp, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
+  --   end
+  --   --   end -----------------------------------------------------------------------------
+  -- end
 end
 
 function doesRouteAlreadyExist()
@@ -406,8 +545,18 @@ function extractSendParamsFromUserInput(str)
 
   -- B. HANDLE SEND PARAMS
   for key, val in pairs(new_route_params.default_params) do
+
     -- check for possible choices.
+    --
+    -- TODO
+    --
+    -- atm this is only a generic find char + double
+    --
+    -- but it would be nice to create a special type of patterns
+    -- dedicated to taking input for specific types of send characteristics
+
     local pattern = key .. "%d?%.?%d?%d?"
+
     local s, e = string.find(str, pattern)
     if s ~= nil and e ~= nil then
       new_route_params.INP[key] = {
@@ -420,6 +569,7 @@ function extractSendParamsFromUserInput(str)
     end
   end
   log.user(format.block(new_route_params.INP))
+  log.user('!!!!!!!!!!!!!!')
   return new_route_params
 end
 ------------------------------------------------------------------------
