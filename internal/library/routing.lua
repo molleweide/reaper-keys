@@ -96,76 +96,63 @@ function routing.sidechainSelTrkToGhostKickTrack()
   sidechainToTrackWithNameString('ghostKick')
 end
 
+
+-- the name of this function is stupid?!
+function audioMidiBoth(rp)
+  if (rp.INP['a'] ~= nil and rp.INP['m'] == nil) or (rp.INP['a'] == nil and rp.INP['m'] == nil) then
+    return 1
+  end
+  if rp.INP['a'] == nil and rp.INP['m'] ~= nil then
+    return 2
+  end
+  if rp.INP['a'] == nil and rp.INP['m'] ~= nil then
+    return 3
+  end
+  return false
+end
+
 function routing.createRoutesLoop(rp, src_t, dest_tr)
   local df = routing_defaults.default_params
   for i = 1, #src_t do
     local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
-
     -- why are these two put here. can they be put inside of  createisingle funcs??
     local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
     local dest_tr_ch = incrementDestChanToSrc(dest_tr, src_tr_ch)
-
     -- currently route is always send // cat is not yet implemented
-    -- 0 = doesn't exist,
-    -- 1 = has audio connected,
-    -- 2 = has midi connected,
-    -- 3 = has both connected
     local exists, old_route_id = checkIfSendExists(src_tr, dest_tr)
     if not exists then
+      -- NEW //////////////////////////////////////////////////////////////////
       local new_route_id = reaper.CreateTrackSend(src_tr, dest_tr)
-
-      -- TODO 
-      --
-      --  refactor the checkers below into its own function
-
-      -- only audio || update with audio??
-      if (rp.INP['a'] ~= nil and rp.INP['m'] == nil) or (rp.INP['a'] == nil and rp.INP['m'] == nil) then
+      if audioMidiBoth(rp) == 'ONLY_AUDIO' then
         if rp.INP['a'] == nil then rp.INP['a'] = df['a'] end
         rp.INP['m'] = df['m']
         rp.INP['m'].param_value = TRACK_INFO_MIDIFLAGS_DISABLED
       end
-      -- only midi || update with midi??
-      if  rp.INP['a'] == nil and rp.INP['m'] ~= nil then
+      if audioMidiBoth(rp) == 'ONLY_MIDI' then
         rp.INP['a'] = df['a']
         rp.INP['a'].param_value = TRACK_INFO_AUDIO_SRC_DISABLED
       end
-      -- audio and midi || or update both??
-      if  rp.INP['a'] ~= nil and rp.INP['m'] ~= nil then
-      end
-        createSingleTrackAudioRoute(new_route_id, rp, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
+      if audioMidiBoth(rp) == 'BOTH_AUDIO_AND_MIDI' then end
+      createSingleTrackAudioRoute(new_route_id, rp, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
     else
       log.user('\nEXISTS')
 
+      -- EXISTS ////////////////////////////////////////////////////////////
       -- only audio
       if exists == 1 then
         log.user('\n\t ONLY AUDIO | old_route_id: ' .. old_route_id)
-
-        -- update audio
-        --
-        -- add midi?
-
+        -- update audio >> requires `u`
+        -- TODO if has midi params add midi?
       end
-
-      -- only midi
       if exists == 2 then
         log.user('\n\t ONLY MIDI | old_route_id: ' .. old_route_id)
-
-        -- update midi
-        --
-        -- add audio?
-
-
-
+        -- update midi >> requires `u`
+        -- TODO if has audio params add audio?
       end
-
-      -- exists and update????
-      --
-      --  should `u` be placed here???
-      -- update send index w/params
-      -- if rp.INP['u'] ~= nil then end
+      if exists == 3 then
+        -- IF HAS BOTH UPDATE BOTH <<<<<<<<< ?!?!?!?!?!?!?!?!?!?!?!
+      end
     end
-
-    --   end -----------------------------------------------------------------------------
   end
 end
 
