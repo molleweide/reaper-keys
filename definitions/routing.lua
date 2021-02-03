@@ -6,6 +6,16 @@ return {
       param_name = 'D_VOL',
       param_value = 0.8
     },
+    ["a"] = {
+      description = 'CREATE AUDIO SEND',
+      -- param_name = 'D_VOL',
+      -- param_value = 0.8
+    },
+    ["m"] = {
+      description = 'CREATE MIDI SEND',
+      -- param_name = 'D_VOL',
+      -- param_value = 0.8
+    },
     -- ["s"] = {
     --   description = 'SENDMODE | int, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx',
     --   param_name = 'I_SENDMODE',

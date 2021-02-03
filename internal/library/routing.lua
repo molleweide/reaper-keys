@@ -1,4 +1,5 @@
 local ru = require('custom_actions.utils')
+local tb = require('utils.table')
 local log = require('utils.log')
 local format = require('utils.format')
 local routing_defaults = require('definitions.routing')
@@ -20,11 +21,6 @@ local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
 local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
 
 -- ## TODO
---
--- 0. two sub tables
---
---    -> default_params
---    -> user_input_params
 --
 -- 1. audio / midi sends // only sends for now
 --
@@ -269,7 +265,7 @@ function createTrackRouteForSingleTrack(route_params, src_tr, src_tr_ch, dest_tr
 end
 
 -- TODO if no destination >>> return ?????
-function prepareRouteComponents(route_params)
+function prepareRouteComponents(rp)
   log.user('prepareRouteComponents')
   local src_t
   local dest_t
@@ -277,12 +273,12 @@ function prepareRouteComponents(route_params)
   local dest_idx
 
   -- GET SRC TRACKS
-  if route_params.src_guids ~= nil then
-    local singleMatchedSource = #route_params.src_guids == 1
+  if rp.src_guids ~= nil then
+    local singleMatchedSource = #rp.src_guids == 1
     if not singleMatchedSource then
       src_t = ru.getSelectedTracksGUIDs()
     else
-      src_t = route_params.src_guids
+      src_t = rp.src_guids
     end
   else
     src_t = ru.getSelectedTracksGUIDs()
@@ -295,27 +291,26 @@ function prepareRouteComponents(route_params)
   end
 
   -- GET DEST TRACKS
-  dest_tr, dest_idx = ru.getTrackByGUID(route_params.dest_guids[1])
+  dest_tr, dest_idx = ru.getTrackByGUID(rp.dest_guids[1])
   local ret, dest_name = reaper.GetTrackName(dest_tr)
 
   log.user('\nlist DEST tracks >>>>> \n')
   log.user('\t' .. dest_idx .. ' - ' .. dest_name)
 
-  -- AUDIO OR MIDI
-  --
-  -- ## TODO
-  --
-  --  MOVE TO TOP
-  --  local r_default  = routing.default_params
-  --  local r_input    = routing.input_params
-  --
-  --  audio / midi sends // only sends for now
-  --
-  --  a = audio
-  --  m = midi
+  -- update send index w/params
+  if rp.INP['u'] ~= nil then end
 
+  -- only audio
+  if rp.INP['a'] ~= nil and rp.INP['m'] == nil then
+  end
 
+  -- only midi
+  if  rp.INP['a'] == nil and rp.INP['m'] ~= nil then
+  end
 
+  -- audio and midi
+  if  rp.INP['a'] ~= nil and rp.INP['m'] ~= nil then
+  end
 
   -- if u then
   --    -- update `si` and return
@@ -335,19 +330,19 @@ function prepareRouteComponents(route_params)
   -- CONFIRM ROUTE CREATION
   log.user('\n>>> confirm route creation y/n')
   local help_str = "` #src: `" .. tostring(#src_t) ..
-  "` #dest: `" .. tostring(#route_params.dest_guids) ..
+  "` #dest: `" .. tostring(#rp.dest_guids) ..
   "` dest[0]: "..dest_name .. "` (y/n)"
   local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
   if answer ~= "y" then return end
 
-  -- FOR EACH SOURCE CREATE ROUTE TO ALL DEST TRACKS
+  -- FOR EACH SOURCE CREATE AUDIO SEND ROUTE TO ALL DEST TRACKS
   for i = 1, #src_t do
     local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
     local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
     local dest_tr_ch = incrementDestChanToSrc(dest_tr, src_tr_ch)
     local is_exist = checkIfSendExists(src_tr, dest_tr)
     if not is_exist then
-      createTrackRouteForSingleTrack(route_params, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
+      createTrackRouteForSingleTrack(rp, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
     end
     --   end -----------------------------------------------------------------------------
   end
@@ -376,7 +371,7 @@ function extractSendParamsFromUserInput(str)
   local pSrc
   local pDest
 
-  new_route_params['input_params'] = {}
+  new_route_params['INP'] = {}
 
   -- A. HANDLE SOURCE /DESTINATION
   for p in str:gmatch "%b()" do
@@ -415,7 +410,7 @@ function extractSendParamsFromUserInput(str)
     local pattern = key .. "%d?%.?%d?%d?"
     local s, e = string.find(str, pattern)
     if s ~= nil and e ~= nil then
-      new_route_params.input_params[key] = {
+      new_route_params.INP[key] = {
         description = val.description,
         param_name = val.param_name,
         param_value = tonumber(string.sub(str,s+1,e))
@@ -424,7 +419,7 @@ function extractSendParamsFromUserInput(str)
       -- don't exist
     end
   end
-  log.user(format.block(new_route_params.input_params))
+  log.user(format.block(new_route_params.INP))
   return new_route_params
 end
 ------------------------------------------------------------------------
