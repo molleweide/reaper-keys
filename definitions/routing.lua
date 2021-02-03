@@ -40,15 +40,15 @@ return {
       param_name = 'I_SRCCHAN',
       param_value = 0,
     },
-    -- ["a"] = {
-    --   description = 'CREATE AUDIO SEND',
-    --   -- param_name = 'D_VOL',
-    --   -- param_value = 0.8
-    -- },
     ["m"] = {
       description = 'CREATE MIDI SEND | self ch / dest ch (default = ALL)',
       param_name = 'I_MIDIFLAGS',
       param_value = TRACK_INFO_MIDIFLAGS_ALL_CH
+    },
+    ["d"] = {
+      description = 'DEST CHAN | int, index, &1024=mono, -1 for none',
+      param_name = 'I_DSTCHAN',
+      param_value = 0,
     },
 
     -- SEND MODE ///////////////////////////////////////////////////
@@ -104,11 +104,6 @@ return {
     --
     --  code into one param, just like midi
     --
-    -- ["C"] = {
-    --   description = 'DEST CHAN | int, index, &1024=mono, -1 for none',
-    --   param_name = 'I_DSTCHAN',
-    --   param_value = 0, -- int,      index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
-    -- },
 
 
     -- MIDI ///////////////////////////////////////////////////////
