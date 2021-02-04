@@ -32,6 +32,11 @@ return {
     --   param_value = 0, -- double,   -1..+1
     -- },
 
+    ["u"] = {
+      description = 'ALLOW OVERWRITE | overwrites existing params',
+      param_name = 'I_SRCCHAN',
+      param_value = 0,
+    },
 
     -- WHICH TYPE ///////////////////////////////////////////////////////////
 
