@@ -2,26 +2,17 @@ local ru = require('custom_actions.utils')
 local tb = require('utils.table')
 local log = require('utils.log')
 local format = require('utils.format')
-local routing_defaults = require('definitions.routing')
+local rc = require('definitions.routing')
 
 local routing = {}
 
+local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
 local div = '##########################################'
 local div2 = '---------------------------------'
 
 -- TODO
 --
--- move these to configs
-
-local TRACK_INFO_AUDIO_SRC_DISABLED = -1
-local TRACK_INFO_MIDIFLAGS_ALL_CH = 0
-local TRACK_INFO_MIDIFLAGS_DISABLED = 4177951
-local TRACK_INFO_CATEGORY_SEND = 0 -- send
-local TRACK_INFO_CATEGORY_RECIEVE = -1 -- send
-local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
-
--- ROUTE VARIABLES
-local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
+-- LINK > format numbers/decimals ::: https://stackoverflow.com/questions/18313171/lua-rounding-numbers-and-then-truncate
 
 ----------------------------------------------------------------
 
@@ -48,8 +39,8 @@ function checkIfSendExists(src_tr, dest_tr)
       local prev_src_audio_ch = reaper.GetTrackSendInfo_Value(src_tr, 0, si, 'I_SRCCHAN')
       -- both audio and midi
       local retval = 3
-      local no_midi = prev_src_midi_flags == TRACK_INFO_MIDIFLAGS_DISABLED
-      local no_audio = prev_src_audio_ch == TRACK_INFO_AUDIO_SRC_DISABLED
+      local no_midi = prev_src_midi_flags == rc.flags.MIDI_OFF
+      local no_audio = prev_src_audio_ch ==  rc.flags.AUDIO_SRC_OFF
       -- only audio = 1
       if no_midi then retval = 1 end
       -- only midi = 2
@@ -70,16 +61,6 @@ function routing.create()
   prepareRouteComponents(new_route_params)
 end
 
-function routing.sidechainSelTrkToGhostSnareTrack()
-  sidechainToTrackWithNameString('ghostSnare')
-end
-
-function routing.sidechainSelTrkToGhostKickTrack()
-  sidechainToTrackWithNameString('ghostKick')
-end
-
-
--- the name of this function is stupid?!
 function audioMidiBoth(rp)
   if (rp.INP['a'] ~= nil and rp.INP['m'] == nil) or (rp.INP['a'] == nil and rp.INP['m'] == nil) then
     return 'ONLY_AUDIO' -- default (audio atm)
@@ -93,17 +74,14 @@ function audioMidiBoth(rp)
   return false
 end
 
-
-
-
 function routing.createRoutesLoop(rp, src_t, dest_tr)
-  local df = routing_defaults.default_params
+  local df = rc.default_params
   for i = 1, #src_t do
     local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
     -- why are these two put here. can they be put inside of  createisingle funcs??
     local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
     local dest_tr_ch = incrementDestChanToSrc(dest_tr, src_tr_ch)
-    -- currently route is always send // cat is not yet implemented
+
     local exists, old_route_id = checkIfSendExists(src_tr, dest_tr)
     if not exists then
       -- NEW //////////////////////////////////////////////////////////////////
@@ -111,11 +89,11 @@ function routing.createRoutesLoop(rp, src_t, dest_tr)
       if audioMidiBoth(rp) == 'ONLY_AUDIO' then
         if rp.INP['a'] == nil then rp.INP['a'] = df['a'] end
         rp.INP['m'] = df['m']
-        rp.INP['m'].param_value = TRACK_INFO_MIDIFLAGS_DISABLED
+        rp.INP['m'].param_value = rc.flags.MIDI_OFF
       end
       if audioMidiBoth(rp) == 'ONLY_MIDI' then
         rp.INP['a'] = df['a']
-        rp.INP['a'].param_value = TRACK_INFO_AUDIO_SRC_DISABLED
+        rp.INP['a'].param_value = rc.flags.AUDIO_SRC_OFF
       end
       if audioMidiBoth(rp) == 'BOTH_AUDIO_AND_MIDI' then end
       createSingleTrackAudioRoute(new_route_id, rp, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
@@ -168,8 +146,8 @@ function routing.createSingleMIDISend(src_tr,dest_tr,dest_chan)
   if not is_exist then
     local midi_send_id = reaper.CreateTrackSend(src_tr, dest_tr) -- create send; return sendidx for reference
     local new_midi_flags = create_send_flags(0, dest_chan)
-    reaper.SetTrackSendInfo_Value(src_tr, TRACK_INFO_CATEGORY_SEND, midi_send_id, "I_MIDIFLAGS", new_midi_flags) -- set midi_flags on reference
-    reaper.SetTrackSendInfo_Value(src_tr, TRACK_INFO_CATEGORY_SEND, midi_send_id, "I_SRCCHAN", TRACK_INFO_AUDIO_SRC_DISABLED)
+    reaper.SetTrackSendInfo_Value(src_tr, rc.flags.CAT_SEND, midi_send_id, "I_MIDIFLAGS", new_midi_flags) -- set midi_flags on reference
+    reaper.SetTrackSendInfo_Value(src_tr, rc.flags.CAT_SEND, midi_send_id, "I_SRCCHAN", rc.flags.AUDIO_SRC_OFF)
   end
 end
 
@@ -186,7 +164,6 @@ function getOtherTrack(tr, cat, si)
   return other_tr, other_tr_idx
 end
 
--- LINK > format numbers/decimals ::: https://stackoverflow.com/questions/18313171/lua-rounding-numbers-and-then-truncate
 function logRoutesByCategory(tr, cat)
   local num_sends = reaper.GetTrackNumSends(tr, cat)
   if num_sends == 0 then
@@ -219,7 +196,7 @@ function logRoutesByCategory(tr, cat)
       end
     elseif cat > 0 then
       -- HARDWARE -------------------------------------
-      -- TODO
+      --
     end
   end
 end
@@ -234,11 +211,11 @@ function routing.logRoutingInfoForSelectedTracks()
     log.user('\n\n'..div..'\n:: routes for track #' .. tr_idx+1 .. ' `' .. current_name .. '`:')
 
     log.user('\n\tSENDs:')
-    logRoutesByCategory(tr, TRACK_INFO_CATEGORY_SEND)
+    logRoutesByCategory(tr, rc.flags.CAT_SEND)
     log.user('\n\tRECIEVEs:')
-    logRoutesByCategory(tr, TRACK_INFO_CATEGORY_RECIEVE)
+    logRoutesByCategory(tr, rc.flags.CAT_REC)
     log.user('\n\tHARDWARE:')
-    logRoutesByCategory(tr, TRACK_INFO_CATEGORY_HARDWARE)
+    logRoutesByCategory(tr, rc.flags.CAT_HW)
   end
 end
 
@@ -269,32 +246,25 @@ function deleteByCategory(tr, cat)
   end
 end
 
-
 function removeAll(tr, kind)
   log.clear()
   log.user('removeAll')
   local target_t = {}
   target_t[#target_t] = tr
-
   if tr == nil or tr == false then target_t = ru.getSelectedTracksGUIDs() end -- get table of src tracks
-
   -- FOR EACH TRACK WE WANT TO TARGET
   for i = 1, #target_t do
     local tr = ru.getTrackByGUID(target_t[i])
     if kind == nil or kind == 0 then
-      deleteByCategory(tr, TRACK_INFO_CATEGORY_SEND)
+      deleteByCategory(tr, rc.flags.CAT_SEND)
     elseif kind == 1 then
-      deleteByCategory(tr, TRACK_INFO_CATEGORY_RECIEVE)
+      deleteByCategory(tr, rc.flags.CAT_REC)
     elseif kind == 2 then
-      deleteByCategory(tr, TRACK_INFO_CATEGORY_SEND)
-      deleteByCategory(tr, TRACK_INFO_CATEGORY_RECIEVE)
+      deleteByCategory(tr, rc.flags.CAT_SEND)
+      deleteByCategory(tr, rc.flags.CAT_REC)
     end
   end
-
   return true
-end
-
-function sidechainToTrackWithNameString(str)
 end
 
 function incrementDestChanToSrc(dest_tr, src_tr_ch)
@@ -306,7 +276,7 @@ end
 
 function routeUpdate(type, old_route_id, rp, src_tr)
   local m = rp.INP['m']
-  local df = routing_defaults.default_params
+  local df = rc.default_params
   log.user('old route id: ' .. old_route_id)
   for k, p in pairs(rp.INP) do
     if k == 'u' then goto continue end
@@ -340,10 +310,10 @@ end
 
 function createSingleTrackAudioRoute(new_rid, route_params, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
   log.user('createTrackSend')
-  local df = routing_defaults.default_params
+  local df = rc.default_params
   for k, p in pairs(route_params.INP) do
     if k == 'u' then goto continue end
-    if p.param_name == 'I_SRCCHAN' and p.param_value ~= TRACK_INFO_AUDIO_SRC_DISABLED then
+    if p.param_name == 'I_SRCCHAN' and p.param_value ~= rc.flags.AUDIO_SRC_OFF then
       if p.param_value ~= nil then
         reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, p.param_name, p.param_value)
       else
@@ -365,7 +335,6 @@ function createSingleTrackAudioRoute(new_rid, route_params, src_tr, src_tr_ch, d
   end
 end
 
--- TODO if no destination >>> return ?????
 function prepareRouteComponents(rp)
   log.user('prepareRouteComponents')
   local src_t
@@ -427,7 +396,7 @@ end
 
 function extractSendParamsFromUserInput(str)
   log.user('extractSendParamsFromUserInput')
-  local new_route_params = routing_defaults
+  local new_route_params = rc
   local pcount = 0
   local pSrc
   local pDest
@@ -452,17 +421,17 @@ function extractSendParamsFromUserInput(str)
   -- SRC IS NUM ELSE
   if tonumber(pSrc) ~= nil then
     local tr = reaper.GetTrack(0, tonumber(pSrc) - 1)
-    routing_defaults['src_guids'] = { reaper.GetTrackGUID( tr ) }
+    rc['src_guids'] = { reaper.GetTrackGUID( tr ) }
   else
-    routing_defaults['src_guids'] = getMatchedTrackGUIDs(pSrc)
+    rc['src_guids'] = getMatchedTrackGUIDs(pSrc)
   end
   -- DEST IS NUM ELSE
   if tonumber(pDest) ~= nil then
     -- use tr index for dest
     local tr = reaper.GetTrack(0, tonumber(pDest) - 1)
-    routing_defaults['dest_guids'] = { reaper.GetTrackGUID( tr ) }
+    rc['dest_guids'] = { reaper.GetTrackGUID( tr ) }
   else
-    routing_defaults['dest_guids'] = getMatchedTrackGUIDs(pDest)
+    rc['dest_guids'] = getMatchedTrackGUIDs(pDest)
   end
 
   -- B. HANDLE USER INPUT PARAMS
@@ -485,8 +454,17 @@ end
 ------------------------------------------------------------------------
 
 function preventRouteFeedback()
-  -- TODO ??
 end
 
+function sidechainToTrackWithNameString(str)
+end
+
+function routing.sidechainSelTrkToGhostSnareTrack()
+  sidechainToTrackWithNameString('ghostSnare')
+end
+
+function routing.sidechainSelTrkToGhostKickTrack()
+  sidechainToTrackWithNameString('ghostKick')
+end
 ------------------------------------------------------------------------
 return routing

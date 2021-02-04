@@ -10,7 +10,14 @@ local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
 
 
 return {
-    -- SetTrackSendInfo_Value below --------------
+  flags = {
+    AUDIO_SRC_OFF = TRACK_INFO_AUDIO_SRC_DISABLED,
+    MIDI_ALL_CH = TRACK_INFO_MIDIFLAGS_ALL_CH,
+    MIDI_OFF = TRACK_INFO_MIDIFLAGS_DISABLED,
+    CAT_SEND = TRACK_INFO_CATEGORY_SEND,
+    CAT_REC = TRACK_INFO_CATEGORY_RECIEVE,
+    CAT_HW = TRACK_INFO_CATEGORY_HARDWARE,
+  },
   default_params = {
 
 
