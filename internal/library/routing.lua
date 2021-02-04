@@ -106,6 +106,9 @@ function getOtherTrack(tr, cat, si)
   return other_tr, other_tr_idx
 end
 
+-- TODO
+--
+-- if no audio / midi >>> don't show audio/midi
 function logRoutesByCategory(tr, cat)
   local num_sends = reaper.GetTrackNumSends(tr, cat)
   if num_sends == 0 then
@@ -120,22 +123,33 @@ function logRoutesByCategory(tr, cat)
 
       if cat == 0 then
         -- SEND ---------------------------------------------------
-        log.user('\n\t\tto track (' .. other_tr_idx .. ') `' .. tostring(other_tr_name)..'`')
-        local audio_out = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
-        local send_in = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
+        local audio_out     = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
+        local send_in       = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
         local midi_flags_tr = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
-        log.user('\t\t\t'..si..' :: AUDIO_OUT: ' .. tostring(audio_out) .. ' -> ' .. send_in ..
-          ' | MIDI_OUT: ' .. get_send_flags_src(midi_flags_tr) ..
-          ' -> ' .. get_send_flags_dest(midi_flags_tr))
+        log.user(string.format("\n\t\tto (#%i) `%s`", other_tr_idx, other_tr_name))
+        log.user(
+          string.format(
+            "\t\t\t%i :: AUDIO_OUT: %i -> %i | MIDI_OUT: %i -> %i",
+            si, audio_out, send_in,
+            get_send_flags_src(midi_flags_tr),
+            get_send_flags_dest(midi_flags_tr)
+            )
+          )
       elseif cat < 0 then
         -- RECIEVE ------------------------------------------------
-        log.user('\n\t\tfrom track (' .. other_tr_idx .. ') `' .. tostring(other_tr_name)..'`')
         local rec_out = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
         local audio_in =  reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
         local midi_flags_tr = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
-        log.user('\t\t\t'..si..' :: ' .. tostring(rec_out) .. ' -> ' .. audio_in ..
-          ' AUDIO_IN | ' .. get_send_flags_src(midi_flags_tr) ..
-          ' -> ' .. get_send_flags_dest(midi_flags_tr) .. ' MIDI_IN')
+        log.user(string.format("\n\t\tfrom (#%i) `%s`", other_tr_idx, other_tr_name))
+        log.user(
+          string.format(
+            "\t\t\t%i :: %i -> %i AUDIO_IN | %i -> %i MIDI_IN",
+            si, rec_out, audio_in,
+            get_send_flags_src(midi_flags_tr),
+            get_send_flags_dest(midi_flags_tr)
+            )
+          )
+
       end
     elseif cat > 0 then
       -- HARDWARE -------------------------------------
