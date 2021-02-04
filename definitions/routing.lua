@@ -5,10 +5,6 @@ local TRACK_INFO_CATEGORY_SEND = 0 -- send
 local TRACK_INFO_CATEGORY_RECIEVE = -1 -- send
 local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
 
-
-
-
-
 return {
   flags = {
     AUDIO_SRC_OFF = TRACK_INFO_AUDIO_SRC_DISABLED,
@@ -18,27 +14,8 @@ return {
     CAT_REC = TRACK_INFO_CATEGORY_RECIEVE,
     CAT_HW = TRACK_INFO_CATEGORY_HARDWARE,
   },
+
   default_params = {
-
-
-    -- nudge params //////////////////////////////////////////////////////
-    --
-    --    0 = do nothing
-    --    + = nudge
-    --
-    --    TODO this would require a dedicated match-pattern
-
-    ["v"] = {
-      description = 'VOLUME | TODO.. double, 1.0 = +0dB',
-      param_name = 'D_VOL',
-      param_value = 0.8
-    },
-    -- ["P"] = {
-    --  description = 'update pan | -+int (max/min) (default=0)'
-    --   param_name = 'D_PAN',
-    --   param_value = 0, -- double,   -1..+1
-    -- },
-
     ["u"] = {
       description = 'ALLOW OVERWRITE | overwrites existing params',
       param_name = 'I_SRCCHAN',
@@ -78,6 +55,24 @@ return {
       param_value = 0,
     },
 
+    -- nudge params //////////////////////////////////////////////////////
+    --
+    --    0 = do nothing
+    --    + = nudge
+    --
+    --    TODO this would require a dedicated match-pattern
+
+    ["v"] = {
+      description = 'VOLUME | TODO.. double, 1.0 = +0dB',
+      param_name = 'D_VOL',
+      param_value = 1
+    },
+    -- ["P"] = {
+    --  description = 'update pan | -+int (max/min) (default=0)'
+    --   param_name = 'D_PAN',
+    --   param_value = 0, -- double,   -1..+1
+    -- },
+
     -- TOGGLES //////////////////////////////////////////////////////////////////////
     --
     --  > you don't have to submit params
@@ -109,21 +104,6 @@ return {
     -- ["a"] = {
     --   param_name = 'I_AUTOMODE',
     --   param_value = 0, -- int :     auto mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
-    -- },
-
-
-    -- TODO
-    --
-    --  code into one param, just like midi
-    --
-
-
-    -- MIDI ///////////////////////////////////////////////////////
-
-
-    -- ["I"] = {
-    --   param_name = 'I_MIDIFLAGS',
-    --   param_value = 0, -- int,      low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chan
     -- },
   }
 }

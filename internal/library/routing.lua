@@ -175,24 +175,25 @@ function logRoutesByCategory(tr, cat)
     if cat <= 0 then
       local other_tr, other_tr_idx = getOtherTrack(tr, cat, si)
       local _, other_tr_name = reaper.GetTrackName(other_tr)
-      log.user('\n\t\t' .. si .. ' #' .. other_tr_idx .. ' ' .. tostring(other_tr_name))
 
       if cat == 0 then
         -- SEND ---------------------------------------------------
+        log.user('\n\t\tto track (' .. other_tr_idx .. ') `' .. tostring(other_tr_name)..'`')
         local audio_out = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
         local send_in = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
         local midi_flags_tr = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
-        log.user('\t\t\tAUDIO_OUT ' .. tostring(audio_out) .. ' \t-> S_IN \t' .. send_in)
-        log.user('\t\t\tMIDI_OUT: ' .. get_send_flags_src(midi_flags_tr) ..
-          ' \t\t-> MS_IN \t' .. get_send_flags_dest(midi_flags_tr))
+        log.user('\t\t\t'..si..' :: AUDIO_OUT: ' .. tostring(audio_out) .. ' -> ' .. send_in ..
+          ' | MIDI_OUT: ' .. get_send_flags_src(midi_flags_tr) ..
+          ' -> ' .. get_send_flags_dest(midi_flags_tr))
       elseif cat < 0 then
         -- RECIEVE ------------------------------------------------
+        log.user('\n\t\tfrom track (' .. other_tr_idx .. ') `' .. tostring(other_tr_name)..'`')
         local rec_out = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
         local audio_in =  reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
         local midi_flags_tr = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
-        log.user('\t\t\tSRC_OUT ' .. tostring(rec_out) .. ' \t\t-> AUDIO_IN ' .. audio_in)
-        log.user('\t\t\tMSRC_OUT: ' .. get_send_flags_src(midi_flags_tr) ..
-          ' \t\t-> MIDI_IN ' .. get_send_flags_dest(midi_flags_tr))
+        log.user('\t\t\t'..si..' :: ' .. tostring(rec_out) .. ' -> ' .. audio_in ..
+          ' AUDIO_IN | ' .. get_send_flags_src(midi_flags_tr) ..
+          ' -> ' .. get_send_flags_dest(midi_flags_tr) .. ' MIDI_IN')
       end
     elseif cat > 0 then
       -- HARDWARE -------------------------------------
