@@ -4,41 +4,38 @@
 
 ## TODO priority list.
 
-- io_device >> the reason why no match for roland is because I need to escape chars, eg. `-`???!!!
-
 - add default route for syntax
 
-* create custom action for bypassing currently highlighted and active window fx.
+  if match drum names >>> route to sum_drums
+  if match music names >>> route to sum_music
 
-* collect all routing examples that make sense into a dir.
+* create custom action for bypassing currently highlighted and active window fx.
 
 * create definitions/defaults/fx.lua
   is there something basic that I can do with an fx mode.
 
-* routing.lua
+- segments
 
-  take code from mpl > finish the `checkItRouteExists()` func
+- denite >>> ability to set configs on the fly just like `:set` in vim?
 
-* segments
+- virtual keyb > shouldn't be that hard!!
 
-* denite >>> ability to set configs on the fly just like `:set` in vim?
-
-* virtual keyb > shouldn't be that hard!!
-
-* midi
+- midi
 
   A new track fx mode would be ideal i think. So that I can use regular
   up down commands to navigate the fx list.
 
-- fx > config state > log touched parameter
+* fx > config state > log touched parameter
 
   very interesting config variable for ui dev
 
-- hide tracks?!
+* hide tracks?!
 
 ## QUESTIONS
 
 `can I rename the reaper.app file. eg. duplicate and rename reaper dir when new version??`
+
+- io_device >> the reason why no match for roland is because I need to escape chars, eg. `-`???!!!
 
 ## regions =================================================
 
