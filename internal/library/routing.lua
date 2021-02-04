@@ -14,26 +14,18 @@ local div2 = '---------------------------------'
 --
 --  read more vimscript <<<<<<<<<<<<<<<<<<<<<
 --
---      - routeUpdate()  TODO
---          requires exists... >>> disable only use in update
---
---          if `u` or disabled
---
---
---      - delete send by id
+--      - after update >>> if both audio and midi == off >> delete send_idx
 --
 --      - update midi channels
 --        pattern: how take midi ch input from user???
+--          eg. if `m[1,16]`
 --
 --      - update send by id?
 --
 --      - many 2 many >>> pattern name/num separators (**)
 --
---      (if disable both >> delete send idx)
---
 --      PATTERN
 --
---        (*)     ! before m/a >>> disable audio / midi
 --        (**)    src/dest list separators
 --
 --      CUSTOM_ACTION
@@ -369,8 +361,8 @@ function routing.createRoutesLoop(rp, src_t, dest_tr)
       createSingleTrackAudioRoute(new_route_id, rp, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
     else
       log.user('\nEXISTS')
+      -- make exists >> return strings >> easier to read
       if exists == 1 then -- ALREADY HAS AUDIO
-        log.user('1')
         if rType(rp, 'ONLY_AUDIO') and rp.INP['u'] ~= nil then
           routeUpdate('audio', old_route_id, rp, src_tr)
         end
@@ -379,7 +371,6 @@ function routing.createRoutesLoop(rp, src_t, dest_tr)
           routeUpdate('midi', old_route_id, rp, src_tr)
         end
       elseif exists == 2 then -- ALREADY HAS MIDI
-        log.user('2')
         if rType(rp, 'ONLY_MIDI') and rp.INP['u'] ~= nil then
           routeUpdate('midi', old_route_id, rp, src_tr)
         end
@@ -388,13 +379,20 @@ function routing.createRoutesLoop(rp, src_t, dest_tr)
           routeUpdate('audio', old_route_id, rp, src_tr)
         end
       elseif exists == 3 then -- ALREADY HAS BOTH
-        log.user('3')
         if rType(rp,'ONLY_AUDIO') and rp.INP['u'] ~= nil then
           routeUpdate('audio', old_route_id, rp, src_tr)
         end
         if rType(rp,'ONLY_MIDI') and rp.INP['u'] ~= nil then
           routeUpdate('midi', old_route_id, rp, src_tr)
         end
+      end
+
+      -- DELETE SEND IF EMPTY
+      local i_src_ch = reaper.GetTrackSendInfo_Value(src_tr, 0, old_route_id, 'I_SRCCHAN')
+      local i_src_midi = reaper.GetTrackSendInfo_Value(src_tr, 0, old_route_id, 'I_MIDIFLAGS')
+      if i_src_ch == rc.flags.AUDIO_SRC_OFF and i_src_midi == rc.flags.MIDI_OFF then
+        log.user('::delete send ' .. old_route_id .. '::')
+        removeSingle(src_tr, 0, old_route_id)
       end
     end
   end
@@ -404,8 +402,8 @@ end
 --  REMOVE ROUTES
 --/////////////////
 
-function routing.removeSingle(send_idx)
-  -- TODO
+function removeSingle(tr, cat, sendidx)
+  local ret = reaper.RemoveTrackSend(tr, cat, sendidx)
 end
 
 
