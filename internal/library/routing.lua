@@ -12,25 +12,43 @@ local div2 = '---------------------------------'
 
 --  EXERCISES
 --
---      - disable audio send
+--  read more vimscript <<<<<<<<<<<<<<<<<<<<<
 --
---      - disable midi send
+--      - disable audio / midi send (*) TODO
 --
---      - disable all
+--      - delete send by id
+--
+--      - update midi channels
+  --        pattern: how take midi ch input from user???
+  --
+--      - update send by id?
+--
+--      (if disable both >> delete send idx)
+--
+--      PATTERN
+--
+--        (*)     ! before m/a >>> disable audio / midi
+--
+--      CUSTOM_ACTION
+--
+--      - sidechain selected tracks to <ghostkick>
+--          connect plugin to auxiliary channel.
+--
+--      SYNTAX
 --
 --      - syntax.lua > auto send > drums/music/fx
 --
---      - auto send kicks to ghost_kick
 --
---      - sidechain selected tracks to ghost kick
+--      MUTE SEND
 --
---      - mute send
+--        - nudge send params
+  --      - nudge volume
+  --      - nudge pan
 --
---      - nudge volume
---
---      - nudge pan
---
---      - toggle mono / stereo
+--      TOGGLE SEND PARAMS
+--        - mono / stereo
+--        - mute
+--        - flip phase
 --
 --
 -- LINK > format numbers/decimals ::: https://stackoverflow.com/questions/18313171/lua-rounding-numbers-and-then-truncate
@@ -354,6 +372,10 @@ function routing.removeSingle(send_idx)
   -- TODO
 end
 
+
+-- all these 3 functions can be refactored into one
+-- tiny function if I create a good pattern for handling
+-- the removal/disabling of a send/recieve.
 function routing.removeAllSends(tr)
   removeAll(tr)
 end

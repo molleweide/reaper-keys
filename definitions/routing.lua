@@ -6,6 +6,24 @@ local TRACK_INFO_CATEGORY_RECIEVE = -1 -- send
 local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
 
 return {
+
+  --  /////////////////////////////////////////////////////////////////////
+  --  ROUTING MACROS
+  --  ////////////////
+  --
+  --  TODO
+  --
+  --  - auto send (SRC_PATTERN) to (DEST_PATTERN)
+
+
+  macros = {
+    ['X'] = '(<dest_tr_name>)a2!m'
+  },
+
+  --  /////////////////////////////////////////////////////////////////////
+  --  FLAGS
+  --  ///////
+
   flags = {
     AUDIO_SRC_OFF = TRACK_INFO_AUDIO_SRC_DISABLED,
     MIDI_ALL_CH = TRACK_INFO_MIDIFLAGS_ALL_CH,
@@ -22,7 +40,9 @@ return {
       param_value = 0,
     },
 
-    -- WHICH TYPE ///////////////////////////////////////////////////////////
+    -- ////////////////////////////////////////////////////////////////////
+    -- WHICH TYPE
+    -- ////////////
 
     ["a"] = {
       description = 'SOURCE CHAN | int, index, &1024=mono, -1 for none',
@@ -40,7 +60,9 @@ return {
       param_value = 0,
     },
 
-    -- SEND MODE ///////////////////////////////////////////////////
+    -- /////////////////////////////////////////////////////////////////////////////
+    -- SEND MODE
+    -- ///////////
 
     -- ["s"] = {
     --   description = 'SENDMODE | int, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx',
@@ -55,7 +77,9 @@ return {
       param_value = 0,
     },
 
-    -- nudge params //////////////////////////////////////////////////////
+    -- ////////////////////////////////////////////////////////////////////////////////
+    -- NUDGE PARAMS
+    -- //////////////
     --
     --    0 = do nothing
     --    + = nudge
@@ -73,13 +97,14 @@ return {
     --   param_value = 0, -- double,   -1..+1
     -- },
 
-    -- TOGGLES //////////////////////////////////////////////////////////////////////
-    --
+    -- //////////////////////////////////////////////////////////////////////////////////
+    -- TOGGLES
+    -- /////////
     --  > you don't have to submit params
     --
     --  > 1 = flip
 
-    -- ["u"] = {
+    -- [""] = {
     --   param_name = 'SEND_IDX',
     --   param_value = 0,
     -- }, -- send_idx    : int
