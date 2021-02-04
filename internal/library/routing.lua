@@ -14,20 +14,25 @@ local div2 = '---------------------------------'
 --
 --  read more vimscript <<<<<<<<<<<<<<<<<<<<<
 --
+--      - format remove decimals
+--
 --      - disable audio / midi send (*) TODO
 --
 --      - delete send by id
 --
 --      - update midi channels
-  --        pattern: how take midi ch input from user???
-  --
+--        pattern: how take midi ch input from user???
+--
 --      - update send by id?
+--
+--      - many 2 many >>> pattern name/num separators (**)
 --
 --      (if disable both >> delete send idx)
 --
 --      PATTERN
 --
 --        (*)     ! before m/a >>> disable audio / midi
+--        (**)    src/dest list separators
 --
 --      CUSTOM_ACTION
 --
@@ -42,8 +47,8 @@ local div2 = '---------------------------------'
 --      MUTE SEND
 --
 --        - nudge send params
-  --      - nudge volume
-  --      - nudge pan
+--      - nudge volume
+--      - nudge pan
 --
 --      TOGGLE SEND PARAMS
 --        - mono / stereo
@@ -186,24 +191,17 @@ function routing.create()
   log.clear()
   log.user('create()')
   if not isSel() then return end
-  local _, input_str = reaper.GetUserInputs("SPECIFY ROUTE:", 1, route_help_str, "(176)")
-  local new_route_params = extractSendParamsFromUserInput(input_str)
-  prepareRouteComponents(new_route_params)
+  local _, input_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, "(176)")
+  -- new route params
+  local nrp = extractSendParamsFromUserInput(input_str)
+  prepareRouteComponents(nrp)
 end
 
-function extractSendParamsFromUserInput(str)
-  log.user('extractSendParamsFromUserInput')
-  local new_route_params = rc
+function getEnclosedData(str)
   local pcount = 0
-  local pSrc
-  local pDest
-
-  new_route_params['INP'] = {}
-
-  -- A. HANDLE SOURCE /DESTINATION
+  -- find get insides of () pairs >> make more generalized func
   for p in str:gmatch "%b()" do
     pcount = pcount + 1
-    -- remove enclosing `()`
     if pcount == 1 then pDest = str.sub(p, 2, str.len(p) - 1) end
     if pcount == 2 then
       pSrc = pDest
@@ -211,11 +209,35 @@ function extractSendParamsFromUserInput(str)
       break
     end
   end
+
+  -- filterOutEnclosuresFromString(encl_type) -- encl_type = (){}[]
   for r in str:gmatch "%b()" do
     str = str:gsub("%("..r.."%)", "")
   end
+  return retval, pSrc, pDest, str
+end
 
-  -- SRC IS NUM ELSE
+function extractSendParamsFromUserInput(str)
+  log.user('extractSendParamsFromUserInput')
+  local nrp = rc;
+  local pcount = 0
+  local pSrc, pDest
+  nrp['INP'] = {}
+
+  local ret, pSrc, pDest, str = getEnclosedData(str) -- (){}[]
+
+
+  -- TODO
+  --
+  --  gmatch comma separated list
+  --    if num >> get track by gui index
+  --    if str >> get match tracks
+  --      add all tracks
+  --        if >1 >>> prompt user >>> ARE YOU SURE?????
+  --
+  --        make nice log statement > easy visualize
+  --
+  -- SRC IS NUM ELSE ------------------------------------------
   if tonumber(pSrc) ~= nil then
     local tr = reaper.GetTrack(0, tonumber(pSrc) - 1)
     rc['src_guids'] = { reaper.GetTrackGUID( tr ) }
@@ -231,21 +253,28 @@ function extractSendParamsFromUserInput(str)
     rc['dest_guids'] = getMatchedTrackGUIDs(pDest)
   end
 
-  -- B. HANDLE USER INPUT PARAMS
-  for key, val in pairs(new_route_params.default_params) do
+  -- B. HANDLE USER INPUT PARAMS ------------------------------
+  for key, val in pairs(nrp.default_params) do
+
+    -- ideas
+    --
+    -- using @
+    --
+    --  / (){}[]
+    --  use separators for enclosings >>> mult src/dest int/strs
     local pattern = key .. "%d?%.?%d?%d?" -- very generic pattern
 
     local s, e = string.find(str, pattern)
     if s ~= nil and e ~= nil then
-      new_route_params.INP[key] = {
+      nrp.INP[key] = {
         description = val.description,
         param_name = val.param_name,
         param_value = tonumber(string.sub(str,s+1,e))
       }
     end
   end
-  log.user('<USER INPUT PARAMS>', format.block(new_route_params.INP))
-  return new_route_params
+  log.user('<USER INPUT PARAMS>', format.block(nrp.INP))
+  return nrp
 end
 
 function prepareRouteComponents(rp)
@@ -255,7 +284,7 @@ function prepareRouteComponents(rp)
   local dest_tr
   local dest_idx
 
-  -- GET SRC TRACKS
+  -- GET SRC TRACKS -------------------------------------------
   if rp.src_guids ~= nil then
     local singleMatchedSource = #rp.src_guids == 1
     if not singleMatchedSource then
