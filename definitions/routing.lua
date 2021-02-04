@@ -5,6 +5,26 @@ local TRACK_INFO_CATEGORY_SEND = 0 -- send
 local TRACK_INFO_CATEGORY_RECIEVE = -1 -- send
 local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
 
+--//////////////////////////////////////////////////
+--
+-- ROUTING LANG
+--
+--  neither of a and m | a and not m
+--      create AUDIO send (default)
+--
+--  only m
+--      create midi send
+--
+--  a and m
+--      create both audio and m
+--
+--  ----------------------------
+--
+--
+--  prepend key with `!` to update w/ disable value
+--
+--//////////////////////////////////////////////////
+
 return {
 
   --  /////////////////////////////////////////////////////////////////////
@@ -33,6 +53,8 @@ return {
     CAT_HW = TRACK_INFO_CATEGORY_HARDWARE,
   },
 
+  -- remove `param_` >>> becomes redundant
+
   default_params = {
     ["u"] = {
       description = 'ALLOW OVERWRITE | overwrites existing params',
@@ -48,11 +70,13 @@ return {
       description = 'SOURCE CHAN | int, index, &1024=mono, -1 for none',
       param_name = 'I_SRCCHAN',
       param_value = 0,
+      disable_value = TRACK_INFO_AUDIO_SRC_DISABLED
     },
     ["m"] = {
       description = 'CREATE MIDI SEND | self ch / dest ch (default = ALL)',
       param_name = 'I_MIDIFLAGS',
-      param_value = TRACK_INFO_MIDIFLAGS_ALL_CH
+      param_value = TRACK_INFO_MIDIFLAGS_ALL_CH,
+      disable_value = TRACK_INFO_MIDIFLAGS_DISABLED
     },
     ["d"] = {
       description = 'DEST CHAN | int, index, &1024=mono, -1 for none',

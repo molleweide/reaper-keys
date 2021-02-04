@@ -14,9 +14,11 @@ local div2 = '---------------------------------'
 --
 --  read more vimscript <<<<<<<<<<<<<<<<<<<<<
 --
---      - format remove decimals
+--      - routeUpdate()  TODO
+--          requires exists... >>> disable only use in update
 --
---      - disable audio / midi send (*) TODO
+--          if `u` or disabled
+--
 --
 --      - delete send by id
 --
@@ -233,13 +235,8 @@ end
 
 function extractSendParamsFromUserInput(str)
   log.user('extractSendParamsFromUserInput')
-  local nrp = rc;
-  local pcount = 0
-  local pSrc, pDest
-  nrp['INP'] = {}
-
+  local nrp = rc; nrp['INP'] = {}
   local ret, pSrc, pDest, str = getEnclosedData(str) -- (){}[]
-
 
   -- TODO
   --
@@ -269,21 +266,19 @@ function extractSendParamsFromUserInput(str)
 
   -- B. HANDLE USER INPUT PARAMS ------------------------------
   for key, val in pairs(nrp.default_params) do
-
-    -- ideas
-    --
-    -- using @
-    --
-    --  / (){}[]
-    --  use separators for enclosings >>> mult src/dest int/strs
-    local pattern = key .. "%d?%.?%d?%d?" -- very generic pattern
-
+    local pattern = "!?" .. key .. "%d?%.?%d?%d?" -- very generic pattern
     local s, e = string.find(str, pattern)
     if s ~= nil and e ~= nil then
+      local sub_pattern = string.sub(str,s,e)
+      local prefix = string.sub(sub_pattern,0,1)
+      local mv_offset = 1
+      if prefix == '!' then mv_offset = 2 end
+      local matched_value = string.sub(str,s+mv_offset,e)
       nrp.INP[key] = {
         description = val.description,
         param_name = val.param_name,
-        param_value = tonumber(string.sub(str,s+1,e))
+        param_value = tonumber(matched_value),
+        disable = prefix == '!'
       }
     end
   end
@@ -334,15 +329,17 @@ function prepareRouteComponents(rp)
   routing.createRoutesLoop(rp, src_t, dest_tr)
 end
 
-function audioMidiBoth(rp)
+
+
+function rType(rp, check_str)
   if (rp.INP['a'] ~= nil and rp.INP['m'] == nil) or (rp.INP['a'] == nil and rp.INP['m'] == nil) then
-    return 'ONLY_AUDIO' -- default (audio atm)
+    return 'ONLY_AUDIO' == check_str -- default (audio atm)
   end
   if rp.INP['a'] == nil and rp.INP['m'] ~= nil then
-    return 'ONLY_MIDI' -- only midi
+    return 'ONLY_MIDI' == check_str -- only midi
   end
   if rp.INP['a'] == nil and rp.INP['m'] ~= nil then
-    return 'BOTH_AUDIO_AND_MIDI' -- both audio and midi
+    return 'BOTH_AUDIO_AND_MIDI' == check_str -- both audio and midi
   end
   return false
 end
@@ -359,47 +356,43 @@ function routing.createRoutesLoop(rp, src_t, dest_tr)
     if not exists then
       -- NEW //////////////////////////////////////////////////////////////////
       local new_route_id = reaper.CreateTrackSend(src_tr, dest_tr)
-      if audioMidiBoth(rp) == 'ONLY_AUDIO' then
+      if rType(rp, 'ONLY_AUDIO') then
         if rp.INP['a'] == nil then rp.INP['a'] = df['a'] end
         rp.INP['m'] = df['m']
         rp.INP['m'].param_value = rc.flags.MIDI_OFF
       end
-      if audioMidiBoth(rp) == 'ONLY_MIDI' then
+      if rType(rp, 'ONLY_MIDI') then
         rp.INP['a'] = df['a']
         rp.INP['a'].param_value = rc.flags.AUDIO_SRC_OFF
       end
-      if audioMidiBoth(rp) == 'BOTH_AUDIO_AND_MIDI' then end
+      if rType(rp, 'BOTH_AUDIO_AND_MIDI') then end
       createSingleTrackAudioRoute(new_route_id, rp, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
     else
       log.user('\nEXISTS')
-      -- ALREADY HAS AUDIO
-      if exists == 1 then
+      if exists == 1 then -- ALREADY HAS AUDIO
         log.user('1')
-        if audioMidiBoth(rp) == 'ONLY_AUDIO' and rp.INP['u'] ~= nil then
+        if rType(rp, 'ONLY_AUDIO') and rp.INP['u'] ~= nil then
           routeUpdate('audio', old_route_id, rp, src_tr)
         end
-        if audioMidiBoth(rp) == 'ONLY_MIDI' then
+        if rType(rp,'ONLY_MIDI') then
+          if rp.INP['m'] == nil then rp.INP['m'] = df['m'] end
           routeUpdate('midi', old_route_id, rp, src_tr)
         end
-      end
-      -- ALREADY HAS MIDI
-      if exists == 2 then
+      elseif exists == 2 then -- ALREADY HAS MIDI
         log.user('2')
-        if audioMidiBoth(rp) == 'ONLY_MIDI' and rp.INP['u'] ~= nil then
+        if rType(rp, 'ONLY_MIDI') and rp.INP['u'] ~= nil then
           routeUpdate('midi', old_route_id, rp, src_tr)
         end
-        if audioMidiBoth(rp) == 'ONLY_AUDIO' then
+        if rType(rp,'ONLY_AUDIO') then
           if rp.INP['a'] == nil then rp.INP['a'] = df['a'] end
           routeUpdate('audio', old_route_id, rp, src_tr)
         end
-      end
-      -- ALREADY HAS BOTH
-      if exists == 3 then
+      elseif exists == 3 then -- ALREADY HAS BOTH
         log.user('3')
-        if audioMidiBoth(rp) == 'ONLY_AUDIO' and rp.INP['u'] ~= nil then
+        if rType(rp,'ONLY_AUDIO') and rp.INP['u'] ~= nil then
           routeUpdate('audio', old_route_id, rp, src_tr)
         end
-        if audioMidiBoth(rp) == 'ONLY_MIDI' and rp.INP['u'] ~= nil then
+        if rType(rp,'ONLY_MIDI') and rp.INP['u'] ~= nil then
           routeUpdate('midi', old_route_id, rp, src_tr)
         end
       end
@@ -474,15 +467,25 @@ function incrementDestChanToSrc(dest_tr, src_tr_ch)
   return dest_tr_ch
 end
 
+
+-- TODO
+--
+--  if p.disable then end
+
 function routeUpdate(type, old_route_id, rp, src_tr)
   local m = rp.INP['m']
   local df = rc.default_params
   log.user('old route id: ' .. old_route_id)
   for k, p in pairs(rp.INP) do
+    log.user(p.param_name .. '  ' .. tostring(p.param_value))
     if k == 'u' then goto continue end
-    if k == 'm' then
+    if k == 'm' then -- MIDI /////////////////////////////////
       if type == 'midi' or type == 'both' then
-        if k.param_value ~= nil then
+        if p.disable then
+          log.user('midi disable')
+          reaper.SetTrackSendInfo_Value(
+            src_tr, 0, old_route_id, p.param_name, df[k].disable_value)
+        elseif p.param_value ~= nil then
           reaper.SetTrackSendInfo_Value(
             src_tr, 0, old_route_id, p.param_name, p.param_value)
         else
@@ -490,15 +493,16 @@ function routeUpdate(type, old_route_id, rp, src_tr)
             src_tr, 0, old_route_id, df[k].param_name, df[k].param_value)
         end
       end
-    else
+    else -- AUDIO ////////////////////////////////////////////
       if type == 'audio' or type == 'both' then
-        log.user(p.param_name .. '  ' .. tostring(p.param_value))
-        if p.param_value ~= nil then
-          log.user('new')
+        if p.disable then
+          log.user('audio disable')
+          reaper.SetTrackSendInfo_Value(
+            src_tr, 0, old_route_id, p.param_name, df[k].disable_value)
+        elseif p.param_value ~= nil then
           reaper.SetTrackSendInfo_Value(
             src_tr, 0, old_route_id, p.param_name, p.param_value)
         else
-          log.user('old')
           reaper.SetTrackSendInfo_Value( -- if no value >> default
             src_tr, 0, old_route_id, df[k].param_name, df[k].param_value)
         end
