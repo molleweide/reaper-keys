@@ -20,62 +20,14 @@ local TRACK_INFO_CATEGORY_SEND = 0 -- send
 local TRACK_INFO_CATEGORY_RECIEVE = -1 -- send
 local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
 
-
 -- ROUTE VARIABLES
 local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
 
--- ## TODO
---
--- 
------------------------------------------------
-function checkIfSendExists(src_tr, dest_tr)
-  log.user('checkIfSendsExist')
-  for si=0,  reaper.GetTrackNumSends( src_tr, 0 ) do
+----------------------------------------------------------------
 
-    local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, 0, si, 1 )
+function isSel() return reaper.CountSelectedTracks(0) ~= 0 end
 
-    if dest_tr_check == dest_tr then
-      local prev_params = {}
-
-      -- put inside prev params
-      local prev_src_midi_flags = reaper.GetTrackSendInfo_Value(src_tr, 0, si, 'I_MIDIFLAGS')
-      local prev_src_audio_ch = reaper.GetTrackSendInfo_Value(src_tr, 0, si, 'I_SRCCHAN')
-      -- local prev_src_dest_ch = -- TODO <<<<
-
-      -- both audio and midi
-      local retval = 3
-      log.user(prev_src_midi_flags .. '    ' .. prev_src_audio_ch)
-
-      local no_midi = prev_src_midi_flags == TRACK_INFO_MIDIFLAGS_DISABLED
-      local no_audio = prev_src_audio_ch == TRACK_INFO_AUDIO_SRC_DISABLED
-      -- only audio = 1
-      if no_midi then retval = 1 end
-      -- only midi = 2
-      if no_audio then retval = 2 end
-
-
-      -- TODO
-      --
-      -- return table filled with previous params
-
-      log.user(tostring(si) .. '   ' .. tostring(no_midi) .. '   ' .. tostring(no_audio) .. '   ' .. tostring(retval))
-
-      return retval, si, prev_params
-    end
-  end
-  return false
-end
-
-
-
-
-
-
-
-
-function preventRouteFeedback()
-  -- TODO ??
-end
+----------------------------------------------------------------
 
 -- GET FIRST 5 BITS
 function get_send_flags_src(flags) return flags & ((1 << 5)- 1) end
@@ -86,7 +38,28 @@ function get_send_flags_dest(flags) return flags >> 5 end
 -- GET SRC AND DEST BYTE PREPARED
 function create_send_flags(src_ch, dest_ch) return (dest_ch << 5) | src_ch end
 
-function isSel() return reaper.CountSelectedTracks(0) ~= 0 end
+-----------------------------------------------
+function checkIfSendExists(src_tr, dest_tr)
+  log.user('checkIfSendsExist')
+  for si=0,  reaper.GetTrackNumSends( src_tr, 0 ) do
+    local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, 0, si, 1 )
+    if dest_tr_check == dest_tr then
+      local prev_src_midi_flags = reaper.GetTrackSendInfo_Value(src_tr, 0, si, 'I_MIDIFLAGS')
+      local prev_src_audio_ch = reaper.GetTrackSendInfo_Value(src_tr, 0, si, 'I_SRCCHAN')
+      -- both audio and midi
+      local retval = 3
+      local no_midi = prev_src_midi_flags == TRACK_INFO_MIDIFLAGS_DISABLED
+      local no_audio = prev_src_audio_ch == TRACK_INFO_AUDIO_SRC_DISABLED
+      -- only audio = 1
+      if no_midi then retval = 1 end
+      -- only midi = 2
+      if no_audio then retval = 2 end
+      -- log.user(tostring(si) .. '   ' .. tostring(no_midi) .. '   ' .. tostring(no_audio) .. '   ' .. tostring(retval))
+      return retval, si, prev_params
+    end
+  end
+  return false
+end
 
 function routing.create()
   log.clear()
@@ -368,27 +341,23 @@ end
 function createSingleTrackAudioRoute(new_rid, route_params, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
   log.user('createTrackSend')
   local df = routing_defaults.default_params
-  log.user(src_tr_ch, dest_tr_ch)
-  -- log.user(format.block(route_params.INP))
-
   for k, p in pairs(route_params.INP) do
-
     if k == 'u' then goto continue end
-
     if p.param_name == 'I_SRCCHAN' and p.param_value ~= TRACK_INFO_AUDIO_SRC_DISABLED then
-
-      -- change this here so that I can make 3/4 sends
-      if dest_tr_ch == 2 then
-        reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0)
+      if p.param_value ~= nil then
+        reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, p.param_name, p.param_value)
       else
-        reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
+        reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, p.param_name, df[k].param_value)
       end
-
+      -- if dest_tr_ch == 2 then
+      --   reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0)
+      -- else
+      --   reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
+      -- end
     else
       if p.param_value ~= nil then
         reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, p.param_name, p.param_value)
       else
-        -- if no value >> default
         reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, p.param_name, df[k].param_value)
       end
     end
@@ -425,7 +394,6 @@ function prepareRouteComponents(rp)
   -- GET DEST TRACKS
   dest_tr, dest_idx = ru.getTrackByGUID(rp.dest_guids[1])
   local ret, dest_name = reaper.GetTrackName(dest_tr)
-
   log.user('\nlist DEST tracks >>>>> \n')
   log.user('\t' .. dest_idx .. ' - ' .. dest_name)
 
@@ -437,11 +405,8 @@ function prepareRouteComponents(rp)
   local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
   if answer ~= "y" then return end
 
-
   -- EXECUTE / UPDATE ROUTING STATE
-
   routing.createRoutesLoop(rp, src_t, dest_tr)
-
 end
 
 function doesRouteAlreadyExist()
@@ -500,19 +465,9 @@ function extractSendParamsFromUserInput(str)
     routing_defaults['dest_guids'] = getMatchedTrackGUIDs(pDest)
   end
 
-  -- B. HANDLE SEND PARAMS
+  -- B. HANDLE USER INPUT PARAMS
   for key, val in pairs(new_route_params.default_params) do
-
-    -- check for possible choices.
-    --
-    -- TODO
-    --
-    -- atm this is only a generic find char + double
-    --
-    -- but it would be nice to create a special type of patterns
-    -- dedicated to taking input for specific types of send characteristics
-
-    local pattern = key .. "%d?%.?%d?%d?"
+    local pattern = key .. "%d?%.?%d?%d?" -- very generic pattern
 
     local s, e = string.find(str, pattern)
     if s ~= nil and e ~= nil then
@@ -521,13 +476,17 @@ function extractSendParamsFromUserInput(str)
         param_name = val.param_name,
         param_value = tonumber(string.sub(str,s+1,e))
       }
-    else
-      -- don't exist
     end
   end
-  log.user('rp.INP', format.block(new_route_params.INP))
-  log.user('!!!!!!!!!!!!!!')
+  log.user('<USER INPUT PARAMS>', format.block(new_route_params.INP))
   return new_route_params
 end
+
+------------------------------------------------------------------------
+
+function preventRouteFeedback()
+  -- TODO ??
+end
+
 ------------------------------------------------------------------------
 return routing
