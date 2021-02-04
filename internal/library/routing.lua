@@ -26,7 +26,7 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 
 -- ## TODO
 --
---    - if update eg 'a' put no ch are given >> only update params like phase/mono/etc. ??
+-- 
 -----------------------------------------------
 function checkIfSendExists(src_tr, dest_tr)
   log.user('checkIfSendsExist')
@@ -92,7 +92,7 @@ function routing.create()
   log.clear()
   log.user('create()')
   if not isSel() then return end
-  local _, input_str = reaper.GetUserInputs("SPECIFY ROUTE:", 1, route_help_str, "")
+  local _, input_str = reaper.GetUserInputs("SPECIFY ROUTE:", 1, route_help_str, "(176)")
   local new_route_params = extractSendParamsFromUserInput(input_str)
   prepareRouteComponents(new_route_params)
 end
@@ -341,7 +341,7 @@ function routeUpdate(type, old_route_id, rp, src_tr)
       if type == 'midi' or type == 'both' then
         if k.param_value ~= nil then
           reaper.SetTrackSendInfo_Value(
-            src_tr, 0, old_route_id, rp.INP[k].param_name, k.param_value)
+            src_tr, 0, old_route_id, p.param_name, p.param_value)
         else
           reaper.SetTrackSendInfo_Value( -- if no value >> default
             src_tr, 0, old_route_id, df[k].param_name, df[k].param_value)
@@ -349,11 +349,13 @@ function routeUpdate(type, old_route_id, rp, src_tr)
       end
     else
       if type == 'audio' or type == 'both' then
-        log.user(k .. '  ' .. tostring(p.param_value))
-        if k.param_value ~= nil then
+        log.user(p.param_name .. '  ' .. tostring(p.param_value))
+        if p.param_value ~= nil then
+          log.user('new')
           reaper.SetTrackSendInfo_Value(
-            src_tr, 0, old_route_id, rp.INP[k].param_name, k.param_value)
+            src_tr, 0, old_route_id, p.param_name, p.param_value)
         else
+          log.user('old')
           reaper.SetTrackSendInfo_Value( -- if no value >> default
             src_tr, 0, old_route_id, df[k].param_name, df[k].param_value)
         end
@@ -374,6 +376,8 @@ function createSingleTrackAudioRoute(new_rid, route_params, src_tr, src_tr_ch, d
     if k == 'u' then goto continue end
 
     if p.param_name == 'I_SRCCHAN' and p.param_value ~= TRACK_INFO_AUDIO_SRC_DISABLED then
+
+      -- change this here so that I can make 3/4 sends
       if dest_tr_ch == 2 then
         reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0)
       else
