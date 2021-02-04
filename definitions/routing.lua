@@ -7,7 +7,7 @@ local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
 
 --//////////////////////////////////////////////////
 --
--- ROUTING LANG
+-- ROUTING
 --
 --  neither of a and m | a and not m
 --      create AUDIO send (default)
@@ -20,8 +20,14 @@ local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
 --
 --  ----------------------------
 --
+--  the param_name is not necessarily the input format ?!
+--
+--  ----------------------------
+--
 --
 --  prepend key with `!` to update w/ disable value
+--
+--  `()u!a` = disablu audio for track ()
 --
 --//////////////////////////////////////////////////
 

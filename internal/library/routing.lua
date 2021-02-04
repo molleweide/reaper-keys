@@ -10,13 +10,18 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 local div = '##########################################'
 local div2 = '---------------------------------'
 
+--  !!!!!!
+--
+--      using midi busses is not supported
+--
 --  EXERCISES
 --
 --  read more vimscript <<<<<<<<<<<<<<<<<<<<<
 --
---      - after update >>> if both audio and midi == off >> delete send_idx
+--      if only audio >> midi doesn't update?? now u is req but it shouldn't be
+--      since midi doesn't exist already
 --
---      - update midi channels
+--
 --        pattern: how take midi ch input from user???
 --          eg. if `m[1,16]`
 --
@@ -71,9 +76,35 @@ function getMatchedTrackGUIDs(search_name)
   return t
 end
 
+-- mv to utils
+-- this function alse is defined in syntax/syntax
+function getStringSplitPattern(pString, pPattern)
+  local Table = {}  -- NOTE: use {n = 0} in Lua-5.0
+  local fpat = "(.-)" .. pPattern
+  local last_end = 1
+  local s, e, cap = pString:find(fpat, 1)
+  while s do
+    if s ~= 1 or cap ~= "" then
+      table.insert(Table,cap)
+    end
+    last_end = e+1
+    s, e, cap = pString:find(fpat, last_end)
+  end
+  if last_end <= #pString then
+    cap = pString:sub(last_end)
+    table.insert(Table, cap)
+  end
+  return Table
+end
 --//////////////////////////////////////////////////////////////////////
 --  MIDI FLAGS
 --//////////////
+--
+--
+--  the get functions return the `normal` decimal value
+--  of the midi flag, eg src ch 1, dest ch 6, etc..
+--
+--  the input is the output from `I_MIDIFLAGS`
 
 --  GET FIRST 5 BITS
 function get_send_flags_src(flags) return flags & ((1 << 5)- 1) end
@@ -109,6 +140,7 @@ function logRoutesByCategory(tr, cat)
     -- log.user('\t\t--')
     return
   end
+
   for si = 0, num_sends-1 do
 
     if cat <= 0 then
@@ -205,9 +237,16 @@ function routing.create()
   prepareRouteComponents(nrp)
 end
 
-function getEnclosedData(str)
+
+function removeEnclosureFromString(str, encl_type)
+  for r in str:gmatch ("%b"..encl_type) do
+    str = str:gsub("%("..r.."%)", "")
+  end
+  return str
+end
+
+function getParens(str)
   local pcount = 0
-  -- find get insides of () pairs >> make more generalized func
   for p in str:gmatch "%b()" do
     pcount = pcount + 1
     if pcount == 1 then pDest = str.sub(p, 2, str.len(p) - 1) end
@@ -217,21 +256,35 @@ function getEnclosedData(str)
       break
     end
   end
-
-  -- filterOutEnclosuresFromString(encl_type) -- encl_type = (){}[]
-  for r in str:gmatch "%b()" do
-    str = str:gsub("%("..r.."%)", "")
-  end
+  str = removeEnclosureFromString(str, '()')
   return retval, pSrc, pDest, str
+end
+
+function getCurly(str)
+  local data
+  for p in str:gmatch "%b{}" do
+    data = str.sub(p, 2, str.len(p) - 1)
+  end
+  str = removeEnclosureFromString(str, '{}')
+  return data, str
+end
+
+function getBrackets(str)
+  local data
+  for p in str:gmatch "%b[]" do
+    data = str.sub(p, 2, str.len(p) - 1)
+  end
+  str = removeEnclosureFromString(str, '[]')
+  return data, str
 end
 
 function extractSendParamsFromUserInput(str)
   log.user('extractSendParamsFromUserInput')
   local nrp = rc; nrp['INP'] = {}
-  local ret, pSrc, pDest, str = getEnclosedData(str) -- (){}[]
 
-  -- TODO
-  --
+  -- LOOK FOR ()
+  local ret, pSrc, pDest, str = getParens(str) -- (){}[]
+
   --  gmatch comma separated list
   --    if num >> get track by gui index
   --    if str >> get match tracks
@@ -249,23 +302,89 @@ function extractSendParamsFromUserInput(str)
   end
   -- DEST IS NUM ELSE
   if tonumber(pDest) ~= nil then
-    -- use tr index for dest
     local tr = reaper.GetTrack(0, tonumber(pDest) - 1)
     rc['dest_guids'] = { reaper.GetTrackGUID( tr ) }
   else
     rc['dest_guids'] = getMatchedTrackGUIDs(pDest)
   end
 
-  -- B. HANDLE USER INPUT PARAMS ------------------------------
+  -- CHECK FOR [] AND ()
+  --
+  -- TODO
+  --
+  --
+  --    tonum
+  --
+  --    assign to route_params
+  --
+  --    create check for {} and [] in route loop
+  --
+  --    create ch range limits
+  --
+  --
+  --
+  --
+  -- audio ch
+  local dataBracket, str = getBrackets(str)
+  if dataBracket ~= nil then
+    local asrc_ch, adst_ch
+    local dataBracketSplit = getStringSplitPattern(dataBracket, ",")
+    if #dataBracketSplit == 1 then
+      asrc_ch = 0 -- default
+      adst_ch = dataBracketSplit[0]
+    elseif #dataBracketSplit == 2 then
+      asrc_ch = dataBracketSplit[0]
+      adst_ch = dataBracketSplit[1]
+    else
+      asrc_ch = 0 -- default
+      adst_ch = 0 -- default
+    end
+  end
+
+  -- midi ch values
+  local dataCurly, str = getCurly(str)
+  if dataCurly ~= nil then
+    local msrc_ch, mdst_ch
+    local dataCurlySplit = getStringSplitPattern(dataCurly, ",")
+    if #dataCurlySplit == 1 then
+      msrc_ch = 0 -- default
+      mdst_ch = dataCurlySplit[0]
+    elseif #dataCurlySplit == 2 then
+      msrc_ch = dataCurlySplit[0]
+      mdst_ch = dataCurlySplit[1]
+    else
+      msrc_ch = 0 -- default
+      mdst_ch = 0 -- default
+    end
+  end
+
+
+  -- HANDLE KEY PARAMS ------------------------------
   for key, val in pairs(nrp.default_params) do
-    local pattern = "!?" .. key .. "%d?%.?%d?%d?" -- very generic pattern
+
+    local pattern = "!?" .. key .. "%d?%.?%d?%d?%d?%d?" -- very generic pattern
     local s, e = string.find(str, pattern)
+
     if s ~= nil and e ~= nil then
       local sub_pattern = string.sub(str,s,e)
       local prefix = string.sub(sub_pattern,0,1)
       local mv_offset = 1
+
       if prefix == '!' then mv_offset = 2 end
       local matched_value = string.sub(str,s+mv_offset,e)
+
+      -- TODO
+      --
+      -- assign [] and {} to src_ch_flags and dest_ch_flags
+      --
+      --   >>> then just make a check for these before a,m, and d are set in
+      --   the route creation loop
+
+      -- if a and [] ?????
+      --
+      -- set matched_value
+      -- if [] >> set `d` flag setWithBrackest = true >>> ignore regular `d` param
+
       nrp.INP[key] = {
         description = val.description,
         param_name = val.param_name,
@@ -464,11 +583,6 @@ function incrementDestChanToSrc(dest_tr, src_tr_ch)
   if dest_tr_ch < src_tr_ch then reaper.SetMediaTrackInfo_Value( dest_tr, 'I_NCHAN', src_tr_ch ) end
   return dest_tr_ch
 end
-
-
--- TODO
---
---  if p.disable then end
 
 function routeUpdate(type, old_route_id, rp, src_tr)
   local m = rp.INP['m']
