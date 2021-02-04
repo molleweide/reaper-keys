@@ -10,26 +10,138 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 local div = '##########################################'
 local div2 = '---------------------------------'
 
--- TODO
+--  EXERCISES
+--
+--      - disable audio send
+--
+--      - disable midi send
+--
+--      - disable all
+--
+--      - syntax.lua > auto send > drums/music/fx
+--
+--      - auto send kicks to ghost_kick
+--
+--      - sidechain selected tracks to ghost kick
+--
+--      - mute send
+--
+--      - nudge volume
+--
+--      - nudge pan
+--
+--      - toggle mono / stereo
+--
 --
 -- LINK > format numbers/decimals ::: https://stackoverflow.com/questions/18313171/lua-rounding-numbers-and-then-truncate
 
-----------------------------------------------------------------
+--////////////////////////////////////////////////////////////////////////
+--  UTILS
+--/////////
 
 function isSel() return reaper.CountSelectedTracks(0) ~= 0 end
 
-----------------------------------------------------------------
+function getMatchedTrackGUIDs(search_name)
+  if not search_name then return nil end
+  local t = {}
+  for i=0, reaper.CountTracks(0) - 1 do
+    local tr = reaper.GetTrack(0, i)
+    local _, current_name = reaper.GetTrackName(tr)
+    if current_name:match(search_name) then
+      t[#t+1] = reaper.GetTrackGUID( tr )
+    end
+  end
+  return t
+end
 
--- GET FIRST 5 BITS
+--//////////////////////////////////////////////////////////////////////
+--  MIDI FLAGS
+--//////////////
+
+--  GET FIRST 5 BITS
 function get_send_flags_src(flags) return flags & ((1 << 5)- 1) end
 
--- GET SECOND 5 BITS
+--  GET SECOND 5 BITS
 function get_send_flags_dest(flags) return flags >> 5 end
 
--- GET SRC AND DEST BYTE PREPARED
+--  GET SRC AND DEST BYTE PREPARED
 function create_send_flags(src_ch, dest_ch) return (dest_ch << 5) | src_ch end
 
------------------------------------------------
+--//////////////////////////////////////////////////////////////////////
+--  LOGGING
+--///////////
+
+-- hardware not working....
+function getOtherTrack(tr, cat, si)
+  local other_tr
+  if cat == 0 then
+    other_tr = reaper.BR_GetMediaTrackSendInfo_Track(tr, cat, si, 1)
+  else
+    other_tr = reaper.BR_GetMediaTrackSendInfo_Track(tr, cat, si, 0)
+  end
+  local other_tr_idx = reaper.GetMediaTrackInfo_Value(other_tr, "IP_TRACKNUMBER") - 1
+  return other_tr, other_tr_idx
+end
+
+function logRoutesByCategory(tr, cat)
+  local num_sends = reaper.GetTrackNumSends(tr, cat)
+  if num_sends == 0 then
+    -- log.user('\t\t--')
+    return
+  end
+  for si = 0, num_sends-1 do
+
+    if cat <= 0 then
+      local other_tr, other_tr_idx = getOtherTrack(tr, cat, si)
+      local _, other_tr_name = reaper.GetTrackName(other_tr)
+
+      if cat == 0 then
+        -- SEND ---------------------------------------------------
+        log.user('\n\t\tto track (' .. other_tr_idx .. ') `' .. tostring(other_tr_name)..'`')
+        local audio_out = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
+        local send_in = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
+        local midi_flags_tr = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
+        log.user('\t\t\t'..si..' :: AUDIO_OUT: ' .. tostring(audio_out) .. ' -> ' .. send_in ..
+          ' | MIDI_OUT: ' .. get_send_flags_src(midi_flags_tr) ..
+          ' -> ' .. get_send_flags_dest(midi_flags_tr))
+      elseif cat < 0 then
+        -- RECIEVE ------------------------------------------------
+        log.user('\n\t\tfrom track (' .. other_tr_idx .. ') `' .. tostring(other_tr_name)..'`')
+        local rec_out = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
+        local audio_in =  reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
+        local midi_flags_tr = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
+        log.user('\t\t\t'..si..' :: ' .. tostring(rec_out) .. ' -> ' .. audio_in ..
+          ' AUDIO_IN | ' .. get_send_flags_src(midi_flags_tr) ..
+          ' -> ' .. get_send_flags_dest(midi_flags_tr) .. ' MIDI_IN')
+      end
+    elseif cat > 0 then
+      -- HARDWARE -------------------------------------
+      --
+    end
+  end
+end
+
+function routing.logRoutingInfoForSelectedTracks()
+  log.clear()
+  local log_t = ru.getSelectedTracksGUIDs()
+  for i = 1, #log_t do
+    local tr, tr_idx = ru.getTrackByGUID(log_t[i])
+    local _, current_name = reaper.GetTrackName(tr)
+    log.user('\n\n'..div..'\n:: routes for track #' .. tr_idx+1 .. ' `' .. current_name .. '`:')
+
+    log.user('\n\tSENDs:')
+    logRoutesByCategory(tr, rc.flags.CAT_SEND)
+    log.user('\n\tRECIEVEs:')
+    logRoutesByCategory(tr, rc.flags.CAT_REC)
+    log.user('\n\tHARDWARE:')
+    logRoutesByCategory(tr, rc.flags.CAT_HW)
+  end
+end
+
+--//////////////////////////////////////////////////////////////////////
+--  CREATE ROUTE
+--////////////////
+
 function checkIfSendExists(src_tr, dest_tr)
   log.user('checkIfSendsExist')
   for si=0,  reaper.GetTrackNumSends( src_tr, 0 ) do
@@ -59,6 +171,106 @@ function routing.create()
   local _, input_str = reaper.GetUserInputs("SPECIFY ROUTE:", 1, route_help_str, "(176)")
   local new_route_params = extractSendParamsFromUserInput(input_str)
   prepareRouteComponents(new_route_params)
+end
+
+function extractSendParamsFromUserInput(str)
+  log.user('extractSendParamsFromUserInput')
+  local new_route_params = rc
+  local pcount = 0
+  local pSrc
+  local pDest
+
+  new_route_params['INP'] = {}
+
+  -- A. HANDLE SOURCE /DESTINATION
+  for p in str:gmatch "%b()" do
+    pcount = pcount + 1
+    -- remove enclosing `()`
+    if pcount == 1 then pDest = str.sub(p, 2, str.len(p) - 1) end
+    if pcount == 2 then
+      pSrc = pDest
+      pDest = str.sub(p, 2, str.len(p) - 1)
+      break
+    end
+  end
+  for r in str:gmatch "%b()" do
+    str = str:gsub("%("..r.."%)", "")
+  end
+
+  -- SRC IS NUM ELSE
+  if tonumber(pSrc) ~= nil then
+    local tr = reaper.GetTrack(0, tonumber(pSrc) - 1)
+    rc['src_guids'] = { reaper.GetTrackGUID( tr ) }
+  else
+    rc['src_guids'] = getMatchedTrackGUIDs(pSrc)
+  end
+  -- DEST IS NUM ELSE
+  if tonumber(pDest) ~= nil then
+    -- use tr index for dest
+    local tr = reaper.GetTrack(0, tonumber(pDest) - 1)
+    rc['dest_guids'] = { reaper.GetTrackGUID( tr ) }
+  else
+    rc['dest_guids'] = getMatchedTrackGUIDs(pDest)
+  end
+
+  -- B. HANDLE USER INPUT PARAMS
+  for key, val in pairs(new_route_params.default_params) do
+    local pattern = key .. "%d?%.?%d?%d?" -- very generic pattern
+
+    local s, e = string.find(str, pattern)
+    if s ~= nil and e ~= nil then
+      new_route_params.INP[key] = {
+        description = val.description,
+        param_name = val.param_name,
+        param_value = tonumber(string.sub(str,s+1,e))
+      }
+    end
+  end
+  log.user('<USER INPUT PARAMS>', format.block(new_route_params.INP))
+  return new_route_params
+end
+
+function prepareRouteComponents(rp)
+  log.user('prepareRouteComponents')
+  local src_t
+  local dest_t
+  local dest_tr
+  local dest_idx
+
+  -- GET SRC TRACKS
+  if rp.src_guids ~= nil then
+    local singleMatchedSource = #rp.src_guids == 1
+    if not singleMatchedSource then
+      src_t = ru.getSelectedTracksGUIDs()
+    else
+      src_t = rp.src_guids
+    end
+  else
+    src_t = ru.getSelectedTracksGUIDs()
+  end
+  log.user('list SRC tracks >>>>> \n')
+  for i = 1, #src_t do
+    local tr, tr_idx = ru.getTrackByGUID(src_t[i])
+    local ret, src_name = reaper.GetTrackName(tr)
+    log.user('\t' .. tr_idx .. ' - ' .. src_name)
+  end
+
+  -- GET DEST TRACKS
+  dest_tr, dest_idx = ru.getTrackByGUID(rp.dest_guids[1])
+  local ret, dest_name = reaper.GetTrackName(dest_tr)
+  log.user('\nlist DEST tracks >>>>> \n')
+  log.user('\t' .. dest_idx .. ' - ' .. dest_name)
+
+  -- CONFIRM ROUTE CREATION
+  log.user('\n>>> confirm route creation y/n')
+  local help_str = "` #src: `" .. tostring(#src_t) ..
+  "` #dest: `" .. tostring(#rp.dest_guids) ..
+  "` dest[0]: "..dest_name .. "` (y/n)"
+  local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
+  if answer ~= "y" then return end
+
+  -- EXECUTE / UPDATE ROUTING STATE
+  routing.createRoutesLoop(rp, src_t, dest_tr)
 end
 
 function audioMidiBoth(rp)
@@ -134,91 +346,9 @@ function routing.createRoutesLoop(rp, src_t, dest_tr)
   end
 end
 
-function routing.createSingleMIDISend(src_tr,dest_tr,dest_chan)
-  log.user('createSingleMIDISend')
-  local is_exist = checkIfSendExists(src_tr, dest_tr)
-
-  -- TODO
-  -- if dest_chan == nil then set to 0 (ALL)
-  --
-
-  log.user('midi sends exists ???????  : ' .. tostring(is_exist))
-  if not is_exist then
-    local midi_send_id = reaper.CreateTrackSend(src_tr, dest_tr) -- create send; return sendidx for reference
-    local new_midi_flags = create_send_flags(0, dest_chan)
-    reaper.SetTrackSendInfo_Value(src_tr, rc.flags.CAT_SEND, midi_send_id, "I_MIDIFLAGS", new_midi_flags) -- set midi_flags on reference
-    reaper.SetTrackSendInfo_Value(src_tr, rc.flags.CAT_SEND, midi_send_id, "I_SRCCHAN", rc.flags.AUDIO_SRC_OFF)
-  end
-end
-
--- hardware not working....
-function getOtherTrack(tr, cat, si)
-  local other_tr
-  if cat == 0 then
-    other_tr = reaper.BR_GetMediaTrackSendInfo_Track(tr, cat, si, 1)
-  else
-    other_tr = reaper.BR_GetMediaTrackSendInfo_Track(tr, cat, si, 0)
-  end
-  local other_tr_idx = reaper.GetMediaTrackInfo_Value(other_tr, "IP_TRACKNUMBER") - 1
-
-  return other_tr, other_tr_idx
-end
-
-function logRoutesByCategory(tr, cat)
-  local num_sends = reaper.GetTrackNumSends(tr, cat)
-  if num_sends == 0 then
-    -- log.user('\t\t--')
-    return
-  end
-  for si = 0, num_sends-1 do
-
-    if cat <= 0 then
-      local other_tr, other_tr_idx = getOtherTrack(tr, cat, si)
-      local _, other_tr_name = reaper.GetTrackName(other_tr)
-
-      if cat == 0 then
-        -- SEND ---------------------------------------------------
-        log.user('\n\t\tto track (' .. other_tr_idx .. ') `' .. tostring(other_tr_name)..'`')
-        local audio_out = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
-        local send_in = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
-        local midi_flags_tr = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
-        log.user('\t\t\t'..si..' :: AUDIO_OUT: ' .. tostring(audio_out) .. ' -> ' .. send_in ..
-          ' | MIDI_OUT: ' .. get_send_flags_src(midi_flags_tr) ..
-          ' -> ' .. get_send_flags_dest(midi_flags_tr))
-      elseif cat < 0 then
-        -- RECIEVE ------------------------------------------------
-        log.user('\n\t\tfrom track (' .. other_tr_idx .. ') `' .. tostring(other_tr_name)..'`')
-        local rec_out = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
-        local audio_in =  reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
-        local midi_flags_tr = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
-        log.user('\t\t\t'..si..' :: ' .. tostring(rec_out) .. ' -> ' .. audio_in ..
-          ' AUDIO_IN | ' .. get_send_flags_src(midi_flags_tr) ..
-          ' -> ' .. get_send_flags_dest(midi_flags_tr) .. ' MIDI_IN')
-      end
-    elseif cat > 0 then
-      -- HARDWARE -------------------------------------
-      --
-    end
-  end
-end
-
-
-function routing.logRoutingInfoForSelectedTracks()
-  log.clear()
-  local log_t = ru.getSelectedTracksGUIDs()
-  for i = 1, #log_t do
-    local tr, tr_idx = ru.getTrackByGUID(log_t[i])
-    local _, current_name = reaper.GetTrackName(tr)
-    log.user('\n\n'..div..'\n:: routes for track #' .. tr_idx+1 .. ' `' .. current_name .. '`:')
-
-    log.user('\n\tSENDs:')
-    logRoutesByCategory(tr, rc.flags.CAT_SEND)
-    log.user('\n\tRECIEVEs:')
-    logRoutesByCategory(tr, rc.flags.CAT_REC)
-    log.user('\n\tHARDWARE:')
-    logRoutesByCategory(tr, rc.flags.CAT_HW)
-  end
-end
+--////////////////////////////////////////////////////////////////////
+--  REMOVE ROUTES
+--/////////////////
 
 function routing.removeSingle(send_idx)
   -- TODO
@@ -267,6 +397,10 @@ function removeAll(tr, kind)
   end
   return true
 end
+
+--///////////////////////////////////////////////////////////////////////
+--  HANDLE SINGLE TRACK
+--///////////////////////
 
 function incrementDestChanToSrc(dest_tr, src_tr_ch)
   log.user('incrementDestChanToSrc')
@@ -336,125 +470,35 @@ function createSingleTrackAudioRoute(new_rid, route_params, src_tr, src_tr_ch, d
   end
 end
 
-function prepareRouteComponents(rp)
-  log.user('prepareRouteComponents')
-  local src_t
-  local dest_t
-  local dest_tr
-  local dest_idx
+--//////////////////////////////////////////////////////////////////////
+--  FUTURE??
+--////////////
 
-  -- GET SRC TRACKS
-  if rp.src_guids ~= nil then
-    local singleMatchedSource = #rp.src_guids == 1
-    if not singleMatchedSource then
-      src_t = ru.getSelectedTracksGUIDs()
-    else
-      src_t = rp.src_guids
-    end
-  else
-    src_t = ru.getSelectedTracksGUIDs()
+-- TODO
+--
+-- remove this function
+
+function routing.createSingleMIDISend(src_tr,dest_tr,dest_chan)
+  log.user('createSingleMIDISend')
+  local is_exist = checkIfSendExists(src_tr, dest_tr)
+
+  -- TODO
+  -- if dest_chan == nil then set to 0 (ALL)
+  --
+
+  log.user('midi sends exists ???????  : ' .. tostring(is_exist))
+  if not is_exist then
+    local midi_send_id = reaper.CreateTrackSend(src_tr, dest_tr) -- create send; return sendidx for reference
+    local new_midi_flags = create_send_flags(0, dest_chan)
+    reaper.SetTrackSendInfo_Value(src_tr, rc.flags.CAT_SEND, midi_send_id, "I_MIDIFLAGS", new_midi_flags) -- set midi_flags on reference
+    reaper.SetTrackSendInfo_Value(src_tr, rc.flags.CAT_SEND, midi_send_id, "I_SRCCHAN", rc.flags.AUDIO_SRC_OFF)
   end
-  log.user('list SRC tracks >>>>> \n')
-  for i = 1, #src_t do
-    local tr, tr_idx = ru.getTrackByGUID(src_t[i])
-    local ret, src_name = reaper.GetTrackName(tr)
-    log.user('\t' .. tr_idx .. ' - ' .. src_name)
-  end
+end
 
-  -- GET DEST TRACKS
-  dest_tr, dest_idx = ru.getTrackByGUID(rp.dest_guids[1])
-  local ret, dest_name = reaper.GetTrackName(dest_tr)
-  log.user('\nlist DEST tracks >>>>> \n')
-  log.user('\t' .. dest_idx .. ' - ' .. dest_name)
-
-  -- CONFIRM ROUTE CREATION
-  log.user('\n>>> confirm route creation y/n')
-  local help_str = "` #src: `" .. tostring(#src_t) ..
-  "` #dest: `" .. tostring(#rp.dest_guids) ..
-  "` dest[0]: "..dest_name .. "` (y/n)"
-  local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
-  if answer ~= "y" then return end
-
-  -- EXECUTE / UPDATE ROUTING STATE
-  routing.createRoutesLoop(rp, src_t, dest_tr)
+function preventRouteFeedback()
 end
 
 function doesRouteAlreadyExist()
-end
-
-function getMatchedTrackGUIDs(search_name)
-  if not search_name then return nil end
-  local t = {}
-  for i=0, reaper.CountTracks(0) - 1 do
-    local tr = reaper.GetTrack(0, i)
-    local _, current_name = reaper.GetTrackName(tr)
-    if current_name:match(search_name) then
-      t[#t+1] = reaper.GetTrackGUID( tr )
-    end
-  end
-  return t
-end
-
-function extractSendParamsFromUserInput(str)
-  log.user('extractSendParamsFromUserInput')
-  local new_route_params = rc
-  local pcount = 0
-  local pSrc
-  local pDest
-
-  new_route_params['INP'] = {}
-
-  -- A. HANDLE SOURCE /DESTINATION
-  for p in str:gmatch "%b()" do
-    pcount = pcount + 1
-    -- remove enclosing `()`
-    if pcount == 1 then pDest = str.sub(p, 2, str.len(p) - 1) end
-    if pcount == 2 then
-      pSrc = pDest
-      pDest = str.sub(p, 2, str.len(p) - 1)
-      break
-    end
-  end
-  for r in str:gmatch "%b()" do
-    str = str:gsub("%("..r.."%)", "")
-  end
-
-  -- SRC IS NUM ELSE
-  if tonumber(pSrc) ~= nil then
-    local tr = reaper.GetTrack(0, tonumber(pSrc) - 1)
-    rc['src_guids'] = { reaper.GetTrackGUID( tr ) }
-  else
-    rc['src_guids'] = getMatchedTrackGUIDs(pSrc)
-  end
-  -- DEST IS NUM ELSE
-  if tonumber(pDest) ~= nil then
-    -- use tr index for dest
-    local tr = reaper.GetTrack(0, tonumber(pDest) - 1)
-    rc['dest_guids'] = { reaper.GetTrackGUID( tr ) }
-  else
-    rc['dest_guids'] = getMatchedTrackGUIDs(pDest)
-  end
-
-  -- B. HANDLE USER INPUT PARAMS
-  for key, val in pairs(new_route_params.default_params) do
-    local pattern = key .. "%d?%.?%d?%d?" -- very generic pattern
-
-    local s, e = string.find(str, pattern)
-    if s ~= nil and e ~= nil then
-      new_route_params.INP[key] = {
-        description = val.description,
-        param_name = val.param_name,
-        param_value = tonumber(string.sub(str,s+1,e))
-      }
-    end
-  end
-  log.user('<USER INPUT PARAMS>', format.block(new_route_params.INP))
-  return new_route_params
-end
-
-------------------------------------------------------------------------
-
-function preventRouteFeedback()
 end
 
 function sidechainToTrackWithNameString(str)
