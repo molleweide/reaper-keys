@@ -6,6 +6,7 @@ local rc = require('definitions.routing')
 
 local routing = {}
 
+local input_placeholder = "(176)[2|4]{-5|11}"
 local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
 local div = '##########################################'
 local div2 = '---------------------------------'
@@ -227,11 +228,29 @@ function checkIfSendExists(src_tr, dest_tr)
   return false
 end
 
+-- TODO
+--
+-- pass input str to create
+--
+--
+--    a. call function with keybinding
+--
+--    b. call function with prewritten string
+--
+--    c.
 function routing.create()
   log.clear()
   log.user('create()')
+
+  -- TODO
+  --
+  -- this `selection` check is not goot
+  -- it prevents calling create(str)
+  --
+  -- ...rm
   if not isSel() then return end
-  local _, input_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, "(176)")
+
+  local _, input_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
   -- new route params
   local nrp = extractSendParamsFromUserInput(input_str)
   prepareRouteComponents(nrp)
@@ -312,52 +331,58 @@ function extractSendParamsFromUserInput(str)
   --
   -- TODO
   --
-  --
-  --    tonum
-  --
   --    assign to route_params
   --
   --    create check for {} and [] in route loop
   --
-  --    create ch range limits
+  --      ignore regular a/m if {[]}
   --
-  --
-  --
-  --
-  -- audio ch
+  -- AUDIO CH
   local dataBracket, str = getBrackets(str)
   if dataBracket ~= nil then
-    local asrc_ch, adst_ch
-    local dataBracketSplit = getStringSplitPattern(dataBracket, ",")
-    if #dataBracketSplit == 1 then
-      asrc_ch = 0 -- default
-      adst_ch = dataBracketSplit[0]
-    elseif #dataBracketSplit == 2 then
-      asrc_ch = dataBracketSplit[0]
-      adst_ch = dataBracketSplit[1]
-    else
-      asrc_ch = 0 -- default
-      adst_ch = 0 -- default
+    local bSrc, bDst
+    local dataBracketSplit = getStringSplitPattern(dataBracket, "|")
+    for d=1, #dataBracketSplit do
+      local D = tonumber(dataBracketSplit[d])
+      -- come up with better ranges / limits / restrictions for
+      -- I_SRCCHAN
+      if D < 0 or D > 4 then D = 0 end
+      if d==1 then
+        if D ~= nil then bDst = D else bDst = 0 end
+      end
+      if d==2 then
+        bSrc = bDst
+        if D ~= nil then bDst = D else bDst = 0 end
+        break
+      end
     end
+    log.user('bracket: ' .. bSrc .. ' > ' .. bDst)
+
+    -- TODO assign to rc here
+    nrp.brackets = { src = bSrc, dst = bDst }
   end
 
-  -- midi ch values
+  -- MIDI CH VALUES
   local dataCurly, str = getCurly(str)
   if dataCurly ~= nil then
-    local msrc_ch, mdst_ch
-    local dataCurlySplit = getStringSplitPattern(dataCurly, ",")
-    if #dataCurlySplit == 1 then
-      msrc_ch = 0 -- default
-      mdst_ch = dataCurlySplit[0]
-    elseif #dataCurlySplit == 2 then
-      msrc_ch = dataCurlySplit[0]
-      mdst_ch = dataCurlySplit[1]
-    else
-      msrc_ch = 0 -- default
-      mdst_ch = 0 -- default
+    local cSrc, cDst
+    local dataCurlySplit = getStringSplitPattern(dataCurly, "|")
+    for d=1, #dataCurlySplit do
+      local D = tonumber(dataCurlySplit[d])
+      if D < 0 or D > 16 then D = 0 end
+      if d==1 then
+        if D ~= nil then cDst = D else cDst = 0 end
+      end
+      if d==2 then
+        cSrc = cDst
+        if D ~= nil then cDst = D else cDst = 0 end
+        break
+      end
     end
+    log.user('curly: ' .. cSrc .. ' > ' .. cDst)
+    -- TODO assign to rc here
+    nrp.curly = { src = cSrc, dst = cDst }
   end
-
 
   -- HANDLE KEY PARAMS ------------------------------
   for key, val in pairs(nrp.default_params) do
@@ -393,7 +418,7 @@ function extractSendParamsFromUserInput(str)
       }
     end
   end
-  log.user('<USER INPUT PARAMS>', format.block(nrp.INP))
+  log.user(format.block(nrp))
   return nrp
 end
 
