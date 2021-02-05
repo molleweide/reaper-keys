@@ -6,7 +6,7 @@ local rc = require('definitions.routing')
 
 local routing = {}
 
-local input_placeholder = "(176)[2|4]{-5|11}"
+local input_placeholder = "(176)[4|2]{3|4}"
 local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
 local div = '##########################################'
 local div2 = '---------------------------------'
@@ -19,12 +19,16 @@ local div2 = '---------------------------------'
 --
 --  read more vimscript <<<<<<<<<<<<<<<<<<<<<
 --
+--      TODO
+--      [{}] >> updateRoute and createSingleTrackAudioRoute
+--
+--
+--
+--
+--
 --      if only audio >> midi doesn't update?? now u is req but it shouldn't be
 --      since midi doesn't exist already
 --
---
---        pattern: how take midi ch input from user???
---          eg. if `m[1,16]`
 --
 --      - update send by id?
 --
@@ -329,14 +333,6 @@ function extractSendParamsFromUserInput(str)
 
   -- CHECK FOR [] AND ()
   --
-  -- TODO
-  --
-  --    assign to route_params
-  --
-  --    create check for {} and [] in route loop
-  --
-  --      ignore regular a/m if {[]}
-  --
   -- AUDIO CH
   local dataBracket, str = getBrackets(str)
   if dataBracket ~= nil then
@@ -397,18 +393,6 @@ function extractSendParamsFromUserInput(str)
 
       if prefix == '!' then mv_offset = 2 end
       local matched_value = string.sub(str,s+mv_offset,e)
-
-      -- TODO
-      --
-      -- assign [] and {} to src_ch_flags and dest_ch_flags
-      --
-      --   >>> then just make a check for these before a,m, and d are set in
-      --   the route creation loop
-
-      -- if a and [] ?????
-      --
-      -- set matched_value
-      -- if [] >> set `d` flag setWithBrackest = true >>> ignore regular `d` param
 
       nrp.INP[key] = {
         description = val.description,
@@ -609,13 +593,32 @@ function incrementDestChanToSrc(dest_tr, src_tr_ch)
   return dest_tr_ch
 end
 
+-- TODO
+--
+-- merge update and create into one function >>>> pass update/new flage
+
 function routeUpdate(type, old_route_id, rp, src_tr)
   local m = rp.INP['m']
   local df = rc.default_params
   log.user('old route id: ' .. old_route_id)
+  local has_brackets  = route_params.brackets ~= nil
+  local has_curly     = route_params.curly ~= nil
+  if has_brackets ~= nil then
+    reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_SRCCHAN', route_params.brackets.src)
+    reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_DSTCHAN', route_params.brackets.dst)
+  end
+  if has_curly ~= nil then
+    local mf = create_send_flags(route_params.curly.src, route_params.curly.dst)
+    reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_MIDIFLAGS', mf)
+  end
+
   for k, p in pairs(rp.INP) do
     log.user(p.param_name .. '  ' .. tostring(p.param_value))
+
     if k == 'u' then goto continue end
+    if k == 'm' and has_curly then goto continue end
+    if (k == 'a' or k == 'd') and has_brackets then goto continue end
+
     if k == 'm' then -- MIDI /////////////////////////////////
       if type == 'midi' or type == 'both' then
         if p.disable then
@@ -649,11 +652,30 @@ function routeUpdate(type, old_route_id, rp, src_tr)
   end
 end
 
+-- remove `Audio from name` >> it can change both audio andm midi ....
 function createSingleTrackAudioRoute(new_rid, route_params, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
   log.user('createTrackSend')
   local df = rc.default_params
+  local has_brackets  = route_params.brackets ~= nil
+  local has_curly     = route_params.curly ~= nil
+
+  if has_brackets ~= nil then
+    reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN', route_params.brackets.src)
+    reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_DSTCHAN', route_params.brackets.dst)
+  end
+
+  if has_curly ~= nil then
+    local mf = create_send_flags(route_params.curly.src, route_params.curly.dst)
+    reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_MIDIFLAGS', mf)
+  end
+
   for k, p in pairs(route_params.INP) do
+
     if k == 'u' then goto continue end
+    if k == 'm' and has_curly then goto continue end
+    if (k == 'a' or k == 'd') and has_brackets then goto continue end
+
+
     if p.param_name == 'I_SRCCHAN' and p.param_value ~= rc.flags.AUDIO_SRC_OFF then
       if p.param_value ~= nil then
         reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, p.param_name, p.param_value)
@@ -665,6 +687,8 @@ function createSingleTrackAudioRoute(new_rid, route_params, src_tr, src_tr_ch, d
       -- else
       --   reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
       -- end
+
+
     else
       if p.param_value ~= nil then
         reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, p.param_name, p.param_value)
