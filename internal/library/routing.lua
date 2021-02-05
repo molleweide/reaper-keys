@@ -16,10 +16,6 @@ local div2 = '---------------------------------'
 --
 --
 --
---
---
---
---
 --      - update send by id?
 --
 --      - many 2 many >>> pattern name/num separators (**)
@@ -323,7 +319,6 @@ function inputHasChar(str, key)
 end
 
 function extractSendParamsFromUserInput(str)
-  log.user('extractSendParamsFromUserInput')
   local nrp = rc; nrp['INP'] = {}
   local ret, pSrc, pDest, str = getParens(str) -- () ///////////////////////////
 
@@ -343,32 +338,24 @@ function extractSendParamsFromUserInput(str)
   end
 
   local dataBracket, str = getBrackets(str) -- [] /////////////////////////////
+  local bSrc, bDst
   if dataBracket ~= nil then
-    local bSrc, bDst
     local dataBracketSplit = getStringSplitPattern(dataBracket, "|")
     for d=1, #dataBracketSplit do
       local D = tonumber(dataBracketSplit[d])
-      -- come up with better ranges / limits / restrictions for
-      -- I_SRCCHAN
       if D < 0 or D > 4 then D = 0 end
-      if d==1 then
-        if D ~= nil then bDst = D else bDst = 0 end
-      end
+      if d==1 then if D ~= nil then bDst = D else bDst = 0 end end
       if d==2 then
         bSrc = bDst
         if D ~= nil then bDst = D else bDst = 0 end
         break
       end
     end
-    log.user('bracket: ' .. bSrc .. ' > ' .. bDst)
-
-    -- TODO assign to rc here
-    nrp.brackets = { src = bSrc, dst = bDst }
   end
 
   local dataCurly, str = getCurly(str) -- {} /////////////////////////////////
+  local cSrc, cDst
   if dataCurly ~= nil then
-    local cSrc, cDst
     local dataCurlySplit = getStringSplitPattern(dataCurly, "|")
     for d=1, #dataCurlySplit do
       local D = tonumber(dataCurlySplit[d])
@@ -382,34 +369,54 @@ function extractSendParamsFromUserInput(str)
         break
       end
     end
-    log.user('curly: ' .. cSrc .. ' > ' .. cDst)
-    nrp.curly = { src = cSrc, dst = cDst }
   end
 
-  -- HANDLE KEY PARAMS //////////////////////////////////////////////////////
+  -- TODO
   --
-  -- instead of looping over defaults >> i could just
-  -- do a gmatch on str
+  -- below could be refactored into function
+  --
+  -- pass presedence [{}] as params to func
 
-  local ret, val, pre = inputHasChar(str, 'a')
-  if ret then
-
-      -- nrp.INP[key] = {
-      --   description = val.description,
-      --   param_name = val.param_name,
-      --   param_value = tonumber(matched_value),
-      --   disable = prefix == '!'
-      -- }
+  -- AUDIO_SRC //////////////////////////////
+  local key = 'a'
+  local ret, val, pre = inputHasChar(str, key)
+  if ret and dataBracket == nil then
+    if dataBracket ~= nil then val = bSrc else val = tonumber(val) end
+    nrp.INP[key] = {
+      description = df[key].description,
+      param_name = df[key].param_name,
+      param_value = val,
+    }
+    if pre then nrp.INP[key].param_value = df[key].disable_value end
   end
 
-  local ret, val, pre = inputHasChar(str, 'd')
-  if ret then
+  -- AUDIO_DEST //////////////////////////////
+  local key = 'd'
+  local ret, val, pre = inputHasChar(str, key)
+  if ret and dataBracket == nil then
+    if dataBracket ~= nil then val = bDst else val = tonumber(val) end
+    nrp.INP[key] = {
+      description = df[key].description,
+      param_name = df[key].param_name,
+      param_value = val,
+    }
+    if pre then nrp.INP[key].param_value = df[key].disable_value end
   end
 
-  local ret, val, pre = inputHasChar(str, 'm')
-  if ret then
+  -- MIDI //////////////////////////////
+  local key = 'm'
+  local ret, val, pre = inputHasChar(str, key)
+  if ret and dataCurly == nil then
+    if dataCurly ~= nil then val = create_send_flags(cSrc,cDst) else val = tonumber(val) end
+    nrp.INP[key] = {
+      description = df[key].description,
+      param_name = df[key].param_name,
+      param_value = val,
+    }
+    if pre then nrp.INP[key].param_value = df[key].disable_value end
   end
 
+  -- ALLOW_OVERWRITE //////////////////////////////
   local ret, val, pre = inputHasChar(str, 'u')
   if ret then nrp.overwrite = true end
 
@@ -572,68 +579,15 @@ function updateRouteState_Track(src_tr, rp, rid)
   -- else
   --   reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
   -- end
-  if rp.brackets ~= nil then
-    reaper.SetTrackSendInfo_Value( src_tr, 0, rid, 'I_SRCCHAN', rp.brackets.src)
-    reaper.SetTrackSendInfo_Value( src_tr, 0, rid, 'I_DSTCHAN', rp.brackets.dst)
-  end
-  if rp.curly ~= nil then
-    local mf = create_send_flags(rp.curly.src, rp.curly.dst)
-    reaper.SetTrackSendInfo_Value( src_tr, 0, rid, 'I_MIDIFLAGS', mf)
-  end
 
   for k, p in pairs(rp.INP) do
     log.user(p.param_name .. '  ' .. tostring(p.param_value))
-    if k == 'u' then goto continue end -- just a dummy param...
-
-    -- skip set a/m if [{}]
-    if (k == 'a' or k == 'd') and rp.brackets ~= nil then goto continue end
-    if k == 'm' and rp.curly ~= nil then goto continue end
-
-    -- MIDI ////////////////////////////////////////////////
     if k == 'm' then
-
       if (rp.prev == 2 or rp.prev == 3) and not rp.overwrite then goto continue end
-
-      -- TODO 
-      --
-      --  remove this if statement
-      --
-      --  1. disable >> should already be prepared in the extract params
-      --  2. if value nil can be an inline ternary
-      if p.disable then
-        log.user('midi disable')
-        reaper.SetTrackSendInfo_Value(
-          src_tr, 0, rid, p.param_name, df[k].disable_value)
-      elseif p.param_value ~= nil then
-        reaper.SetTrackSendInfo_Value(
-          src_tr, 0, rid, p.param_name, p.param_value)
-      else
-        reaper.SetTrackSendInfo_Value( -- if no value >> default
-          src_tr, 0, rid, df[k].param_name, df[k].param_value)
-      end
-
-    else -- AUDIO ////////////////////////////////////////////
-
+      reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
+    else
       if (rp.prev == 1 or rp.prev == 3) and not rp.overwrite then goto continue end
-
-      -- TODO 
-      --
-      --  remove this if statement
-      --
-      --  1. disable >> should already be prepared in the extract params
-      --  2. if value nil can be an inline ternary
-      --
-      if p.disable then
-        log.user('audio disable')
-        reaper.SetTrackSendInfo_Value(
-          src_tr, 0, rid, p.param_name, df[k].disable_value)
-      elseif p.param_value ~= nil then
-        reaper.SetTrackSendInfo_Value(
-          src_tr, 0, rid, p.param_name, p.param_value)
-      else
-        reaper.SetTrackSendInfo_Value( -- if no value >> default
-          src_tr, 0, rid, df[k].param_name, df[k].param_value)
-      end
+      reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
     end
     :: continue ::
   end
