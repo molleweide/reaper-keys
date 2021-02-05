@@ -200,8 +200,8 @@ end
 -- 3 = both
 
 --
-function getPrevRouteState(src_tr, dest_tr, r)
-  log.user('checkIfSendsExist')
+function getPrevRouteState(src_tr, dest_tr, rp)
+  rp.prev = 0
   for si=0,  reaper.GetTrackNumSends( src_tr, 0 ) do
     local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, 0, si, 1 )
     if dest_tr_check == dest_tr then
@@ -209,26 +209,23 @@ function getPrevRouteState(src_tr, dest_tr, r)
       local prev_src_audio_ch = reaper.GetTrackSendInfo_Value(src_tr, 0, si, 'I_SRCCHAN')
       -- both audio and midi
       local retval = 3
-      r.prev = 3
+      rp.prev = 3
 
       local no_midi = prev_src_midi_flags == rc.flags.MIDI_OFF
       local no_audio = prev_src_audio_ch ==  rc.flags.AUDIO_SRC_OFF
       -- only audio = 1
       if no_midi then
-        retval = 1
-        r.prev = 1
+        rp.prev = 1
       end
       -- only midi = 2
       if no_audio then
-        retval = 2
-        r.prev = 2
+        rp.prev = 2
       end
       -- log.user(tostring(si) .. '   ' .. tostring(no_midi) .. '   ' .. tostring(no_audio) .. '   ' .. tostring(retval))
-      return retval, si, r
+      return rp, si
     end
   end
-  r.comp_state = 0
-  return false, nil, r
+  return rp
 end
 
 -- TODO
@@ -243,20 +240,12 @@ end
 --    c.
 function routing.create()
   log.clear()
-  log.user('create()')
-
-  -- TODO
-  --
-  -- this `selection` check is not goot
-  -- it prevents calling create(str)
-  --
-  -- ...rm
-  if not isSel() then return end
 
   local _, input_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
-  -- new route params
-  local nrp = extractSendParamsFromUserInput(input_str)
-  prepareRouteComponents(nrp)
+
+  local rp = extractSendParamsFromUserInput(input_str)
+
+  prepareRouteComponents(rp)
 end
 
 
@@ -282,21 +271,12 @@ function getParens(str)
   return retval, pSrc, pDest, str
 end
 
-function getCurly(str)
+function getEnclosers(str, encl)
   local data
-  for p in str:gmatch "%b{}" do
+  for p in str:gmatch ("%b"..encl) do
     data = str.sub(p, 2, str.len(p) - 1)
   end
-  str = removeEnclosureFromString(str, '{}')
-  return data, str
-end
-
-function getBrackets(str)
-  local data
-  for p in str:gmatch "%b[]" do
-    data = str.sub(p, 2, str.len(p) - 1)
-  end
-  str = removeEnclosureFromString(str, '[]')
+  str = removeEnclosureFromString(str, encl)
   return data, str
 end
 
@@ -305,12 +285,12 @@ function inputHasChar(str, key)
   local s, e = string.find(str, pattern)
   local mv_offset = 1
   local retval = false
+  local prefix
 
   if s ~= nil and e ~= nil then
     retval = true
     local sub_pattern = string.sub(str,s,e)
-    local prefix = string.sub(sub_pattern,0,1)
-
+    prefix = string.sub(sub_pattern,0,1)
     if prefix == '!' then mv_offset = 2 end
     local matched_value = string.sub(str,s+mv_offset,e)
   end
@@ -318,32 +298,32 @@ function inputHasChar(str, key)
   return retval, matched_value, prefix
 end
 
-function extractSendParamsFromUserInput(str)
-  local nrp = rc; nrp['INP'] = {}
-  local ret, pSrc, pDest, str = getParens(str) -- () ///////////////////////////
-
-  --  gmatch comma separated list
-  --    if num >> get track by gui index
-  --    if str >> get match tracks
-  --      add all tracks
-  --        if >1 >>> prompt user >>> ARE YOU SURE?????
-  -- SRC/DST IS NUM ELSE ////////////////////////////////////////////////////
+--  TODO
+--  gmatch comma separated list
+--    if num >> get track by gui index
+--    if str >> get match tracks
+--      add all tracks
+--        if >1 >>> prompt user >>> ARE YOU SURE?????
+function assignGUIDsFromUserInput(rp, pSrc, pDst)
   if tonumber(pSrc) ~= nil then
     local tr = reaper.GetTrack(0, tonumber(pSrc) - 1)
-  rc['src_guids'] = {reaper.GetTrackGUID(tr)} else rc['src_guids'] = getMatchedTrackGUIDs(pSrc)
+  rp['src_guids'] = {reaper.GetTrackGUID(tr)} else rp['src_guids'] = getMatchedTrackGUIDs(pSrc)
   end
-  if tonumber(pDest) ~= nil then
-    local tr = reaper.GetTrack(0, tonumber(pDest) - 1)
-  rc['dest_guids'] = {reaper.GetTrackGUID(tr)} else rc['dest_guids'] = getMatchedTrackGUIDs(pDest)
+  if tonumber(pDst) ~= nil then
+    local tr = reaper.GetTrack(0, tonumber(pDst) - 1)
+  rp['dest_guids'] = {reaper.GetTrackGUID(tr)} else rp['dest_guids'] = getMatchedTrackGUIDs(pDst)
   end
+  return rp
+end
 
-  local dataBracket, str = getBrackets(str) -- [] /////////////////////////////
+function getEnclosedChannelData(str, encloser, sep, rangeL, rangeH)
+  local dataBracket, str = getEnclosers(str, encloser)
   local bSrc, bDst
   if dataBracket ~= nil then
-    local dataBracketSplit = getStringSplitPattern(dataBracket, "|")
+    local dataBracketSplit = getStringSplitPattern(dataBracket, sep)
     for d=1, #dataBracketSplit do
       local D = tonumber(dataBracketSplit[d])
-      if D < 0 or D > 4 then D = 0 end
+      if D < rangeL or D > rangeH then D = 0 end
       if d==1 then if D ~= nil then bDst = D else bDst = 0 end end
       if d==2 then
         bSrc = bDst
@@ -352,75 +332,67 @@ function extractSendParamsFromUserInput(str)
       end
     end
   end
+  return str, bSrc, bDst
+end
 
-  local dataCurly, str = getCurly(str) -- {} /////////////////////////////////
-  local cSrc, cDst
-  if dataCurly ~= nil then
-    local dataCurlySplit = getStringSplitPattern(dataCurly, "|")
-    for d=1, #dataCurlySplit do
-      local D = tonumber(dataCurlySplit[d])
-      if D < 0 or D > 16 then D = 0 end
-      if d==1 then
-        if D ~= nil then cDst = D else cDst = 0 end
-      end
-      if d==2 then
-        cSrc = cDst
-        if D ~= nil then cDst = D else cDst = 0 end
-        break
-      end
-    end
-  end
+function extractSendParamsFromUserInput(str)
+  local rp = rc;
 
-  -- TODO
-  --
-  -- below could be refactored into function
-  --
-  -- pass presedence [{}] as params to func
+  rp['new_params'] = {}
+
+  local ret, src_tr_data, dest_tr_data, str = getParens(str) -- () ///////////////////////////
+
+  local rp = assignGUIDsFromUserInput(rp, src_tr_data, dest_tr_data)
+
+  local str, bSrc, bDst = getEnclosedChannelData(str, '[]', '|', 0, 4)
+
+  local str, cSrc, cDst = getEnclosedChannelData(str, '{}', '|', 0, 4)
 
   -- AUDIO_SRC //////////////////////////////
   local key = 'a'
   local ret, val, pre = inputHasChar(str, key)
-  if ret and dataBracket == nil then
-    if dataBracket ~= nil then val = bSrc else val = tonumber(val) end
-    nrp.INP[key] = {
+  if ret or bSrc ~= nil then
+    if bSrc ~= nil then val = bSrc else val = tonumber(val) end
+    rp.new_params[key] = {
       description = df[key].description,
       param_name = df[key].param_name,
       param_value = val,
     }
-    if pre then nrp.INP[key].param_value = df[key].disable_value end
+    if pre == '!' then rp.new_params[key].param_value = df[key].disable_value end
   end
 
   -- AUDIO_DEST //////////////////////////////
   local key = 'd'
   local ret, val, pre = inputHasChar(str, key)
-  if ret and dataBracket == nil then
-    if dataBracket ~= nil then val = bDst else val = tonumber(val) end
-    nrp.INP[key] = {
+  if ret or bDsp ~= nil then
+    if bDst ~= nil then val = bDst else val = tonumber(val) end
+    rp.new_params[key] = {
       description = df[key].description,
       param_name = df[key].param_name,
       param_value = val,
     }
-    if pre then nrp.INP[key].param_value = df[key].disable_value end
+    if pre == '!' then rp.new_params[key].param_value = df[key].disable_value end
   end
 
   -- MIDI //////////////////////////////
   local key = 'm'
   local ret, val, pre = inputHasChar(str, key)
-  if ret and dataCurly == nil then
-    if dataCurly ~= nil then val = create_send_flags(cSrc,cDst) else val = tonumber(val) end
-    nrp.INP[key] = {
+  if ret or cSrc ~= nil then
+    if cSrc ~= nil then val = create_send_flags(cSrc,cDst) else val = tonumber(val) end
+    rp.new_params[key] = {
       description = df[key].description,
       param_name = df[key].param_name,
       param_value = val,
     }
-    if pre then nrp.INP[key].param_value = df[key].disable_value end
+    if pre == '!' then rp.new_params[key].param_value = df[key].disable_value end
   end
 
   -- ALLOW_OVERWRITE //////////////////////////////
   local ret, val, pre = inputHasChar(str, 'u')
-  if ret then nrp.overwrite = true end
+  if ret then rp.overwrite = true end
 
-  return nrp
+  log.user(format.block(rp))
+  return rp
 end
 
 function prepareRouteComponents(rp)
@@ -467,13 +439,13 @@ function prepareRouteComponents(rp)
 end
 
 function getNextRouteState(rp, check_str)
-  if (rp.INP['a'] ~= nil and rp.INP['m'] == nil) or (rp.INP['a'] == nil and rp.INP['m'] == nil) then
+  if (rp.new_params['a'] ~= nil and rp.new_params['m'] == nil) or (rp.new_params['a'] == nil and rp.new_params['m'] == nil) then
     rp.next = 1 -- add only audio (default if no a/m input)
   end
-  if rp.INP['a'] == nil and rp.INP['m'] ~= nil then
+  if rp.new_params['a'] == nil and rp.new_params['m'] ~= nil then
     rp.next = 2 -- add only midi
   end
-  if rp.INP['a'] == nil and rp.INP['m'] ~= nil then
+  if rp.new_params['a'] == nil and rp.new_params['m'] ~= nil then
     rp.next = 3 -- add both
   end
 
@@ -487,9 +459,10 @@ function routing.createRoutesLoop(rp, src_t, dest_tr)
     -- why are these two put here. can they be put inside of  createisingle funcs??
     -- local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
     -- local dest_tr_ch = incrementDestChanToSrc(dest_tr, src_tr_ch)
-    local exists, rid, rp = getPrevRouteState(src_tr, dest_tr, rp)
+    local rp, rid = getPrevRouteState(src_tr, dest_tr, rp)
     local rp = getNextRouteState(rp)
-    if rp.prev == 0 then local rid = reaper.CreateTrackSend(src_tr, dest_tr) end
+    if rp.prev == 0 then rid = reaper.CreateTrackSend(src_tr, dest_tr) end
+
     updateRouteState_Track(src_tr, rp, rid)
 
     -- DELETE SEND IF EMPTY
@@ -571,8 +544,6 @@ end
 
 function updateRouteState_Track(src_tr, rp, rid)
   log.user('old route id: ' .. rid)
-  local has_brackets  = rp.brackets ~= nil
-  local has_curly     = rp.curly ~= nil
   -- HANDLE MONO ?!?!
   -- if dest_tr_ch == 2 then
   --   reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0)
@@ -580,12 +551,13 @@ function updateRouteState_Track(src_tr, rp, rid)
   --   reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
   -- end
 
-  for k, p in pairs(rp.INP) do
+  for k, p in pairs(rp.new_params) do
     log.user(p.param_name .. '  ' .. tostring(p.param_value))
     if k == 'm' then
       if (rp.prev == 2 or rp.prev == 3) and not rp.overwrite then goto continue end
       reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
     else
+      log.user(':::::: ' .. k)
       if (rp.prev == 1 or rp.prev == 3) and not rp.overwrite then goto continue end
       reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
     end
