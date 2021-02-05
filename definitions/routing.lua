@@ -75,12 +75,6 @@ return {
   -- remove `param_` >>> becomes redundant
 
   default_params = {
-    ["u"] = {
-      description = 'ALLOW OVERWRITE | overwrites existing params',
-      param_name = 'I_SRCCHAN',
-      param_value = 0,
-    },
-
     -- ////////////////////////////////////////////////////////////////////
     -- WHICH TYPE
     -- ////////////
@@ -114,11 +108,11 @@ return {
     -- },
 
     -- commented >>> always default to send
-    ["k"] = {
-      description = 'route type | int, is <0 for receives, 0=sends, >0 for hardware outputs',
-      param_name = 'CATEGORY',
-      param_value = 0,
-    },
+    -- ["k"] = {
+    --   description = 'route type | int, is <0 for receives, 0=sends, >0 for hardware outputs',
+    --   param_name = 'CATEGORY',
+    --   param_value = 0,
+    -- },
 
     -- ////////////////////////////////////////////////////////////////////////////////
     -- NUDGE PARAMS
@@ -129,11 +123,11 @@ return {
     --
     --    TODO this would require a dedicated match-pattern
 
-    ["v"] = {
-      description = 'VOLUME | TODO.. double, 1.0 = +0dB',
-      param_name = 'D_VOL',
-      param_value = 1
-    },
+    -- ["v"] = {
+    --   description = 'VOLUME | TODO.. double, 1.0 = +0dB',
+    --   param_name = 'D_VOL',
+    --   param_value = 1
+    -- },
     -- ["P"] = {
     --  description = 'update pan | -+int (max/min) (default=0)'
     --   param_name = 'D_PAN',
