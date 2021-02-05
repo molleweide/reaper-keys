@@ -23,11 +23,24 @@ local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
 --  the param_name is not necessarily the input format ?!
 --
 --  ----------------------------
---
---
 --  prepend key with `!` to update w/ disable value
 --
 --  `()u!a` = disablu audio for track ()
+--
+--  ----------------------------
+--  EXAMPLES
+--
+--  (176)               only audio send from sel to #176
+--
+--  (176)(50)a          only audio send from #176 to #50
+--
+--  (nameA)(nameB){2}   midi send from tr_nameA ch 0 to tr_nameV B ch 2
+--
+--  (nameB)[0|2]{}
+--        midi send from tr_nameA ch 0 to tr_nameV B ch 2
+--
+--
+--
 --
 --//////////////////////////////////////////////////
 

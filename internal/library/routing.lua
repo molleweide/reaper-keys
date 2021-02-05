@@ -3,6 +3,7 @@ local tb = require('utils.table')
 local log = require('utils.log')
 local format = require('utils.format')
 local rc = require('definitions.routing')
+local df = rc.default_params
 
 local routing = {}
 
@@ -13,7 +14,20 @@ local div2 = '---------------------------------'
 
 --      TODO
 --
---      merge routeUpdate AND createSingleTrackAudioRoute
+--      remove the ugly disable/default if/else in updateRouteState_Track()
+--
+--      write [{}] to a and d >>>> extract
+--
+--        rename INP >> new_params
+--
+--        use gmatch
+--
+--
+--
+--
+--
+--
+--      merge updateRouteState_Track AND createSingleTrackAudioRoute
 --
 --      make sure everything updates as expected
 --
@@ -194,8 +208,14 @@ end
 --//////////////////////////////////////////////////////////////////////
 --  CREATE ROUTE
 --////////////////
+--
+-- 0 = none
+-- 1 = only audio
+-- 2 = only midi
+-- 3 = both
 
-function checkIfSendExists(src_tr, dest_tr)
+--
+function getPrevRouteState(src_tr, dest_tr, r)
   log.user('checkIfSendsExist')
   for si=0,  reaper.GetTrackNumSends( src_tr, 0 ) do
     local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, 0, si, 1 )
@@ -204,17 +224,26 @@ function checkIfSendExists(src_tr, dest_tr)
       local prev_src_audio_ch = reaper.GetTrackSendInfo_Value(src_tr, 0, si, 'I_SRCCHAN')
       -- both audio and midi
       local retval = 3
+      r.prev = 3
+
       local no_midi = prev_src_midi_flags == rc.flags.MIDI_OFF
       local no_audio = prev_src_audio_ch ==  rc.flags.AUDIO_SRC_OFF
       -- only audio = 1
-      if no_midi then retval = 1 end
+      if no_midi then
+        retval = 1
+        r.prev = 1
+      end
       -- only midi = 2
-      if no_audio then retval = 2 end
+      if no_audio then
+        retval = 2
+        r.prev = 2
+      end
       -- log.user(tostring(si) .. '   ' .. tostring(no_midi) .. '   ' .. tostring(no_audio) .. '   ' .. tostring(retval))
-      return retval, si, prev_params
+      return retval, si, r
     end
   end
-  return false
+  r.comp_state = 0
+  return false, nil, r
 end
 
 -- TODO
@@ -366,6 +395,11 @@ function extractSendParamsFromUserInput(str)
   end
 
   -- HANDLE KEY PARAMS ------------------------------
+  --
+  -- TODO
+  --
+  -- instead of looping over defaults >> i could just
+  -- do a gmatch on str
   for key, val in pairs(nrp.default_params) do
 
     local pattern = "!?" .. key .. "%d?%.?%d?%d?%d?%d?" -- very generic pattern
@@ -375,6 +409,8 @@ function extractSendParamsFromUserInput(str)
       local sub_pattern = string.sub(str,s,e)
       local prefix = string.sub(sub_pattern,0,1)
       local mv_offset = 1
+
+      if key == 'u' then nrp.overwrite = true end
 
       if prefix == '!' then mv_offset = 2 end
       local matched_value = string.sub(str,s+mv_offset,e)
@@ -387,7 +423,6 @@ function extractSendParamsFromUserInput(str)
       }
     end
   end
-  log.user(format.block(nrp))
   return nrp
 end
 
@@ -434,84 +469,42 @@ function prepareRouteComponents(rp)
   routing.createRoutesLoop(rp, src_t, dest_tr)
 end
 
-
-
-function rType(rp, check_str)
+function getNextRouteState(rp, check_str)
   if (rp.INP['a'] ~= nil and rp.INP['m'] == nil) or (rp.INP['a'] == nil and rp.INP['m'] == nil) then
-    return 'ONLY_AUDIO' == check_str -- default (audio atm)
+    rp.next = 1 -- add only audio (default if no a/m input)
   end
   if rp.INP['a'] == nil and rp.INP['m'] ~= nil then
-    return 'ONLY_MIDI' == check_str -- only midi
+    rp.next = 2 -- add only midi
   end
   if rp.INP['a'] == nil and rp.INP['m'] ~= nil then
-    return 'BOTH_AUDIO_AND_MIDI' == check_str -- both audio and midi
+    rp.next = 3 -- add both
   end
-  return false
+
+  -- we should never arrive here i think since default always is add audio send
+  return rp
 end
 
-
-
--- describe each situation better
 function routing.createRoutesLoop(rp, src_t, dest_tr)
   local df = rc.default_params
   for i = 1, #src_t do
     local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
     -- why are these two put here. can they be put inside of  createisingle funcs??
-    local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
-    local dest_tr_ch = incrementDestChanToSrc(dest_tr, src_tr_ch)
+    -- local src_tr_ch = reaper.GetMediaTrackInfo_Value( src_tr, 'I_NCHAN')
+    -- local dest_tr_ch = incrementDestChanToSrc(dest_tr, src_tr_ch)
+    local exists, rid, rp = getPrevRouteState(src_tr, dest_tr, rp)
+    local rp = getNextRouteState(rp)
+    if rp.prev == 0 then local rid = reaper.CreateTrackSend(src_tr, dest_tr) end
+    updateRouteState_Track(src_tr, rp, rid)
 
-    local exists, old_route_id = checkIfSendExists(src_tr, dest_tr)
-    if not exists then
-      -- NEW //////////////////////////////////////////////////////////////////
-      local new_route_id = reaper.CreateTrackSend(src_tr, dest_tr)
-      if rType(rp, 'ONLY_AUDIO') then
-        if rp.INP['a'] == nil then rp.INP['a'] = df['a'] end
-        rp.INP['m'] = df['m']
-        rp.INP['m'].param_value = rc.flags.MIDI_OFF
-      end
-      if rType(rp, 'ONLY_MIDI') then
-        rp.INP['a'] = df['a']
-        rp.INP['a'].param_value = rc.flags.AUDIO_SRC_OFF
-      end
-      if rType(rp, 'BOTH_AUDIO_AND_MIDI') then end
-      createSingleTrackAudioRoute(new_route_id, rp, src_tr, src_tr_ch, dest_tr, dest_tr_ch)
-    else
-      log.user('\nEXISTS')
-      -- make exists >> return strings >> easier to read
-      if exists == 1 then -- ALREADY HAS AUDIO
-        if rType(rp, 'ONLY_AUDIO') and rp.INP['u'] ~= nil then
-          routeUpdate('audio', old_route_id, rp, src_tr)
-        end
-        if rType(rp,'ONLY_MIDI') then
-          if rp.INP['m'] == nil then rp.INP['m'] = df['m'] end
-          routeUpdate('midi', old_route_id, rp, src_tr)
-        end
-      elseif exists == 2 then -- ALREADY HAS MIDI
-        if rType(rp, 'ONLY_MIDI') and rp.INP['u'] ~= nil then
-          routeUpdate('midi', old_route_id, rp, src_tr)
-        end
-        if rType(rp,'ONLY_AUDIO') then
-          if rp.INP['a'] == nil then rp.INP['a'] = df['a'] end
-          routeUpdate('audio', old_route_id, rp, src_tr)
-        end
-      elseif exists == 3 then -- ALREADY HAS BOTH
-        if rType(rp,'ONLY_AUDIO') and rp.INP['u'] ~= nil then
-          routeUpdate('audio', old_route_id, rp, src_tr)
-        end
-        if rType(rp,'ONLY_MIDI') and rp.INP['u'] ~= nil then
-          routeUpdate('midi', old_route_id, rp, src_tr)
-        end
-      end
-
-      -- DELETE SEND IF EMPTY
-      local i_src_ch = reaper.GetTrackSendInfo_Value(src_tr, 0, old_route_id, 'I_SRCCHAN')
-      local i_src_midi = reaper.GetTrackSendInfo_Value(src_tr, 0, old_route_id, 'I_MIDIFLAGS')
-      if i_src_ch == rc.flags.AUDIO_SRC_OFF and i_src_midi == rc.flags.MIDI_OFF then
-        log.user('::delete send ' .. old_route_id .. '::')
-        removeSingle(src_tr, 0, old_route_id)
-      end
+    -- DELETE SEND IF EMPTY
+    local i_src_ch = reaper.GetTrackSendInfo_Value(src_tr, 0, rid, 'I_SRCCHAN')
+    local i_src_midi = reaper.GetTrackSendInfo_Value(src_tr, 0, rid, 'I_MIDIFLAGS')
+    if i_src_ch == rc.flags.AUDIO_SRC_OFF and i_src_midi == rc.flags.MIDI_OFF then
+      log.user('::delete send ' .. rid .. '::')
+      removeSingle(src_tr, 0, rid)
     end
   end
+  log.user(format.block(rp))
 end
 
 --////////////////////////////////////////////////////////////////////
@@ -581,76 +574,80 @@ function incrementDestChanToSrc(dest_tr, src_tr_ch)
   return dest_tr_ch
 end
 
-
--- 0 new
--- 1 add half audio
--- 2 add midi
--- 3 update audio
--- 4 update midi
--- 5 update both
---
-function routeUpdate(type, old_route_id, rp, src_tr)
-  local m = rp.INP['m']
-  local df = rc.default_params
-  log.user('old route id: ' .. old_route_id)
+function updateRouteState_Track(src_tr, rp, rid)
+  log.user('old route id: ' .. rid)
   local has_brackets  = rp.brackets ~= nil
   local has_curly     = rp.curly ~= nil
-
-  if has_brackets ~= nil then
-    reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_SRCCHAN', rp.brackets.src)
-    reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_DSTCHAN', rp.brackets.dst)
+  -- HANDLE MONO ?!?!
+  -- if dest_tr_ch == 2 then
+  --   reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0)
+  -- else
+  --   reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
+  -- end
+  if rp.brackets ~= nil then
+    reaper.SetTrackSendInfo_Value( src_tr, 0, rid, 'I_SRCCHAN', rp.brackets.src)
+    reaper.SetTrackSendInfo_Value( src_tr, 0, rid, 'I_DSTCHAN', rp.brackets.dst)
   end
-
-  if has_curly ~= nil then
+  if rp.curly ~= nil then
     local mf = create_send_flags(rp.curly.src, rp.curly.dst)
-    reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_MIDIFLAGS', mf)
+    reaper.SetTrackSendInfo_Value( src_tr, 0, rid, 'I_MIDIFLAGS', mf)
   end
 
   for k, p in pairs(rp.INP) do
     log.user(p.param_name .. '  ' .. tostring(p.param_value))
-
     if k == 'u' then goto continue end -- just a dummy param...
 
-    if k == 'm' and has_curly then goto continue end
-    if (k == 'a' or k == 'd') and has_brackets then goto continue end
+    -- skip set a/m if [{}]
+    if (k == 'a' or k == 'd') and rp.brackets ~= nil then goto continue end
+    if k == 'm' and rp.curly ~= nil then goto continue end
 
-    -- add single other >>> either m or not m ...
-    -- update
+    -- MIDI ////////////////////////////////////////////////
+    if k == 'm' then
 
+      if (rp.prev == 2 or rp.prev == 3) and not rp.overwrite then goto continue end
 
-    -- if update and then
-    -- end
-
-    if k == 'm' then -- MIDI /////////////////////////////////
-      if type == 'midi' or type == 'both' then
-        if p.disable then
-          log.user('midi disable')
-          reaper.SetTrackSendInfo_Value(
-            src_tr, 0, old_route_id, p.param_name, df[k].disable_value)
-        elseif p.param_value ~= nil then
-          reaper.SetTrackSendInfo_Value(
-            src_tr, 0, old_route_id, p.param_name, p.param_value)
-        else
-          reaper.SetTrackSendInfo_Value( -- if no value >> default
-            src_tr, 0, old_route_id, df[k].param_name, df[k].param_value)
-        end
+      -- TODO 
+      --
+      --  remove this if statement
+      --
+      --  1. disable >> should already be prepared in the extract params
+      --  2. if value nil can be an inline ternary
+      if p.disable then
+        log.user('midi disable')
+        reaper.SetTrackSendInfo_Value(
+          src_tr, 0, rid, p.param_name, df[k].disable_value)
+      elseif p.param_value ~= nil then
+        reaper.SetTrackSendInfo_Value(
+          src_tr, 0, rid, p.param_name, p.param_value)
+      else
+        reaper.SetTrackSendInfo_Value( -- if no value >> default
+          src_tr, 0, rid, df[k].param_name, df[k].param_value)
       end
+
     else -- AUDIO ////////////////////////////////////////////
-      if type == 'audio' or type == 'both' then
-        if p.disable then
-          log.user('audio disable')
-          reaper.SetTrackSendInfo_Value(
-            src_tr, 0, old_route_id, p.param_name, df[k].disable_value)
-        elseif p.param_value ~= nil then
-          reaper.SetTrackSendInfo_Value(
-            src_tr, 0, old_route_id, p.param_name, p.param_value)
-        else
-          reaper.SetTrackSendInfo_Value( -- if no value >> default
-            src_tr, 0, old_route_id, df[k].param_name, df[k].param_value)
-        end
+
+      if (rp.prev == 1 or rp.prev == 3) and not rp.overwrite then goto continue end
+
+      -- TODO 
+      --
+      --  remove this if statement
+      --
+      --  1. disable >> should already be prepared in the extract params
+      --  2. if value nil can be an inline ternary
+      --
+      if p.disable then
+        log.user('audio disable')
+        reaper.SetTrackSendInfo_Value(
+          src_tr, 0, rid, p.param_name, df[k].disable_value)
+      elseif p.param_value ~= nil then
+        reaper.SetTrackSendInfo_Value(
+          src_tr, 0, rid, p.param_name, p.param_value)
+      else
+        reaper.SetTrackSendInfo_Value( -- if no value >> default
+          src_tr, 0, rid, df[k].param_name, df[k].param_value)
       end
     end
-    :: continue ::
+  :: continue ::
   end
 end
 
@@ -699,6 +696,7 @@ function createSingleTrackAudioRoute(new_rid, route_params, src_tr, src_tr_ch, d
       end
     end
     :: continue ::
+
   end
 end
 
@@ -712,7 +710,7 @@ end
 
 function routing.createSingleMIDISend(src_tr,dest_tr,dest_chan)
   log.user('createSingleMIDISend')
-  local is_exist = checkIfSendExists(src_tr, dest_tr)
+  local is_exist = getPrevRouteState(src_tr, dest_tr)
 
   -- TODO
   -- if dest_chan == nil then set to 0 (ALL)
