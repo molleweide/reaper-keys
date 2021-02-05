@@ -74,6 +74,8 @@ return {
 
   -- remove `param_` >>> becomes redundant
 
+  new_params = {--[[ empty ]]},
+
   default_params = {
     -- ////////////////////////////////////////////////////////////////////
     -- WHICH TYPE

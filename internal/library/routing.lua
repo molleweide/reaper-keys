@@ -14,37 +14,28 @@ local div2 = '---------------------------------'
 
 --      TODO
 --
+--      log dst not correctly
 --
+--
+--      - cat
+--          if RECIEVE src and dest are reversed.
+--          you specify the `SRC FROM TR`
 --
 --      - update send by id?
 --
---      - many 2 many >>> pattern name/num separators (**)
---
 --      - src/dest list separators
---
---      CUSTOM_ACTION
---
---      - sidechain selected tracks to <ghostkick>
---          connect plugin to auxiliary channel.
---
---      SYNTAX
---
---      - syntax.lua > auto send > drums/music/fx
---
 --
 --      MUTE SEND
 --
---        - nudge send params
+--      - nudge send params
 --      - nudge volume
 --      - nudge pan
 --
 --      TOGGLE SEND PARAMS
---        - mono / stereo
---        - mute
---        - flip phase
 --
---
--- LINK > format numbers/decimals ::: https://stackoverflow.com/questions/18313171/lua-rounding-numbers-and-then-truncate
+--      - mono / stereo
+--      - mute
+--      - flip phase
 
 --////////////////////////////////////////////////////////////////////////
 --  UTILS
@@ -193,13 +184,10 @@ end
 --//////////////////////////////////////////////////////////////////////
 --  CREATE ROUTE
 --////////////////
---
 -- 0 = none
 -- 1 = only audio
 -- 2 = only midi
 -- 3 = both
-
---
 function getPrevRouteState(src_tr, dest_tr, rp)
   rp.prev = 0
   for si=0,  reaper.GetTrackNumSends( src_tr, 0 ) do
@@ -228,26 +216,17 @@ function getPrevRouteState(src_tr, dest_tr, rp)
   return rp
 end
 
--- TODO
---
--- pass input str to create
---
---
---    a. call function with keybinding
---
---    b. call function with prewritten string
---
---    c.
-function routing.create()
+function routing.create(route_str)
   log.clear()
-
-  local _, input_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
-
-  local rp = extractSendParamsFromUserInput(input_str)
-
+  local _
+  if route_str == nil then
+    --
+    -- if no route_str provided >> user prompt
+    _, route_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
+  end
+  local rp = extractParamsFromString(route_str)
   prepareRouteComponents(rp)
 end
-
 
 function removeEnclosureFromString(str, encl_type)
   for r in str:gmatch ("%b"..encl_type) do
@@ -335,10 +314,26 @@ function getEnclosedChannelData(str, encloser, sep, rangeL, rangeH)
   return str, bSrc, bDst
 end
 
-function extractSendParamsFromUserInput(str)
-  local rp = rc;
+function handleSecondaryParams(rp, str, key, primary)
+  local ret, val, pre = inputHasChar(str, key)
+  if ret or primary ~= nil then
+    if primary ~= nil then val = primary else val = tonumber(val) end
+    if val == nil then val = df[key].param_value end
+    rp.new_params[key] = {
+      description = df[key].description,
+      param_name = df[key].param_name,
+      param_value = val,
+    }
+    if pre == '!' then rp.new_params[key].param_value = df[key].disable_value end
+  end
 
-  rp['new_params'] = {}
+  return rp, str
+end
+
+function extractParamsFromString(str)
+  local rp = rc
+
+  -- A. HANDLE PRIMARY COMMANDS
 
   local ret, src_tr_data, dest_tr_data, str = getParens(str) -- () ///////////////////////////
 
@@ -348,50 +343,19 @@ function extractSendParamsFromUserInput(str)
 
   local str, cSrc, cDst = getEnclosedChannelData(str, '{}', '|', 0, 4)
 
-  -- AUDIO_SRC //////////////////////////////
-  local key = 'a'
-  local ret, val, pre = inputHasChar(str, key)
-  if ret or bSrc ~= nil then
-    if bSrc ~= nil then val = bSrc else val = tonumber(val) end
-    rp.new_params[key] = {
-      description = df[key].description,
-      param_name = df[key].param_name,
-      param_value = val,
-    }
-    if pre == '!' then rp.new_params[key].param_value = df[key].disable_value end
-  end
+  -- B. HANDLE SECONDARY PARAMS
 
-  -- AUDIO_DEST //////////////////////////////
-  local key = 'd'
-  local ret, val, pre = inputHasChar(str, key)
-  if ret or bDsp ~= nil then
-    if bDst ~= nil then val = bDst else val = tonumber(val) end
-    rp.new_params[key] = {
-      description = df[key].description,
-      param_name = df[key].param_name,
-      param_value = val,
-    }
-    if pre == '!' then rp.new_params[key].param_value = df[key].disable_value end
-  end
+  local rp, str = handleSecondaryParams(rp, str, 'a', bSrc)
 
-  -- MIDI //////////////////////////////
-  local key = 'm'
-  local ret, val, pre = inputHasChar(str, key)
-  if ret or cSrc ~= nil then
-    if cSrc ~= nil then val = create_send_flags(cSrc,cDst) else val = tonumber(val) end
-    rp.new_params[key] = {
-      description = df[key].description,
-      param_name = df[key].param_name,
-      param_value = val,
-    }
-    if pre == '!' then rp.new_params[key].param_value = df[key].disable_value end
-  end
+  local rp, str = handleSecondaryParams(rp, str, 'd', bDst)
 
-  -- ALLOW_OVERWRITE //////////////////////////////
+  local midi_flags
+  if cSrc ~= nil and cDst ~= nil then midi_primary = create_send_flags(cSrc,cDst) end
+  local rp, str = handleSecondaryParams(rp, str, 'm', midi_primary)
+
   local ret, val, pre = inputHasChar(str, 'u')
   if ret then rp.overwrite = true end
 
-  log.user(format.block(rp))
   return rp
 end
 
