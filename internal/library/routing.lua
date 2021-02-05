@@ -11,32 +11,17 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 local div = '##########################################'
 local div2 = '---------------------------------'
 
---  !!!!!!
---
---      using midi busses is not supported
---
---  EXERCISES
---
---  read more vimscript <<<<<<<<<<<<<<<<<<<<<
---
 --      TODO
---      [{}] >> updateRoute and createSingleTrackAudioRoute
 --
+--      merge routeUpdate AND createSingleTrackAudioRoute
 --
---
---
---
---      if only audio >> midi doesn't update?? now u is req but it shouldn't be
---      since midi doesn't exist already
---
+--      make sure everything updates as expected
 --
 --      - update send by id?
 --
 --      - many 2 many >>> pattern name/num separators (**)
 --
---      PATTERN
---
---        (**)    src/dest list separators
+--      - src/dest list separators
 --
 --      CUSTOM_ACTION
 --
@@ -464,6 +449,9 @@ function rType(rp, check_str)
   return false
 end
 
+
+
+-- describe each situation better
 function routing.createRoutesLoop(rp, src_t, dest_tr)
   local df = rc.default_params
   for i = 1, #src_t do
@@ -593,20 +581,26 @@ function incrementDestChanToSrc(dest_tr, src_tr_ch)
   return dest_tr_ch
 end
 
--- TODO
---
--- merge update and create into one function >>>> pass update/new flage
 
+-- 0 new
+-- 1 add half audio
+-- 2 add midi
+-- 3 update audio
+-- 4 update midi
+-- 5 update both
+--
 function routeUpdate(type, old_route_id, rp, src_tr)
   local m = rp.INP['m']
   local df = rc.default_params
   log.user('old route id: ' .. old_route_id)
   local has_brackets  = rp.brackets ~= nil
   local has_curly     = rp.curly ~= nil
+
   if has_brackets ~= nil then
     reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_SRCCHAN', rp.brackets.src)
     reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_DSTCHAN', rp.brackets.dst)
   end
+
   if has_curly ~= nil then
     local mf = create_send_flags(rp.curly.src, rp.curly.dst)
     reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_MIDIFLAGS', mf)
@@ -615,9 +609,17 @@ function routeUpdate(type, old_route_id, rp, src_tr)
   for k, p in pairs(rp.INP) do
     log.user(p.param_name .. '  ' .. tostring(p.param_value))
 
-    if k == 'u' then goto continue end
+    if k == 'u' then goto continue end -- just a dummy param...
+
     if k == 'm' and has_curly then goto continue end
     if (k == 'a' or k == 'd') and has_brackets then goto continue end
+
+    -- add single other >>> either m or not m ...
+    -- update
+
+
+    -- if update and then
+    -- end
 
     if k == 'm' then -- MIDI /////////////////////////////////
       if type == 'midi' or type == 'both' then
