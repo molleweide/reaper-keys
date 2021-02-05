@@ -6,7 +6,7 @@ local rc = require('definitions.routing')
 
 local routing = {}
 
-local input_placeholder = "(176)[4|2]{3|4}"
+local input_placeholder = "(176)[2|2]{3|4}"
 local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
 local div = '##########################################'
 local div2 = '---------------------------------'
@@ -601,14 +601,14 @@ function routeUpdate(type, old_route_id, rp, src_tr)
   local m = rp.INP['m']
   local df = rc.default_params
   log.user('old route id: ' .. old_route_id)
-  local has_brackets  = route_params.brackets ~= nil
-  local has_curly     = route_params.curly ~= nil
+  local has_brackets  = rp.brackets ~= nil
+  local has_curly     = rp.curly ~= nil
   if has_brackets ~= nil then
-    reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_SRCCHAN', route_params.brackets.src)
-    reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_DSTCHAN', route_params.brackets.dst)
+    reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_SRCCHAN', rp.brackets.src)
+    reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_DSTCHAN', rp.brackets.dst)
   end
   if has_curly ~= nil then
-    local mf = create_send_flags(route_params.curly.src, route_params.curly.dst)
+    local mf = create_send_flags(rp.curly.src, rp.curly.dst)
     reaper.SetTrackSendInfo_Value( src_tr, 0, old_route_id, 'I_MIDIFLAGS', mf)
   end
 
