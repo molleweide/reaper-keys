@@ -14,7 +14,11 @@ local div2 = '---------------------------------'
 
 --      TODO
 --
---      log dst not correctly
+--      -- start using new route function when creating midi sends in syntax
+--
+--      - regular pass single tr or guid list
+--
+--      - mult tracks src / dst sep list
 --
 --
 --      - cat
@@ -23,11 +27,9 @@ local div2 = '---------------------------------'
 --
 --      - update send by id?
 --
---      - src/dest list separators
 --
 --      MUTE SEND
 --
---      - nudge send params
 --      - nudge volume
 --      - nudge pan
 --
@@ -41,7 +43,13 @@ local div2 = '---------------------------------'
 --  PUBLIC | move to custom ???
 --/////////
 
-function routing.create(route_str)
+-- TODO
+--
+-- 1. pass src/dst in route_str
+-- 2. pass as single tr to arg 2,3
+-- 3. pass list of guids to arg 2,3
+--
+function routing.create(route_str, src_tr, dst_tr)
   log.clear()
   local _
   if route_str == nil then
@@ -71,13 +79,12 @@ function routing.logRoutingInfoForSelectedTracks()
   for i = 1, #log_t do
     local tr, tr_idx = ru.getTrackByGUID(log_t[i])
     local _, current_name = reaper.GetTrackName(tr)
-    log.user('\n\n'..div..'\n:: routes for track #' .. tr_idx+1 .. ' `' .. current_name .. '`:')
-
+    log.user('\n'..div..'\n:: routes for track #' .. tr_idx+1 .. ' `' .. current_name .. '`:')
     log.user('\n\tSENDs:')
     logRoutesByCategory(tr, rc.flags.CAT_SEND)
-    log.user('\n\tRECIEVEs:')
+    log.user('\tRECIEVEs:')
     logRoutesByCategory(tr, rc.flags.CAT_REC)
-    log.user('\n\tHARDWARE:')
+    log.user('\tHARDWARE:')
     logRoutesByCategory(tr, rc.flags.CAT_HW)
   end
 end
@@ -151,51 +158,20 @@ function getOtherTrack(tr, cat, si)
 end
 
 function logRoutesByCategory(tr, cat)
-  local num_sends = reaper.GetTrackNumSends(tr, cat)
-  if num_sends == 0 then
-    -- log.user('\t\t--')
-    return
-  end
-
-  for si = 0, num_sends-1 do
-
-    if cat <= 0 then
+  local num_cat_sends = reaper.GetTrackNumSends(tr, cat)
+  if num_cat_sends == 0 then return end
+  for si = 0, num_cat_sends-1 do
+    if cat <= 0 then -- REGULAR SENDS ////////////////////////////////////////////
       local other_tr, other_tr_idx = getOtherTrack(tr, cat, si)
       local _, other_tr_name = reaper.GetTrackName(other_tr)
-
-      if cat == 0 then
-        -- SEND ---------------------------------------------------
-        local audio_out     = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
-        local send_in       = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
-        local midi_flags_tr = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
-        log.user(string.format("\n\t\tto (#%i) `%s`", other_tr_idx, other_tr_name))
-        log.user(
-          string.format(
-            "\t\t\t%i :: AUDIO_OUT: %i -> %i | MIDI_OUT: %i -> %i",
-            si, audio_out, send_in,
-            get_send_flags_src(midi_flags_tr),
-            get_send_flags_dest(midi_flags_tr)
-            )
-          )
-      elseif cat < 0 then
-        -- RECIEVE ------------------------------------------------
-        local rec_out = reaper.GetTrackSendInfo_Value(other_tr, cat, si, 'I_SRCCHAN')
-        local audio_in =  reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
-        local midi_flags_tr = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
-        log.user(string.format("\n\t\tfrom (#%i) `%s`", other_tr_idx, other_tr_name))
-        log.user(
-          string.format(
-            "\t\t\t%i :: %i -> %i AUDIO_IN | %i -> %i MIDI_IN",
-            si, rec_out, audio_in,
-            get_send_flags_src(midi_flags_tr),
-            get_send_flags_dest(midi_flags_tr)
-            )
-          )
-
-      end
-    elseif cat > 0 then
-      -- HARDWARE -------------------------------------
-      --
+      local SRC = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_SRCCHAN')
+      local DST = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_DSTCHAN')
+      local mf = reaper.GetTrackSendInfo_Value(tr, cat, si, 'I_MIDIFLAGS')
+      local mfs = get_send_flags_src(mf)
+      local mfd = get_send_flags_dest(mf)
+      log.user(string.format("\t\t(#%i) `%s` >> %i :: %i -> %i | %i -> %i",
+        other_tr_idx, other_tr_name, si, SRC, DST, mfs, mfd))
+    elseif cat > 0 then -- HARDWARE /////////////////////////////////////
     end
   end
 end
@@ -254,6 +230,9 @@ function inputHasChar(str, key)
 end
 
 --  TODO
+--
+--  getStringSplitPattern(str, split)
+--
 --  gmatch comma separated list
 --    if num >> get track by gui index
 --    if str >> get match tracks
@@ -391,13 +370,13 @@ function removeSingle(tr, cat, sendidx)
 end
 
 function deleteByCategory(tr, cat)
-  local num_sends = reaper.GetTrackNumSends(tr, cat)
-  -- if num_sends == 0 then return end
-  while(num_sends > 0) do
-    for si=0, num_sends-1 do
+  local num_cat_sends = reaper.GetTrackNumSends(tr, cat)
+  -- if num_cat_sends == 0 then return end
+  while(num_cat_sends > 0) do
+    for si=0, num_cat_sends-1 do
       local rm = reaper.RemoveTrackSend(tr, cat, si)
     end
-    num_sends = reaper.GetTrackNumSends(tr, cat)
+    num_cat_sends = reaper.GetTrackNumSends(tr, cat)
   end
 end
 
@@ -538,18 +517,6 @@ end
 function preventRouteFeedback()
 end
 
-function doesRouteAlreadyExist()
-end
-
-function sidechainToTrackWithNameString(str)
-end
-
-function routing.sidechainSelTrkToGhostSnareTrack()
-  sidechainToTrackWithNameString('ghostSnare')
-end
-
-function routing.sidechainSelTrkToGhostKickTrack()
-  sidechainToTrackWithNameString('ghostKick')
-end
 ------------------------------------------------------------------------
+
 return routing
