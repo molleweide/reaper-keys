@@ -62,6 +62,10 @@ return {
   --  /////////////////////////////////////////////////////////////////////
   --  FLAGS
   --  ///////
+  src_guids,
+  dst_guids,
+  src_from_str = true,
+  dst_from_str = true,
 
   flags = {
     AUDIO_SRC_OFF = TRACK_INFO_AUDIO_SRC_DISABLED,

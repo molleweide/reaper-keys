@@ -14,12 +14,16 @@ local div2 = '---------------------------------'
 
 --      TODO
 --
---      -- start using new route function when creating midi sends in syntax
 --
---      - regular pass single tr or guid list
+--      if one of midi src/dst == nil handle
+--
+--
+--
+--
+--      do i need to kill
+--
 --
 --      - mult tracks src / dst sep list
---
 --
 --      - cat
 --          if RECIEVE src and dest are reversed.
@@ -46,17 +50,34 @@ local div2 = '---------------------------------'
 -- TODO
 --
 -- 1. pass src/dst in route_str
--- 2. pass as single tr to arg 2,3
--- 3. pass list of guids to arg 2,3
+-- 2. pass a single tr to arg 2 or 3
+-- 3. pass list of guids to arg 2 or 3
 --
-function routing.create(route_str, src_tr, dst_tr)
-  log.clear()
+function routing.create(route_str, coded_sources, coded_dests)
+  -- log.clear()
+
+  local rp = rc
   local _
+
+  -- USER SUPPLIED STRING
   if route_str == nil then
-    -- if no route_str provided >> user prompt
     _, route_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
   end
-  local rp = extractParamsFromString(route_str)
+
+  -- TODO
+  --
+  -- if coded_sources == tr
+  --
+  -- if coded_sources == guid
+  --
+  -- if coded_sources == table
+  --
+  --
+  --
+  -- rp.src_from_str == false -- use to force ignore
+  -- rp.dst_from_str == false -- use to force ignore
+
+  local rp = extractParamsFromString(rp, route_str)
   prepareRouteComponents(rp)
 end
 
@@ -74,7 +95,7 @@ end
 
 -- refactor and pet back to log
 function routing.logRoutingInfoForSelectedTracks()
-  log.clear()
+  -- log.clear()
   local log_t = ru.getSelectedTracksGUIDs()
   for i = 1, #log_t do
     local tr, tr_idx = ru.getTrackByGUID(log_t[i])
@@ -216,6 +237,7 @@ function inputHasChar(str, key)
   local s, e = string.find(str, pattern)
   local mv_offset = 1
   local retval = false
+  local matched_value
   local prefix
 
   if s ~= nil and e ~= nil then
@@ -223,7 +245,7 @@ function inputHasChar(str, key)
     local sub_pattern = string.sub(str,s,e)
     prefix = string.sub(sub_pattern,0,1)
     if prefix == '!' then mv_offset = 2 end
-    local matched_value = string.sub(str,s+mv_offset,e)
+    matched_value = string.sub(str,s+mv_offset,e)
   end
 
   return retval, matched_value, prefix
@@ -239,10 +261,12 @@ end
 --      add all tracks
 --        if >1 >>> prompt user >>> ARE YOU SURE?????
 function assignGUIDsFromUserInput(rp, pSrc, pDst)
+  -- if src_from_str
   if tonumber(pSrc) ~= nil then
     local tr = reaper.GetTrack(0, tonumber(pSrc) - 1)
   rp['src_guids'] = {reaper.GetTrackGUID(tr)} else rp['src_guids'] = getMatchedTrackGUIDs(pSrc)
   end
+  -- if dst_from_str
   if tonumber(pDst) ~= nil then
     local tr = reaper.GetTrack(0, tonumber(pDst) - 1)
   rp['dest_guids'] = {reaper.GetTrackGUID(tr)} else rp['dest_guids'] = getMatchedTrackGUIDs(pDst)
@@ -271,32 +295,38 @@ end
 
 function handleSecondaryParams(rp, str, key, primary)
   local ret, val, pre = inputHasChar(str, key)
+  log.user(key, ret, val, pre)
+
+  -- exists or PRIMARY
   if ret or primary ~= nil then
+
     if primary ~= nil then val = primary else val = tonumber(val) end
-    if val == nil then val = df[key].param_value end
+
+    if ret and val == nil then val = df[key].param_value end
+
     rp.new_params[key] = {
       description = df[key].description,
       param_name = df[key].param_name,
       param_value = val,
     }
-    if pre == '!' then rp.new_params[key].param_value = df[key].disable_value end
+
+    -- exists and prefix
+    if ret and pre == '!' then rp.new_params[key].param_value = df[key].disable_value end
   end
 
   return rp, str
 end
 
-function extractParamsFromString(str)
-  local rp = rc
-
+function extractParamsFromString(rp, str)
   -- A. HANDLE PRIMARY COMMANDS
 
   local ret, src_tr_data, dest_tr_data, str = getParens(str) -- () ///////////////////////////
 
   local rp = assignGUIDsFromUserInput(rp, src_tr_data, dest_tr_data)
 
-  local str, bSrc, bDst = getEnclosedChannelData(str, '[]', '|', 0, 4)
+  local str, bSrc, bDst = getEnclosedChannelData(str, '[]', '|', 0, 6)
 
-  local str, cSrc, cDst = getEnclosedChannelData(str, '{}', '|', 0, 4)
+  local str, cSrc, cDst = getEnclosedChannelData(str, '{}', '|', 0, 16)
 
   -- B. HANDLE SECONDARY PARAMS
 
@@ -305,12 +335,14 @@ function extractParamsFromString(str)
   local rp, str = handleSecondaryParams(rp, str, 'd', bDst)
 
   local midi_flags
-  if cSrc ~= nil and cDst ~= nil then midi_primary = create_send_flags(cSrc,cDst) end
-  local rp, str = handleSecondaryParams(rp, str, 'm', midi_primary)
+  if cSrc ~= nil and cDst ~= nil then midi_flags = create_send_flags(cSrc,cDst) end
+  log.user(cSrc, cDst, midi_flags)
+  local rp, str = handleSecondaryParams(rp, str, 'm', midi_flags)
 
   local ret, val, pre = inputHasChar(str, 'u')
   if ret then rp.overwrite = true end
 
+  -- log.user(format.block(rp))
   return rp
 end
 
@@ -340,13 +372,25 @@ function getPrevRouteState(src_tr, dest_tr, rp)
 end
 
 function getNextRouteState(rp, check_str)
-  if (rp.new_params['a'] ~= nil and rp.new_params['m'] == nil) or (rp.new_params['a'] == nil and rp.new_params['m'] == nil) then
-    rp.next = 1 -- add only audio (default if no a/m input)
-  end
-  if rp.new_params['a'] == nil and rp.new_params['m'] ~= nil then
-    rp.next = 2 -- add only midi
-  end
-  if rp.new_params['a'] == nil and rp.new_params['m'] ~= nil then
+
+  -- log.user(format.block(rp))
+
+  if (rp.new_params['a'] ~= nil and rp.new_params['m'] == nil) or
+    (rp.new_params['a'] == nil and rp.new_params['m'] == nil) then
+    rp.next = 1
+    rp.new_params['m'] = {
+      description = df['m'].description,
+      param_name = df['m'].param_name,
+      param_value = rc.flags.MIDI_OFF,
+    }
+  elseif rp.new_params['a'] == nil and rp.new_params['m'] ~= nil then
+    rp.next = 2
+    rp.new_params['a'] = {
+      description = df['a'].description,
+      param_name = df['a'].param_name,
+      param_value = rc.flags.AUDIO_SRC_OFF,
+    }
+  elseif rp.new_params['a'] == nil and rp.new_params['m'] ~= nil then
     rp.next = 3 -- add both
   end
   return rp -- we should never arrive here i think since default always is add audio send
@@ -457,11 +501,11 @@ function createRoutesLoop(rp, src_t, dest_tr)
     updateRouteState_Track(src_tr, rp, rid)
     deleteRouteIfEmpty(src_tr, rid)
   end
-  log.user(format.block(rp))
+  -- log.user(format.block(rp))
 end
 
 function updateRouteState_Track(src_tr, rp, rid)
-  log.user('old route id: ' .. rid)
+  log.user(format.block(rp))
   -- HANDLE MONO ?!?!
   -- if dest_tr_ch == 2 then
   --   reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0)
@@ -472,11 +516,23 @@ function updateRouteState_Track(src_tr, rp, rid)
   for k, p in pairs(rp.new_params) do
     log.user(p.param_name .. '  ' .. tostring(p.param_value))
     if k == 'm' then
+
+      -- skipp if previous route component exists and not overwrite flag
       if (rp.prev == 2 or rp.prev == 3) and not rp.overwrite then goto continue end
+
+      -- next is only audio and first
+      if rp.next == 1 and rp.prev ~= 0 then goto continue end
+
       reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
     else
-      log.user(':::::: ' .. k)
+
+      -- skipp if previous route component exists and not overwrite flag
       if (rp.prev == 1 or rp.prev == 3) and not rp.overwrite then goto continue end
+
+      -- next is only midi and first
+      if rp.next == 2 and rp.prev ~= 0 then goto continue end
+
+
       reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
     end
     :: continue ::
