@@ -59,13 +59,18 @@ return {
     ['X'] = '(<dest_tr_name>)a2!m'
   },
 
+  -- SET : always work with tables in the end
+  -- GET : for loop
+  --
+  src_guids = {},
+  dst_guids = {},
+  src_from_str = true,
+  dst_from_str = true,
+
   --  /////////////////////////////////////////////////////////////////////
   --  FLAGS
   --  ///////
-  src_guids,
-  dst_guids,
-  src_from_str = true,
-  dst_from_str = true,
+
 
   flags = {
     AUDIO_SRC_OFF = TRACK_INFO_AUDIO_SRC_DISABLED,
@@ -76,6 +81,9 @@ return {
     CAT_HW = TRACK_INFO_CATEGORY_HARDWARE,
   },
 
+    -- ////////////////////////////////////////////////////////////////////
+    -- PARAMS
+    -- ////////////
   -- remove `param_` >>> becomes redundant
 
   new_params = {--[[ empty ]]},

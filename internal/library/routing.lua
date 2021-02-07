@@ -12,18 +12,27 @@ local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  =
 local div = '##########################################'
 local div2 = '---------------------------------'
 
+--      create > extractParamsFromString > prepareRouteComponents >
+--
 --      TODO
 --
+--      - pass tr/guid/table as args in code
 --
---      if one of midi src/dst == nil handle
+--          >> prepareDestTracks
+--
+--          >> confirm Route creation
+--
+--          >> call routeUpdateLoop
 --
 --
---
---
---      do i need to kill
 --
 --
 --      - mult tracks src / dst sep list
+--
+--      `!a/m` should not require `u`
+--
+--            if `u` or `!` current param.disable == true
+--
 --
 --      - cat
 --          if RECIEVE src and dest are reversed.
@@ -31,6 +40,11 @@ local div2 = '---------------------------------'
 --
 --      - update send by id?
 --
+--      - audio ch ranges?
+--
+--      - if no track found src/dst >>> prompt user
+--
+--      -
 --
 --      MUTE SEND
 --
@@ -64,16 +78,39 @@ function routing.create(route_str, coded_sources, coded_dests)
     _, route_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
   end
 
-  -- TODO
+  -- TODO ///////////////////////////////////////////////////////////
   --
-  -- if coded_sources == tr
+    -- TEST >>>  get track here and pass to getGUIDByTrack
+
+  if ru.getGUIDByTrack(coded_sources) then
+    log.user('coded_sources >>> TRACK')
+    local coded_src_guid = ru.getGUIDByTrack(coded_sources)
+    -- rp
+
+  elseif ru.getTrackByGUID(coded_sources)  then
+    log.user('coded_sources >>> GUID')
+    local coded_src_guid = coded_sources
+    -- rp
+
+  elseif type(coded_sources) == 'table' then
+    log.user('coded_sources >>> TABLE')
+
+    -- loop through table
+    --    make check for each slot
+    --        assign to rp
+
+    local src_guids = {}
+    for i = 0, #coded_sources - 1 do
+
+    end
+  end
+
+  -- TODO ///////////////////////////////////////////////////////////
   --
-  -- if coded_sources == guid
-  --
-  -- if coded_sources == table
-  --
-  --
-  --
+  --    handle coded destinations
+
+
+
   -- rp.src_from_str == false -- use to force ignore
   -- rp.dst_from_str == false -- use to force ignore
 
@@ -81,17 +118,10 @@ function routing.create(route_str, coded_sources, coded_dests)
   prepareRouteComponents(rp)
 end
 
-function routing.removeAllSends(tr)
-  removeAll(tr)
-end
-
-function routing.removeAllRecieves(tr)
-  removeAll(tr, 1)
-end
-
-function routing.removeAllBoth(tr)
-  removeAll(tr, 2)
-end
+-- refactor these into one with variable arguments
+function routing.removeAllSends(tr) removeAll(tr) end
+function routing.removeAllRecieves(tr) removeAll(tr, 1) end
+function routing.removeAllBoth(tr) removeAll(tr, 2) end
 
 -- refactor and pet back to log
 function routing.logRoutingInfoForSelectedTracks()
@@ -260,6 +290,10 @@ end
 --    if str >> get match tracks
 --      add all tracks
 --        if >1 >>> prompt user >>> ARE YOU SURE?????
+--
+--    for dataX
+--      loop assign rp.src_guids[i] = src_guid
+--
 function assignGUIDsFromUserInput(rp, pSrc, pDst)
   -- if src_from_str
   if tonumber(pSrc) ~= nil then
@@ -449,12 +483,45 @@ end
 --  UPDATE ROUTE STATE
 --//////////////////////
 
+function compileTargetGuids(rp)
+
+  -- if src_guids == 1
+  --
+  -- if dst_guids == 1
+
+
+  if rp.src_guids ~= nil then
+    local singleMatchedSource = #rp.src_guids == 1
+    if not singleMatchedSource then
+      src_t = ru.getSelectedTracksGUIDs()
+    else
+      src_t = rp.src_guids
+    end
+  else
+    src_t = ru.getSelectedTracksGUIDs()
+  end
+  log.user('list SRC tracks >>>>> \n')
+  for i = 1, #src_t do
+    local tr, tr_idx = ru.getTrackByGUID(src_t[i])
+    local ret, src_name = reaper.GetTrackName(tr)
+    log.user('\t' .. tr_idx .. ' - ' .. src_name)
+  end
+
+  -- GET DEST TRACKS
+  dest_tr, dest_idx = ru.getTrackByGUID(rp.dest_guids[1])
+  local ret, dest_name = reaper.GetTrackName(dest_tr)
+  log.user('\nlist DEST tracks >>>>> \n')
+  log.user('\t' .. dest_idx .. ' - ' .. dest_name)
+  return rp
+end
+
 function prepareRouteComponents(rp)
-  log.user('prepareRouteComponents')
   local src_t
   local dest_t
   local dest_tr
   local dest_idx
+
+  -- local rp = compileTargetGuids(rp)
 
   -- GET SRC TRACKS -------------------------------------------
   if rp.src_guids ~= nil then
@@ -492,9 +559,17 @@ function prepareRouteComponents(rp)
   createRoutesLoop(rp, src_t, dest_tr)
 end
 
-function createRoutesLoop(rp, src_t, dest_tr)
-  for i = 1, #src_t do
-    local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, src_t[i] )
+-- TODO
+--
+--  dest_tr param should be DST_GUIDS
+--    double loop
+--
+--      for src
+--        for dst
+--          do...............
+function createRoutesLoop(rp, SRC_GUIDS, dest_tr)
+  for i = 1, #SRC_GUIDS do
+    local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, SRC_GUIDS[i] )
     local rp, rid = getPrevRouteState(src_tr, dest_tr, rp)
     local rp = getNextRouteState(rp)
     if rp.prev == 0 then rid = reaper.CreateTrackSend(src_tr, dest_tr) end

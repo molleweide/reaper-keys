@@ -147,12 +147,22 @@ end
 --
 -- or should there maybe be a `track` file under lib/ where we'd put
 -- any kind of base track functions.
+function utils.getGUIDByTrack(tr)
+  for i = 0, reaper.CountTracks(0) - 1 do
+    local tr = reaper.GetSelectedTrack(0,i)
+    local GUID = reaper.GetTrackGUID( tr )
+    if GUID ~= nil or GUID ~= "" then return GUID end
+  end
+  return false
+end
+
 function utils.getTrackByGUID(search_guid)
   for i = 0, reaper.CountTracks(0) - 1 do
     local tr = reaper.GetTrack(0,i)
     local GUID = reaper.GetTrackGUID( tr )
     if GUID == search_guid then return tr, i end
   end
+  return false
 end
 
 function utils.getTrackPosition()
