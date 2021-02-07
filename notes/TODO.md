@@ -27,6 +27,9 @@
 
 * fx > config state > log touched parameter
 
+- fx > replace fx at index w/fxNew
+  so that I can switch synths
+
   very interesting config variable for ui dev
 
 * hide tracks?!
