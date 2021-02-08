@@ -15,9 +15,6 @@ local USER_INPUT_TARGETS_DIV = '|'
 
 --      TODO
 --
---      -> if coded targets > affirm if routing exceedes a certain number
---              put in config > code_limit/gui_limit
---
 --      -> write up of examples in docs ::: add >> todo
 --
 --      -> SYNTAX | only requires sends
@@ -78,9 +75,11 @@ function routing.create(route_str, coded_sources, coded_dests)
   if not ret then return end -- something went wrong
 
   if coded_sources ~= nil then
+    rp.coded_targets = true
     ret, rp = setRouteTargetGuids(rp, 'src_guids', coded_sources)
   end
   if coded_dests ~= nil then
+    rp.coded_targets = true
     ret, rp = setRouteTargetGuids(rp, 'dst_guids', coded_dests)
   end
 
@@ -229,7 +228,20 @@ end
 --  EXTRACT ROUTE PARAMS
 --///////////////////////
 
-function logConfirmList()
+function logConfirmList(rp)
+  log.user('::: SOURCE TRACKS :::\n')
+  for i = 1, #rp.src_guids do
+    local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i].guid)
+    local _, src_name = reaper.GetTrackName(tr)
+    log.user('\t' .. tr_idx .. ' - ' .. src_name)
+  end
+  log.user('\n::: DESTINATION TRACKS :::\n')
+  for i = 1, #rp.dst_guids do
+    local tr, tr_idx = ru.getTrackByGUID(rp.dst_guids[i].guid)
+    local _, dst_name = reaper.GetTrackName(tr)
+    log.user('\t' .. tr_idx .. ' - ' .. dst_name)
+  end
+  log.user('\n>>> CONFIRM ROUTE CREATION (y<Enter> -> confirm)\n\n')
 end
 
 function confirmRouteCreation(rp)
@@ -240,28 +252,23 @@ function confirmRouteCreation(rp)
   local r_u_sure = 'Are you sure you want to do this?'
   log.user(div, warning_str)
 
+  logConfirmList(rp)
 
-  log.user('list SRC tracks >>>>> \n')
-  for i = 1, #rp.src_guids do
-    local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i].guid)
-    local _, src_name = reaper.GetTrackName(tr)
-    log.user('\t' .. tr_idx .. ' - ' .. src_name)
-  end
 
-  -- LOG FINAL DEST TARGETS
-  log.user('\nlist DEST tracks >>>>> \n')
-  for i = 1, #rp.dst_guids do
-    local tr, tr_idx = ru.getTrackByGUID(rp.dst_guids[i].guid)
-    local _, dst_name = reaper.GetTrackName(tr)
-    log.user('\t' .. tr_idx .. ' - ' .. dst_name)
-  end
-
-  log.user('\n>>> confirm route creation y/n')
   local help_str = "` #src: `" .. tostring(#rp.src_guids) ..
   "` #dst: `" .. tostring(#rp.dst_guids) .. "` (y/n)"
+
+
+  -- rm one of these three prompts
+
   local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
 
-  if answer == "y" and num_tr_affected > 5 then
+
+  if answer == "y" and num_tr_affected > rc.code_tot_route_num_limit and not rp.coded_targets then
+    _, answer = reaper.GetUserInputs(r_u_sure, 1, warning_str, "")
+  end
+
+  if answer == "y" and num_tr_affected > rc.gui_tot_route_num_limit and rp.coded_targets then
     _, answer = reaper.GetUserInputs(r_u_sure, 1, warning_str, "")
   end
 
@@ -430,7 +437,6 @@ function extractParamsFromString(rp, str)
 
   if dst_tr_data ~= nil then
     local dst_tr_split =  getStringSplitPattern(dst_tr_data, USER_INPUT_TARGETS_DIV)
-    log.user(format.block(dst_tr_split))
     local ret, rp = setRouteTargetGuids(rp, 'dst_guids', dst_tr_split)
   else
     log.user('ERROR: no DST targets was provided')
@@ -580,7 +586,7 @@ function createRoutesLoop(rp)
       rp, rid = getPrevRouteState(rp, src_tr, dst_tr)
       rp      = getNextRouteState(rp)
 
-      log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'` INTO #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
+      log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  -->  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
 
       -- could i make a way here for showing exactly what is going to happen on each track.
       -- that would be pretty nice I think

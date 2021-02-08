@@ -155,6 +155,8 @@ function utils.getGUIDByTrack(tr)
   return false
 end
 
+
+-- add return track name also??
 function utils.getTrackByGUID(search_guid)
   -- local tr = reaper.BR_GetMediaTrackByGUID( 0, search_guid )
   -- if type(tr) == 'userdata' then return tr else return false end

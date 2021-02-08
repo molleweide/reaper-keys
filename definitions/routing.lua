@@ -1,3 +1,6 @@
+-- move all of these down into rc config
+--
+-- or should these be put in routing lib?
 local TRACK_INFO_AUDIO_SRC_DISABLED = -1
 local TRACK_INFO_MIDIFLAGS_ALL_CH = 0
 local TRACK_INFO_MIDIFLAGS_DISABLED = 4177951
@@ -68,6 +71,10 @@ return {
   -- src_from_sel = false,
   dst_from_str = false,
   user_input = false,
+
+
+  code_tot_route_num_limit = 5,
+  gui_tot_route_num_limit = 1,
 
   --  /////////////////////////////////////////////////////////////////////
   --  FLAGS
