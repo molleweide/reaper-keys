@@ -64,8 +64,10 @@ return {
   --
   src_guids = {},
   dst_guids = {},
-  src_from_str = true,
-  dst_from_str = true,
+  -- src_from_str = false,
+  -- src_from_sel = false,
+  dst_from_str = false,
+  user_input = false,
 
   --  /////////////////////////////////////////////////////////////////////
   --  FLAGS
@@ -81,9 +83,9 @@ return {
     CAT_HW = TRACK_INFO_CATEGORY_HARDWARE,
   },
 
-    -- ////////////////////////////////////////////////////////////////////
-    -- PARAMS
-    -- ////////////
+  -- ////////////////////////////////////////////////////////////////////
+  -- PARAMS
+  -- ////////////
   -- remove `param_` >>> becomes redundant
 
   new_params = {--[[ empty ]]},
