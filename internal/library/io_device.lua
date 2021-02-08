@@ -4,6 +4,9 @@ local format = require('utils.format')
 
 io_device = {}
 
+local my_devices = {
+
+}
 --  REAPER STARTUP
 --
 --    on start up look for midi devices / audio devices and
@@ -18,7 +21,7 @@ function setMidiInForSingleTrack(tr, chan, dev_name)
     local retval, nameout = reaper.GetMIDIInputName( i, '' )
     -- if nameout ~= '' then log.user(nameout) end
     if nameout:lower():match(dev_name:lower()) then
-      -- log.user('found: ' .. nameout)
+      log.user('found: ' .. nameout)
       dev_id = i
     end
   end
@@ -55,6 +58,7 @@ function io_device.setInputTo_MIDI_QMK() setMidiInMultSel('Ergodox EZ') end
 --    whenever I use a new piano (88) keys >> add to list of pianos? maybe good idea
 --        easy to recal settings for piano size when in studio
 --]]
-function io_device.setInputTo_MIDI_GRAND_ROLAND() setMidiInMultSel('- Port 1') end
+local roland_escaped = 'Roland %- RD Series %- Port 1'
+function io_device.setInputTo_MIDI_GRAND_ROLAND() setMidiInMultSel(roland_escaped) end
 
 return io_device
