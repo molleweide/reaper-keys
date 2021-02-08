@@ -1,5 +1,4 @@
 local ru = require('custom_actions.utils')
-local tb = require('utils.table')
 local log = require('utils.log')
 local format = require('utils.format')
 local rc = require('definitions.routing')
@@ -66,16 +65,14 @@ function routing.create(route_str, coded_sources, coded_dests)
   if not ret then return end -- something went wrong
 
   if coded_sources ~= nil then
-    local ret
     ret, rp = setRouteTargetGuids(rp, 'src_guids', coded_sources)
   end
   if coded_dests ~= nil then
-    local ret
     ret, rp = setRouteTargetGuids(rp, 'dst_guids', coded_dests)
   end
 
-  lrp(rp) -- log rp
 
+  lrp(rp) -- log rp
 
   -- inside confirmRC >> make a last super strict check to make sure that nothing
   -- shitty is slippint through
@@ -219,9 +216,11 @@ end
 
 function confirmRouteCreation(rp)
   -- LOG FINAL SOURCES TARGETS
+
+
   log.user(div, 'list SRC tracks >>>>> \n')
   for i = 1, #rp.src_guids do
-    local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i])
+    local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i].guid)
     local _, src_name = reaper.GetTrackName(tr)
     log.user('\t' .. tr_idx .. ' - ' .. src_name)
   end
@@ -229,7 +228,7 @@ function confirmRouteCreation(rp)
   -- LOG FINAL DEST TARGETS
   log.user('\nlist DEST tracks >>>>> \n')
   for i = 1, #rp.dst_guids do
-    local tr, tr_idx = ru.getTrackByGUID(rp.dst_guids[i])
+    local tr, tr_idx = ru.getTrackByGUID(rp.dst_guids[i].guid)
     local _, dst_name = reaper.GetTrackName(tr)
     log.user('\t' .. tr_idx .. ' - ' .. dst_name)
   end
@@ -387,6 +386,8 @@ end
 function extractParamsFromString(rp, str)
   -- HANDLE PARENTHESIS
   local ret, src_tr_data, dst_tr_data, str = extractParenthesisTargets(str)
+
+
   if src_tr_data ~= nil and rp.userInput then -- SRC PROVIDED
     local src_tr_split =  getStringSplitPattern(src_tr_data, USER_INPUT_TARGETS_DIV)
     local ret, rp = setRouteTargetGuids(rp, 'src_guids', src_tr_split)

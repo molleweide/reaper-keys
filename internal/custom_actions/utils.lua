@@ -149,7 +149,6 @@ end
 -- any kind of base track functions.
 function utils.getGUIDByTrack(tr)
   for i = 0, reaper.CountTracks(0) - 1 do
-    local tr = reaper.GetSelectedTrack(0,i)
     local GUID = reaper.GetTrackGUID( tr )
     if GUID ~= nil or GUID ~= "" then return GUID end
   end
