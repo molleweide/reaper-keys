@@ -156,6 +156,9 @@ function utils.getGUIDByTrack(tr)
 end
 
 function utils.getTrackByGUID(search_guid)
+  -- local tr = reaper.BR_GetMediaTrackByGUID( 0, search_guid )
+  -- if type(tr) == 'userdata' then return tr else return false end
+  -- or just nil >> but it is really nice to get idx together with guid sometimes..
   for i = 0, reaper.CountTracks(0) - 1 do
     local tr = reaper.GetTrack(0,i)
     local GUID = reaper.GetTrackGUID( tr )

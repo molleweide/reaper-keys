@@ -6,7 +6,7 @@ local df = rc.default_params
 
 local routing = {}
 
-local input_placeholder = "(176|177|kick|snare)"
+local input_placeholder = "(176|177|178|179)"
 local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
 local div = '\n##########################################\n\n'
 local div2 = '---------------------------------'
@@ -15,12 +15,9 @@ local USER_INPUT_TARGETS_DIV = '|'
 
 --      TODO
 --
---      update all places to use new guid obj
---
---      route loop > add mult dest
---
---
---
+--      if coded targets
+--        don't prompt user to affirm unless a single command exceedes a certain number
+--          put in config
 --
 --
 --      `!a/m` should not require `u` ?!?!?!?!?!
@@ -77,7 +74,10 @@ function routing.create(route_str, coded_sources, coded_dests)
   -- inside confirmRC >> make a last super strict check to make sure that nothing
   -- shitty is slippint through
   if confirmRouteCreation(rp) then
-    createRoutesLoop(rp, src_t, dest_tr)
+    createRoutesLoop(rp)
+  else
+    log.clear()
+    log.user('<abort>')
   end
 end
 
@@ -216,9 +216,14 @@ end
 
 function confirmRouteCreation(rp)
   -- LOG FINAL SOURCES TARGETS
+  local num_tr_affected = #rp.src_guids*#rp.dst_guids
+
+  local warning_str = 'Tot num routes being affected = '.. num_tr_affected
+  local r_u_sure = 'Are you sure you want to do this?'
+  log.user(div, warning_str)
 
 
-  log.user(div, 'list SRC tracks >>>>> \n')
+  log.user('list SRC tracks >>>>> \n')
   for i = 1, #rp.src_guids do
     local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i].guid)
     local _, src_name = reaper.GetTrackName(tr)
@@ -237,7 +242,12 @@ function confirmRouteCreation(rp)
   local help_str = "` #src: `" .. tostring(#rp.src_guids) ..
   "` #dst: `" .. tostring(#rp.dst_guids) .. "` (y/n)"
   local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
-  if answer ~= "y" then return true end
+
+  if answer == "y" and num_tr_affected > 5 then
+    _, answer = reaper.GetUserInputs(r_u_sure, 1, warning_str, "")
+  end
+
+  if answer == "y" then return true end
   return false
 end
 
@@ -268,9 +278,9 @@ function setRouteTargetGuids(rp, key, new_tracks_data)
       if new_tracks_data == '<not_working_yet>' then
         --
       elseif ru.getTrackByGUID(new_tracks_data[i]) ~= false then
-      local tr, tr_idx = ru.getTrackByGUID(new_tracks_data[i])
-      local _, current_name = reaper.GetTrackName(tr)
-      tr_guids[i] = { name = current_name, guid = new_tracks_data[i] }
+        local tr, tr_idx = ru.getTrackByGUID(new_tracks_data[i])
+        local _, current_name = reaper.GetTrackName(tr)
+        tr_guids[i] = { name = current_name, guid = new_tracks_data[i] }
 
       elseif tonumber(new_tracks_data[i]) ~= nil then
         local tr = reaper.GetTrack(0, tonumber(new_tracks_data[i]) - 1)
@@ -439,7 +449,7 @@ end
 --  GET ROUTE STATE
 --////////////////
 
-function getPrevRouteState(src_tr, dest_tr, rp)
+function getPrevRouteState(rp, src_tr, dest_tr)
   rp.prev = 0
   for si=0,  reaper.GetTrackNumSends( src_tr, 0 ) do
     local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, 0, si, 1 )
@@ -536,24 +546,34 @@ end
 --  UPDATE ROUTE STATE
 --//////////////////////
 
-
--- TODO
---
---  dest_tr param should be DST_GUIDS
---    double loop
---
---      for src
---        for dst
---          do...............
 function createRoutesLoop(rp)
-  for i = 1, #SRC_GUIDS do
-    local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, SRC_GUIDS[i] )
-    local rp, rid = getPrevRouteState(src_tr, dest_tr, rp)
-    local rp = getNextRouteState(rp)
-    -- if rp.prev == 0 then rid = reaper.CreateTrackSend(src_tr, dest_tr) end
-    -- updateRouteState_Track(src_tr, rp, rid)
-    -- deleteRouteIfEmpty(src_tr, rid)
-  end
+  for i = 1, #rp.src_guids do
+    for j = 1, #rp.dst_guids do
+
+      if rp.src_guids[i].guid == rp.dst_guids[j].guid then
+        log.user('same')
+        goto continue
+      end
+
+
+      local src_tr, sidx = ru.getTrackByGUID(rp.src_guids[i].guid)
+      local dst_tr, didx = ru.getTrackByGUID(rp.dst_guids[j].guid)
+
+      rp, rid = getPrevRouteState(rp, src_tr, dst_tr)
+      rp      = getNextRouteState(rp)
+
+      log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'` INTO #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
+
+      -- could i make a way here for showing exactly what is going to happen on each track.
+      -- that would be pretty nice I think
+
+      -- if rp.prev == 0 then rid = reaper.CreateTrackSend(src_tr, dest_tr) end
+      -- updateRouteState_Track(src_tr, rp, rid)
+      -- deleteRouteIfEmpty(src_tr, rid)
+
+      :: continue ::
+    end -- dst
+  end -- src
 end
 
 function updateRouteState_Track(src_tr, rp, rid)
