@@ -24,6 +24,10 @@ local USER_INPUT_TARGETS_DIV = '|'
 --          syntax > update lane mapping w/ routing.create()
 --          syntax > if track M:: or A:: and no sends >> route to respective master.
 --
+--      -> segments
+--
+--      -> record random stuff w/ empa
+--
 --      -> REMOVAL OF ROUTES
 --
 --      `!a/m` should not require `u` ?!?!?!?!?!
