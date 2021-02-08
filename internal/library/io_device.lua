@@ -7,6 +7,15 @@ io_device = {}
 local my_devices = {
 
 }
+
+
+function captureNewIODevices()
+  -- 1. capture and write to file
+  --    2. write these into config list somehow
+end
+
+
+
 --  REAPER STARTUP
 --
 --    on start up look for midi devices / audio devices and

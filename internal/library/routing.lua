@@ -15,23 +15,39 @@ local USER_INPUT_TARGETS_DIV = '|'
 
 --      TODO
 --
---      if coded targets
---        don't prompt user to affirm unless a single command exceedes a certain number
---          put in config
+--      -> if coded targets > affirm if routing exceedes a certain number
+--              put in config > code_limit/gui_limit
 --
+--      -> write up of examples in docs ::: add >> todo
+--
+--      -> SYNTAX | only requires sends
+--
+--          >>> most important for flow
+--
+--          syntax > update lane mapping w/ routing.create()
+--          syntax > if track M:: or A:: and no sends >> route to respective master.
+--
+--      -> REMOVAL OF ROUTES
 --
 --      `!a/m` should not require `u` ?!?!?!?!?!
 --
 --            if `u` or `!` current param.disable == true
 --
---
---      - cat
+--      -> RECIEVES
 --          if RECIEVE src and dest are reversed.
 --          you specify the `SRC FROM TR`
 --
 --      - update send by id?
 --
 --      - audio ch ranges?
+--
+--      -> COMMANDS
+--
+--        switch monitors
+--
+--
+--
+--
 --
 --      MUTE SEND
 --
@@ -123,7 +139,7 @@ end
 
 -- TODO
 --
--- retval, t
+-- retval, t ?
 function getMatchedTrackGUIDs(search_name)
   if not search_name then return nil end
   local found = false
@@ -140,6 +156,8 @@ function getMatchedTrackGUIDs(search_name)
 end
 
 -- this function alse is defined in syntax/syntax
+--
+-- mv to util
 function getStringSplitPattern(pString, pPattern)
   local Table = {}  -- NOTE: use {n = 0} in Lua-5.0
   local fpat = "(.-)" .. pPattern
