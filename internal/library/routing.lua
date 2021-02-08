@@ -14,16 +14,20 @@ local div2 = '---------------------------------'
 
 local USER_INPUT_TARGETS_DIV = '|'
 
---      PRIORITY LIST
---
---      1. coded_sources/dest ( tr / guid / table(tr/guid) )
---
---      2. user extract list source / dest ( num/name_str )
---          (obviously no guids here...)
---
 --      TODO
 --
---      add dest loop >>> call updateRoutesStateLoop
+--      src / dst depth + 1 > add name param so that I can debug easier
+--        add tiny obj
+--        {
+--          name,
+--          guid
+--        }
+--
+--      route loop > add mult dest
+--
+--
+--
+--
 --
 --      `!a/m` should not require `u` ?!?!?!?!?!
 --
@@ -75,10 +79,13 @@ function routing.create(route_str, coded_sources, coded_dests)
     ret, rp = setRouteTargetGuids(rp, 'dst_guids', coded_dests)
   end
 
-  logrp(rp) -- log rp
+  lrp(rp) -- log rp
 
+
+  -- inside confirmRC >> make a last super strict check to make sure that nothing
+  -- shitty is slippint through
   if confirmRouteCreation(rp) then
-    -- move createRoutesLoop(rp, src_t, dest_tr)
+    createRoutesLoop(rp, src_t, dest_tr)
   end
 end
 
@@ -104,12 +111,13 @@ function routing.logRoutingInfoForSelectedTracks()
   end
 end
 
-function logrp(rp)
+function lrp(rp)
+  -- log rp
   log.user(div, format.block(rp))
 end
 
 --////////////////////////////////////////////////////////////////////////
---  UTILS
+--  UTILS | mv to reaper util
 --/////////
 
 function isSel() return reaper.CountSelectedTracks(0) ~= 0 end
@@ -211,13 +219,15 @@ end
 --  EXTRACT ROUTE PARAMS
 --///////////////////////
 
+function logConfirmList()
+end
 
 function confirmRouteCreation(rp)
   -- LOG FINAL SOURCES TARGETS
   log.user(div, 'list SRC tracks >>>>> \n')
   for i = 1, #rp.src_guids do
     local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i])
-    local ret, src_name = reaper.GetTrackName(tr)
+    local _, src_name = reaper.GetTrackName(tr)
     log.user('\t' .. tr_idx .. ' - ' .. src_name)
   end
 
@@ -225,8 +235,8 @@ function confirmRouteCreation(rp)
   log.user('\nlist DEST tracks >>>>> \n')
   for i = 1, #rp.dst_guids do
     local tr, tr_idx = ru.getTrackByGUID(rp.dst_guids[i])
-    local ret, src_name = reaper.GetTrackName(tr)
-    log.user('\t' .. tr_idx .. ' - ' .. src_name)
+    local _, dst_name = reaper.GetTrackName(tr)
+    log.user('\t' .. tr_idx .. ' - ' .. dst_name)
   end
 
   log.user('\n>>> confirm route creation y/n')
@@ -240,34 +250,6 @@ end
 
 --    key = src_guid/dst_guids
 --    new_track_data = (tr / tr_guid / tr_name / table)
---
---
---    if
---
---
---
---
---
---
---
---  TODO
---
---  merge into setRouteTargets
-
--- function assignGUIDsFromUserInput(rp, pSrc, pDst)
---   -- if src_from_str
---   if tonumber(pSrc) ~= nil then
---     local tr = reaper.GetTrack(0, tonumber(pSrc) - 1)
---   rp['src_guids'] = {reaper.GetTrackGUID(tr)} else rp['src_guids'] = getMatchedTrackGUIDs(pSrc)
---   end
---   -- if dst_from_str
---   if tonumber(pDst) ~= nil then
---     local tr = reaper.GetTrack(0, tonumber(pDst) - 1)
---   rp['dst_guids'] = {reaper.GetTrackGUID(tr)} else rp['dst_guids'] = getMatchedTrackGUIDs(pDst)
---   end
---   return rp
--- end
-
 function setRouteTargetGuids(rp, key, new_tracks_data)
   local retval = false
   local log_str = 'new_tracks_data >>> '
@@ -294,9 +276,12 @@ function setRouteTargetGuids(rp, key, new_tracks_data)
 
       elseif tonumber(new_tracks_data[i]) ~= nil then
         local tr = reaper.GetTrack(0, tonumber(new_tracks_data[i]) - 1)
+        -- local _, current_name = reaper.GetTrackName(tr)
+
         local guid_from_tr = ru.getGUIDByTrack(tr)
         tr_guids[i] = guid_from_tr
 
+        -- log.user(i .. ' ' .. current_name .. ' TR INDEX!!!')
       else
         local match_t = getMatchedTrackGUIDs(new_tracks_data[i])
         local tr_guids = TableConcat(tr_guids, match_t)
@@ -419,6 +404,7 @@ function extractParamsFromString(rp, str)
 
   if dst_tr_data ~= nil then
     local dst_tr_split =  getStringSplitPattern(dst_tr_data, USER_INPUT_TARGETS_DIV)
+    log.user(format.block(dst_tr_split))
     local ret, rp = setRouteTargetGuids(rp, 'dst_guids', dst_tr_split)
   else
     log.user('ERROR: no DST targets was provided')
@@ -561,16 +547,15 @@ end
 --      for src
 --        for dst
 --          do...............
-function createRoutesLoop(rp, SRC_GUIDS, dest_tr)
+function createRoutesLoop(rp)
   for i = 1, #SRC_GUIDS do
     local src_tr =  reaper.BR_GetMediaTrackByGUID( 0, SRC_GUIDS[i] )
     local rp, rid = getPrevRouteState(src_tr, dest_tr, rp)
     local rp = getNextRouteState(rp)
-    if rp.prev == 0 then rid = reaper.CreateTrackSend(src_tr, dest_tr) end
-    updateRouteState_Track(src_tr, rp, rid)
-    deleteRouteIfEmpty(src_tr, rid)
+    -- if rp.prev == 0 then rid = reaper.CreateTrackSend(src_tr, dest_tr) end
+    -- updateRouteState_Track(src_tr, rp, rid)
+    -- deleteRouteIfEmpty(src_tr, rid)
   end
-  -- log.user(format.block(rp))
 end
 
 function updateRouteState_Track(src_tr, rp, rid)
