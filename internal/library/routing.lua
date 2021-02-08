@@ -9,7 +9,7 @@ local routing = {}
 
 local input_placeholder = "(176|177|kick|snare)"
 local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
-local div = '##########################################'
+local div = '\n##########################################\n\n'
 local div2 = '---------------------------------'
 
 local USER_INPUT_TARGETS_DIV = '|'
@@ -23,24 +23,7 @@ local USER_INPUT_TARGETS_DIV = '|'
 --
 --      TODO
 --
---          setRouteTargetGuids >> if string num
---            update with check if track_name >> search tr
---
---            remove prepareRouteComponents function
---
---              if no dest check for selection
---
---                if no src/dst >>> prompt user
---
---                  put confirmation inside of create
---
---                    call updateRoutesStateLoop
---
---
---      update all functions to have a retval param first?
---
---
---
+--      add dest loop >>> call updateRoutesStateLoop
 --
 --      `!a/m` should not require `u` ?!?!?!?!?!
 --
@@ -79,25 +62,10 @@ function routing.create(route_str, coded_sources, coded_dests)
     _, route_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
   end
 
-  -- leave here but update
   local ret
   ret, rp = extractParamsFromString(rp, route_str)
   if not ret then return end -- something went wrong
 
-  -- TODO
-  --
-  --  only gets tracks from selection if and searches for match
-  --
-  --  >>>>> I have to refresh my memory and sketch out how this is actually
-  --  done because now i am actually a bit confused how i am getting tracks.
-  --    what is the priority list now.
-  --
-  --  if should probably move this to above `setRouteTargetGuids()`
-  -- rp = prepareRouteComponents(rp)
-
-  -- IF CODE TARGETS
-  --
-  -- or if # == 0
   if coded_sources ~= nil then
     local ret
     ret, rp = setRouteTargetGuids(rp, 'src_guids', coded_sources)
@@ -107,7 +75,7 @@ function routing.create(route_str, coded_sources, coded_dests)
     ret, rp = setRouteTargetGuids(rp, 'dst_guids', coded_dests)
   end
 
-  log.user(format.block(rp))
+  logrp(rp) -- log rp
 
   if confirmRouteCreation(rp) then
     -- move createRoutesLoop(rp, src_t, dest_tr)
@@ -134,6 +102,10 @@ function routing.logRoutingInfoForSelectedTracks()
     log.user('\tHARDWARE:')
     logRoutesByCategory(tr, rc.flags.CAT_HW)
   end
+end
+
+function logrp(rp)
+  log.user(div, format.block(rp))
 end
 
 --////////////////////////////////////////////////////////////////////////
@@ -242,7 +214,7 @@ end
 
 function confirmRouteCreation(rp)
   -- LOG FINAL SOURCES TARGETS
-  log.user('list SRC tracks >>>>> \n')
+  log.user(div, 'list SRC tracks >>>>> \n')
   for i = 1, #rp.src_guids do
     local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i])
     local ret, src_name = reaper.GetTrackName(tr)
@@ -300,7 +272,7 @@ function setRouteTargetGuids(rp, key, new_tracks_data)
   local retval = false
   local log_str = 'new_tracks_data >>> '
   local tr_guids = {}
-  log.user(key, format.block(type(new_tracks_data)))
+  -- log.user(key, format.block(type(new_tracks_data)))
   if type(new_tracks_data) ~= 'table' then -- NOT TABLE ::::::::::::::
     if new_tracks_data == '<not_working_yet>' then
       --
@@ -332,26 +304,8 @@ function setRouteTargetGuids(rp, key, new_tracks_data)
     end -- for
   end -- table
 
-  -- if type(new_tracks_data) ~= table then
-  --   log.user(log_str .. 'SINGLE TRACK')
-  --   retval = true
-  --   tr_guids = {ru.getGUIDByTrack(new_tracks_data)}
-  --
-  --   -- elseif new_tracks_data == tr_name_str then
-  --
-  --
-  -- elseif ru.getTrackByGUID(new_tracks_data) then
-  --
-  --
-  --
-  -- elseif type(new_tracks_data) == 'table' then
-  --
-  --
-  --
-  -- end -- if ru.get
   if retval then rp[key] = tr_guids end
   return retval, rp
-
 end
 
 function removeEnclosureFromString(str, encl_type)
@@ -426,7 +380,7 @@ end
 
 function handleSecondaryParams(rp, str, key, primary)
   local ret, val, pre = inputHasChar(str, key)
-  log.user(key, ret, val, pre)
+  -- log.user(key, ret, val, pre)
 
   -- exists or PRIMARY
   if ret or primary ~= nil then
@@ -449,28 +403,25 @@ function handleSecondaryParams(rp, str, key, primary)
 end
 
 function extractParamsFromString(rp, str)
-
   -- HANDLE PARENTHESIS
   local ret, src_tr_data, dst_tr_data, str = extractParenthesisTargets(str)
   if src_tr_data ~= nil and rp.userInput then -- SRC PROVIDED
     local src_tr_split =  getStringSplitPattern(src_tr_data, USER_INPUT_TARGETS_DIV)
     local ret, rp = setRouteTargetGuids(rp, 'src_guids', src_tr_split)
   elseif isSel() then -- FALLBACK SRC SEL
-    log.user('extractParams >> sourc from sel')
     rp.src_from_selection = true
     rp['src_guids'] = ru.getSelectedTracksGUIDs()
   else -- NO SRC ERR..
-    log.user('no src targets was provided')
+    log.user('ERROR: no src targets was provided')
     return false, rp
   end
 
 
   if dst_tr_data ~= nil then
     local dst_tr_split =  getStringSplitPattern(dst_tr_data, USER_INPUT_TARGETS_DIV)
-    -- log.user('USER_INPUT_SPLIT_DST',format.block(dst_tr_split))
     local ret, rp = setRouteTargetGuids(rp, 'dst_guids', dst_tr_split)
   else
-    log.user('no DST targets was provided')
+    log.user('ERROR: no DST targets was provided')
     return false, rp
   end
 
@@ -491,13 +442,12 @@ function extractParamsFromString(rp, str)
 
   local midi_flags
   if cSrc ~= nil and cDst ~= nil then midi_flags = create_send_flags(cSrc,cDst) end
-  log.user(cSrc, cDst, midi_flags)
+  -- log.user(cSrc, cDst, midi_flags)
   rp, str = handleSecondaryParams(rp, str, 'm', midi_flags)
 
   ret, val, pre = inputHasChar(str, 'u')
   if ret then rp.overwrite = true end
 
-  -- log.user(format.block(rp))
   return true, rp
 end
 
@@ -527,8 +477,6 @@ function getPrevRouteState(src_tr, dest_tr, rp)
 end
 
 function getNextRouteState(rp, check_str)
-
-  -- log.user(format.block(rp))
 
   if (rp.new_params['a'] ~= nil and rp.new_params['m'] == nil) or
     (rp.new_params['a'] == nil and rp.new_params['m'] == nil) then
