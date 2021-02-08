@@ -185,11 +185,11 @@ function utils.getSelectedTracks()
 end
 
 function utils.getSelectedTracksGUIDs()
-  -- log.user('getSelectedTracksGUIDs')
   local t = {}
   for i = 1, reaper.CountSelectedTracks(0) do
     local tr = reaper.GetSelectedTrack(0,i-1)
-    t[#t+1] = reaper.GetTrackGUID( tr )
+    local _, current_name = reaper.GetTrackName(tr)
+    t[#t+1] = { name = current_name, guid = reaper.GetTrackGUID( tr ) }
   end
   return t
 end

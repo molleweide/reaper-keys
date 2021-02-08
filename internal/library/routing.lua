@@ -16,12 +16,7 @@ local USER_INPUT_TARGETS_DIV = '|'
 
 --      TODO
 --
---      src / dst depth + 1 > add name param so that I can debug easier
---        add tiny obj
---        {
---          name,
---          guid
---        }
+--      update all places to use new guid obj
 --
 --      route loop > add mult dest
 --
@@ -140,7 +135,7 @@ function getMatchedTrackGUIDs(search_name)
     local tr = reaper.GetTrack(0, i)
     local _, current_name = reaper.GetTrackName(tr)
     if current_name:match(search_name) then
-      t[#t+1] = reaper.GetTrackGUID( tr )
+      t[#t+1] = { name = current_name, guid = reaper.GetTrackGUID( tr ) }
       found = true
     end
   end
@@ -260,7 +255,9 @@ function setRouteTargetGuids(rp, key, new_tracks_data)
       --
     elseif ru.getTrackByGUID(new_tracks_data) ~= false then
       retval = true
-      tr_guids = { new_tracks_data }
+      local tr, tr_idx = ru.getTrackByGUID(new_tracks_data[i])
+      local _, current_name = reaper.GetTrackName(tr)
+      tr_guids = { name = current_name, guid = new_tracks_data }
     else
       retval = false
       log.user('new tracks data NOT table but did not pass as TRACK/GUID')
@@ -272,16 +269,16 @@ function setRouteTargetGuids(rp, key, new_tracks_data)
       if new_tracks_data == '<not_working_yet>' then
         --
       elseif ru.getTrackByGUID(new_tracks_data[i]) ~= false then
-        tr_guids[i] = new_tracks_data[i]
+      local tr, tr_idx = ru.getTrackByGUID(new_tracks_data[i])
+      local _, current_name = reaper.GetTrackName(tr)
+      tr_guids[i] = { name = current_name, guid = new_tracks_data[i] }
 
       elseif tonumber(new_tracks_data[i]) ~= nil then
         local tr = reaper.GetTrack(0, tonumber(new_tracks_data[i]) - 1)
-        -- local _, current_name = reaper.GetTrackName(tr)
+        local _, current_name = reaper.GetTrackName(tr)
 
         local guid_from_tr = ru.getGUIDByTrack(tr)
-        tr_guids[i] = guid_from_tr
-
-        -- log.user(i .. ' ' .. current_name .. ' TR INDEX!!!')
+        tr_guids[i] = { name = current_name, guid = guid_from_tr }
       else
         local match_t = getMatchedTrackGUIDs(new_tracks_data[i])
         local tr_guids = TableConcat(tr_guids, match_t)
