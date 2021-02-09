@@ -8,52 +8,86 @@ nav_order: 4
 You need to assign `routing.create()`
 
 
-## source / destination tracks
+## SOURCE / DESTINATION TRACKS ##################################
 
-(1,5,46,trX,trY)
+(5,tr_name)               selection send to track #5 and match:tr_name
+
+(trA,45)(trX,trY,15,16)   source / dest complex arguments
+
+- TODO: use capital S/R for category = send/recieve
+
+## SET CHANNELS ################################################
+
+### AUDIO -----------
 
 
-(trA,45)(trX,trY,15,16)
+(1,5,46,trX,trY)[0,2]
 
+send selection to match:tr_name src ch 3/4 to dst ch 5/6
 
-## set channels
+(tr_name)a2d4
 
-### AUDIO
+- TODO: rename a to s ((s)rc/(d)st)
 
-(1,5,46,trX,trY)[]
+### MIDI -----------
 
-### MIDI
+(trA)(trX){5,6}   create midi send from match:trA ch5 to match:trX ch 6
 
-(trA,45)(trX,trY,15,16){}
+## UPDATE ROUTE ###############################################
 
-## disable
+(tr_name)ua2      force update sel src ch to src ch = 3/4 (dst ch default)
+
+## DISABLE ###################################################
 
 Apply disable prop to affected targets
 
 For audio and midi this value ! turns audio off. If both audio and midi off
 then delete route index
 
-(1,5,46,trX,trY)
+(tr_name)!a     only midi send to match:tr_name
 
-## remove
+## REMOVE ####################################################
 
-## set values
+-             remove all sends / recieves of selection, or coded sources
+-S            remove all sends
+-R            remove all recieves
+-(11,12)R     delete all recieves on track 11 and 12
+-(kick)S    delete all sends on match:tr_name
 
-Use any of `amv` flags to set values manually.
+
+## set values ----------------
+
+Use any of `admv` flags to set values manually.
 
 eg `(15)a0d2` send selected track ch 1/2 into track #15 ch 3/4
 
 ## toggle values
 
-## nudge values
+mute
+phase
 
-## combine w/ other functions
+## nudge values ###############################################
+
+volume
+pan
+
+## pre / post ##################################################
+
+
+## COMBINE W/ OTHER FUNCTIONS ##################################
 
 - sidechain selected tracks to match
 
     1. apply reacomp to last fx
     2. rename to `COMP_SC_KICK`
     3. route to track match kick
+
+- `if track num_sends == 0 and name match:drum_categories`
+
+    get tracks that match drum categories
+    
+      `routing.create('(DRUMS_ALL){0,0}', list_drum_tracks)`
+
 
 ## TODO
 

@@ -15,8 +15,12 @@ local USER_INPUT_TARGETS_DIV = '|'
 
 --      TODO
 --
---      -> write up of examples in docs ::: add >> todo
 --
+--      -> REMOVAL OF ROUTES
+--
+--      -
+--      -S
+--      -R
 --
 --
 --      -> SYNTAX | only requires sends
@@ -30,7 +34,6 @@ local USER_INPUT_TARGETS_DIV = '|'
 --
 --      -> record random stuff w/ empa
 --
---      -> REMOVAL OF ROUTES
 --
 --      `!a/m` should not require `u` ?!?!?!?!?!
 --
