@@ -18,9 +18,13 @@ local USER_INPUT_TARGETS_DIV = '|'
 --
 --      -> REMOVAL OF ROUTES
 --
---      -
---      -S
---      -R
+--      -     remove flag
+--      S     Send flag
+--      R     recieve flag
+--
+--      handleRemoval()
+--
+--
 --
 --
 --      -> SYNTAX | only requires sends
@@ -70,6 +74,13 @@ local USER_INPUT_TARGETS_DIV = '|'
 --  PUBLIC | move to custom ???
 --/////////
 
+
+-- TODO
+--
+-- rename to something general for both create, update, and remove
+--
+--    routes.update()
+
 function routing.create(route_str, coded_sources, coded_dests)
   log.clear()
   local rp = rc
@@ -92,12 +103,16 @@ function routing.create(route_str, coded_sources, coded_dests)
     ret, rp = setRouteTargetGuids(rp, 'dst_guids', coded_dests)
   end
 
+  -- make sure there are
+  -- local validate, err = validateNewRoute(rp)
+  -- if not validate then
+  -- end
 
   lrp(rp) -- log rp
 
-  -- inside confirmRC >> make a last super strict check to make sure that nothing
-  -- shitty is slippint through
-  if confirmRouteCreation(rp) then
+  if rp.remove_routes then
+    handleRemoval(rp)
+  elseif confirmRouteCreation(rp) then
     createRoutesLoop(rp)
   else
     log.clear()
@@ -428,6 +443,21 @@ function handleSecondaryParams(rp, str, key, primary)
 end
 
 function extractParamsFromString(rp, str)
+
+  -- remove
+
+  -- if str has '-' then rp.remove_routes = true return end
+  -- if str has 'S' then
+  --    rp.category == 'SEND'
+  --    rp.remove_cat = 'SEND'
+  --  end
+  -- if str has 'R' then
+  --    rp.category == 'RECIEVE'
+  --    rp.remove_cat = 'RECIEVE'
+  --  end
+
+
+
   -- HANDLE PARENTHESIS
   local ret, src_tr_data, dst_tr_data, str = extractParenthesisTargets(str)
 
@@ -439,6 +469,11 @@ function extractParamsFromString(rp, str)
     rp.src_from_selection = true
     rp['src_guids'] = ru.getSelectedTracksGUIDs()
   else -- NO SRC ERR..
+
+    -- TODO
+    --
+    --  mv this to validateNewRoute()
+
     log.user('ERROR: no src targets was provided')
     return false, rp
   end
@@ -448,6 +483,9 @@ function extractParamsFromString(rp, str)
     local dst_tr_split =  getStringSplitPattern(dst_tr_data, USER_INPUT_TARGETS_DIV)
     local ret, rp = setRouteTargetGuids(rp, 'dst_guids', dst_tr_split)
   else
+    -- TODO
+    --
+    --  mv this to validateNewRoute()
     log.user('ERROR: no DST targets was provided')
     return false, rp
   end
@@ -476,6 +514,22 @@ function extractParamsFromString(rp, str)
   if ret then rp.overwrite = true end
 
   return true, rp
+end
+
+
+--//////////////////////////////////////////////////////////////////////
+--  VALIDATE NEW ROUTE
+--//////////////////////
+
+function validateNewRoute(rp)
+  local err = {}
+  -- rp.user_input
+  -- rp.coded_targets
+  if rp.remove_cat == 'BOTH' then
+  elseif
+  if (#rp.src_guids == 0 or #rp.dst_guids == 0) or then
+    return
+  return ret, err
 end
 
 --//////////////////////////////////////////////////////////////////////
@@ -529,6 +583,37 @@ end
 --////////////////////////////////////////////////////////////////////
 --  REMOVE ROUTES
 --/////////////////
+
+
+-- TODO
+--
+-- src and dest are required here
+--
+--  if no source throw error
+--
+--    coded targets need to make sure both src/dst are provided
+
+function handleRemoval(rp)
+
+  -- if rp.remove_cat == 'BOTH'
+  --
+  --    if no src err
+  --    if no dest remove all
+  --    else delete routes src/dst
+  --
+  -- elseif rp.remove_cat == 'SEND'
+  --
+  --    if no src err
+  --    if no dest remove all
+  --    else delete routes src/dst
+  --
+  -- elseif rp.remove_cat == 'RECIEVE'
+  --
+  --    if no src err
+  --    if no dest remove all rec on source
+  --    else delete recieves src <- dst
+  --
+end
 
 function deleteRouteIfEmpty(src_tr, rid)
   local i_src_ch = reaper.GetTrackSendInfo_Value(src_tr, 0, rid, 'I_SRCCHAN')

@@ -72,9 +72,15 @@ return {
   dst_from_str = false,
   user_input = false,
 
+  coded_targets = false,
 
   code_tot_route_num_limit = 5,
   gui_tot_route_num_limit = 1,
+  route_num_extreme = 20,
+  remove_routes = false,
+  remove_cat = 'BOTH'
+  category = 'SEND',
+
 
   --  /////////////////////////////////////////////////////////////////////
   --  FLAGS

@@ -7,14 +7,29 @@ nav_order: 4
 
 You need to assign `routing.create()`
 
+## category ##################################################
+
+- TODO: use capital S/R for category = send/recieve
+
 
 ## SOURCE / DESTINATION TRACKS ##################################
+
 
 (5,tr_name)               selection send to track #5 and match:tr_name
 
 (trA,45)(trX,trY,15,16)   source / dest complex arguments
 
-- TODO: use capital S/R for category = send/recieve
+
+if S
+
+()        send from sel -> ()
+(A)(B)    send from (A) -> (B)
+
+if R
+
+(other)        selection recieves ()
+(A)(other)    A recieves the other
+
 
 ## SET CHANNELS ################################################
 
@@ -49,10 +64,11 @@ then delete route index
 ## REMOVE ####################################################
 
 -             remove all sends / recieves of selection, or coded sources
--S            remove all sends
--R            remove all recieves
--(11,12)R     delete all recieves on track 11 and 12
--(kick)S    delete all sends on match:tr_name
+-S            remove all sends on sel tr | or code
+-R            remove all recieves on sel tr | or code
+-(ghost)R     delete all recieves from track match:ghost to selection
+-(kick)S      delete all sends on match:tr_name to sel
+-(A)(B)       delete all A recieves from B
 
 
 ## set values ----------------
@@ -82,7 +98,7 @@ pan
     2. rename to `COMP_SC_KICK`
     3. route to track match kick
 
-- `if track num_sends == 0 and name match:drum_categories`
+- `if track num_sends == 0 and name match:drum_categories` send to DRUMS_ALL
 
     get tracks that match drum categories
     
