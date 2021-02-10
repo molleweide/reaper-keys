@@ -24,14 +24,10 @@ local USER_INPUT_TARGETS_DIV = '|'
 --
 --      TODO
 --
+--      -> cust util
+--
 --      -> syntax now so that I can use `zp`
 --
---      -> mult R options bug
---          only the first recieve is applied properly??
---
---
---
---      -> cust util
 --
 --        test coded targets >> add new custom bindings
 --
@@ -94,6 +90,18 @@ local USER_INPUT_TARGETS_DIV = '|'
 -- rename to something general for both create, update, and remove
 --
 --    routes.update()
+
+function routing.testCodedTargets()
+  log.user('test coded targets')
+  local guid_src = getMatchedTrackGUIDs('TEST_A')
+  local guid_dst = getMatchedTrackGUIDs('TEST_B')
+
+  log.user(format.block(guid_src[1]))
+  -- log.user(guid_src)
+
+  routing.create('[0|2]R', guid_src[#guid_src].guid, guid_dst[#guid_dst].guid)
+end
+
 
 function routing.create(route_str, coded_sources, coded_dests)
   log.clear()
@@ -343,9 +351,9 @@ function setRouteTargetGuids(rp, key, new_tracks_data)
       --
     elseif ru.getTrackByGUID(new_tracks_data) ~= false then
       retval = true
-      local tr, tr_idx = ru.getTrackByGUID(new_tracks_data[i])
+      local tr, tr_idx = ru.getTrackByGUID(new_tracks_data)
       local _, current_name = reaper.GetTrackName(tr)
-      tr_guids = { name = current_name, guid = new_tracks_data }
+      tr_guids = {{ name = current_name, guid = new_tracks_data }}
     else
       retval = false
       log.user('new tracks data NOT table but did not pass as TRACK/GUID')
@@ -491,11 +499,11 @@ function extractParamsFromString(rp, str)
 
 
 
-  if src_tr_data ~= nil and rp.userInput then -- SRC PROVIDED
+  if src_tr_data ~= nil then -- SRC PROVIDED
     local src_tr_split =  getStringSplitPattern(src_tr_data, USER_INPUT_TARGETS_DIV)
     local ret, rp = setRouteTargetGuids(rp, 'src_guids', src_tr_split)
   elseif isSel() then -- FALLBACK SRC SEL
-    rp.src_from_selection = true
+    -- rp.src_from_selection = true
     rp['src_guids'] = ru.getSelectedTracksGUIDs()
   end
 
@@ -755,7 +763,7 @@ function targetLoop(rp)
       :: continue ::
     end -- dst
   end -- src
-  -- lrp(rp)
+  lrp(rp)
 end
 
 function updateRouteState_Track(src_tr, rp, rid)
