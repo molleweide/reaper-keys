@@ -6,7 +6,7 @@ local df = rc.default_params
 
 local routing = {}
 
-local input_placeholder = "(176|177|178|179)"
+local input_placeholder = "(176)aR"
 local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
 local div = '\n##########################################\n\n'
 local div2 = '---------------------------------'
@@ -26,8 +26,7 @@ local USER_INPUT_TARGETS_DIV = '|'
 --
 --      -> cat
 --
---        if category == 1
---          reverse src/dst
+--        deleting R works but R still creates S
 --
 --
 --
@@ -124,12 +123,15 @@ function routing.create(route_str, coded_sources, coded_dests)
   -- end
 
   -- if rp.category == 1 then
+  -- end
+
+  lrp(rp) -- log rp
+
+  -- if rp.category == -1 and not rp.remove_routes then
   --   local tmp = rp.src_guids
   --   rp.src_guids = rp.dst_guids
   --   rp.dst_guids = tmp
   -- end
-
-  lrp(rp) -- log rp
 
   if rp.remove_routes then
     handleRemoval(rp)
@@ -563,6 +565,7 @@ function getPrevRouteState(rp, src_tr, dest_tr)
   for si=0,  num_routes_by_cat do
     local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, cat, si, check_other )
 
+
     -- local _, current_name = reaper.GetTrackName(dest_tr_check)
     -- log.user('dst check: ' .. current_name)
 
@@ -694,7 +697,6 @@ function targetLoop(rp)
       local src_tr, sidx = ru.getTrackByGUID(rp.src_guids[i].guid)
       local dst_tr, didx = ru.getTrackByGUID(rp.dst_guids[j].guid)
 
-      -- TODO -- getPrevRouteState only uses cat=send
       rp, rid = getPrevRouteState(rp, src_tr, dst_tr)
       rp      = getNextRouteState(rp)
 
@@ -710,7 +712,11 @@ function targetLoop(rp)
       else
         log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  -->  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
         if rp.prev == 0 then
-          rid = reaper.CreateTrackSend(src_tr, dst_tr)
+          if rp.category == 0 then
+            rid = reaper.CreateTrackSend(src_tr, dst_tr)
+          elseif rp.category == -1 then
+            rid = reaper.CreateTrackSend(dst_tr,src_tr)
+          end
         end
         updateRouteState_Track(src_tr, rp, rid)
 
@@ -737,7 +743,7 @@ function updateRouteState_Track(src_tr, rp, rid)
   --   reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
   -- end
   --
-  log.user(src_tr)
+  -- log.user(src_tr)
 
   for k, p in pairs(rp.new_params) do
     if k == 'm' then
@@ -748,7 +754,7 @@ function updateRouteState_Track(src_tr, rp, rid)
       -- next is only audio and first
       if rp.next == 1 and rp.prev ~= 0 then goto continue end
 
-      reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
+      reaper.SetTrackSendInfo_Value(src_tr, rp.category, rid, p.param_name, p.param_value)
     else
 
       -- skipp if previous route component exists and not overwrite flag
@@ -758,7 +764,7 @@ function updateRouteState_Track(src_tr, rp, rid)
       if rp.next == 2 and rp.prev ~= 0 then goto continue end
 
       log.user(p.param_name .. '  ' .. tostring(p.param_value))
-      reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
+      reaper.SetTrackSendInfo_Value(src_tr, rp.category, rid, p.param_name, p.param_value)
     end
 
     :: continue ::
