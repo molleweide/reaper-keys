@@ -26,9 +26,9 @@ local USER_INPUT_TARGETS_DIV = '|'
 --
 --      -> syntax now so that I can use `zp`
 --
---      -> SR works but there is some kind of problem with multiple tracks.
+--      -> mult R options bug
+--          only the first recieve is applied properly??
 --
---          only the first route is applied properly??
 --
 --
 --      -> cust util
@@ -711,7 +711,7 @@ function targetLoop(rp)
       rp, rid = getPrevRouteState(rp, src_tr, dst_tr)
       rp      = getNextRouteState(rp)
 
-      log.user(rp.prev, rp.next)
+      -- log.user(rp.prev, rp.next)
 
       if rp.remove_routes then
         if rid == nil then
@@ -721,25 +721,27 @@ function targetLoop(rp)
         log.user('TR: ' .. rp.src_guids[i].name .. ' , rm send id: ' .. rid)
         removeSingle(src_tr, rp.category, rid)
       else
-        log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  -->  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
         if rp.prev == 0 then
           -- rid = reaper.CreateTrackSend(src_tr, dst_tr)
-          if rp.category == 0 then
+          if rp.category == rc.flags.CAT_SEND then
+            log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  -->  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
             rid = reaper.CreateTrackSend(src_tr, dst_tr)
-          elseif rp.category == -1 then
+          elseif rp.category == rc.flags.CAT_REC then
+            log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  <--  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
             rid = reaper.CreateTrackSend(dst_tr,src_tr)
           end
         end
 
 
         -- lrp(rp)
+        log.user('rid >>> ' .. rid)
 
-        -- if rp.category == 0 then
-        --   updateRouteState_Track(src_tr, rp, rid)
-        -- elseif rp.category == -1 then
-        --   updateRouteState_Track(dst_tr, rp, rid)
-        -- end
-        updateRouteState_Track(src_tr, rp, rid)
+        if rp.category == rc.flags.CAT_SEND then
+          updateRouteState_Track(src_tr, rp, rid)
+        elseif rp.category == rc.flags.CAT_REC then
+          updateRouteState_Track(dst_tr, rp, rid)
+        end
+        -- updateRouteState_Track(src_tr, rp, rid)
 
 
         -- TODO
@@ -753,6 +755,7 @@ function targetLoop(rp)
       :: continue ::
     end -- dst
   end -- src
+  -- lrp(rp)
 end
 
 function updateRouteState_Track(src_tr, rp, rid)
@@ -767,6 +770,12 @@ function updateRouteState_Track(src_tr, rp, rid)
   -- log.user(src_tr)
 
   -- lrp(rp)
+  -- local test =  reaper.GetTrackSendInfo_Value( src_tr, rp.category, rid, 'I_SRCCHAN')
+  -- log.user('test' .. test)
+
+  -- local 
+    local _, current_name = reaper.GetTrackName(src_tr)
+    log.user('update tr: ' .. current_name)
 
   for k, p in pairs(rp.new_params) do
     if k == 'm' then
@@ -777,7 +786,9 @@ function updateRouteState_Track(src_tr, rp, rid)
       -- next is only audio and first
       if rp.next == 1 and rp.prev ~= 0 then goto continue end
 
-      reaper.SetTrackSendInfo_Value(src_tr, rp.category, rid, p.param_name, p.param_value)
+      -- log.user('update midiiiiiii')
+      -- log.user(p.param_name .. '  ' .. tostring(p.param_value))
+      reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
     else
 
       -- skipp if previous route component exists and not overwrite flag
@@ -786,9 +797,9 @@ function updateRouteState_Track(src_tr, rp, rid)
       -- next is only midi and first
       if rp.next == 2 and rp.prev ~= 0 then goto continue end
 
-      log.user('!!!!!!!!!!!!!')
-      log.user(p.param_name .. '  ' .. tostring(p.param_value))
-      reaper.SetTrackSendInfo_Value(src_tr, rp.category, rid, p.param_name, p.param_value)
+      -- log.user('!!!!!!!!!!!!!')
+      -- log.user(p.param_name .. '  ' .. tostring(p.param_value))
+      reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
     end
 
     :: continue ::
