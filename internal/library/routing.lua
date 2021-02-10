@@ -24,11 +24,6 @@ local USER_INPUT_TARGETS_DIV = '|'
 --
 --      TODO
 --
---      -> cat
---
---        switching src/dst when creating the send did the trick! why??
---
---
 --
 --
 --      -> cust util
@@ -125,7 +120,7 @@ function routing.create(route_str, coded_sources, coded_dests)
   -- if rp.category == 1 then
   -- end
 
-  lrp(rp) -- log rp
+  -- lrp(rp) -- log rp
 
   -- if rp.category == -1 and not rp.remove_routes then
   --   local tmp = rp.src_guids
@@ -598,8 +593,10 @@ function getNextRouteState(rp, check_str)
       param_name = df['m'].param_name,
       param_value = rc.flags.MIDI_OFF,
     }
-  elseif rp.new_params['a'] == nil and rp.new_params['m'] ~= nil then
+  elseif rp.new_params['a'] == nil and rp.new_params['m'] ~= nil
+    and rp.new_params['m'].param_value ~= rc.flags.MIDI_OFF then
     rp.next = 2
+
     rp.new_params['a'] = {
       description = df['a'].description,
       param_name = df['a'].param_name,
@@ -718,6 +715,10 @@ function targetLoop(rp)
             rid = reaper.CreateTrackSend(dst_tr,src_tr)
           end
         end
+
+
+        lrp(rp)
+
         updateRouteState_Track(src_tr, rp, rid)
 
 
