@@ -19,24 +19,18 @@ local USER_INPUT_TARGETS_DIV = '|'
 --        upon writing a lot of send funcs I find that CreateTrackSend(track, nil)
 --          creates a wierd kind of hwout that i have to remove manually.
 --          it does not show up when logging route states
---
---
---
---
+--          no error!!!!!!!!!!!!!!!!!!!!
 --
 --
 --      TODO
 --
+--      -> cat
 --
---      src is req for removal but how
+--        if category == 1
+--          reverse src/dst
 --
---      -> REMOVAL OF ROUTES
 --
---      -     remove flag
---      S     Send flag
---      R     recieve flag
 --
---      handleRemoval()
 --
 --      -> cust util
 --
@@ -127,6 +121,12 @@ function routing.create(route_str, coded_sources, coded_dests)
   -- make sure there are
   -- local validate, err = validateNewRoute(rp)
   -- if not validate then
+  -- end
+
+  -- if rp.category == 1 then
+  --   local tmp = rp.src_guids
+  --   rp.src_guids = rp.dst_guids
+  --   rp.dst_guids = tmp
   -- end
 
   lrp(rp) -- log rp
@@ -265,7 +265,7 @@ function logRoutesByCategory(tr, cat)
       local mfs = get_send_flags_src(mf)
       local mfd = get_send_flags_dest(mf)
       log.user(string.format("\t\t(#%i) `%s` >> %i :: %i -> %i | %i -> %i",
-        other_tr_idx, other_tr_name, si, SRC, DST, mfs, mfd))
+        other_tr_idx+1, other_tr_name, si, SRC, DST, mfs, mfd))
     elseif cat > 0 then -- HARDWARE /////////////////////////////////////
     end
   end
@@ -471,13 +471,22 @@ function handleSecondaryParams(rp, str, key, primary)
 end
 
 function extractParamsFromString(rp, str)
-
-  if str:find('%-') then rp.remove_routes = true end
-  if str:find('S') then rp.category = 0 end
-  if str:find('R') then rp.category = 1 end
+  if str:find('%-') then
+    rp.remove_routes = true
+    rp.remove_both = true
+  end
+  if str:find('S') then
+    rp.category = 0
+    rp.remove_both = false
+  end
+  if str:find('R') then
+    rp.category = -1
+    rp.remove_both = false
+  end
 
   -- HANDLE PARENTHESIS
   local ret, src_tr_data, dst_tr_data, str = extractParenthesisTargets(str)
+
 
 
   if src_tr_data ~= nil and rp.userInput then -- SRC PROVIDED
@@ -541,13 +550,27 @@ end
 --////////////////
 
 function getPrevRouteState(rp, src_tr, dest_tr)
+  local cat = rp.category
+  local check_other = 1
+  if rp.category == -1 then check_other = 0 end
   rp.prev = 0
 
-  for si=0,  reaper.GetTrackNumSends( src_tr, 0 ) do
-    local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, 0, si, 1 )
+
+
+  local num_routes_by_cat = reaper.GetTrackNumSends( src_tr, cat )
+  log.user('num:::: ' .. num_routes_by_cat)
+
+  for si=0,  num_routes_by_cat do
+    local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, cat, si, check_other )
+
+    -- local _, current_name = reaper.GetTrackName(dest_tr_check)
+    -- log.user('dst check: ' .. current_name)
+
+
     if dest_tr_check == dest_tr then
-      local prev_src_midi_flags = reaper.GetTrackSendInfo_Value(src_tr, 0, si, 'I_MIDIFLAGS')
-      local prev_src_audio_ch = reaper.GetTrackSendInfo_Value(src_tr, 0, si, 'I_SRCCHAN')
+      log.user('prev match!!!!!')
+      local prev_src_midi_flags = reaper.GetTrackSendInfo_Value(src_tr, cat, si, 'I_MIDIFLAGS')
+      local prev_src_audio_ch = reaper.GetTrackSendInfo_Value(src_tr, cat, si, 'I_SRCCHAN')
       -- local prev_src_hw = reaper.GetTrackSendInfo_Value(src_tr, 1, si, 'I_SRCCHAN')
       local retval = 3 -- both audio and midi
       rp.prev = 3
@@ -564,7 +587,6 @@ function getPrevRouteState(rp, src_tr, dest_tr)
 end
 
 function getNextRouteState(rp, check_str)
-
   if (rp.new_params['a'] ~= nil and rp.new_params['m'] == nil) or
     (rp.new_params['a'] == nil and rp.new_params['m'] == nil) then
     rp.next = 1
@@ -600,7 +622,6 @@ end
 --    coded targets need to make sure both src/dst are provided
 
 function handleRemoval(rp)
-
   if #rp.src_guids == 0 then
     -- it is up to user to make sure we have targets
     log.user('REMOVAL ERROR > NO BASE TARGETS')
@@ -608,7 +629,7 @@ function handleRemoval(rp)
   elseif #rp.dst_guids == 0 then
     logHeader('REMOVE ALL ROUTES ON BASE')
     logConfirmList(rp)
-    removeAllRoutesTrack(rp, 2) -- 2 == both send/rec
+    removeAllRoutesTrack(rp) -- 2 == both send/rec
 
   else
     logHeader('src rm > connections btw list src/dst')
@@ -646,14 +667,13 @@ function removeAllRoutesTrack(rp)
   log.user('>>> removeAllRoutesTrack')
   for i = 1, #rp.src_guids do
     local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i].guid)
-    if  rp.category == 0 then
+    if not rp.remove_both and rp.category == 0 then
       deleteByCategory(tr, rc.flags.CAT_SEND)
-    elseif rp.category == 1 then
+    elseif not rp.remove_both and rp.category == -1 then
       deleteByCategory(tr, rc.flags.CAT_REC)
-    elseif rp.category == 2 then
+    elseif rp.remove_both then
       deleteByCategory(tr, rc.flags.CAT_SEND)
       deleteByCategory(tr, rc.flags.CAT_REC)
-      deleteByCategory(tr, rc.flags.CAT_HW)
     end -- if
   end -- for
   return true
@@ -671,7 +691,6 @@ function targetLoop(rp)
       local rid
       if rp.src_guids[i].guid == rp.dst_guids[j].guid then goto continue end
 
-
       local src_tr, sidx = ru.getTrackByGUID(rp.src_guids[i].guid)
       local dst_tr, didx = ru.getTrackByGUID(rp.dst_guids[j].guid)
 
@@ -681,16 +700,27 @@ function targetLoop(rp)
 
       log.user(rp.prev, rp.next)
 
-      if rp.remove_routes and rid ~= nil then
+      if rp.remove_routes then
+        if rid == nil then
+          log.user('TR: ' .. rp.src_guids[i].name .. ' has no sends..')
+          return false
+        end
         log.user('TR: ' .. rp.src_guids[i].name .. ' , rm send id: ' .. rid)
-        -- removeSingle(src_tr, rp.category, rid)
+        removeSingle(src_tr, rp.category, rid)
       else
         log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  -->  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
         if rp.prev == 0 then
           rid = reaper.CreateTrackSend(src_tr, dst_tr)
-          log.user('new send #' .. rid)
         end
         updateRouteState_Track(src_tr, rp, rid)
+
+
+        -- TODO
+        --
+        -- if you don't supply
+        -- `a`
+        -- then ONLY one route is created
+        -- and all others are deleted ?!?!
         deleteRouteIfEmpty(src_tr, rid)
       end
       :: continue ::

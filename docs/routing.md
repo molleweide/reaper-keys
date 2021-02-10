@@ -7,6 +7,10 @@ nav_order: 4
 
 You need to assign `routing.create()`
 
+only one send par tr relation
+
+A can only have one send to B
+
 ## category ##################################################
 
 - TODO: use capital S/R for category = send/recieve
@@ -30,7 +34,7 @@ if S
 
 if R
 
-(other)        selection recieves ()
+(other)        selection recieves (other)
 (A)(other)    A recieves the other
 
 
