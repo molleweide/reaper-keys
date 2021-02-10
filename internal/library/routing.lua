@@ -16,6 +16,8 @@ local USER_INPUT_TARGETS_DIV = '|'
 --      TODO
 --
 --
+--      src is req for removal but how
+--
 --      -> REMOVAL OF ROUTES
 --
 --      -     remove flag
@@ -23,6 +25,13 @@ local USER_INPUT_TARGETS_DIV = '|'
 --      R     recieve flag
 --
 --      handleRemoval()
+--
+--      -> cust util
+--
+--        test coded targets >> add new custom bindings
+--
+--
+--      -> syntax apply update()
 --
 --
 --
@@ -113,25 +122,27 @@ function routing.create(route_str, coded_sources, coded_dests)
   if rp.remove_routes then
     handleRemoval(rp)
   elseif confirmRouteCreation(rp) then
-    createRoutesLoop(rp)
+    targetLoop(rp)
   else
     log.clear()
-    log.user('<abort>')
+    log.user('<ROUTE COMMAND ABORTED>')
   end
 end
 
 -- refactor these into one with variable arguments
-function routing.removeAllSends(tr) removeAll(tr) end
-function routing.removeAllRecieves(tr) removeAll(tr, 1) end
-function routing.removeAllBoth(tr) removeAll(tr, 2) end
+function routing.removeAllSends(tr) removeAllRoutesTrack(tr) end
+function routing.removeAllRecieves(tr) removeAllRoutesTrack(tr, 1) end
+function routing.removeAllBoth(tr) removeAllRoutesTrack(tr, 2) end
 
 -- refactor and pet back to log
 function routing.logRoutingInfoForSelectedTracks()
   -- log.clear()
   local log_t = ru.getSelectedTracksGUIDs()
+
   for i = 1, #log_t do
-    local tr, tr_idx = ru.getTrackByGUID(log_t[i])
+    local tr, tr_idx = ru.getTrackByGUID(log_t[i].guid)
     local _, current_name = reaper.GetTrackName(tr)
+
     log.user('\n'..div..'\n:: routes for track #' .. tr_idx+1 .. ' `' .. current_name .. '`:')
     log.user('\n\tSENDs:')
     logRoutesByCategory(tr, rc.flags.CAT_SEND)
@@ -268,13 +279,18 @@ function logConfirmList(rp)
   log.user('\n>>> CONFIRM ROUTE CREATION (y<Enter> -> confirm)\n\n')
 end
 
+function logHeader(str)
+  log.user(div, str .. '\n\n')
+end
+
 function confirmRouteCreation(rp)
   -- LOG FINAL SOURCES TARGETS
   local num_tr_affected = #rp.src_guids*#rp.dst_guids
 
   local warning_str = 'Tot num routes being affected = '.. num_tr_affected
   local r_u_sure = 'Are you sure you want to do this?'
-  log.user(div, warning_str)
+  logHeader(warning_str)
+  -- log.user(div, warning_str)
 
   logConfirmList(rp)
 
@@ -446,7 +462,10 @@ function extractParamsFromString(rp, str)
 
   -- remove
 
-  -- if str has '-' then rp.remove_routes = true return end
+  if str:find('%-') then
+    log.user('-----------------------------------------------------------------------------')
+    rp.remove_routes = true
+  end
   -- if str has 'S' then
   --    rp.category == 'SEND'
   --    rp.remove_cat = 'SEND'
@@ -468,26 +487,12 @@ function extractParamsFromString(rp, str)
   elseif isSel() then -- FALLBACK SRC SEL
     rp.src_from_selection = true
     rp['src_guids'] = ru.getSelectedTracksGUIDs()
-  else -- NO SRC ERR..
-
-    -- TODO
-    --
-    --  mv this to validateNewRoute()
-
-    log.user('ERROR: no src targets was provided')
-    return false, rp
   end
 
 
   if dst_tr_data ~= nil then
     local dst_tr_split =  getStringSplitPattern(dst_tr_data, USER_INPUT_TARGETS_DIV)
     local ret, rp = setRouteTargetGuids(rp, 'dst_guids', dst_tr_split)
-  else
-    -- TODO
-    --
-    --  mv this to validateNewRoute()
-    log.user('ERROR: no DST targets was provided')
-    return false, rp
   end
 
   -- rp = assignGUIDsFromUserInput(rp, src_tr_data, dst_tr_data)
@@ -521,16 +526,16 @@ end
 --  VALIDATE NEW ROUTE
 --//////////////////////
 
-function validateNewRoute(rp)
-  local err = {}
-  -- rp.user_input
-  -- rp.coded_targets
-  if rp.remove_cat == 'BOTH' then
-  elseif
-  if (#rp.src_guids == 0 or #rp.dst_guids == 0) or then
-    return
-  return ret, err
-end
+-- function validateNewRoute(rp)
+--   local err = {}
+--   -- rp.user_input
+--   -- rp.coded_targets
+--   if rp.remove_cat == 'BOTH' then
+--
+--   elseif (#rp.src_guids == 0 or #rp.dst_guids == 0) then
+--     return ret, err
+--   end
+-- end
 
 --//////////////////////////////////////////////////////////////////////
 --  GET ROUTE STATE
@@ -595,24 +600,21 @@ end
 
 function handleRemoval(rp)
 
-  -- if rp.remove_cat == 'BOTH'
-  --
-  --    if no src err
-  --    if no dest remove all
-  --    else delete routes src/dst
-  --
-  -- elseif rp.remove_cat == 'SEND'
-  --
-  --    if no src err
-  --    if no dest remove all
-  --    else delete routes src/dst
-  --
-  -- elseif rp.remove_cat == 'RECIEVE'
-  --
-  --    if no src err
-  --    if no dest remove all rec on source
-  --    else delete recieves src <- dst
-  --
+  if #rp.src_guids == 0 then
+    -- it is up to user to make sure we have targets
+    log.user('REMOVAL ERROR > NO BASE TARGETS')
+
+  elseif #rp.dst_guids == 0 then
+    logHeader('REMOVE ALL ROUTES ON BASE')
+    logConfirmList(rp)
+    removeAllRoutesTrack(rp, 2) -- 2 == both send/rec
+
+  else
+    logHeader('src rm > connections btw list src/dst')
+    logConfirmList(rp)
+    targetLoop(rp)
+
+  end
 end
 
 function deleteRouteIfEmpty(src_tr, rid)
@@ -639,24 +641,19 @@ function deleteByCategory(tr, cat)
   end
 end
 
-function removeAll(tr, kind)
-  log.clear()
-  log.user('removeAll')
-  local target_t = {}
-  target_t[#target_t] = tr
-  if tr == nil or tr == false then target_t = ru.getSelectedTracksGUIDs() end -- get table of src tracks
-  -- FOR EACH TRACK WE WANT TO TARGET
-  for i = 1, #target_t do
-    local tr = ru.getTrackByGUID(target_t[i])
-    if kind == nil or kind == 0 then
+function removeAllRoutesTrack(rp)
+  log.user('>>> removeAllRoutesTrack')
+  for i = 1, #rp.src_guids do
+    local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i].guid)
+    if  rp.remove_cat == 0 then
       deleteByCategory(tr, rc.flags.CAT_SEND)
-    elseif kind == 1 then
+    elseif rp.remove_cat == 1 then
       deleteByCategory(tr, rc.flags.CAT_REC)
-    elseif kind == 2 then
+    elseif rp.remove_cat == 2 then
       deleteByCategory(tr, rc.flags.CAT_SEND)
       deleteByCategory(tr, rc.flags.CAT_REC)
-    end
-  end
+    end -- if
+  end -- for
   return true
 end
 
@@ -664,31 +661,30 @@ end
 --  UPDATE ROUTE STATE
 --//////////////////////
 
-function createRoutesLoop(rp)
+-- TODO
+--
+function targetLoop(rp)
   for i = 1, #rp.src_guids do
     for j = 1, #rp.dst_guids do
 
-      if rp.src_guids[i].guid == rp.dst_guids[j].guid then
-        log.user('same')
-        goto continue
-      end
-
-
+      if rp.src_guids[i].guid == rp.dst_guids[j].guid then goto continue end
       local src_tr, sidx = ru.getTrackByGUID(rp.src_guids[i].guid)
       local dst_tr, didx = ru.getTrackByGUID(rp.dst_guids[j].guid)
 
       rp, rid = getPrevRouteState(rp, src_tr, dst_tr)
       rp      = getNextRouteState(rp)
 
-      log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  -->  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
-
-      -- could i make a way here for showing exactly what is going to happen on each track.
-      -- that would be pretty nice I think
-
-      -- if rp.prev == 0 then rid = reaper.CreateTrackSend(src_tr, dest_tr) end
-      -- updateRouteState_Track(src_tr, rp, rid)
-      -- deleteRouteIfEmpty(src_tr, rid)
-
+      if rp.remove_routes then
+        log.user('TR: ' .. rp.src_guids[i].name .. ' , rm send id: ' .. rid)
+        -- removeSingle(src_tr, rp.remove_cat, rid)
+      else
+        log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  -->  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
+        -- could i make a way here for showing exactly what is going to happen on each track.
+        -- that would be pretty nice I think
+        -- if rp.prev == 0 then rid = reaper.CreateTrackSend(src_tr, dest_tr) end
+        -- updateRouteState_Track(src_tr, rp, rid)
+        -- deleteRouteIfEmpty(src_tr, rid)
+      end
       :: continue ::
     end -- dst
   end -- src

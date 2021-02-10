@@ -14,6 +14,9 @@ You need to assign `routing.create()`
 
 ## SOURCE / DESTINATION TRACKS ##################################
 
+- TODO: rename src/dst -->  base/other
+    makes it recieves more intuitive
+
 
 (5,tr_name)               selection send to track #5 and match:tr_name
 
