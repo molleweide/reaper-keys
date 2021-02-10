@@ -78,8 +78,11 @@ return {
   gui_tot_route_num_limit = 1,
   route_num_extreme = 20,
   remove_routes = false,
-  remove_cat = 2,
-  category = 'SEND',
+
+
+  -- 0 send, 1 rec, 2 both (remove..)
+  -- you cannot create with `2`
+  category = 0,
 
 
   --  /////////////////////////////////////////////////////////////////////
@@ -93,7 +96,7 @@ return {
     MIDI_OFF = TRACK_INFO_MIDIFLAGS_DISABLED,
     CAT_SEND = TRACK_INFO_CATEGORY_SEND,
     CAT_REC = TRACK_INFO_CATEGORY_RECIEVE,
-    CAT_HW = TRACK_INFO_CATEGORY_HARDWARE,
+    CAT_HW = 1,
   },
 
   -- ////////////////////////////////////////////////////////////////////
@@ -217,7 +220,7 @@ return {
 -- I_MIDIFLAGS : int *, low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chanSee CreateTrackSend, RemoveTrackSend, GetTrackNumSends.
 
 
--- number reaper.GetTrackSendInfo_Value(MediaTrack tr, integer category, integer sendidx, string parmname)
+-- number reaper.GetTrackSendInfo_Value(MediaTrack tr, integer category, sendidx, parmname)
 --
 -- Get send/receive/hardware output numerical-value attributes.
 -- category is <0 for receives, 0=sends, >0 for hardware outputs

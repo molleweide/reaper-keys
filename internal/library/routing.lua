@@ -13,6 +13,18 @@ local div2 = '---------------------------------'
 
 local USER_INPUT_TARGETS_DIV = '|'
 
+--
+--      BUG
+--
+--        upon writing a lot of send funcs I find that CreateTrackSend(track, nil)
+--          creates a wierd kind of hwout that i have to remove manually.
+--          it does not show up when logging route states
+--
+--
+--
+--
+--
+--
 --      TODO
 --
 --
@@ -460,22 +472,9 @@ end
 
 function extractParamsFromString(rp, str)
 
-  -- remove
-
-  if str:find('%-') then
-    log.user('-----------------------------------------------------------------------------')
-    rp.remove_routes = true
-  end
-  -- if str has 'S' then
-  --    rp.category == 'SEND'
-  --    rp.remove_cat = 'SEND'
-  --  end
-  -- if str has 'R' then
-  --    rp.category == 'RECIEVE'
-  --    rp.remove_cat = 'RECIEVE'
-  --  end
-
-
+  if str:find('%-') then rp.remove_routes = true end
+  if str:find('S') then rp.category = 0 end
+  if str:find('R') then rp.category = 1 end
 
   -- HANDLE PARENTHESIS
   local ret, src_tr_data, dst_tr_data, str = extractParenthesisTargets(str)
@@ -530,7 +529,7 @@ end
 --   local err = {}
 --   -- rp.user_input
 --   -- rp.coded_targets
---   if rp.remove_cat == 'BOTH' then
+--   if rp.category == 'BOTH' then
 --
 --   elseif (#rp.src_guids == 0 or #rp.dst_guids == 0) then
 --     return ret, err
@@ -543,11 +542,13 @@ end
 
 function getPrevRouteState(rp, src_tr, dest_tr)
   rp.prev = 0
+
   for si=0,  reaper.GetTrackNumSends( src_tr, 0 ) do
     local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, 0, si, 1 )
     if dest_tr_check == dest_tr then
       local prev_src_midi_flags = reaper.GetTrackSendInfo_Value(src_tr, 0, si, 'I_MIDIFLAGS')
       local prev_src_audio_ch = reaper.GetTrackSendInfo_Value(src_tr, 0, si, 'I_SRCCHAN')
+      -- local prev_src_hw = reaper.GetTrackSendInfo_Value(src_tr, 1, si, 'I_SRCCHAN')
       local retval = 3 -- both audio and midi
       rp.prev = 3
       local no_midi = prev_src_midi_flags == rc.flags.MIDI_OFF
@@ -645,13 +646,14 @@ function removeAllRoutesTrack(rp)
   log.user('>>> removeAllRoutesTrack')
   for i = 1, #rp.src_guids do
     local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i].guid)
-    if  rp.remove_cat == 0 then
+    if  rp.category == 0 then
       deleteByCategory(tr, rc.flags.CAT_SEND)
-    elseif rp.remove_cat == 1 then
+    elseif rp.category == 1 then
       deleteByCategory(tr, rc.flags.CAT_REC)
-    elseif rp.remove_cat == 2 then
+    elseif rp.category == 2 then
       deleteByCategory(tr, rc.flags.CAT_SEND)
       deleteByCategory(tr, rc.flags.CAT_REC)
+      deleteByCategory(tr, rc.flags.CAT_HW)
     end -- if
   end -- for
   return true
@@ -666,24 +668,30 @@ end
 function targetLoop(rp)
   for i = 1, #rp.src_guids do
     for j = 1, #rp.dst_guids do
-
+      local rid
       if rp.src_guids[i].guid == rp.dst_guids[j].guid then goto continue end
+
+
       local src_tr, sidx = ru.getTrackByGUID(rp.src_guids[i].guid)
       local dst_tr, didx = ru.getTrackByGUID(rp.dst_guids[j].guid)
 
+      -- TODO -- getPrevRouteState only uses cat=send
       rp, rid = getPrevRouteState(rp, src_tr, dst_tr)
       rp      = getNextRouteState(rp)
 
-      if rp.remove_routes then
+      log.user(rp.prev, rp.next)
+
+      if rp.remove_routes and rid ~= nil then
         log.user('TR: ' .. rp.src_guids[i].name .. ' , rm send id: ' .. rid)
-        -- removeSingle(src_tr, rp.remove_cat, rid)
+        -- removeSingle(src_tr, rp.category, rid)
       else
         log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  -->  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
-        -- could i make a way here for showing exactly what is going to happen on each track.
-        -- that would be pretty nice I think
-        -- if rp.prev == 0 then rid = reaper.CreateTrackSend(src_tr, dest_tr) end
-        -- updateRouteState_Track(src_tr, rp, rid)
-        -- deleteRouteIfEmpty(src_tr, rid)
+        if rp.prev == 0 then
+          rid = reaper.CreateTrackSend(src_tr, dst_tr)
+          log.user('new send #' .. rid)
+        end
+        updateRouteState_Track(src_tr, rp, rid)
+        deleteRouteIfEmpty(src_tr, rid)
       end
       :: continue ::
     end -- dst
@@ -698,9 +706,10 @@ function updateRouteState_Track(src_tr, rp, rid)
   -- else
   --   reaper.SetTrackSendInfo_Value( src_tr, 0, new_rid, 'I_SRCCHAN',0|(1024*math.floor(src_tr_ch/2)))
   -- end
+  --
+  log.user(src_tr)
 
   for k, p in pairs(rp.new_params) do
-    log.user(p.param_name .. '  ' .. tostring(p.param_value))
     if k == 'm' then
 
       -- skipp if previous route component exists and not overwrite flag
@@ -718,9 +727,10 @@ function updateRouteState_Track(src_tr, rp, rid)
       -- next is only midi and first
       if rp.next == 2 and rp.prev ~= 0 then goto continue end
 
-
+      log.user(p.param_name .. '  ' .. tostring(p.param_value))
       reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
     end
+
     :: continue ::
   end
 end
