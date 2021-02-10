@@ -24,6 +24,11 @@ local USER_INPUT_TARGETS_DIV = '|'
 --
 --      TODO
 --
+--      -> syntax now so that I can use `zp`
+--
+--      -> SR works but there is some kind of problem with multiple tracks.
+--
+--          only the first route is applied properly??
 --
 --
 --      -> cust util
@@ -585,17 +590,25 @@ function getPrevRouteState(rp, src_tr, dest_tr)
 end
 
 function getNextRouteState(rp, check_str)
-  if (rp.new_params['a'] ~= nil and rp.new_params['m'] == nil) or
-    (rp.new_params['a'] == nil and rp.new_params['m'] == nil) then
+  if (rp.new_params['a'] == nil and rp.new_params['m'] == nil) or
+    (rp.new_params['a'] ~= nil and rp.new_params['m'] == nil)
+    and rp.new_params['a'].param_value ~= rc.flags.AUDIO_SRC_OFF then
+
+    log.user(':A:')
+    -- and rp.new_params['a'].param_value ~= rc.flags.AUDIO_SRC_OFF then
     rp.next = 1
     rp.new_params['m'] = {
       description = df['m'].description,
       param_name = df['m'].param_name,
       param_value = rc.flags.MIDI_OFF,
     }
+
   elseif rp.new_params['a'] == nil and rp.new_params['m'] ~= nil
-    and rp.new_params['m'].param_value ~= rc.flags.MIDI_OFF then
+    and rp.new_params['m'].param_value ~= rc.flags.MIDI_OFF or
+    (rp.new_params['a'].param_value == rc.flags.AUDIO_SRC_OFF and rp.new_params['m'] ~= nil) then
     rp.next = 2
+
+    log.user(':M:')
 
     rp.new_params['a'] = {
       description = df['a'].description,
@@ -605,6 +618,7 @@ function getNextRouteState(rp, check_str)
   elseif rp.new_params['a'] == nil and rp.new_params['m'] ~= nil then
     rp.next = 3 -- add both
   end
+  -- lrp(rp)
   return rp -- we should never arrive here i think since default always is add audio send
 end
 
@@ -709,6 +723,7 @@ function targetLoop(rp)
       else
         log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  -->  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
         if rp.prev == 0 then
+          -- rid = reaper.CreateTrackSend(src_tr, dst_tr)
           if rp.category == 0 then
             rid = reaper.CreateTrackSend(src_tr, dst_tr)
           elseif rp.category == -1 then
@@ -717,8 +732,13 @@ function targetLoop(rp)
         end
 
 
-        lrp(rp)
+        -- lrp(rp)
 
+        -- if rp.category == 0 then
+        --   updateRouteState_Track(src_tr, rp, rid)
+        -- elseif rp.category == -1 then
+        --   updateRouteState_Track(dst_tr, rp, rid)
+        -- end
         updateRouteState_Track(src_tr, rp, rid)
 
 
@@ -746,6 +766,8 @@ function updateRouteState_Track(src_tr, rp, rid)
   --
   -- log.user(src_tr)
 
+  -- lrp(rp)
+
   for k, p in pairs(rp.new_params) do
     if k == 'm' then
 
@@ -764,6 +786,7 @@ function updateRouteState_Track(src_tr, rp, rid)
       -- next is only midi and first
       if rp.next == 2 and rp.prev ~= 0 then goto continue end
 
+      log.user('!!!!!!!!!!!!!')
       log.user(p.param_name .. '  ' .. tostring(p.param_value))
       reaper.SetTrackSendInfo_Value(src_tr, rp.category, rid, p.param_name, p.param_value)
     end
