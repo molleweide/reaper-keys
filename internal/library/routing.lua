@@ -26,7 +26,7 @@ local USER_INPUT_TARGETS_DIV = '|'
 --
 --      -> cat
 --
---        deleting R works but R still creates S
+--        switching src/dst when creating the send did the trick! why??
 --
 --
 --
