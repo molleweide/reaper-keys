@@ -69,6 +69,7 @@ return {
     ["<M-i>"] = "MoveRedo",
     ["<M-o>"] = "MoveUndo",
     ["v"] = "SetModeVisualTimeline",
+    ["<CM-M>"] = "SetModeVKB",
     ["<C-SPC>"] = "ToggleViewMixer",
     ["<ESC>"] = "Reset",
     ["<return>"] = "StartStop",

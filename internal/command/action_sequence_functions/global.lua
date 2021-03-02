@@ -80,12 +80,12 @@ return {
       end
     },
   },
-  midi_device = {
+  vkb = {
     {
-      { 'visual_timeline_command' },
-      function(visual_timeline_command)
-        runner.runAction(visual_timeline_command)
+      { 'vkb_command' },
+      function(action)
+        runner.runAction(action)
       end
     },
-  }
+  },
 }

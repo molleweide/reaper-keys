@@ -11,8 +11,9 @@ local MODE = 0
 -- TYPE_MASK=0xF0;
 -- CHANNEL_MASK=0x0F;
 -- //OMNI=0x00;
-local NOTE_ON   = 0x90;
-local NOTE_OFF  = 0x80;
+local NOTE_ON   = 0x90
+local NOTE_OFF  = 0x80
+local VEL       = 0x50 -- dec 80
 -- //IN_GM=0x00;
 -- //ORPHAN_KILL=0x00;
 -- //ORPHAN_REMAP=0x01;
@@ -22,21 +23,27 @@ local NOTE_OFF  = 0x80;
 
 local midi = {}
 
-function midi.sendMidiNote_C3() sendMidiNote(51) end
-function midi.sendMidiNote_C3() sendMidiNote(50) end
-function midi.sendMidiNote_C3() sendMidiNote(49) end
-function midi.sendMidiNote_C3() sendMidiNote(48) end
+function midi.sendMidiNote_A_2() sendMidiNote(57) end
+function midi.sendMidiNote_Gs2() sendMidiNote(56) end
+function midi.sendMidiNote_G_2() sendMidiNote(55) end
+function midi.sendMidiNote_Fs2() sendMidiNote(54) end
+function midi.sendMidiNote_F_2() sendMidiNote(53) end
+function midi.sendMidiNote_E_2() sendMidiNote(52) end
+function midi.sendMidiNote_Ds2() sendMidiNote(51) end
+function midi.sendMidiNote_D_2() sendMidiNote(50) end
+function midi.sendMidiNote_Cs2() sendMidiNote(49) end
+function midi.sendMidiNote_C_2() sendMidiNote(48) end
 
 
--- todo
+--  TODO
 --
 --    how can I use key-release here??
---
 --      write an issue > ask Mike about this
-function sendMidiNote(int)
-  reaper.StuffMIDIMessage( MODE,  NOTE_ON,  msg2,  msg3)
+
+function sendMidiNote(note_num)
+  reaper.StuffMIDIMessage( MODE,  NOTE_ON,  note_num,  VEL)
   -- wait()
-  reaper.StuffMIDIMessage( MODE,  NOTE_OFF,  msg2,  msg3)
+  reaper.StuffMIDIMessage( MODE,  NOTE_OFF,  note_num,  VEL)
 end
 
 
