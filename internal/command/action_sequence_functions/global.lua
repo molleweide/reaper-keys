@@ -79,5 +79,13 @@ return {
         runner.extendTimelineSelection(move_function, args)
       end
     },
+  },
+  midi_device = {
+    {
+      { 'visual_timeline_command' },
+      function(visual_timeline_command)
+        runner.runAction(visual_timeline_command)
+      end
+    },
   }
 }

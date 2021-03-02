@@ -2,10 +2,41 @@ local log = require('utils.log')
 local format = require('utils.format')
 
 
+-- // MIDI HELPER VARIABLE
+-- WAS_FILTERED = 1024;  // array for storing which notes are filtered
+-- PASS_THRU_CC = 0;
+
+local MODE = 0
+
+-- TYPE_MASK=0xF0;
+-- CHANNEL_MASK=0x0F;
+-- //OMNI=0x00;
+local NOTE_ON   = 0x90;
+local NOTE_OFF  = 0x80;
+-- //IN_GM=0x00;
+-- //ORPHAN_KILL=0x00;
+-- //ORPHAN_REMAP=0x01;
+-- //OUT_AD=0x00;
+-- //OUT_BFD=0x01;
+-- //OUT_SD=0x02;
+
 local midi = {}
 
+function midi.sendMidiNote_C3() sendMidiNote(51) end
+function midi.sendMidiNote_C3() sendMidiNote(50) end
+function midi.sendMidiNote_C3() sendMidiNote(49) end
+function midi.sendMidiNote_C3() sendMidiNote(48) end
 
-function sendMidiNote()
+
+-- todo
+--
+--    how can I use key-release here??
+--
+--      write an issue > ask Mike about this
+function sendMidiNote(int)
+  reaper.StuffMIDIMessage( MODE,  NOTE_ON,  msg2,  msg3)
+  -- wait()
+  reaper.StuffMIDIMessage( MODE,  NOTE_OFF,  msg2,  msg3)
 end
 
 

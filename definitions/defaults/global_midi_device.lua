@@ -1,5 +1,10 @@
+-- todo
+--
+--    - create stuff midi custom func
+--    - create call for each note int
+
 return {
-  command = {
+  midi_device = {
     [";"] = "",
     ["l"] = "",
     ["k"] = "",
@@ -12,3 +17,4 @@ return {
     ["a"] = "",
   },
 }
+
