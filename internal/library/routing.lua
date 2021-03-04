@@ -7,7 +7,9 @@ local df = rc.default_params
 
 local routing = {}
 
-local input_placeholder = "(176)aR"
+local input_placeholder = "" -- "(176)aR" -- used for testing purps
+
+-- I was trying format the text box but I did not get it to work
 local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
 local div = '\n##########################################\n\n'
 local div2 = '---------------------------------'
@@ -15,7 +17,7 @@ local div2 = '---------------------------------'
 local USER_INPUT_TARGETS_DIV = '|'
 
 --
---      BUG
+--      REAPER BUG
 --
 --        create ticket on forum
 --        upon writing a lot of send funcs I find that CreateTrackSend(track, nil)
@@ -26,60 +28,22 @@ local USER_INPUT_TARGETS_DIV = '|'
 --
 --      TODO
 --
---      removal doesn't work because I am not removing properly with create
+--      NUDGE VALUES
 --
+--      nudge volume
+--      nudge pan
 --
---
---       cust util
---       syntax apply update()
---
---
---
---
---
---       segments
---
---       record random stuff w/ empa
---
---
---       RECIEVES
---  if RECIEVE src and dest are reversed.
---          you specify the `SRC FROM TR`
---
---       update send by id?
---
---       audio ch ranges?
---
---       COMMANDS
---
---        switch monitors
---
---
---
---
---
---      MUTE SEND
---
---      - nudge volume
---      - nudge pan
---
---      TOGGLE SEND PARAMS
+--      TOGGLE PARAMS
 --
 --      - mono / stereo
 --      - mute
 --      - flip phase
 
---////////////////////////////////////////////////////////////////////////
---  PUBLIC | move to custom ???
---/////////
+--  PUBLIC | move to custom.lua ???
 
-
--- TODO
---
--- rename to something general for both create, update, and remove
---
---    routes.update()
-
+-- func for testing that coded targets are working.
+-- ie. using routing.updateState within code instead
+-- of using it in-app.
 function routing.testCodedTargets()
   log.user('test coded targets')
   local guid_src = getMatchedTrackGUIDs('TEST_A')
@@ -109,9 +73,6 @@ function routing.updateState(route_str, coded_sources, coded_dests)
     _, route_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
   end
 
-  -- log.user(rp.remove_routes)
-  -- log.user(rp.remove_both)
-
   local ret
   ret, rp = extractParamsFromString(rp, route_str)
   if not ret then return end -- something went wrong
@@ -125,29 +86,9 @@ function routing.updateState(route_str, coded_sources, coded_dests)
     ret, rp = setRouteTargetGuids(rp, 'dst_guids', coded_dests)
   end
 
-  -- make sure there are
-  -- local validate, err = validateNewRoute(rp)
-  -- if not validate then
-  -- end
-
-  -- if rp.category == 1 then
-  -- end
-
-  -- lrp(rp) -- log rp
-
-  -- if rp.category == -1 and not rp.remove_routes then
-  --   local tmp = rp.src_guids
-  --   rp.src_guids = rp.dst_guids
-  --   rp.dst_guids = tmp
-  -- end
-  -- log.user(route_str)
-  -- log.user(rp.remove_routes)
-  -- log.user(rp.remove_both)
-
   if rp.remove_routes then
     handleRemoval(rp)
   elseif not rp.user_input then
-    -- log.user('//')
     targetLoop(rp)
   elseif confirmRouteCreation(rp) then
     targetLoop(rp)
@@ -162,7 +103,7 @@ function routing.removeAllSends(tr) removeAllRoutesTrack(tr) end
 function routing.removeAllRecieves(tr) removeAllRoutesTrack(tr, 1) end
 function routing.removeAllBoth(tr) removeAllRoutesTrack(tr, 2) end
 
--- refactor and pet back to log
+-- refactor and put back to log
 function routing.logRoutingInfoForSelectedTracks()
   -- log.clear()
   local log_t = ru.getSelectedTracksGUIDs()
@@ -185,9 +126,7 @@ function lrp(r)
   log.user(div, format.block(r))
 end
 
---
---  UTILS | mv to reaper util
---
+--  UTILS | mv to reaper util?
 
 function isSel() return reaper.CountSelectedTracks(0) ~= 0 end
 
@@ -216,6 +155,8 @@ function getMatchedTrackGUIDs(search_name)
   if found then return t else return false end
 end
 
+-- TODO
+--
 -- this function alse is defined in syntax/syntax
 --
 -- mv to util
@@ -238,9 +179,11 @@ function getStringSplitPattern(pString, pPattern)
   return Table
 end
 
---//////////////////////////////////////////////////////////////////////
---  MIDI FLAGS | move to midi utils
---//////////////
+--  TODO
+--
+--  mv to midi.util
+--
+--  MIDI FLAGS | move to midi utils ???
 
 --  GET FIRST 5 BITS
 function get_send_flags_src(flags) return flags & ((1 << 5)- 1) end
@@ -251,11 +194,9 @@ function get_send_flags_dest(flags) return flags >> 5 end
 --  GET SRC AND DEST BYTE PREPARED
 function create_send_flags(src_ch, dest_ch) return (dest_ch << 5) | src_ch end
 
---//////////////////////////////////////////////////////////////////////
 --  ROUTE STATE LOGGING
---///////////////////////
 
--- hardware not working....
+-- hardware doesn't work ?!
 function getOtherTrack(tr, cat, si)
   local other_tr
   if cat == 0 then
@@ -286,9 +227,7 @@ function logRoutesByCategory(tr, cat)
   end
 end
 
---//////////////////////////////////////////////////////////////////////
 --  EXTRACT ROUTE PARAMS
---///////////////////////
 
 function logConfirmList(rp)
   log.user('::: SOURCE TRACKS :::\n')
@@ -321,21 +260,12 @@ function confirmRouteCreation(rp)
 
   logConfirmList(rp)
 
-
   local help_str = "` #src: `" .. tostring(#rp.src_guids) ..
   "` #dst: `" .. tostring(#rp.dst_guids) .. "` (y/n)"
-
-  -- rm one of these three prompts
-
-  -- local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
 
   if num_tr_affected > rc.tot_route_num_limit and not rp.coded_targets then
     _, answer = reaper.GetUserInputs(r_u_sure, 1, help_str, "")
   end
-
-  -- if answer == "y" and num_tr_affected > rc.gui_tot_route_num_limit and rp.coded_targets then
-  --   _, answer = reaper.GetUserInputs(r_u_sure, 1, warning_str, "")
-  -- end
 
   if answer == "y" then return true end
   return false
@@ -542,25 +472,7 @@ function extractParamsFromString(rp, str)
   return true, rp
 end
 
-
---//////////////////////////////////////////////////////////////////////
---  VALIDATE NEW ROUTE
---//////////////////////
-
--- function validateNewRoute(rp)
---   local err = {}
---   -- rp.user_input
---   -- rp.coded_targets
---   if rp.category == 'BOTH' then
---
---   elseif (#rp.src_guids == 0 or #rp.dst_guids == 0) then
---     return ret, err
---   end
--- end
-
---//////////////////////////////////////////////////////////////////////
 --  GET ROUTE STATE
---////////////////
 
 function getPrevRouteState(rp, src_tr, dest_tr)
   local cat = rp.category
@@ -568,18 +480,10 @@ function getPrevRouteState(rp, src_tr, dest_tr)
   if rp.category == -1 then check_other = 0 end
   rp.prev = 0
 
-
-
   local num_routes_by_cat = reaper.GetTrackNumSends( src_tr, cat )
-  -- log.user('num:::: ' .. num_routes_by_cat)
 
   for si=0,  num_routes_by_cat do
     local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, cat, si, check_other )
-
-
-    -- local _, current_name = reaper.GetTrackName(dest_tr_check)
-    -- log.user('dst check: ' .. current_name)
-
 
     if dest_tr_check == dest_tr then
       -- log.user('prev match!!!!!')
@@ -605,8 +509,6 @@ function getNextRouteState(rp, check_str)
     (rp.new_params['a'] ~= nil and rp.new_params['m'] == nil)
     and rp.new_params['a'].param_value ~= rc.flags.AUDIO_SRC_OFF then
 
-    -- log.user(':A:')
-    -- and rp.new_params['a'].param_value ~= rc.flags.AUDIO_SRC_OFF then
     rp.next = 1
     rp.new_params['m'] = {
       description = df['m'].description,
@@ -619,8 +521,6 @@ function getNextRouteState(rp, check_str)
     (rp.new_params['a'].param_value == rc.flags.AUDIO_SRC_OFF and rp.new_params['m'] ~= nil) then
     rp.next = 2
 
-    -- log.user(':M:')
-
     rp.new_params['a'] = {
       description = df['a'].description,
       param_name = df['a'].param_name,
@@ -629,27 +529,14 @@ function getNextRouteState(rp, check_str)
   elseif rp.new_params['a'] == nil and rp.new_params['m'] ~= nil then
     rp.next = 3 -- add both
   end
-  -- lrp(rp)
   return rp -- we should never arrive here i think since default always is add audio send
 end
 
---////////////////////////////////////////////////////////////////////
 --  REMOVE ROUTES
---/////////////////
-
-
--- TODO
---
--- src and dest are required here
---
---  if no source throw error
---
---    coded targets need to make sure both src/dst are provided
 
 function handleRemoval(rp)
   if #rp.src_guids == 0 then
-    -- it is up to user to make sure we have targets
-    log.user('REMOVAL ERROR > NO BASE TARGETS')
+    log.user('REMOVAL ERROR > NO SOURCE TARGETS SPECIFIED')
 
   elseif #rp.dst_guids == 0 then
     -- logHeader('REMOVE ALL ROUTES ON BASE')
@@ -689,7 +576,6 @@ function deleteByCategory(tr, cat)
 end
 
 function removeAllRoutesTrack(rp)
-  -- log.user('>>> removeAllRoutesTrack')
   for i = 1, #rp.src_guids do
     local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i].guid)
     if not rp.remove_both and rp.category == 0 then
@@ -704,12 +590,8 @@ function removeAllRoutesTrack(rp)
   return true
 end
 
---///////////////////////////////////////////////////////////////////////
 --  UPDATE ROUTE STATE
---//////////////////////
 
--- TODO
---
 function targetLoop(rp)
   -- log.user('target')
   for i = 1, #rp.src_guids do
@@ -723,10 +605,7 @@ function targetLoop(rp)
       rp, rid = getPrevRouteState(rp, src_tr, dst_tr)
       rp      = getNextRouteState(rp)
 
-      -- log.user(rp.prev, rp.next)
-
       if rp.remove_routes then
-        -- log.user('remove')
         if rid == nil then
           -- log.user('TR: ' .. rp.src_guids[i].name .. ' has no sends..')
           return false
@@ -735,8 +614,6 @@ function targetLoop(rp)
         removeSingle(src_tr, rp.category, rid)
       else
         if rp.prev == 0 then
-          -- log.user('if prev == 0')
-          -- rid = reaper.CreateTrackSend(src_tr, dst_tr)
           if rp.category == rc.flags.CAT_SEND then
             -- log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  -->  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
             rid = reaper.CreateTrackSend(src_tr, dst_tr)
@@ -746,29 +623,17 @@ function targetLoop(rp)
           end
         end
 
-
-        -- log.user('rid >>> ' .. rid)
-
         if rp.category == rc.flags.CAT_SEND then
-          -- log.user('update r state')
           updateRouteState_Track(src_tr, rp, rid)
         elseif rp.category == rc.flags.CAT_REC then
           updateRouteState_Track(dst_tr, rp, rid)
         end
-        -- updateRouteState_Track(src_tr, rp, rid)
 
-
-        -- TODO
-        --
-        -- `a`
-        -- then ONLY one route is created
-        -- and all others are deleted ?!?!
         deleteRouteIfEmpty(src_tr, rid)
       end
       :: continue ::
     end -- dst
   end -- src
-  -- lrp(rp)
 end
 
 function updateRouteState_Track(src_tr, rp, rid)
@@ -786,7 +651,6 @@ function updateRouteState_Track(src_tr, rp, rid)
   -- local test =  reaper.GetTrackSendInfo_Value( src_tr, rp.category, rid, 'I_SRCCHAN')
   -- log.user('test' .. test)
 
-  -- local
   local _, current_name = reaper.GetTrackName(src_tr)
     -- log.user('update tr: ' .. current_name)
 
@@ -799,8 +663,6 @@ function updateRouteState_Track(src_tr, rp, rid)
       -- next is only audio and first
       if rp.next == 1 and rp.prev ~= 0 then goto continue end
 
-      -- log.user('update midiiiiiii')
-      -- log.user(p.param_name .. '  ' .. tostring(p.param_value))
       reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
     else
 
@@ -810,8 +672,6 @@ function updateRouteState_Track(src_tr, rp, rid)
       -- next is only midi and first
       if rp.next == 2 and rp.prev ~= 0 then goto continue end
 
-      -- log.user('!!!!!!!!!!!!!')
-      -- log.user(p.param_name .. '  ' .. tostring(p.param_value))
       reaper.SetTrackSendInfo_Value(src_tr, 0, rid, p.param_name, p.param_value)
     end
 
@@ -819,38 +679,17 @@ function updateRouteState_Track(src_tr, rp, rid)
   end
 end
 
---//////////////////////////////////////////////////////////////////////
---  FUTURE??
---////////////
+--  OTHER
 
--- TODO
---
--- remove this function
-
--- replace this function in Syntax with my new route_str
-function routing.createSingleMIDISend(src_tr,dest_tr,dest_chan)
-  log.user('createSingleMIDISend')
-  local is_exist = getPrevRouteState(src_tr, dest_tr)
-
-  -- TODO if dest_chan == nil then set to 0 (ALL)
-
-  log.user('midi sends exists ???????  : ' .. tostring(is_exist))
-  if not is_exist then
-    local midi_send_id = reaper.CreateTrackSend(src_tr, dest_tr) -- create send; return sendidx for reference
-    local new_midi_flags = create_send_flags(0, dest_chan)
-    reaper.SetTrackSendInfo_Value(src_tr, rc.flags.CAT_SEND, midi_send_id, "I_MIDIFLAGS", new_midi_flags) -- set midi_flags on reference
-    reaper.SetTrackSendInfo_Value(src_tr, rc.flags.CAT_SEND, midi_send_id, "I_SRCCHAN", rc.flags.AUDIO_SRC_OFF)
-  end
-end
-
--- rm ????????
-function incrementDestChanToSrc(dest_tr, src_tr_ch)
-  local dest_tr_ch = reaper.GetMediaTrackInfo_Value( dest_tr, 'I_NCHAN')
-  if dest_tr_ch < src_tr_ch then reaper.SetMediaTrackInfo_Value( dest_tr, 'I_NCHAN', src_tr_ch ) end
-  return dest_tr_ch
-end
+-- why did this one come from hmmm
+-- function incrementDestChanToSrc(dest_tr, src_tr_ch)
+--   local dest_tr_ch = reaper.GetMediaTrackInfo_Value( dest_tr, 'I_NCHAN')
+--   if dest_tr_ch < src_tr_ch then reaper.SetMediaTrackInfo_Value( dest_tr, 'I_NCHAN', src_tr_ch ) end
+--   return dest_tr_ch
+-- end
 
 function preventRouteFeedback()
+  -- ??????
 end
 
 ------------------------------------------------------------------------
