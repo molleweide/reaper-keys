@@ -7,16 +7,15 @@ nav_order: 4
 
 You need to assign `routing.create()`
 
-only one send par tr relation
+only one send per track relation
 
-A can only have one send to B
+A can only have one send to B (i think)
 
 ## category ##################################################
 
-- TODO: use capital S/R for category = send/recieve
+S/R for category = send/recieve
 
-
-## SOURCE / DESTINATION TRACKS ##################################
+## SOURCE / DESTINATION TRACKS STRING ##################################
 
 - TODO: rename src/dst -->  base/other
     makes it recieves more intuitive
@@ -37,6 +36,7 @@ if R
 (other)        selection recieves (other)
 (A)(other)    A recieves the other
 
+## CODED SOURDER/DEST TARGETS ##################################
 
 ## SET CHANNELS ################################################
 
@@ -76,6 +76,7 @@ then delete route index
 -(ghost)R     delete all recieves from track match:ghost to selection
 -(kick)S      delete all sends on match:tr_name to sel
 -(A)(B)       delete all A recieves from B
+-(12)           remove all on tr 12
 
 
 ## set values ----------------

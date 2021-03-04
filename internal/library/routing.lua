@@ -1,6 +1,7 @@
 local ru = require('custom_actions.utils')
 local log = require('utils.log')
 local format = require('utils.format')
+local config = require('definitions.config')
 local rc = require('definitions.routing')
 local df = rc.default_params
 
@@ -16,6 +17,7 @@ local USER_INPUT_TARGETS_DIV = '|'
 --
 --      BUG
 --
+--        create ticket on forum
 --        upon writing a lot of send funcs I find that CreateTrackSend(track, nil)
 --          creates a wierd kind of hwout that i have to remove manually.
 --          it does not show up when logging route states
@@ -24,44 +26,31 @@ local USER_INPUT_TARGETS_DIV = '|'
 --
 --      TODO
 --
---      -> cust util
---
---      -> syntax now so that I can use `zp`
+--      removal doesn't work because I am not removing properly with create
 --
 --
---        test coded targets >> add new custom bindings
 --
---
---      -> syntax apply update()
+--       cust util
+--       syntax apply update()
 --
 --
 --
 --
---      -> SYNTAX | only requires sends
 --
---          >>> most important for flow
+--       segments
 --
---          syntax > update lane mapping w/ routing.create()
---          syntax > if track M:: or A:: and no sends >> route to respective master.
---
---      -> segments
---
---      -> record random stuff w/ empa
+--       record random stuff w/ empa
 --
 --
---      `!a/m` should not require `u` ?!?!?!?!?!
---
---            if `u` or `!` current param.disable == true
---
---      -> RECIEVES
---          if RECIEVE src and dest are reversed.
+--       RECIEVES
+--  if RECIEVE src and dest are reversed.
 --          you specify the `SRC FROM TR`
 --
---      - update send by id?
+--       update send by id?
 --
---      - audio ch ranges?
+--       audio ch ranges?
 --
---      -> COMMANDS
+--       COMMANDS
 --
 --        switch monitors
 --
@@ -103,14 +92,25 @@ function routing.testCodedTargets()
 end
 
 
-function routing.create(route_str, coded_sources, coded_dests)
-  log.clear()
+function routing.updateState(route_str, coded_sources, coded_dests)
+  -- log.clear()
   local rp = rc
   local _
+
+  -- !!!!
+  --  I set remove_routes explicitly here. Why?
+  --    Because on my second laptop this prop gets converted
+  --    to true even though i never set it to true. I don't understad why.
+  --    This is really wierd. Anyways, luckilly it works by setting it here
+  rp.remove_routes = false
+
   if route_str == nil then
     rp.user_input = true
     _, route_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
   end
+
+  -- log.user(rp.remove_routes)
+  -- log.user(rp.remove_both)
 
   local ret
   ret, rp = extractParamsFromString(rp, route_str)
@@ -140,9 +140,15 @@ function routing.create(route_str, coded_sources, coded_dests)
   --   rp.src_guids = rp.dst_guids
   --   rp.dst_guids = tmp
   -- end
+  -- log.user(route_str)
+  -- log.user(rp.remove_routes)
+  -- log.user(rp.remove_both)
 
   if rp.remove_routes then
     handleRemoval(rp)
+  elseif not rp.user_input then
+    -- log.user('//')
+    targetLoop(rp)
   elseif confirmRouteCreation(rp) then
     targetLoop(rp)
   else
@@ -175,20 +181,19 @@ function routing.logRoutingInfoForSelectedTracks()
   end
 end
 
-function lrp(rp)
-  -- log rp
-  log.user(div, format.block(rp))
+function lrp(r)
+  log.user(div, format.block(r))
 end
 
---////////////////////////////////////////////////////////////////////////
+--
 --  UTILS | mv to reaper util
---/////////
+--
 
 function isSel() return reaper.CountSelectedTracks(0) ~= 0 end
 
 function TableConcat(t1,t2)
   for i=1,#t2 do
-    t1[#t1+1] = t2[i]  --corrected bug. if t1[#t1+i] is used, indices will be skipped
+    t1[ #t1+1 ] = t2[i]  --corrected bug. if t1[#t1+i] is used, indices will be skipped
   end
   return t1
 end
@@ -310,7 +315,7 @@ function confirmRouteCreation(rp)
   local num_tr_affected = #rp.src_guids*#rp.dst_guids
 
   local warning_str = 'Tot num routes being affected = '.. num_tr_affected
-  local r_u_sure = 'Are you sure you want to do this?'
+  local r_u_sure = 'Confirm update routes'
   logHeader(warning_str)
   -- log.user(div, warning_str)
 
@@ -320,19 +325,17 @@ function confirmRouteCreation(rp)
   local help_str = "` #src: `" .. tostring(#rp.src_guids) ..
   "` #dst: `" .. tostring(#rp.dst_guids) .. "` (y/n)"
 
-
   -- rm one of these three prompts
 
-  local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
+  -- local _, answer = reaper.GetUserInputs("Create new route for track:", 1, help_str, "")
 
-
-  if answer == "y" and num_tr_affected > rc.code_tot_route_num_limit and not rp.coded_targets then
-    _, answer = reaper.GetUserInputs(r_u_sure, 1, warning_str, "")
+  if num_tr_affected > rc.tot_route_num_limit and not rp.coded_targets then
+    _, answer = reaper.GetUserInputs(r_u_sure, 1, help_str, "")
   end
 
-  if answer == "y" and num_tr_affected > rc.gui_tot_route_num_limit and rp.coded_targets then
-    _, answer = reaper.GetUserInputs(r_u_sure, 1, warning_str, "")
-  end
+  -- if answer == "y" and num_tr_affected > rc.gui_tot_route_num_limit and rp.coded_targets then
+  --   _, answer = reaper.GetUserInputs(r_u_sure, 1, warning_str, "")
+  -- end
 
   if answer == "y" then return true end
   return false
@@ -348,7 +351,7 @@ function setRouteTargetGuids(rp, key, new_tracks_data)
   -- log.user(key, format.block(type(new_tracks_data)))
   if type(new_tracks_data) ~= 'table' then -- NOT TABLE ::::::::::::::
     if new_tracks_data == '<not_working_yet>' then
-      --
+      -- track
     elseif ru.getTrackByGUID(new_tracks_data) ~= false then
       retval = true
       local tr, tr_idx = ru.getTrackByGUID(new_tracks_data)
@@ -568,7 +571,7 @@ function getPrevRouteState(rp, src_tr, dest_tr)
 
 
   local num_routes_by_cat = reaper.GetTrackNumSends( src_tr, cat )
-  log.user('num:::: ' .. num_routes_by_cat)
+  -- log.user('num:::: ' .. num_routes_by_cat)
 
   for si=0,  num_routes_by_cat do
     local dest_tr_check = reaper.BR_GetMediaTrackSendInfo_Track( src_tr, cat, si, check_other )
@@ -579,7 +582,7 @@ function getPrevRouteState(rp, src_tr, dest_tr)
 
 
     if dest_tr_check == dest_tr then
-      log.user('prev match!!!!!')
+      -- log.user('prev match!!!!!')
       local prev_src_midi_flags = reaper.GetTrackSendInfo_Value(src_tr, cat, si, 'I_MIDIFLAGS')
       local prev_src_audio_ch = reaper.GetTrackSendInfo_Value(src_tr, cat, si, 'I_SRCCHAN')
       -- local prev_src_hw = reaper.GetTrackSendInfo_Value(src_tr, 1, si, 'I_SRCCHAN')
@@ -602,7 +605,7 @@ function getNextRouteState(rp, check_str)
     (rp.new_params['a'] ~= nil and rp.new_params['m'] == nil)
     and rp.new_params['a'].param_value ~= rc.flags.AUDIO_SRC_OFF then
 
-    log.user(':A:')
+    -- log.user(':A:')
     -- and rp.new_params['a'].param_value ~= rc.flags.AUDIO_SRC_OFF then
     rp.next = 1
     rp.new_params['m'] = {
@@ -616,7 +619,7 @@ function getNextRouteState(rp, check_str)
     (rp.new_params['a'].param_value == rc.flags.AUDIO_SRC_OFF and rp.new_params['m'] ~= nil) then
     rp.next = 2
 
-    log.user(':M:')
+    -- log.user(':M:')
 
     rp.new_params['a'] = {
       description = df['a'].description,
@@ -649,13 +652,13 @@ function handleRemoval(rp)
     log.user('REMOVAL ERROR > NO BASE TARGETS')
 
   elseif #rp.dst_guids == 0 then
-    logHeader('REMOVE ALL ROUTES ON BASE')
-    logConfirmList(rp)
+    -- logHeader('REMOVE ALL ROUTES ON BASE')
+    -- logConfirmList(rp)
     removeAllRoutesTrack(rp) -- 2 == both send/rec
 
   else
-    logHeader('src rm > connections btw list src/dst')
-    logConfirmList(rp)
+    -- logHeader('src rm > connections btw list src/dst')
+    -- logConfirmList(rp)
     targetLoop(rp)
 
   end
@@ -686,7 +689,7 @@ function deleteByCategory(tr, cat)
 end
 
 function removeAllRoutesTrack(rp)
-  log.user('>>> removeAllRoutesTrack')
+  -- log.user('>>> removeAllRoutesTrack')
   for i = 1, #rp.src_guids do
     local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i].guid)
     if not rp.remove_both and rp.category == 0 then
@@ -708,6 +711,7 @@ end
 -- TODO
 --
 function targetLoop(rp)
+  -- log.user('target')
   for i = 1, #rp.src_guids do
     for j = 1, #rp.dst_guids do
       local rid
@@ -722,29 +726,31 @@ function targetLoop(rp)
       -- log.user(rp.prev, rp.next)
 
       if rp.remove_routes then
+        -- log.user('remove')
         if rid == nil then
-          log.user('TR: ' .. rp.src_guids[i].name .. ' has no sends..')
+          -- log.user('TR: ' .. rp.src_guids[i].name .. ' has no sends..')
           return false
         end
-        log.user('TR: ' .. rp.src_guids[i].name .. ' , rm send id: ' .. rid)
+        -- log.user('TR: ' .. rp.src_guids[i].name .. ' , rm send id: ' .. rid)
         removeSingle(src_tr, rp.category, rid)
       else
         if rp.prev == 0 then
+          -- log.user('if prev == 0')
           -- rid = reaper.CreateTrackSend(src_tr, dst_tr)
           if rp.category == rc.flags.CAT_SEND then
-            log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  -->  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
+            -- log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  -->  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
             rid = reaper.CreateTrackSend(src_tr, dst_tr)
           elseif rp.category == rc.flags.CAT_REC then
-            log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  <--  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
+            -- log.user('ROUTE #'.. sidx+1 ..' `'.. rp.src_guids[i].name ..'`  <--  #'.. didx+1 ..' `'.. rp.dst_guids[j].name .. '`')
             rid = reaper.CreateTrackSend(dst_tr,src_tr)
           end
         end
 
 
-        -- lrp(rp)
-        log.user('rid >>> ' .. rid)
+        -- log.user('rid >>> ' .. rid)
 
         if rp.category == rc.flags.CAT_SEND then
+          -- log.user('update r state')
           updateRouteState_Track(src_tr, rp, rid)
         elseif rp.category == rc.flags.CAT_REC then
           updateRouteState_Track(dst_tr, rp, rid)
@@ -754,7 +760,6 @@ function targetLoop(rp)
 
         -- TODO
         --
-        -- if you don't supply
         -- `a`
         -- then ONLY one route is created
         -- and all others are deleted ?!?!
@@ -763,7 +768,7 @@ function targetLoop(rp)
       :: continue ::
     end -- dst
   end -- src
-  lrp(rp)
+  -- lrp(rp)
 end
 
 function updateRouteState_Track(src_tr, rp, rid)
@@ -781,9 +786,9 @@ function updateRouteState_Track(src_tr, rp, rid)
   -- local test =  reaper.GetTrackSendInfo_Value( src_tr, rp.category, rid, 'I_SRCCHAN')
   -- log.user('test' .. test)
 
-  -- local 
-    local _, current_name = reaper.GetTrackName(src_tr)
-    log.user('update tr: ' .. current_name)
+  -- local
+  local _, current_name = reaper.GetTrackName(src_tr)
+    -- log.user('update tr: ' .. current_name)
 
   for k, p in pairs(rp.new_params) do
     if k == 'm' then

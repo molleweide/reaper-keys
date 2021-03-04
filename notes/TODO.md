@@ -16,13 +16,6 @@
 
 - denite >>> ability to set configs on the fly just like `:set` in vim?
 
-- virtual keyb > shouldn't be that hard!!
-
-- midi
-
-  A new track fx mode would be ideal i think. So that I can use regular
-  up down commands to navigate the fx list.
-
 * fx > config state > log touched parameter
 
 - fx > replace fx at index w/fxNew `<<<<<<<<<<<<<<<<<<<`
@@ -31,10 +24,6 @@
   very interesting config variable for ui dev
 
 * hide tracks?!
-
-## QUESTIONS
-
-`can I rename the reaper.app file. eg. duplicate and rename reaper dir when new version??`
 
 ## regions =================================================
 
@@ -69,37 +58,7 @@ how does state_machine get the actual key press sent to it?
 
 ## RNDM ====================================================
 
-this is going to be so fucking awesome. the insane thing about
-reaper keys markers is that you can make marks for any type of char,
-which gives you a lot of marks, you don't have to worry.
-and so this makes it possible for you to jump between a monstrous amount
-of sound sources and tracks.
+nice. this shit is fucking good. i slept really well last night and
+i am super excited now to go to the gym and do some moe workng out today.
 
-now iam just trying krumma krumma bracea rotera bak höften i have to rotate my hips
-backwards. and you are suppose to write about rotating your hips backwards. imagine
-that your hipis a big wheel in the middle of a folding knife and make this one roll 
-backwards so that the underside pulls forward and the upper side rotates backwards a
-roll back roll back and roll back some more. roll and roll and roll and roll.
 
-oh would it make sense to make an implementation for outputting double keys
-which would mean that you are not doing the thing that is roll back krumma
-bracea krumma bracea och se till att kroppen verkigen lär sig det här.
-
-jag gör det här eftersom att det är superviktigt. i roll back and clean and try 
-to make it as clean as possible but the bain krumma roll the wheel backwards harder and
-harder. it is an infinite chain pulling constantly all the time and this is the hard part 
-about standing at the computer but if you get into a good habbit of doing this a lot then this will
-be the new normal and that is where i want to be. 
-
-now things are going to be absolutely amazing. i am going to contact all of my old friends that i haven't
-talked to in a while abcdefghijklmnopqrstuvwxyzåäö so david is easing like a mature person
-
-i also workout constantly. because i know how the body works really well by now and that makes it a lot
-of fun to move in general. the more i move the better i feel and the better i feel the better i perform at
-everything. you can't even compare. it is just amazingnntt
-rssrssrssssnnfuurednc,rstnfirestnrsstsstctrcntsnneiiiioreekrumkrumkrumkrumntantsantsaneiotsraneio
-tsraneiotsraneiotsraneiotsraneiiotsraneiotsraneiotsraneiotsraneitsraneiotsraneiotsraneiotsraneiotsraneio
-tsraneiotsraneiotsraneiotsraneiotsraneiotsraneiotsraneiotsraneio
-tsraneiotsraneiotsraneiotsraneiotsraneiotsraneiotsraneiotsraneiotsraneiotsra
-neiotsraneiotsraneiotsraneiotsraneiotsraneiotsraneiotsraneiotsAneiotsraneiotsraneiotsraneiotsrneitsraneio
-tsrneiotsraneitsraneiotsraneiotsrneiotsrneitsraneitsraneiotsraneiotsraneiotsrnseriro

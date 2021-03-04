@@ -13,6 +13,7 @@ return {
     'command',
     'operator',
     'meta_command',
-  }
+  },
+  allow_update_route_without_confirm = true
 }
 
