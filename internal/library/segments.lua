@@ -18,6 +18,9 @@ function segments.insertSpaceAtEditCursorFromTimeSelection()
   reaper.PreventUIRefresh(-1)
 end
 
+-- TODO
+--
+-- get this to work now
 function segments.repeatShiftAllItemsInTimeSelectionByTrackByTimeSel()
   -- 1. if item pos is before time sel start > skip
   -- 2. add time_sel_len
