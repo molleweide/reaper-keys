@@ -2,6 +2,30 @@
 
 ## TODO priority list.
 
+# pr starts
+
+- test segments command
+
+- add routing commands to default bindings
+
+- add select audio interface to default bindings
+
+- merge master into molleweide
+
+- this is also going to take some energy.  but this is great. now the
+    gui is back which will make things much easier
+    if i pull master and create a good pull request then
+    i am going to get greate tips from mike. i really 
+    hope he is going to like it
+
+- check out master 
+    gco molleweide my files
+
+- create PR
+
+# pr ends
+
+
 - add default route for syntax
 
   if match drum names >>> route to sum_drums

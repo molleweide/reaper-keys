@@ -33,13 +33,13 @@ return {
   gCut = syntax.gcut,
   gPut = syntax.gput,
   gYank = syntax.gyank,
-  SaveAllTracksAsTemplate = {
-    "Reset",
-    "FirstTrack",
-    "SetModeVisualTrack", -- I lose visual???
-    "LastTrack",
-    -- "SaveTrackTempFromSelected"
-  },
+  -- SaveAllTracksAsTemplate = { -- not working!!!
+  --   "Reset",
+  --   "FirstTrack",
+  --   "SetModeVisualTrack", -- I lose visual???
+  --   "LastTrack",
+  --   -- "SaveTrackTempFromSelected"
+  -- },
   ZoomProjectCustom = {"ZoomProject", "ApplyConfigs"},
   -- custom zoom project where I always call apply tree after zoom + scroll
   -- ArmTracksWithMidiRouter = { "ArmTracks", custom.hookUpMidiRouter }, -- hook setup midi router.

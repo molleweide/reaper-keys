@@ -129,6 +129,12 @@ return {
     }},
     ["<SPC>"] = { "+leader commands", {
         ["<SPC>"] = "ShowActionList",
+        ["i"] = { "+i/o device", {
+          ["q"] = "TrackInSet_MIDI_QMK",
+          ["g"] = "TrackInSet_MIDI_GRAND_ROLAND",
+          ["v"] = "TrackInSet_MIDI_VIRTUAL",
+          ["d"] = "TrackInSet_MIDI_DEFAULT",
+        }},
         ["z"] = { "+zoom/scroll", {
             ["t"] = "ScrollToPlayPosition",
             ["e"] = "ScrollToEditCursor",
@@ -159,11 +165,6 @@ return {
             }},
         }},
         ["R"] = { "+routing", {
-            ["xx"] = "RouteUpdate",
-            ["xq"] = "RouteRemoveAllSends",
-            ["xQ"] = "RouteRemoveAllRecieves",
-            ["xl"] = "RouteLogSelection",
-            ["xc"] = "RouteTestCodedT"
             -- ["o"] = "SetRecordMidiOutput",
             -- ["d"] = "SetRecordMidiOverdub",
             -- ["t"] = "SetRecordMidiTouchReplace",
@@ -189,13 +190,13 @@ return {
             ["w"] = "SetAutomationModeWrite",
         }},
         ["S"] = { "+segments", {
-            ["r"] = "SetAutomationModeTrimRead",
-            ["R"] = "SetAutomationModeRead",
-            ["l"] = "SetAutomationModeLatch",
-            ["g"] = "SetAutomationModeLatchAndArm",
-            ["p"] = "SetAutomationModeLatchPreview",
-            ["t"] = "SetAutomationModeTouch",
-            ["w"] = "SetAutomationModeWrite",
+            -- ["r"] = "SetAutomationModeTrimRead",
+            -- ["R"] = "SetAutomationModeRead",
+            -- ["l"] = "SetAutomationModeLatch",
+            -- ["g"] = "SetAutomationModeLatchAndArm",
+            -- ["p"] = "SetAutomationModeLatchPreview",
+            -- ["t"] = "SetAutomationModeTouch",
+            -- ["w"] = "SetAutomationModeWrite",
         }},
         ["s"] = { "+selected items", {
             ["j"] = "NextTake",
@@ -281,6 +282,11 @@ return {
                 ["4"] = "InsertTrackFromTemplateSlot4",
             }},
             ["x"] = {"+routing", {
+                ["x"] = "RouteUpdate",
+                ["q"] = "RouteRemoveAllSends",
+                ["Q"] = "RouteRemoveAllRecieves",
+                ["l"] = "RouteLogSelection",
+                ["c"] = "RouteTestCodedT",
                 ["p"] = "TrackToggleSendToParent",
                 ["s"] = "ToggleShowTrackRouting",
             }},

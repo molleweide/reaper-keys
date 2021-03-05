@@ -626,7 +626,7 @@ return {
   NudgeTrackVolumeDown = 40116, -- 0.05 dB
   PlayAndSkipTimeSelection = 40317,
 
-  RouteCreate = lib.routing.updateState,
+  RouteUpdate = lib.routing.updateState,
   RouteLogSelection = lib.routing.logRoutingInfoForSelectedTracks,
   RouteRemove = lib.routing.remove,
   RouteRemoveAllSends = lib.routing.removeAllSends,
@@ -644,6 +644,7 @@ return {
   VKBSendMidi_Cs2 = lib.midi.sendMidiNote_Cs2,
   VKBSendMidi_C_2 = lib.midi.sendMidiNote_C_2,
 
+  -- todo
   RepeatInsertTimeSelection = {
     "LoopEnd",
     "SelectAllItemsInCurrentTimeSel",
@@ -653,4 +654,21 @@ return {
     lib.segments.insertSpaceAtEditCursorFromTimeSelection,
     lib.segments.repeatShiftAllItemsInTimeSelectionByTrackByTimeSel
   },
-}
+
+  -- switch easy between devices
+  --
+  -- i included this here to show you mike
+  -- but this list of devices is ofc different for everybody.
+  -- but these commands allow me to hook into a custom midi pre processor
+  -- that i built to accompany reaper keys.
+  --
+  -- i will submit that later.
+  --
+  -- needs to alert user if no devices found.
+
+    TrackInSet_MIDI_QMK = {lib.io_device.setInputTo_MIDI_QMK, custom.setupMidiInputPreProcessorOnSelTrks},
+    TrackInSet_MIDI_GRAND_ROLAND = {lib.io_device.setInputTo_MIDI_GRAND_ROLAND, custom.setupMidiInputPreProcessorOnSelTrks},
+    TrackInSet_MIDI_VIRTUAL = {lib.io_device.setInputTo_MIDI_VIRTUAL, custom.setupMidiInputPreProcessorOnSelTrks},
+    TrackInSet_MIDI_DEFAULT = {lib.io_device.setInputTo_MIDI_DEFAULT, custom.setupMidiInputPreProcessorOnSelTrks},
+
+  }
