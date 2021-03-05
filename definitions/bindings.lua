@@ -27,7 +27,7 @@ return {
     timeline_motion = {},
     command = {
       -- ["aa"] = "ArmTracksWithMidiRouter", -- only works for command right now.
-      ["zp"] = "ZoomProject",
+      ["zp"] = "ZoomProjectCustom",
       ["<C-,>"] = { "+cmd", {
           ["c"] = "LogWhatever",
           ["C"] = "CloseReaConsole",
@@ -40,12 +40,6 @@ return {
           ["R"] = "RepeatInsertTimeSelection",
           ["S"] = "SaveAllTracksAsTemplate",
           ["w"] = "ApplyConfigs",
-          ["xx"] = "TrackRouteCreate",
-          -- ["xr"] = "TrackRouteRemove",
-          ["xq"] = "TrackRouteRemoveAllSends",
-          ["xQ"] = "TrackRouteRemoveAllRecieves",
-          ["xl"] = "TrackRouteLogSelection",
-          ["xc"] = "TrackRouteTestCodedT"
       }}
     },
   },
