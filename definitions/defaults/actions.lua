@@ -562,7 +562,6 @@ return {
   VerticalScrollStart = "_XENAKIOS_TVPAGEHOME",
   ViewFxChainInputCurrentTrack = 40844,
   ViewFxChainMaster = 40846,
-
   VKBSendMidi_A_2 = lib.midi.sendMidiNote_A_2,
   VKBSendMidi_Gs2 = lib.midi.sendMidiNote_Gs2,
   VKBSendMidi_G_2 = lib.midi.sendMidiNote_G_2,
@@ -573,7 +572,6 @@ return {
   VKBSendMidi_D_2 = lib.midi.sendMidiNote_D_2,
   VKBSendMidi_Cs2 = lib.midi.sendMidiNote_Cs2,
   VKBSendMidi_C_2 = lib.midi.sendMidiNote_C_2,
-
   ZoomAllItems = {"SaveItemSelection", "SelectAllItems", "ZoomItemSelection", "RestoreItemSelection"},
   ZoomAllTracks = {"SaveTrackSelection", "SelectAllTracks", "ZoomTrackSelection", "RestoreTrackSelection"},
   ZoomInHoriz = {1012, prefixRepetitionCount=true},
