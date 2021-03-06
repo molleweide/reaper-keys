@@ -190,6 +190,7 @@ return {
             ["w"] = "SetAutomationModeWrite",
         }},
         ["S"] = { "+segments", {
+          ["d"] = "RepeatInsertTimeSelection",
             -- ["r"] = "SetAutomationModeTrimRead",
             -- ["R"] = "SetAutomationModeRead",
             -- ["l"] = "SetAutomationModeLatch",
@@ -263,7 +264,7 @@ return {
         ["t"] = { "+track", {
             ["n"] = "ResetTrackToNormal",
             ["R"] = "RenderTrack",
-            ["r"] = "RenameTrack",
+            ["r"] = "RenameTracks",
             ["z"] = "MinimizeTracks",
             ["m"] = "CycleRecordMonitor",
             ["f"] = "CycleFolderState",

@@ -25,8 +25,14 @@ local USER_INPUT_TARGETS_DIV = '|'
 --          it does not show up when logging route states
 --          no error!!!!!!!!!!!!!!!!!!!!
 --
---
 --      TODO
+--
+--
+--      inform user about feedback points
+--        make it easy to manage feedback routes safely
+--          list all feedback points
+--            i need to learn gui asap
+--
 --
 --      NUDGE VALUES
 --

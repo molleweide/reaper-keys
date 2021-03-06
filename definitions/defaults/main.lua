@@ -123,7 +123,7 @@ return {
     ["yy"] = "CopyTrack",
     ["zz"] = "ScrollToSelectedTracks",
     ["|"] = "SplitItemsAtEditCursor",
-    ["~"] = "MarkedTracks",
+    ["~"] = "MarkedRegion",
     ["<C-j>"] = "NudgeTrackVolumeDownBy1Tenth",
     ["<C-k>"] = "NudgeTrackVolumeUpBy1Tenth",
     ["<C-J>"] = "NudgeTrackVolumeDownBy1",

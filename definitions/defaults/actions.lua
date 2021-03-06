@@ -644,7 +644,9 @@ return {
   VKBSendMidi_Cs2 = lib.midi.sendMidiNote_Cs2,
   VKBSendMidi_C_2 = lib.midi.sendMidiNote_C_2,
 
-  -- todo
+  SelectAllItemsInCurrentTimeSel = 40717,
+  SelectAllItemsInCurrentTimeAndTrackSel = 40718,
+
   RepeatInsertTimeSelection = {
     "LoopEnd",
     "SelectAllItemsInCurrentTimeSel",

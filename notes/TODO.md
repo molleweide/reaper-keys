@@ -1,14 +1,6 @@
 # REAPER KEYS TODO
 
-## TODO priority list.
-
 # pr starts
-
-- test segments command
-
-- add routing commands to default bindings
-
-- add select audio interface to default bindings
 
 - merge master into molleweide
 
@@ -25,16 +17,31 @@
 
 # pr ends
 
+- route log list and fdbk
+    gui
+
+- gui 
+   > list items in time selection
+
+- gui 
+    show status of 
+      items / track / route / mixer?
+
+
+- theme
+    test
+  fuck up as much as possible
+
 
 - add default route for syntax
 
-  if match drum names >>> route to sum_drums
-  if match music names >>> route to sum_music
+    if match drum names >>> route to sum_drums
+    if match music names >>> route to sum_music
 
 * create custom action for bypassing currently highlighted and active window fx.
 
 * create definitions/defaults/fx.lua
-  is there something basic that I can do with an fx mode.
+    is there something basic that I can do with an fx mode.
 
 - segments
 
@@ -43,11 +50,13 @@
 * fx > config state > log touched parameter
 
 - fx > replace fx at index w/fxNew `<<<<<<<<<<<<<<<<<<<`
-  so that I can switch synths
+    so that I can switch synths
 
-  very interesting config variable for ui dev
+    very interesting config variable for ui dev
 
 * hide tracks?!
+
+# other #######################################################
 
 ## regions =================================================
 
@@ -66,19 +75,19 @@ how does state_machine get the actual key press sent to it?
 
 - templates
 
-  create a function that takes and saves all components of the project.
+    create a function that takes and saves all components of the project.
 
-  master
-  drums
-  music
-  fx
+    master
+    drums
+    music
+    fx
 
-  ```lua
-  -- auto store and create importable modules of the current project
-  -- increment names in
-  for each zone
-  for each group
-  ```
+    ```lua
+    -- auto store and create importable modules of the current project
+    -- increment names in
+    for each zone
+    for each group
+    ```
 
 ## RNDM ====================================================
 

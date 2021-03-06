@@ -4,11 +4,20 @@ local format = require('utils.format')
 
 io_device = {}
 
-local my_devices = {
 
+-- TODO
+--
+-- device not present
+--  gui >> device not present!
+--
+--
+
+
+local my_devices = {
+  -- how could I put and manage used devices in nice list config?
 }
 
-
+-- todo
 function captureNewIODevices()
   -- 1. capture and write to file
   --    2. write these into config list somehow
