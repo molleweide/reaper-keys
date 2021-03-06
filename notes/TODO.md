@@ -2,16 +2,22 @@
 
 # pr starts
 
-- merge master into molleweide
+- pull down molleweide on main laptop
 
-- this is also going to take some energy.  but this is great. now the
-    gui is back which will make things much easier
-    if i pull master and create a good pull request then
-    i am going to get greate tips from mike. i really 
-    hope he is going to like it
+- reaper-jsfx
 
-- check out master 
-    gco molleweide my files
+    only keep plugin-main files in root!!!
+    rename mid-main into `midi-rec-pre.jsfx`
+
+    mkdir lib/
+    fn/vars
+
+    rename piano into 
+    qmk-base-layer
+    device-piano-88-keys
+
+    test and make sure this works!!
+
 
 - create PR
 
@@ -21,16 +27,16 @@
     gui
 
 - gui 
-   > list items in time selection
+    > list items in time selection
 
 - gui 
     show status of 
-      items / track / route / mixer?
+    items / track / route / mixer?
 
 
 - theme
     test
-  fuck up as much as possible
+    fuck up as much as possible
 
 
 - add default route for syntax
