@@ -1,6 +1,7 @@
 local log = require('utils.log')
 local format = require('utils.format')
 local fx = require('library.fx')
+local io = require('definitions.io')
 
 local custom_actions = {
   move = require('custom_actions.movement'),
@@ -85,30 +86,30 @@ function updateMidiPreProcessorByInputDevice(tr)
   local dev_id = ((tr_rec_in - midi_device_offset) & device_mask) >> 5
   local retval, nameout = reaper.GetMIDIInputName( dev_id, '' )
 
-  -- put into my configs ??
-  local device_search_strings = {
-    'Virtual Midi Keyboard',
-    'Ergodox EZ',
-    '- port 1' -- tmp roland RD grand
-  }
+  -- -- put into my configs ??
+  -- local device_search_strings = {
+  --   'Virtual Midi Keyboard',
+  --   'Ergodox EZ',
+  --   '- port 1' -- tmp roland RD grand
+  -- }
 
   local enabled_device
-  for k,device_str in pairs(device_search_strings) do
+  for k,device_str in pairs(io.midi) do
     if nameout:lower():match(device_str:lower()) then enabled_device = device_str end
   end
 
   if enabled_device == nil then return end
-  if enabled_device == 'Virtual Midi Keyboard' then
+  if enabled_device == io.midi.vkb then
     fx.setParamForFxAtIndex(tr, 0, 1, 0, true) -- set device
     fx.setParamForFxAtIndex(tr, 0, 2, 0, true) -- set mode
   end
 
-  if enabled_device == 'Ergodox EZ' then
+  if enabled_device == io.midi.qmk then
     fx.setParamForFxAtIndex(tr, 0, 1, 1, true) -- set device
     fx.setParamForFxAtIndex(tr, 0, 2, 1, true) -- set mode
   end
 
-  if enabled_device == '- port 1' then
+  if enabled_device == io.midi.roland then
     fx.setParamForFxAtIndex(tr, 0, 1, 2, true) -- set device
     fx.setParamForFxAtIndex(tr, 0, 2, 6, true) -- set mode
   end
