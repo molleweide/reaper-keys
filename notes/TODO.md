@@ -1,15 +1,7 @@
 # REAPER KEYS TODO
 
 # pr starts
-
-- name func
-  config name_prefix
-  two commands
-  set prefix
-  set name
-
 - create PR
-
 ## pr ends
 
 - syntax/fx never use track indices >>> gui!!
