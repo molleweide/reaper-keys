@@ -2,21 +2,11 @@
 
 # pr starts
 
-- reaper-jsfx
+- clean up custom actions
 
-  only keep plugin-main files in root!!!
-  rename mid-main into `midi-rec-pre.jsfx`
+- clean up io devices
 
-  mkdir lib/
-  fn/vars
-
-  rename piano into
-  qmk-base-layer
-  device-piano-88-keys
-
-  test and make sure this works!!
-
-* create PR
+- create PR
 
 # pr ends
 
