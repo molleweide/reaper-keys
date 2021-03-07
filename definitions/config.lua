@@ -14,6 +14,7 @@ return {
     'operator',
     'meta_command',
   },
-  name_prefix_match_str = '%a%:....%:'
-}
 
+  -- create you custom name prefix
+  name_prefix_match_str = '^%a%:.*%:'
+}

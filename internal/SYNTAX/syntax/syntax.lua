@@ -3,12 +3,13 @@ local class_configs = require('SYNTAX.config.config').classes
 local format = require('utils.format')
 local log = require('utils.log')
 local util = require('SYNTAX.lib.util')
+local str_util = require('utils.string')
 
 local syntax = {}
 
 ------------------------------------------------------------------------------------------
 
--- split into smaller functions
+-- refactor
 function getNameStringParts(tdx, trk_name)
   local dividers = {}
   local div_char = ':'
@@ -54,7 +55,7 @@ function getNameStringParts(tdx, trk_name)
 end
 
 function createOptionsTable(i, options_str)
-  local options_arr = split(options_str,",")
+  local options_arr = string_util.getStringSplitPattern(options_str,",")
   local OPTIONS = {}
   for i,s in pairs(options_arr) do
     local char_set = "^[%a]*=[%a%d]*$"
@@ -74,25 +75,25 @@ function createOptionsTable(i, options_str)
   return OPTIONS
 end
 
--- mv to utils
-function split(pString, pPattern)
-  local Table = {}  -- NOTE: use {n = 0} in Lua-5.0
-  local fpat = "(.-)" .. pPattern
-  local last_end = 1
-  local s, e, cap = pString:find(fpat, 1)
-  while s do
-    if s ~= 1 or cap ~= "" then
-      table.insert(Table,cap)
-    end
-    last_end = e+1
-    s, e, cap = pString:find(fpat, last_end)
-  end
-  if last_end <= #pString then
-    cap = pString:sub(last_end)
-    table.insert(Table, cap)
-  end
-  return Table
-end
+-- -- mv to utils
+-- function split(pString, pPattern)
+--   local Table = {}  -- NOTE: use {n = 0} in Lua-5.0
+--   local fpat = "(.-)" .. pPattern
+--   local last_end = 1
+--   local s, e, cap = pString:find(fpat, 1)
+--   while s do
+--     if s ~= 1 or cap ~= "" then
+--       table.insert(Table,cap)
+--     end
+--     last_end = e+1
+--     s, e, cap = pString:find(fpat, last_end)
+--   end
+--   if last_end <= #pString then
+--     cap = pString:sub(last_end)
+--     table.insert(Table, cap)
+--   end
+--   return Table
+-- end
 
 -- mv to virtual_track_table_interface.lua
 function createTrackObj(guid, i, p, o, n) -- index; prefix; options; track name

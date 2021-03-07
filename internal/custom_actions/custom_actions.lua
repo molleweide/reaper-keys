@@ -1,4 +1,5 @@
 local log = require('utils.log')
+local config = require('definitions.config')
 local format = require('utils.format')
 local fx = require('library.fx')
 local io = require('definitions.io')
@@ -62,25 +63,20 @@ end
 -- seems like these two functions could be refactored later into a `changeTracks()` super func
 function custom_actions.updatePrefixOfSelectedTracks() end
 function custom_actions.updateNameOfSelectedTracks()
-
-
   local num_sel = reaper.CountSelectedTracks(0)
   local _, new_name_string = reaper.GetUserInputs("Change track name", 1, "Track name:", "")
-
   if num_sel == 0 then return end
 
-
-  if num_sel == 1 then
-    local track = reaper.GetSelectedTrack(0,0)
-    local _, str = reaper.GetSetMediaTrackInfo_String(track, "P_NAME", new_name_string, 1);
-    return
-  end
-
-
-  if num_sel > 1 then
+  if num_sel > 0 then
     for i = 1, num_sel do
-      local track = reaper.GetSelectedTrack(0, i - 1)
-      local _, str = reaper.GetSetMediaTrackInfo_String(track, "P_NAME", new_name_string, 1);
+      local tr = reaper.GetSelectedTrack(0, i - 1)
+      local ret, old_name_full = reaper.GetTrackName(tr)
+      local s, e = string.find(old_name_full, config.name_prefix_match_str)
+      if s == nil then s = 0; e = 0 end
+      local old_prefix = string.sub(old_name_full, s, e)
+      local old_name = string.sub(old_name_full, e + 1)
+      local new_name_full = old_prefix .. new_name_string
+      local _, str = reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", new_name_full, 1);
     end
     return
   end
