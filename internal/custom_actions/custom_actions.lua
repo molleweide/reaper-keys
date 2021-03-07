@@ -60,8 +60,10 @@ function custom_actions.splitItemsAtTimeSelection()
   reaper.Main_OnCommand(SplitAtTimeSelection, 0)
 end
 
--- seems like these two functions could be refactored later into a `changeTracks()` super func
-function custom_actions.updatePrefixOfSelectedTracks() end
+function custom_actions.updatePrefixOfSelectedTracks()
+
+end
+
 function custom_actions.updateNameOfSelectedTracks()
   local num_sel = reaper.CountSelectedTracks(0)
   local _, new_name_string = reaper.GetUserInputs("Change track name", 1, "Track name:", "")
