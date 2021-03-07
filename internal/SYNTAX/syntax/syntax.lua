@@ -55,7 +55,7 @@ function getNameStringParts(tdx, trk_name)
 end
 
 function createOptionsTable(i, options_str)
-  local options_arr = string_util.getStringSplitPattern(options_str,",")
+  local options_arr = str_util.getStringSplitPattern(options_str,",")
   local OPTIONS = {}
   for i,s in pairs(options_arr) do
     local char_set = "^[%a]*=[%a%d]*$"

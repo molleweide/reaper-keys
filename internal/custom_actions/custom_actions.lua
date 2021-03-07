@@ -65,6 +65,7 @@ function custom_actions.updateNameOfSelectedTracks() trackUpdateName(0) end
 
 -- mv to util/track.lua
 function trackUpdateName(set_prefix)
+  log.clear()
   local num_sel = reaper.CountSelectedTracks(0)
   local _, new_name_string = reaper.GetUserInputs("Change track name", 1, "Track name:", "")
   if num_sel == 0 then return end
@@ -78,12 +79,12 @@ function trackUpdateName(set_prefix)
       local old_prefix = string.sub(old_name_full, s, e)
       local old_name = string.sub(old_name_full, e + 1)
 
+      local new_name_full
       if set_prefix then
-        local new_name_full = new_name_string .. old_name
+        new_name_full = new_name_string .. old_name
       else
-        local new_name_full = old_prefix .. new_name_string
+        new_name_full = old_prefix .. new_name_string
       end
-
       local _, str = reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", new_name_full, 1);
     end
     return
