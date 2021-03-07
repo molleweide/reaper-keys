@@ -62,15 +62,21 @@ end
 -- seems like these two functions could be refactored later into a `changeTracks()` super func
 function custom_actions.updatePrefixOfSelectedTracks() end
 function custom_actions.updateNameOfSelectedTracks()
+
+
   local num_sel = reaper.CountSelectedTracks(0)
   local _, new_name_string = reaper.GetUserInputs("Change track name", 1, "Track name:", "")
 
   if num_sel == 0 then return end
+
+
   if num_sel == 1 then
     local track = reaper.GetSelectedTrack(0,0)
     local _, str = reaper.GetSetMediaTrackInfo_String(track, "P_NAME", new_name_string, 1);
     return
   end
+
+
   if num_sel > 1 then
     for i = 1, num_sel do
       local track = reaper.GetSelectedTrack(0, i - 1)
