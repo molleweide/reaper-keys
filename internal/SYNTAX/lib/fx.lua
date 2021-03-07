@@ -11,6 +11,7 @@ local fx_util = require('library.fx')
 local fx = {}
 
 function fx.applyConfFxToChildObj(child_obj, proll_start_idx, opt_type) -- change to drum_map_note_start
+
   local tr, tr_idx    = reaper_utils.getTrackByGUID(child_obj.guid)
   if tr == nil then return end
   local tr_range      = 1
@@ -70,7 +71,7 @@ function fx.applyConfFxToChildObj(child_obj, proll_start_idx, opt_type) -- chang
         if old_has_div then
           if not rsfx_str_match then -- missmatch
             local tr = reaper.GetTrack(0, child_obj.trackIndex)
-            util.replaceFxAtIndex(tr, RSFX_LIST[RSFX_IDX].search_str, new_fx_chain_idx) -- after existing
+            fx_util.replaceFxAtIndex(tr, RSFX_LIST[RSFX_IDX].search_str, new_fx_chain_idx) -- after existing
           end
         else -- prev not pre, but still pre syntax > insert at end of pre
           -- local tr = reaper.GetTrack(0, child_obj.trackIndex)

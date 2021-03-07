@@ -61,6 +61,7 @@ function actions.applyConfigs()
           -- trr.createSingleMIDISend(lvl2_tr, tr, 0) -- 0 = all ch
           trr.updateState('S{0|0}', LVL2_obj.guid, trk_obj.guid)
 
+          log.user(trk_obj.name)
           fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
           count_w_range = midi.updatePianoRoll(LVL2_obj, trk_obj, count_w_range)
         end
