@@ -2,8 +2,6 @@
 
 # pr starts
 
-- pull down molleweide on main laptop
-
 - reaper-jsfx
 
   only keep plugin-main files in root!!!
@@ -21,6 +19,8 @@
 * create PR
 
 # pr ends
+
+- syntax/fx never use track indices >>> gui!!
 
 - create custom o/O commands >> never enter text fields
 

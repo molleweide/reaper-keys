@@ -44,7 +44,6 @@ function actions.applyConfigs()
 
             -- local lvl2_tr = utils.getTrackByGUID(LVL2_obj.guid)
             -- local tr = utils.getTrackByGUID(split_obj.guid)
-            -- trr.createSingleMIDISend(lvl2_tr, tr, s)
             trr.updateState('{0|'..s..'}', LVL2_obj.guid, split_obj.guid)
             end
           end
@@ -57,11 +56,8 @@ function actions.applyConfigs()
 
           -- local lvl2_tr = utils.getTrackByGUID(LVL2_obj.guid)
           -- local tr = utils.getTrackByGUID(trk_obj.guid)
-
-          -- trr.createSingleMIDISend(lvl2_tr, tr, 0) -- 0 = all ch
           trr.updateState('S{0|0}', LVL2_obj.guid, trk_obj.guid)
 
-          log.user(trk_obj.name)
           fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
           count_w_range = midi.updatePianoRoll(LVL2_obj, trk_obj, count_w_range)
         end
