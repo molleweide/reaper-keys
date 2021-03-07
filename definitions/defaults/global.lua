@@ -241,7 +241,8 @@ return {
         ["t"] = { "+track", {
             ["n"] = "ResetTrackToNormal",
             ["R"] = "RenderTrack",
-            ["r"] = "RenameTracks",
+            ["r"] = "UpdateTrackName",
+            ["p"] = "UpdateTrackNamePrefix",
             ["z"] = "MinimizeTracks",
             ["m"] = "CycleRecordMonitor",
             ["f"] = "CycleFolderState",

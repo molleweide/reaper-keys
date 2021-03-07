@@ -60,11 +60,11 @@ function custom_actions.splitItemsAtTimeSelection()
   reaper.Main_OnCommand(SplitAtTimeSelection, 0)
 end
 
-function custom_actions.updatePrefixOfSelectedTracks()
+function custom_actions.updatePrefixOfSelectedTracks() trackUpdateName(1) end
+function custom_actions.updateNameOfSelectedTracks() trackUpdateName(0) end
 
-end
-
-function custom_actions.updateNameOfSelectedTracks()
+-- mv to util/track.lua
+function trackUpdateName(set_prefix)
   local num_sel = reaper.CountSelectedTracks(0)
   local _, new_name_string = reaper.GetUserInputs("Change track name", 1, "Track name:", "")
   if num_sel == 0 then return end
@@ -77,7 +77,13 @@ function custom_actions.updateNameOfSelectedTracks()
       if s == nil then s = 0; e = 0 end
       local old_prefix = string.sub(old_name_full, s, e)
       local old_name = string.sub(old_name_full, e + 1)
-      local new_name_full = old_prefix .. new_name_string
+
+      if set_prefix then
+        local new_name_full = new_name_string .. old_name
+      else
+        local new_name_full = old_prefix .. new_name_string
+      end
+
       local _, str = reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", new_name_full, 1);
     end
     return
