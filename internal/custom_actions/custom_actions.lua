@@ -123,7 +123,7 @@ function custom_actions.setupMidiInputPreProcessorOnSelTrks()
     if zeroth_idx_name == 'RK_MIDI_PRE_PROCESSOR' then
       updateMidiPreProcessorByInputDevice(tr)
     else
-      local fx_str = 'mid_main.jsfx' -- INSERT MIDI PRE PROCESSOR JSFX
+      local fx_str = 'midi-rec-pre.jsfx' -- INSERT MIDI PRE PROCESSOR JSFX
       fx.insertFxAtIndex(tr, fx_str, 0, true)
       fx.getSetTrackFxNameByFxChainIndex(tr,0, true, 'RK_MIDI_PRE_PROCESSOR')
       updateMidiPreProcessorByInputDevice(tr)
