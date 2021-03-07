@@ -14,5 +14,6 @@ return {
     'operator',
     'meta_command',
   },
+  name_prefix_match_str = '%a%:....%:'
 }
 

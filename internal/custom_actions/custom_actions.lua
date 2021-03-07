@@ -60,7 +60,8 @@ function custom_actions.splitItemsAtTimeSelection()
 end
 
 -- seems like these two functions could be refactored later into a `changeTracks()` super func
-function custom_actions.changeNamesOfSelectedTracks()
+function custom_actions.updatePrefixOfSelectedTracks() end
+function custom_actions.updateNameOfSelectedTracks()
   local num_sel = reaper.CountSelectedTracks(0)
   local _, new_name_string = reaper.GetUserInputs("Change track name", 1, "Track name:", "")
 
@@ -85,13 +86,6 @@ function updateMidiPreProcessorByInputDevice(tr)
   local device_mask = 2016
   local dev_id = ((tr_rec_in - midi_device_offset) & device_mask) >> 5
   local retval, nameout = reaper.GetMIDIInputName( dev_id, '' )
-
-  -- -- put into my configs ??
-  -- local device_search_strings = {
-  --   'Virtual Midi Keyboard',
-  --   'Ergodox EZ',
-  --   '- port 1' -- tmp roland RD grand
-  -- }
 
   local enabled_device
   for k,device_str in pairs(io.midi) do
