@@ -2,6 +2,7 @@ local reaper_state = require('utils.reaper_state')
 local format = require('utils.format')
 local log = require('utils.log')
 local trr = require('library.routing')
+local rc = require('definitions.routing')
 local trackObj = require('SYNTAX.lib.track_obj')
 local syntax = require('SYNTAX.syntax.syntax')
 local fx = require('SYNTAX.lib.fx')
@@ -18,8 +19,12 @@ function actions.applyConfigs()
   local vtt = syntax.getVerifiedTree()
   -- log.user(format.vtt(vtt))
 
+  -- LEVEL 1 //////////////////////////////////////////////////////
+
   for i, LVL1_obj in pairs(vtt) do ------------------------------ lvl 1 ------------
     syntax_utils.setClassTrackInfo(config.classes, LVL1_obj)
+
+    -- LEVEL 2 //////////////////////////////////////////////////////
 
     for j, LVL2_obj in pairs(LVL1_obj.children) do ------------- lvl 2 ------------
       local count_w_range     = 24 -- put in config
@@ -27,37 +32,51 @@ function actions.applyConfigs()
 
       local opt_m_children = {}
 
+      -- LEVEL 3 //////////////////////////////////////////////////////
+
       for k, LVL3_obj in pairs(LVL2_obj.children) do ----------- lvl 3 ------------
         syntax_utils.setClassTrackInfo(config.classes, LVL3_obj) -- why pass config? stupid..
 
-        if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MC') and syntax_utils.trackObjHasOption(LVL2_obj, 'm') then
-          -- local lvl2_tr = utils.getTrackByGUID(LVL2_obj.guid)
+        -- M ///////////////////////////////////////////////////////////////////////////////
+        --
+        -- if has no send
 
+        -- MC //////////////////////////////////////////////////////////////////////////////
+
+        if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MC') and syntax_utils.trackObjHasOption(LVL2_obj, 'm') then
           trr.updateState('-S',LVL2_obj.guid) -- remove all sends
           opt_m_children[#opt_m_children+1] = LVL3_obj -- collect m_opt_obj for reverse looping later
         end
 
+        -- C /////////////////////////////////////////////////////////////////////////////
+
         if LVL3_obj.class == 'C' then
-          -- local lvl3_tr = utils.getTrackByGUID(LVL3_obj.guid)
           trr.updateState('-S', LVL3_obj.guid)
           for s, split_obj in pairs(LVL3_obj.children) do
-
-            -- local lvl2_tr = utils.getTrackByGUID(LVL2_obj.guid)
-            -- local tr = utils.getTrackByGUID(split_obj.guid)
             trr.updateState('{0|'..s..'}', LVL2_obj.guid, split_obj.guid)
             end
           end
-        end -- LEVEL 3
+        end
+
+        -- MS //////////////////////////////////////////////////////////////////////////////
+        --
+        -- if has no send
+        --  send to mix
+        if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MS') then
+          local ret = trr.trackHasSends(LVL3_obj.guid, rc.FLAGS.CAT_SEND)
+          if not ret then
+            log.user('has no sends: ' .. LVL3_obj.name)
+          end
+        end
+
+        -- MIDI MAPPING m=1 /////////////////////////////////////////////////////////
+        -- put this above under MC?!
 
         -- take care of reveres/ascending (piano roll) mappings
         for k=1, #opt_m_children do
           local rev_idx = #opt_m_children + 1 - k -- reverse idx !!!
           local trk_obj = opt_m_children[rev_idx]
-
-          -- local lvl2_tr = utils.getTrackByGUID(LVL2_obj.guid)
-          -- local tr = utils.getTrackByGUID(trk_obj.guid)
           trr.updateState('S{0|0}', LVL2_obj.guid, trk_obj.guid)
-
           fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
           count_w_range = midi.updatePianoRoll(LVL2_obj, trk_obj, count_w_range)
         end

@@ -105,6 +105,15 @@ function routing.updateState(route_str, coded_sources, coded_dests)
   end
 end
 
+function routing.trackHasSends(guid, cat)
+  local tr, tr_idx = ru.getTrackByGUID(guid)
+  local num_routes_by_cat = reaper.GetTrackNumSends( tr, cat )
+  if num_routes_by_cat > 0 then
+    return true
+  end
+  return false
+end
+
 -- refactor these into one with variable arguments
 function routing.removeAllSends(tr) removeAllRoutesTrack(tr) end
 function routing.removeAllRecieves(tr) removeAllRoutesTrack(tr, 1) end

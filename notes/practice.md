@@ -1,3 +1,0 @@
-# PRACTICE
-
-- punch record

@@ -1,8 +1,11 @@
 # REAPER KEYS TODO
 
-# pr starts
-- create PR
-## pr ends
+- routes
+    trackHasSends()
+      send to mix sum
+
+- dev
+  log everything that relates to paths
 
 - syntax/fx never use track indices >>> gui!!
 
