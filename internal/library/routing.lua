@@ -529,12 +529,27 @@ function getNextRouteState(rp, check_str)
   --
   --  collect a/m keys here and reset them before below logic
 
+  local a_present = false
+  local m_present = false
+  local audio_off = false
+  local midi_off = false
+  if rp.new_params['a'] ~= nil then
+    a_present = true
+
+    if rp.new_params['a'].param_value == rc.flags.AUDIO_SRC_OFF then
+      audio_off = true
+    end
+  end
+  if rp.new_params['m'] ~= nil then
+    m_present = true
+    if rp.new_params['m'].param_value == rc.flags.MIDI_OFF then
+       midi_off = true
+    end
+  end
 
   -- ONLY AUDIO //////////////////////////////
 
-  if (rp.new_params['a'] == nil and rp.new_params['m'] == nil) or
-    (rp.new_params['a'] ~= nil and rp.new_params['m'] == nil)
-    and rp.new_params['a'].param_value ~= rc.flags.AUDIO_SRC_OFF then
+  if (not a_present and not m_present) or (a_present and not m_present) and not audio_off then
 
     rp.next = 1
     rp.new_params['m'] = {
@@ -545,9 +560,7 @@ function getNextRouteState(rp, check_str)
 
   -- ONLY MIDI ///////////////////////////
     -- index a nil error below
-  elseif rp.new_params['a'] == nil and rp.new_params['m'] ~= nil
-    and rp.new_params['m'].param_value ~= rc.flags.MIDI_OFF or
-    (rp.new_params['a'].param_value == rc.flags.AUDIO_SRC_OFF and rp.new_params['m'] ~= nil) then
+  elseif not a_present and m_present and not midi_off or (audio_off and m_present) then
     rp.next = 2
 
     rp.new_params['a'] = {
@@ -557,6 +570,8 @@ function getNextRouteState(rp, check_str)
     }
 
     -- BOTH ///////////////////////////////
+    --
+    -- it feels as if this is wrong but i don't remember
   elseif rp.new_params['a'] == nil and rp.new_params['m'] ~= nil then
     rp.next = 3 -- add both
   end
