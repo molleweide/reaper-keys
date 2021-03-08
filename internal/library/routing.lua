@@ -78,6 +78,7 @@ function routing.updateState(route_str, coded_sources, coded_dests)
   if route_str == nil then
     rp.user_input = true
     _, route_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
+    if not _ then return end
   end
 
   local ret
@@ -523,11 +524,10 @@ function getPrevRouteState(rp, src_tr, dest_tr)
   return rp
 end
 
-function getNextRouteState(rp, check_str)
 
-  -- TODO prevent nil errors
-  --
-  --  collect a/m keys here and reset them before below logic
+-- this function has to be improved.
+
+function getNextRouteState(rp, check_str)
 
   local a_present = false
   local m_present = false
@@ -559,7 +559,6 @@ function getNextRouteState(rp, check_str)
     }
 
   -- ONLY MIDI ///////////////////////////
-    -- index a nil error below
   elseif not a_present and m_present and not midi_off or (audio_off and m_present) then
     rp.next = 2
 
