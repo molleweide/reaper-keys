@@ -21,10 +21,7 @@ function actions.applyConfigs()
       for k, LVL3_obj in pairs(LVL2_obj.children) do ----------- lvl 3 ------------
         syntax_utils.setClassTrackInfo(config.classes, LVL3_obj) -- why pass config? stupid..
         opt_m_children = apply_funcs.prepareMidiTracksForLaneMapping(LVL2_obj, LVL3_obj, opt_m_children)
-
-        -- TODO
-        apply_funcs.applyChannelSplitRouting(LVL3_obj) -- mv to lvl4
-
+        apply_funcs.applyChannelSplitRouting(LVL3_obj) -- mv to lvl4 ??
         apply_funcs.applyZoneDefaultRoutes(LVL3_obj, LVL1_obj.name)
         for l, LVL4_obj in pairs(LVL3_obj.children) do ----------- lvl 4 ------------
           apply_funcs.applyZoneDefaultRoutes(LVL4_obj, LVL1_obj.name) -- only works for MA not S atm
