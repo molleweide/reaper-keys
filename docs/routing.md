@@ -15,6 +15,9 @@ A can only have one send to B (i think)
 
 `#/$` for category = send/recieve
 
+my intention was to us S/R but i have improve the match funcs first
+because now there is conflict if search_strings_contain capital letters
+
 ## SOURCE / DESTINATION TRACKS STRING ##################################
 
 - TODO: rename src/dst -->  base/other
@@ -26,7 +29,7 @@ A can only have one send to B (i think)
 (trA,45)(trX,trY,15,16)   source / dest complex arguments
 
 
-if S
+if #
 
 ()        send from sel -> ()
 (A)(B)    send from (A) -> (B)
@@ -72,8 +75,8 @@ then delete route index
 
 -             remove all sends / recieves of selection, or coded sources
 -#            remove all sends on sel tr | or code
--R            remove all recieves on sel tr | or code
--(ghost)R     delete all recieves from track match:ghost to selection
+-$            remove all recieves on sel tr | or code
+-(ghost)$     delete all recieves from track match:ghost to selection
 -(kick)#      delete all sends on match:tr_name to sel
 -(A)(B)       delete all A recieves from B
 -(12)           remove all on tr 12
