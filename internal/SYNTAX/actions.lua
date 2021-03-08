@@ -9,6 +9,7 @@ local fx = require('SYNTAX.lib.fx')
 local midi = require('SYNTAX.lib.midi')
 local utils = require('custom_actions.utils')
 local syntax_utils = require('SYNTAX.lib.util')
+local apply_funcs = require('SYNTAX.syntax.util')
 local config = require('SYNTAX.config.config')
 
 local actions = {}
@@ -39,35 +40,35 @@ function actions.applyConfigs()
         end
 
         -- refactor into C applyChannelSplits(parent_obj, child_obj)
+        apply_funcs.applyChannelSplitRouting(LVL3_obj)
 
-        if LVL3_obj.class == 'C' then
-          trr.updateState('-#', LVL3_obj.guid)
-          for s, split_obj in pairs(LVL3_obj.children) do
-            trr.updateState('{0|'..s..'}', LVL2_obj.guid, split_obj.guid)
-          end
-        end
+        -- if LVL3_obj.class == 'C' then
+        --   trr.updateState('-#', LVL3_obj.guid)
+        --   for s, split_obj in pairs(LVL3_obj.children) do
+        --     trr.updateState('{0|'..s..'}', LVL2_obj.guid, split_obj.guid)
+        --   end
+        -- end
 
         -- refactor into MS applyZoneDefaultRoutes(parent_obj, child_obj, zone_name)
+        apply_funcs.applyZoneDefaultRoutes(LVL3_obj, zone_name)
 
-        if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MS') then
-          -- should include 'A' as well!!!
-          local has_sends = trr.trackHasSends(LVL3_obj.guid, rc.flags.CAT_SEND)
-          if not has_sends then
-            if LVL1_obj.name == 'DRUMS_ZONE' then
-              trr.updateState('(SUM_DRUMS)#[0|0]', LVL3_obj.guid)
-            elseif LVL1_obj.name == 'MUSIC_ZONE' then
-              trr.updateState('(SUM_MUSIC)#[0|0]', LVL3_obj.guid)
-            elseif LVL1_obj.name == 'FX_ZONE' then
-              trr.updateState('(SUM_FX)#[0|0]', LVL3_obj.guid)
-            elseif LVL1_obj.name == 'VOCALS_ZONE' then
-              -- trr.updateState('{0|'..s..'}', LVL2_obj.guid, split_obj.guid)
-            else
-              trr.updateState('(MIX_BUSS)#[0|0]', LVL3_obj.guid)
-            end
-          end
-
-          -- name ^kick . send to 'ghostkick'
-        end
+        -- if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MS') then
+        --   -- should include 'A' as well!!!
+        --   local has_sends = trr.trackHasSends(LVL3_obj.guid, rc.flags.CAT_SEND)
+        --   if not has_sends then
+        --     if LVL1_obj.name == 'DRUMS_ZONE' then
+        --       trr.updateState('(SUM_DRUMS)#[0|0]', LVL3_obj.guid)
+        --     elseif LVL1_obj.name == 'MUSIC_ZONE' then
+        --       trr.updateState('(SUM_MUSIC)#[0|0]', LVL3_obj.guid)
+        --     elseif LVL1_obj.name == 'FX_ZONE' then
+        --       trr.updateState('(SUM_FX)#[0|0]', LVL3_obj.guid)
+        --     elseif LVL1_obj.name == 'VOCALS_ZONE' then
+        --       -- trr.updateState('{0|'..s..'}', LVL2_obj.guid, split_obj.guid)
+        --     else
+        --       trr.updateState('(MIX_BUSS)#[0|0]', LVL3_obj.guid)
+        --     end
+        --   end
+        -- end
 
 
         -- refactor applyGhostSends
@@ -87,14 +88,16 @@ function actions.applyConfigs()
       -- refactor into applyPianoLaneMapping()
 
       -- MIDI MAPPING m=1 | reverse loop //////////////////////////////////////////
+      --
+      apply_funcs.applyMappedOptMChildren(LVL2_obj, opt_m_children, count_w_range)
 
-      for k=1, #opt_m_children do
-        local rev_idx = #opt_m_children + 1 - k -- reverse idx !!!
-        local trk_obj = opt_m_children[rev_idx]
-        trr.updateState('#{0|0}', LVL2_obj.guid, trk_obj.guid)
-        fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
-        count_w_range = midi.updatePianoRoll(LVL2_obj, trk_obj, count_w_range)
-      end
+      -- for k=1, #opt_m_children do
+      --   local rev_idx = #opt_m_children + 1 - k -- reverse idx !!!
+      --   local trk_obj = opt_m_children[rev_idx]
+      --   trr.updateState('#{0|0}', LVL2_obj.guid, trk_obj.guid)
+      --   fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
+      --   count_w_range = midi.updatePianoRoll(LVL2_obj, trk_obj, count_w_range)
+      -- end
 
     end -- LEVEL 2 --------
   end -- LEVEL 1 --------
