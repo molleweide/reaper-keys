@@ -64,7 +64,7 @@ end
 
 
 function routing.updateState(route_str, coded_sources, coded_dests)
-  log.clear()
+  -- log.clear()
   local rp = rc
   local _
 

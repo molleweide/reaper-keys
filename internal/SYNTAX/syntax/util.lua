@@ -7,11 +7,6 @@ local midi = require('SYNTAX.lib.midi')
 
 local mod = {}
 
-
--- M
-
--- refactor into MC applyMidiLaneMapping(parent_obj, child_obj)
-
 function mod.prepareMidiTracksForLaneMapping(parent_obj, child_obj, opt_m_children)
   if syntax_utils.strHasOneOfChars(child_obj.class, 'MC') and syntax_utils.trackObjHasOption(parent_obj, 'm') then
     trr.updateState('-#', parent_obj.guid) -- remove all sends
@@ -20,7 +15,6 @@ function mod.prepareMidiTracksForLaneMapping(parent_obj, child_obj, opt_m_childr
   return opt_m_children
 end
 
--- refactor into C applyChannelSplits(parent_obj, child_obj)
 function mod.applyChannelSplitRouting(trk_obj)
   if trk_obj.class == 'C' then
     trr.updateState('-#', trk_obj.guid)
@@ -30,12 +24,7 @@ function mod.applyChannelSplitRouting(trk_obj)
   end
 end
 
--- refactor into MS applyZoneDefaultRoutes(parent_obj, child_obj, zone_name)
 function mod.applyZoneDefaultRoutes(trk_obj, zone_name)
-
-  -- right now this will only create mapping for 'M'
-  --l
-
   if syntax_utils.strHasOneOfChars(trk_obj.class, 'MAS') then
     -- should include 'A' as well!!!
     local has_sends = trr.trackHasSends(trk_obj.guid, rc.flags.CAT_SEND)
@@ -61,13 +50,12 @@ function mod.applyZoneDefaultRoutes(trk_obj, zone_name)
   end
 end
 
-
--- refactor applyGhostSends
-
--- if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MS') then
-  --   -- should include 'A' as well!!!
-  --   -- name ^kick . send to 'ghostkick'
--- end
+function mod.sendKicksToGhost(trk_obj)
+  if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MAS') then
+    -- should include 'A' as well!!!
+    -- name ^kick . send to 'ghostkick'
+  end
+end
 
 function mod.applyMappedOptMChildren(parent_obj, opt_m_children, count_w_range)
   -- local count_w_range = count_w_range
