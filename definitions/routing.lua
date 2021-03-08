@@ -75,7 +75,7 @@ return {
   coded_targets = false,
 
   -- code_tot_route_num_limit = 5,
-  tot_route_num_limit = 5,
+  tot_route_num_limit = 2,
   route_num_extreme = 20,
   remove_routes = false,
 

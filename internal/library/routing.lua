@@ -8,7 +8,7 @@ local df = rc.default_params
 
 local routing = {}
 
-local input_placeholder = "" -- "(176)aR" -- used for testing purps
+local input_placeholder = "(176)" -- used for testing purps
 
 -- I was trying format the text box but I did not get it to work
 local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
@@ -64,7 +64,7 @@ end
 
 
 function routing.updateState(route_str, coded_sources, coded_dests)
-  -- log.clear()
+  log.clear()
   local rp = rc
   local _
 
@@ -96,6 +96,7 @@ function routing.updateState(route_str, coded_sources, coded_dests)
   -- if route_str:match('SUM_DRUMS') then
   --   lrp(rp)
   -- end
+  -- lrp(rp)
 
   if rp.remove_routes then
     handleRemoval(rp)
@@ -104,7 +105,6 @@ function routing.updateState(route_str, coded_sources, coded_dests)
   elseif confirmRouteCreation(rp) then
     targetLoop(rp)
   else
-    log.clear()
     log.user('<ROUTE COMMAND ABORTED>')
   end
 end
@@ -270,25 +270,21 @@ function logHeader(str)
 end
 
 function confirmRouteCreation(rp)
-  -- LOG FINAL SOURCES TARGETS
   local num_tr_affected = #rp.src_guids*#rp.dst_guids
 
-  local warning_str = 'Tot num routes being affected = '.. num_tr_affected
-  local r_u_sure = 'Confirm update routes'
-  logHeader(warning_str)
-  -- log.user(div, warning_str)
-
-  logConfirmList(rp)
-
-  local help_str = "` #src: `" .. tostring(#rp.src_guids) ..
-  "` #dst: `" .. tostring(#rp.dst_guids) .. "` (y/n)"
-
-  if num_tr_affected > rc.tot_route_num_limit and not rp.coded_targets then
-    _, answer = reaper.GetUserInputs(r_u_sure, 1, help_str, "")
+  if num_tr_affected >= rc.tot_route_num_limit and not rp.coded_targets then
+    local warning_str = 'Tot num routes being affected = '.. num_tr_affected
+    local r_u_sure = 'Confirm update routes'
+    local help_str = "` #src: `" .. tostring(#rp.src_guids) ..
+    "` #dst: `" .. tostring(#rp.dst_guids) .. "` (y/n)"
+    logHeader(warning_str)
+    -- log.user(div, warning_str)
+    logConfirmList(rp)
+    local _, answer = reaper.GetUserInputs(r_u_sure, 1, help_str, "")
+    if answer == "y" then return true end
+    return false
   end
-
-  if answer == "y" then return true end
-  return false
+  return true
 end
 
 
@@ -528,6 +524,14 @@ function getPrevRouteState(rp, src_tr, dest_tr)
 end
 
 function getNextRouteState(rp, check_str)
+
+  -- TODO prevent nil errors
+  --
+  --  collect a/m keys here and reset them before below logic
+
+
+  -- ONLY AUDIO //////////////////////////////
+
   if (rp.new_params['a'] == nil and rp.new_params['m'] == nil) or
     (rp.new_params['a'] ~= nil and rp.new_params['m'] == nil)
     and rp.new_params['a'].param_value ~= rc.flags.AUDIO_SRC_OFF then
@@ -539,6 +543,8 @@ function getNextRouteState(rp, check_str)
       param_value = rc.flags.MIDI_OFF,
     }
 
+  -- ONLY MIDI ///////////////////////////
+    -- index a nil error below
   elseif rp.new_params['a'] == nil and rp.new_params['m'] ~= nil
     and rp.new_params['m'].param_value ~= rc.flags.MIDI_OFF or
     (rp.new_params['a'].param_value == rc.flags.AUDIO_SRC_OFF and rp.new_params['m'] ~= nil) then
@@ -549,6 +555,8 @@ function getNextRouteState(rp, check_str)
       param_name = df['a'].param_name,
       param_value = rc.flags.AUDIO_SRC_OFF,
     }
+
+    -- BOTH ///////////////////////////////
   elseif rp.new_params['a'] == nil and rp.new_params['m'] ~= nil then
     rp.next = 3 -- add both
   end
