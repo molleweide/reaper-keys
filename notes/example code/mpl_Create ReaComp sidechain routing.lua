@@ -1,11 +1,3 @@
--- @description Create ReaComp sidechain routing from selected track to track under mouse cursor
--- @version 1.04
--- @author MPL
--- @website http://forum.cockos.com/showthread.php?t=188335
--- @changelog
---    # change send mode to Pre-Fader (Post-FX)
-
-
 threshold = 0.25
 ratio = 0.06
 defsendvol = 1

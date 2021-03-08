@@ -47,15 +47,22 @@ function mod.applyZoneDefaultRoutes(trk_obj, zone_name)
       end
 
     end
+
+    -- setup ghost kicks
+
+    if trk_obj.name:match('^kick') then
+      trr.updateState('(ghostkick)#[0|0]', trk_obj.guid)
+    end
+
   end
 end
 
-function mod.sendKicksToGhost(trk_obj)
-  if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MAS') then
-    -- should include 'A' as well!!!
-    -- name ^kick . send to 'ghostkick'
-  end
-end
+-- function mod.sendKicksToGhost(trk_obj)
+--   if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MAS') then
+--     -- should include 'A' as well!!!
+--     -- name ^kick . send to 'ghostkick'
+--   end
+-- end
 
 function mod.applyMappedOptMChildren(parent_obj, opt_m_children, count_w_range)
   -- local count_w_range = count_w_range

@@ -1,8 +1,13 @@
 # REAPER KEYS TODO
 
-- send kicks to ghost track
-
 - sidechain reacomp ommand
+    add fx 
+    rename fx
+    set fx params
+    create send
+
+- remove master sends on new tracks
+
 
 - convert syntax into submodule
     https://stackoverflow.com/questions/30325758/git-conversion-of-a-subdirectory-to-a-submodule
