@@ -1,8 +1,11 @@
 # REAPER KEYS TODO
 
+- convert syntax into submodule
+    https://stackoverflow.com/questions/30325758/git-conversion-of-a-subdirectory-to-a-submodule
+    https://duckduckgo.com/?q=git+convert+subdir+into+submodule&ia=web&iai=r1-0&page=1&sexp=%7B%22cdrexp%22%3A%22b%22%2C%22artexp%22%3A%22b%22%2C%22prodexp%22%3A%22b%22%2C%22prdsdexp%22%3A%22c%22%2C%22biaexp%22%3A%22b%22%2C%22msvrtexp%22%3A%22b%22%2C%22ebayexp%22%3A%22b%22%7D
+    new project reaper-syntax
 
-
-
+- refactor action
 
 - dev
   log everything that relates to paths
@@ -38,45 +41,7 @@
 
 * fx > config state > log touched parameter
 
-
   very interesting config variable for ui dev
 
 * hide tracks?!
 
-# other
-
-## regions =================================================
-
-- add ability to save notes to the region. ?
-
-# UNUSED KEYS ==============================================
-
-folder keys f/c/<TAB>
-enter track o/O
-
-## RK internals
-
-how does state_machine get the actual key press sent to it?
-
-## FAST PRODUCTION SETUP ===================================
-
-- templates
-
-  create a function that takes and saves all components of the project.
-
-  master
-  drums
-  music
-  fx
-
-  ```lua
-  -- auto store and create importable modules of the current project
-  -- increment names in
-  for each zone
-  for each group
-  ```
-
-## RNDM ====================================================
-
-nice. this shit is fucking good. i slept really well last night and
-i am super excited now to go to the gym and do some moe workng out today.

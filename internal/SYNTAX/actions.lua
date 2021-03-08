@@ -31,14 +31,14 @@ function actions.applyConfigs()
 
         -- M
 
-        -- MC
+        -- refactor into MC applyMidiLaneMapping(parent_obj, child_obj)
 
         if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MC') and syntax_utils.trackObjHasOption(LVL2_obj, 'm') then
           trr.updateState('-#',LVL2_obj.guid) -- remove all sends
           opt_m_children[#opt_m_children+1] = LVL3_obj -- collect m_opt_obj for reverse looping later
         end
 
-        -- C
+        -- refactor into C applyChannelSplits(parent_obj, child_obj)
 
         if LVL3_obj.class == 'C' then
           trr.updateState('-#', LVL3_obj.guid)
@@ -47,9 +47,10 @@ function actions.applyConfigs()
           end
         end
 
-        -- MS
+        -- refactor into MS applyZoneDefaultRoutes(parent_obj, child_obj, zone_name)
 
         if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MS') then
+          -- should include 'A' as well!!!
           local has_sends = trr.trackHasSends(LVL3_obj.guid, rc.flags.CAT_SEND)
           if not has_sends then
             if LVL1_obj.name == 'DRUMS_ZONE' then
@@ -68,9 +69,22 @@ function actions.applyConfigs()
           -- name ^kick . send to 'ghostkick'
         end
 
+
+        -- refactor applyGhostSends
+
+        if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MS') then
+          -- should include 'A' as well!!!
+          -- name ^kick . send to 'ghostkick'
+        end
+
+
         -- A //////////////////////////////////////////////////////////////////////
 
       end -- LEVEL 3 -------
+
+
+
+      -- refactor into applyPianoLaneMapping()
 
       -- MIDI MAPPING m=1 | reverse loop //////////////////////////////////////////
 

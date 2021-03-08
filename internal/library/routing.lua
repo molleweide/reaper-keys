@@ -24,7 +24,7 @@ local USER_INPUT_TARGETS_DIV = '|'
 --        upon writing a lot of send funcs I find that CreateTrackSend(track, nil)
 --          creates a wierd kind of hwout that i have to remove manually.
 --          it does not show up when logging route states
---          no error!!!!!!!!!!!!!!!!!!!!
+--          no error hmmm
 --
 --      TODO
 --
@@ -93,11 +93,6 @@ function routing.updateState(route_str, coded_sources, coded_dests)
     rp.coded_targets = true
     ret, rp = setRouteTargetGuids(rp, 'dst_guids', coded_dests)
   end
-
-  -- if route_str:match('SUM_DRUMS') then
-  --   lrp(rp)
-  -- end
-  -- lrp(rp)
 
   if rp.remove_routes then
     handleRemoval(rp)

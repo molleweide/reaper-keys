@@ -1,49 +1,40 @@
 # RNDM
 
-how can i tell how to send to submix
+# other
 
-i could add the match name to parent. but i could
-also create track name prefixesy
+## regions =================================================
 
-oooh! create three trackNamePrefixMatch list
+- add ability to save notes to the region. ?
 
-now things are starting to come together.
+# UNUSED KEYS ==============================================
 
-and the important thing now is to just bind things together
-so that i can get going with this. 
+folder keys f/c/<TAB>
+enter track o/O
 
-then i can improve on it and work more and more along the way
-but now the ground work is almost finished.
+## RK internals
 
-i have to find out why i have so little memory left on the computer.
-i have to then start producing and this will become a more andm
-more crystalized flow that is a slow strter but it has an exponential
-leverage effect because since you can modularize everything.
-therfore I well be able to reuse everything always and work
-faster and faster. this is absolutely insane actually.
+how does state_machine get the actual key press sent to it?
 
-nyw i just have to fix my body compltely so that i can work
-efficently but this is unrelated to th actual production work.
-but it is a huge prerequisit.
+## FAST PRODUCTION SETUP ===================================
 
-because when i can set sidechain comp, auto rout, dublicate
-segments, and navigate fx. mix, pan and set effects. now weare
-really starting to get things glued together. this will then
-later allow for hooking up to the web with a web interface 
-so that one can manage songs and projects with crypto.
+- templates
 
-and hook people up with computers and stuff so that others can
-participate. this is pretty cool. then we could work together
-multiple people with multiple computers and anyone in my 
-vicinity can participat on a project. i just send people
-links when they are on the same network as i am.
+  create a function that takes and saves all components of the project.
 
-and later ths will probably allow me to set up automatic dj setupMidiInputPreProcessorOnSelTrks
-and do automatic live production. we'll see what comes out of this.
+  master
+  drums
+  music
+  fx
 
-by connecting mult computers and dong crazy production in a bit 
-sci fi way. this is possible and i am going to do it.
+  ```lua
+  -- auto store and create importable modules of the current project
+  -- increment names in
+  for each zone
+  for each group
+  ```
 
-i am going to fucking do this and this is going to be tha shit.
+## RNDM ====================================================
 
+nice. this shit is fucking good. i slept really well last night and
+i am super excited now to go to the gym and do some moe workng out today.
 
