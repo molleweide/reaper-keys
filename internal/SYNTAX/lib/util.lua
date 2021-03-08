@@ -130,4 +130,18 @@ function util.getParentGroupByTrIdx(vtt, child_idx)
   return parent_group_obj, parent_group_tr, parent_group_idx
 end
 
+
+-- input name
+-- return 'drums', 'music', 'fx', 'vocals'
+function util.trackNameMatchCategory(name)
+
+  -- for each cat_type
+  --    for each name prefix
+  --      match ^prefix
+  --        return cat_type
+
+  -- return false
+
+end
+
 return util

@@ -1,11 +1,14 @@
 # REAPER KEYS TODO
 
-- routes
-    trackHasSends()
-      send to mix sum
+
+
+
 
 - dev
   log everything that relates to paths
+
+- fx > replace fx at index w/fxNew `<<<<<<<<<<<<<<<<<<<`
+  so that I can switch synths
 
 - syntax/fx never use track indices >>> gui!!
 
@@ -26,24 +29,15 @@
   test
   fuck up as much as possible
 
-- add default route for syntax
-
-  if match drum names >>> route to sum_drums
-  if match music names >>> route to sum_music
-
 * create custom action for bypassing currently highlighted and active window fx.
 
 * create definitions/defaults/fx.lua
   is there something basic that I can do with an fx mode.
 
-- segments
-
 - denite >>> ability to set configs on the fly just like `:set` in vim?
 
 * fx > config state > log touched parameter
 
-- fx > replace fx at index w/fxNew `<<<<<<<<<<<<<<<<<<<`
-  so that I can switch synths
 
   very interesting config variable for ui dev
 

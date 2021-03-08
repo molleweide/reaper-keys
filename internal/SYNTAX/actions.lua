@@ -15,16 +15,10 @@ local actions = {}
 ------------------------------------------------------------------------------------------
 function actions.applyConfigs()
   log.clear()
-  -- log.user('\n\n### applyConf ###########################################')
   local vtt = syntax.getVerifiedTree()
-  -- log.user(format.vtt(vtt))
-
-  -- LEVEL 1 //////////////////////////////////////////////////////
 
   for i, LVL1_obj in pairs(vtt) do ------------------------------ lvl 1 ------------
     syntax_utils.setClassTrackInfo(config.classes, LVL1_obj)
-
-    -- LEVEL 2 //////////////////////////////////////////////////////
 
     for j, LVL2_obj in pairs(LVL1_obj.children) do ------------- lvl 2 ------------
       local count_w_range     = 24 -- put in config
@@ -32,59 +26,67 @@ function actions.applyConfigs()
 
       local opt_m_children = {}
 
-      -- LEVEL 3 //////////////////////////////////////////////////////
-
       for k, LVL3_obj in pairs(LVL2_obj.children) do ----------- lvl 3 ------------
         syntax_utils.setClassTrackInfo(config.classes, LVL3_obj) -- why pass config? stupid..
 
-        -- M ///////////////////////////////////////////////////////////////////////////////
-        --
-        -- if has no send
+        -- M
 
-        -- MC //////////////////////////////////////////////////////////////////////////////
+        -- MC
 
         if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MC') and syntax_utils.trackObjHasOption(LVL2_obj, 'm') then
-          trr.updateState('-S',LVL2_obj.guid) -- remove all sends
+          trr.updateState('-#',LVL2_obj.guid) -- remove all sends
           opt_m_children[#opt_m_children+1] = LVL3_obj -- collect m_opt_obj for reverse looping later
         end
 
-        -- C /////////////////////////////////////////////////////////////////////////////
+        -- C
 
         if LVL3_obj.class == 'C' then
-          trr.updateState('-S', LVL3_obj.guid)
+          trr.updateState('-#', LVL3_obj.guid)
           for s, split_obj in pairs(LVL3_obj.children) do
             trr.updateState('{0|'..s..'}', LVL2_obj.guid, split_obj.guid)
+          end
+        end
+
+        -- MS
+
+        if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MS') then
+          local has_sends = trr.trackHasSends(LVL3_obj.guid, rc.flags.CAT_SEND)
+          if not has_sends then
+            if LVL1_obj.name == 'DRUMS_ZONE' then
+              trr.updateState('(SUM_DRUMS)#[0|0]', LVL3_obj.guid)
+            elseif LVL1_obj.name == 'MUSIC_ZONE' then
+              trr.updateState('(SUM_MUSIC)#[0|0]', LVL3_obj.guid)
+            elseif LVL1_obj.name == 'FX_ZONE' then
+              trr.updateState('(SUM_FX)#[0|0]', LVL3_obj.guid)
+            elseif LVL1_obj.name == 'VOCALS_ZONE' then
+              -- trr.updateState('{0|'..s..'}', LVL2_obj.guid, split_obj.guid)
+            else
+              trr.updateState('(MIX_BUSS)#[0|0]', LVL3_obj.guid)
             end
           end
+
+          -- name ^kick . send to 'ghostkick'
         end
 
-        -- MS //////////////////////////////////////////////////////////////////////////////
-        --
-        -- if has no send
-        --  send to mix
-        if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MS') then
-          local ret = trr.trackHasSends(LVL3_obj.guid, rc.FLAGS.CAT_SEND)
-          if not ret then
-            log.user('has no sends: ' .. LVL3_obj.name)
-          end
-        end
+        -- A //////////////////////////////////////////////////////////////////////
 
-        -- MIDI MAPPING m=1 /////////////////////////////////////////////////////////
-        -- put this above under MC?!
+      end -- LEVEL 3 -------
 
-        -- take care of reveres/ascending (piano roll) mappings
-        for k=1, #opt_m_children do
-          local rev_idx = #opt_m_children + 1 - k -- reverse idx !!!
-          local trk_obj = opt_m_children[rev_idx]
-          trr.updateState('S{0|0}', LVL2_obj.guid, trk_obj.guid)
-          fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
-          count_w_range = midi.updatePianoRoll(LVL2_obj, trk_obj, count_w_range)
-        end
-      end -- LEVEL 2
-    end -- LEVEL 1
-  end
+      -- MIDI MAPPING m=1 | reverse loop //////////////////////////////////////////
 
-  function ypcMidiSegments(LVL2_parent_obj, tr_idx_first, tr_idx_last, MIDI_LOW_btm)
+      for k=1, #opt_m_children do
+        local rev_idx = #opt_m_children + 1 - k -- reverse idx !!!
+        local trk_obj = opt_m_children[rev_idx]
+        trr.updateState('#{0|0}', LVL2_obj.guid, trk_obj.guid)
+        fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
+        count_w_range = midi.updatePianoRoll(LVL2_obj, trk_obj, count_w_range)
+      end
+
+    end -- LEVEL 2 --------
+  end -- LEVEL 1 --------
+end
+
+function ypcMidiSegments(LVL2_parent_obj, tr_idx_first, tr_idx_last, MIDI_LOW_btm)
     local MC_SEL_COUNT = 0
     local MIDI_HIGH = 0
     local MIDI_HIGH_top

@@ -93,6 +93,10 @@ function routing.updateState(route_str, coded_sources, coded_dests)
     ret, rp = setRouteTargetGuids(rp, 'dst_guids', coded_dests)
   end
 
+  -- if route_str:match('SUM_DRUMS') then
+  --   lrp(rp)
+  -- end
+
   if rp.remove_routes then
     handleRemoval(rp)
   elseif not rp.user_input then
@@ -434,11 +438,11 @@ function extractParamsFromString(rp, str)
     rp.remove_routes = true
     rp.remove_both = true
   end
-  if str:find('S') then
+  if str:find('%#') then
     rp.category = 0
     rp.remove_both = false
   end
-  if str:find('R') then
+  if str:find('%$') then
     rp.category = -1
     rp.remove_both = false
   end
@@ -458,7 +462,10 @@ function extractParamsFromString(rp, str)
 
 
   if dst_tr_data ~= nil then
-    local dst_tr_split =  getStringSplitPattern(dst_tr_data, USER_INPUT_TARGETS_DIV)
+    local dst_tr_split =  str_util.getStringSplitPattern(dst_tr_data, USER_INPUT_TARGETS_DIV)
+
+    -- log.user('dest: ' .. format.block(dst_tr_split))
+
     local ret, rp = setRouteTargetGuids(rp, 'dst_guids', dst_tr_split)
   end
 
@@ -693,6 +700,7 @@ function updateRouteState_Track(src_tr, rp, rid)
 
     :: continue ::
   end
+  -- lrp(rp)
 end
 
 --  OTHER

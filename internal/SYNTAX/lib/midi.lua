@@ -7,7 +7,7 @@ local midi = {}
 
 function midi.updatePianoRoll(grp_obj,child_obj, count_w_range)
   if count_w_range > 127 then
-    log.user("TrackOptionError: "..tdx.." : Note range for group (" ..  grp_obj.name .. ") exceedes 127.") -- add group name to this err msg
+    log.user("TrackOptionError: "..child_obj.trackIndex.." : Note range for group (" ..  grp_obj.name .. ") exceedes 127.") -- add group name to this err msg
     return false
   end
 

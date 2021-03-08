@@ -13,7 +13,7 @@ A can only have one send to B (i think)
 
 ## category ##################################################
 
-S/R for category = send/recieve
+`#/$` for category = send/recieve
 
 ## SOURCE / DESTINATION TRACKS STRING ##################################
 
@@ -71,10 +71,10 @@ then delete route index
 ## REMOVE ####################################################
 
 -             remove all sends / recieves of selection, or coded sources
--S            remove all sends on sel tr | or code
+-#            remove all sends on sel tr | or code
 -R            remove all recieves on sel tr | or code
 -(ghost)R     delete all recieves from track match:ghost to selection
--(kick)S      delete all sends on match:tr_name to sel
+-(kick)#      delete all sends on match:tr_name to sel
 -(A)(B)       delete all A recieves from B
 -(12)           remove all on tr 12
 
