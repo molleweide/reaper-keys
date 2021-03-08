@@ -1,5 +1,9 @@
 # REAPER KEYS TODO
 
+- send kicks to ghost track
+
+- sidechain reacomp ommand
+
 - convert syntax into submodule
     https://stackoverflow.com/questions/30325758/git-conversion-of-a-subdirectory-to-a-submodule
     https://duckduckgo.com/?q=git+convert+subdir+into+submodule&ia=web&iai=r1-0&page=1&sexp=%7B%22cdrexp%22%3A%22b%22%2C%22artexp%22%3A%22b%22%2C%22prodexp%22%3A%22b%22%2C%22prdsdexp%22%3A%22c%22%2C%22biaexp%22%3A%22b%22%2C%22msvrtexp%22%3A%22b%22%2C%22ebayexp%22%3A%22b%22%7D
