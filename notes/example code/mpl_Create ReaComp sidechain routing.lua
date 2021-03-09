@@ -6,17 +6,17 @@ defsendvol = 1
 function main(threshold, ratio, defsendvol)
 
   -- get source
-  src_tr = {}
-  for tr_i = 1, CountSelectedTracks(0) do
-    track = GetSelectedTrack(0,tr_i-1)
-    src_tr[#src_tr+1] = GetTrackGUID( track )
-  end
-  if #src_tr == 0 then return end
+  -- src_tr = {}
+  -- for tr_i = 1, CountSelectedTracks(0) do
+  --   track = GetSelectedTrack(0,tr_i-1)
+  --   src_tr[#src_tr+1] = GetTrackGUID( track )
+  -- end
+  -- if #src_tr == 0 then return end
 
   -- get dest
-  dest_tr = VF_GetTrackUnderMouseCursor()
-  if not dest_tr then return end
-  dest_trGUID = GetTrackGUID( dest_tr )
+  -- dest_tr = VF_GetTrackUnderMouseCursor()
+  -- if not dest_tr then return end
+  -- dest_trGUID = GetTrackGUID( dest_tr )
 
   -- increase chan
   ch_cnt = GetMediaTrackInfo_Value( dest_tr, 'I_NCHAN' )

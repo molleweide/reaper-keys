@@ -1,26 +1,19 @@
 local ru = require('custom_actions.utils')
 local log = require('utils.log')
--- local str_util = require('utils.string')
 local format = require('utils.format')
--- local config = require('definitions.config')
 local rc = require('definitions.routing')
 local df = rc.default_params
 
 local rlib = require('library.route.rlib')
-local rlog = require('library.route.rlib_log')
+local rlib_log = require('library.route.rlib_log')
 local rlib_targets = require('library.route.rlib_targets')
 local rlib_string = require('library.route.rlib_string')
 
 local routing = {}
 
-local input_placeholder = "(176)" -- used for testing purps
-
--- I was trying format the text box but I did not get it to work
-local route_help_str = "route params:\n" .. "\nk int  = category" .. "\ni int  = send idx"
+local input_placeholder = ""
+local route_help_str = "route params:"
 local div = '\n##########################################\n\n'
--- local div2 = '---------------------------------'
-
--- local USER_INPUT_TARGETS_DIV = '|'
 
 --
 --      REAPER BUG
@@ -51,18 +44,15 @@ local div = '\n##########################################\n\n'
 --      - mute
 --      - flip phase
 
---  PUBLIC | move to custom.lua ???
-
--- func for testing that coded targets are working.
--- ie. using routing.updateState within code instead
--- of using it in-app.
 function routing.testCodedTargets()
+  -- func for testing that coded targets are working.
+  -- ie. using routing.updateState within code instead
+  -- of using it in-app.
   log.user('test coded targets')
   local guid_src = getMatchedTrackGUIDs('TEST_A')
   local guid_dst = getMatchedTrackGUIDs('TEST_B')
 
   log.user(format.block(guid_src[1]))
-  -- log.user(guid_src)
 
   routing.create('[0|2]R', guid_src[#guid_src].guid, guid_dst[#guid_dst].guid)
 end
@@ -119,12 +109,10 @@ function routing.trackHasSends(guid, cat)
   return false
 end
 
--- refactor these into one with variable arguments
 function routing.removeAllSends(tr) rlib.removeAllRoutesTrack(tr) end
 function routing.removeAllRecieves(tr) rlib.removeAllRoutesTrack(tr, 1) end
 function routing.removeAllBoth(tr) rlib.removeAllRoutesTrack(tr, 2) end
 
--- refactor and put back to log
 function routing.logRoutingInfoForSelectedTracks()
   -- log.clear()
   local log_t = ru.getSelectedTracksGUIDs()
@@ -135,11 +123,11 @@ function routing.logRoutingInfoForSelectedTracks()
 
     log.user('\n'..div..'\n:: routes for track #' .. tr_idx+1 .. ' `' .. current_name .. '`:')
     log.user('\n\tSENDs:')
-    rlog.logRoutesByCategory(tr, rc.flags.CAT_SEND)
+    rlib_log.logRoutesByCategory(tr, rc.flags.CAT_SEND)
     log.user('\tRECIEVEs:')
-    rlog.logRoutesByCategory(tr, rc.flags.CAT_REC)
+    rlib_log.logRoutesByCategory(tr, rc.flags.CAT_REC)
     log.user('\tHARDWARE:')
-    rlog.logRoutesByCategory(tr, rc.flags.CAT_HW)
+    rlib_log.logRoutesByCategory(tr, rc.flags.CAT_HW)
   end
 end
 

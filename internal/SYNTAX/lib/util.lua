@@ -4,6 +4,7 @@ local log = require('utils.log')
 
 local util = {}
 
+-- wtf never use tr idx
 function util.gt(child_obj)
   local tr = reaper.GetTrack(0, child_obj.trackIndex)
   return tr

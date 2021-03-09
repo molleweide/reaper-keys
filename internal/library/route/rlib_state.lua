@@ -33,9 +33,6 @@ function rlib_state.getPrevRouteState(rp, src_tr, dest_tr)
   return rp
 end
 
-
--- this function has to be improved.
-
 function rlib_state.getNextRouteState(rp, check_str)
 
   local a_present = false
@@ -83,7 +80,7 @@ function rlib_state.getNextRouteState(rp, check_str)
   elseif rp.new_params['a'] == nil and rp.new_params['m'] ~= nil then
     rp.next = 3 -- add both
   end
-  return rp -- we should never arrive here i think since default always is add audio send
+  return rp
 end
 
 return rlib_state
