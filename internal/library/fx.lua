@@ -1,4 +1,5 @@
 -- dofile(reaper.GetResourcePath().."/UserPlugins/ultraschall_api.lua")
+local ru = require('custom_actions.utils')
 local log = require('utils.log')
 
 local fx_util = {}
@@ -7,6 +8,16 @@ local fx_util = {}
 local REC_FX = 0x1000000
 
 --[[-------------------------------
+
+TODO
+
+- make sure only GUIDS are used in this file as arguments
+
+- bypass fx
+
+-- rec/norec could be refactored into base fn
+
+-----------------------------------
 
 
 retval, minval, maxval = reaper.TrackFX_GetParam(track, fx_idx, param_idx)
@@ -32,6 +43,34 @@ reaper.TrackFX_CopyToTrack(src_track, src_fx, dest_track, dest_fx, is_move)
 
 -----------------------------------]]--
 
+
+function fx_util.insertFxToLastIndex(tgui, fx_str, is_rec_fx)
+  reaper.TrackFX_AddByName(tr, fx_str, true, -1) -- add to last index
+end
+
+
+-- check if named fx exists. this is much more specific than only looking for a
+-- specific fx since two instances of same fx can different purposes...
+function fx_util.trackHasFxChainString(guid, fx_str, is_rec_fx)
+
+  local tr = ru.getTrackByGUID(guid)
+
+  if is_rec_fx then
+    local tc = reaper.TrackFX_GetRecCount(tr) - 1
+    for i = 0, tc - 1 do
+      local fxc_str = fx_util.getSetTrackFxNameByFxChainIndex(tr, i, true) -- TODO rec fx
+      if fx_str == fxc_str then return true end
+    end
+
+  else
+    local tc = reaper.TrackFX_GetCount(tr) - 1
+    for i = 0, tc - 1 do
+      local fxc_str = fx_util.getSetTrackFxNameByFxChainIndex(tr, i, false) -- TODO rec fx
+      if fx_str == fxc_str then return true end
+    end
+  end
+  return false
+end
 
 
 -- add ability to add last fx index
@@ -96,7 +135,7 @@ function fx_util.setParamForFxAtIndex(tr, fx_idx, param, value, is_rec_fx)
   end
 end
 
-function fx_util.getSetTrackFxNameByFxChainIndex(tr,idx_fx,is_rec_fx, newName)
+function fx_util.getSetTrackFxNameByFxChainIndex(tr, idx_fx, is_rec_fx, newName)
   local strT, found, slot = {}
   local Pcall
   local FXGUID

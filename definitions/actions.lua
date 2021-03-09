@@ -33,6 +33,7 @@ return {
   gCut = syntax.gcut,
   gPut = syntax.gput,
   gYank = syntax.gyank,
+  sidechainToGhosKick = syntax.sidechainToGhosKick,
   -- SaveAllTracksAsTemplate = { -- not working!!!
   --   "Reset",
   --   "FirstTrack",

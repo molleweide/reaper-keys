@@ -20,7 +20,7 @@ return {
     },
     track_selector = {},
     track_operator = {
-      -- ["a"] = "ArmTracksWithMidiRouter",
+     -- ["a"] = "ArmTracksWithMidiRouter",
     },
     timeline_operator = {},
     timeline_selector = {},
@@ -40,6 +40,7 @@ return {
           ["R"] = "RepeatInsertTimeSelection",
           ["S"] = "SaveAllTracksAsTemplate",
           ["w"] = "ApplyConfigs",
+          ["sk"] = "sidechainToGhosKick",
       }}
     },
   },

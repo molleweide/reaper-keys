@@ -1,12 +1,14 @@
 # REAPER KEYS TODO
 
-- sidechain reacomp ommand
-    add fx 
-    rename fx
-    set fx params
-    create send
+- sidechain ghost
+    test add fx 
+    create route
 
-- remove master sends on new tracks
+- midi actions!
+    get fast
+
+- create custom insert tracks
+  prevent master send
 
 
 - convert syntax into submodule

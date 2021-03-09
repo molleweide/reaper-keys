@@ -1,3 +1,5 @@
+local ru = require('custom_actions.utils')
+local fx_util = require('library.fx')
 local format = require('utils.format')
 local log = require('utils.log')
 local syntax = require('SYNTAX.syntax.syntax')
@@ -53,33 +55,28 @@ function actions.gput()
   actions.applyConfigs()
 end
 
-function actions.sidechainTracks()
-  if tr_util.isSel() then -- FALLBACK SRC SEL
-  end
-    -- rp['src_guids'] = ru.getSelectedTracksGUIDs()
-  -- -- insert reacomp
-  -- local reacompid = TrackFX_AddByName( dest_tr, 'ReaComp (Cockos)', false, 1 )
-  -- TrackFX_SetOpen(dest_tr, reacompid, true)
-  -- TrackFX_SetParam(dest_tr, reacompid, 0, threshold)
-  -- TrackFX_SetParam(dest_tr, reacompid, 1, ratio)
-  -- TrackFX_SetParam(dest_tr, reacompid, 8, (1/1084)*2)
+-- TODO
+--
+-- if 'MASB' ??
+function actions.sidechainToGhosKick()
+  local t_sel = ru.getSelectedTracksGUIDs()
+  for i, t_tr in pairs(t_sel) do ------------- lvl 2 ------------
+    if not fx_util.trackHasFxChainString(t_tr.guid, 'SC_GHOST_KICK', false) then
+      local fx_search_str = "ReaSamplOmatic5000",
+      fx_util.insertFxToLastIndex(t_tr.guid, fx_search_str, false)
+      local tc = reaper.TrackFX_GetCount(tr) - 1
 
-  for i = 1, reaper.CountSelectedTracks(0) do
-    local tr = reaper.GetSelectedTrack(0,i-1)
+      -- fix never use guids!!!
+      local tr = ru.getTrackByGUID(t_tr.guid)
 
-    -- if has fx named GHOST_SC
-      -- add fx last
+      fx.getSetTrackFxNameByFxChainIndex(tr, tc, true, 'SC_GHOST_KICK')
 
-    -- local zeroth_idx_name = fx.getSetTrackFxNameByFxChainIndex(tr, 0, true) -- TODO rec fx
-    -- if zeroth_idx_name == 'RK_MIDI_PRE_PROCESSOR' then
-    --   updateMidiPreProcessorByInputDevice(tr)
-    -- else
-    --   local fx_str = 'midi-rec-pre.jsfx' -- INSERT MIDI PRE PROCESSOR JSFX
-    --   fx.insertFxAtIndex(tr, fx_str, 0, true)
-    --   fx.getSetTrackFxNameByFxChainIndex(tr,0, true, 'RK_MIDI_PRE_PROCESSOR')
-    --   updateMidiPreProcessorByInputDevice(tr)
-    -- end
+      -- TrackFX_SetParam(dest_tr, reacompid, 0, threshold)
+      -- TrackFX_SetParam(dest_tr, reacompid, 1, ratio)
+      -- TrackFX_SetParam(dest_tr, reacompid, 8, (1/1084)*2)
 
+      -- recieve into reacomp
+    end
   end
 end
 
