@@ -59,23 +59,56 @@ end
 --
 -- if 'MASB' ??
 function actions.sidechainToGhosKick()
+
   local t_sel = ru.getSelectedTracksGUIDs()
-  for i, t_tr in pairs(t_sel) do ------------- lvl 2 ------------
+
+  for i, t_tr in pairs(t_sel) do
+
     if not fx_util.trackHasFxChainString(t_tr.guid, 'SC_GHOST_KICK', false) then
-      local fx_search_str = "ReaSamplOmatic5000",
-      fx_util.insertFxToLastIndex(t_tr.guid, fx_search_str, false)
+
+
+    -- EXAMPLE
+    --
+    -- -- insert reacomp
+    -- local reacompid = TrackFX_AddByName( dest_tr, 'ReaComp (Cockos)', false, 1 )
+    -- TrackFX_SetOpen(dest_tr, reacompid, true)
+    -- TrackFX_SetParam(dest_tr, reacompid, 0, threshold)
+    -- TrackFX_SetParam(dest_tr, reacompid, 1, ratio)
+
+    -- -- this has to be setting to recieve from aux track.
+    -- TrackFX_SetParam(dest_tr, reacompid, 8, (1/1084)*2) -- what is this?
+
+
+
+    -- ADD REACOMP <<<<<<
+      local fx_search_str = "ReaSamplOmatic5000"
+      local fx_idx = fx_util.insertFxToLastIndex(t_tr.guid, fx_search_str, false)
       local tc = reaper.TrackFX_GetCount(tr) - 1
+
+
 
       -- fix never use guids!!!
       local tr = ru.getTrackByGUID(t_tr.guid)
 
       fx.getSetTrackFxNameByFxChainIndex(tr, tc, true, 'SC_GHOST_KICK')
 
+
+
+      -- FX_IDX
+      --
+      --  set reacomp params
+      --
       -- TrackFX_SetParam(dest_tr, reacompid, 0, threshold)
       -- TrackFX_SetParam(dest_tr, reacompid, 1, ratio)
       -- TrackFX_SetParam(dest_tr, reacompid, 8, (1/1084)*2)
 
-      -- recieve into reacomp
+
+
+      -- recieve into reacomp track
+      -- rlib.update('',,)
+
+
+
     end
   end
 end
