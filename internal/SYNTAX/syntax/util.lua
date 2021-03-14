@@ -4,7 +4,6 @@ local trr = require('library.routing')
 local fx = require('SYNTAX.lib.fx')
 local midi = require('SYNTAX.lib.midi')
 
-
 local mod = {}
 
 function mod.prepareMidiTracksForLaneMapping(parent_obj, child_obj, opt_m_children)
@@ -48,30 +47,57 @@ function mod.applyZoneDefaultRoutes(trk_obj, zone_name)
 
     end
 
-    -- setup ghost kicks
-
+    -- setup ghost kicks | mv to fn
     if trk_obj.name:match('^kick') then
       trr.updateState('(ghostkick)#[0|0]', trk_obj.guid)
     end
-
   end
 end
 
--- function mod.sendKicksToGhost(trk_obj)
---   if syntax_utils.strHasOneOfChars(LVL3_obj.class, 'MAS') then
---     -- should include 'A' as well!!!
---     -- name ^kick . send to 'ghostkick'
---   end
--- end
-
 function mod.applyMappedOptMChildren(parent_obj, opt_m_children, count_w_range)
-  -- local count_w_range = count_w_range
   for k=1, #opt_m_children do
     local rev_idx = #opt_m_children + 1 - k -- reverse idx !!!
     local trk_obj = opt_m_children[rev_idx]
     trr.updateState('#{0|0}', parent_obj.guid, trk_obj.guid)
     fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
     count_w_range = midi.updatePianoRoll(parent_obj, trk_obj, count_w_range)
+  end
+end
+
+--
+function mod.sidechainToGhostKick(rec_from_track_name_match, fx_gui_name, fn_filt)
+
+  -- use class filter, 'MASB' to make sure i only route tracks
+  -- that make sense. ie. in this case only audio out tracks.
+  -- not midi out tracks, eg. 'GC'
+  --
+  -- pass this as a filter function.
+  -- so that I can submit a pr without having to submit my sytax files.
+
+  local t_sel = ru.getSelectedTracksGUIDs()
+  for i, t_tr in pairs(t_sel) do
+
+    -- CHECK IF GUI NAME EXISTS
+    if not fx_util.trackHasFxChainString(t_tr.guid, fx_gui_name, false) then
+
+    -- ADD FX > refactor into funcion addSideChainFx(trguid, fx_search_str,fx_gui_name) ??
+    --    also pass fx params as a table.
+    --      just for fun make things easier to manage.
+    local fx_search_str = "ReaSamplOmatic5000"
+    local fx_idx = fx_util.insertFxToLastIndex(t_tr.guid, fx_search_str, false)
+    local tr = ru.getTrackByGUID(t_tr.guid)
+    fx.getSetTrackFxNameByFxChainIndex(tr, tc, true, fx_gui_name)
+
+    --  SET FX PARAMS | mv to setFxParamsFromTable(tr_guid, fx_idx, t_params)
+    reaper.TrackFX_SetParam(tr, fx_idx, 0, threshold)
+    reaper.TrackFX_SetParam(tr, fx_idx, 1, ratio)
+    reaper.TrackFX_SetParam(tr, fx_idx, 8, (1/1084)*2)
+
+    -- ROUTE CREATE RECIEVE FROM GHOST
+    local route_str = '('..rec_from_track_name_match..')$[0|2]'
+    trr.updateState(route_str, t_tr.guid)
+
+    end
   end
 end
 

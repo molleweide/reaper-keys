@@ -45,7 +45,7 @@ reaper.TrackFX_CopyToTrack(src_track, src_fx, dest_track, dest_fx, is_move)
 
 
 function fx_util.insertFxToLastIndex(tgui, fx_str, is_rec_fx)
-  reaper.TrackFX_AddByName(tr, fx_str, true, -1) -- add to last index
+  return reaper.TrackFX_AddByName(tr, fx_str, true, -1) -- add to last index
 end
 
 
