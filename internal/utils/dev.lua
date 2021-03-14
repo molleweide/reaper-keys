@@ -1,6 +1,16 @@
 
 local dev = {}
 
+
+-- TODO
+--
+--    add input fx
+--
+--    also show the source-file-name
+--      so that one can easilly search add new fx.
+--
+
+-- log all fx params of last touched fx
 function dev.logLastTouchedFxParams()
   local retval, tracknumber, itemnumber, fxnumber = reaper.GetFocusedFX()
 
@@ -38,6 +48,21 @@ function dev.logLastTouchedFxParams()
     end
   end
   reaper.defer(function() end)
+end
+
+-- create binding C-, 'L'
+function logLastTouchedFxParamDetails()
+  retval, tracknumber, fxnumber, paramnumber = reaper.GetLastTouchedFX()
+  if retval then
+    tr =  reaper.CSurf_TrackFromID( tracknumber, false )
+    retval, fxname = reaper.TrackFX_GetFXName( tr, fxnumber, '' )
+    retval, parname = reaper.TrackFX_GetParamName( tr, fxnumber, paramnumber, '' )
+    val = reaper.TrackFX_GetParamNormalized( tr, fxnumber, paramnumber)
+    retval, valf = reaper.TrackFX_GetFormattedParamValue(  tr, fxnumber, paramnumber,'' )
+    retval, trname = reaper.GetTrackName( tr, '' )
+    reaper.ClearConsole()
+    reaper.ShowConsoleMsg(trname..'\nfx#'..(fxnumber+1)..' - '..fxname..'\nparameter#'..(paramnumber+1)..' - '..parname..'\nvalue: '..val..'\nFormatted value: '..valf)
+  end
 end
 
 function dev.logPaths()

@@ -4,12 +4,17 @@
     test add fx 
     create route
 
+- log fx params detailed
+
+- fx mode
+
 - midi actions!
     get fast
 
 - create custom insert tracks
-  prevent master send
-
+  prevent master send!
+  use custom track name
+    default prefix = ''
 
 - convert syntax into submodule
     https://stackoverflow.com/questions/30325758/git-conversion-of-a-subdirectory-to-a-submodule
@@ -17,14 +22,14 @@
     new project reaper-syntax
 
 - dev
+  fx params detailed
   log everything that relates to paths
 
 - fx > replace fx at index w/fxNew `<<<<<<<<<<<<<<<<<<<`
-  so that I can switch synths
+    change fuzzy to fuzzy
 
 - syntax/fx never use track indices >>> gui!!
 
-- create custom o/O commands >> never enter text fields
 
 - route log list and fdbk
   gui
@@ -53,4 +58,3 @@
   very interesting config variable for ui dev
 
 * hide tracks?!
-
