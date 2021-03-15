@@ -1,4 +1,7 @@
 local rc = require('definitions.routing')
+local format = require('utils.format')
+local log = require('utils.log')
+local ru = require('custom_actions.utils')
 local syntax_utils = require('SYNTAX.lib.util')
 local trr = require('library.routing')
 local fx_util = require('library.fx')
@@ -74,11 +77,11 @@ function mod.applyKeydFxToSelTrks(fn_filt, fx_gui_name, fx_search_str, fx_params
     local passed_filter = false
     if fn_filt or fn_filt() then passed_filter = true end
     if passed_filter and not fx_util.trackHasFxChainString(t_tr.guid, fx_gui_name, false) then
-    fx_util.insertFxToLastIdxAndGuiRename(guid_tr, fx_search_str, fx_gui_name)
-    fx_util.setFxParamsFromTable(t_tr.guid, fx_idx, fx_params)
-    trr.updateState(route_str, t_tr.guid)
+      local fx_idx = fx_util.insertFxToLastIdxAndGuiRename(t_tr.guid, fx_search_str, fx_gui_name)
+      fx_util.setFxParamsFromTable(t_tr.guid, fx_idx, fx_params)
     end
   end
+  trr.updateState(route_str)
 end
 
 return mod

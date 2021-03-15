@@ -1,10 +1,14 @@
 # REAPER KEYS TODO
 
-- syntax use <.> as separator instead of <::>
+- fx set fx params by table
+    add number param
+     how is this done is sytax classes?
 
 - learn gui
+    what to do
 
 - fx mode
+    how is midi mode sensed?
 
 - switch sound source
     rename main synth to `SRC_1`
@@ -18,6 +22,8 @@
   prevent master send!
   use custom track name
     default prefix = ''
+
+- syntax use <.> as separator instead of <::>
 
 - change fuzzy to fuzzy
 

@@ -124,14 +124,18 @@ function rlib_string.extractParamsFromString(rp, str)
   -- HANDLE PARENTHESIS
   local ret, src_tr_data, dst_tr_data, str = extractParenthesisTargets(str)
 
+  -- log.user(ret, src_tr_data, dst_tr_data)
 
 
   if src_tr_data ~= nil then -- SRC PROVIDED
     local src_tr_split =  str_util.getStringSplitPattern(src_tr_data, USER_INPUT_TARGETS_DIV)
     local ret, rp = rlib_targets.setRouteTargetGuids(rp, 'src_guids', src_tr_split)
   elseif tr_util.isSel() then -- FALLBACK SRC SEL
+    -- log.user('only one paren')
     -- rp.src_from_selection = true
-    rp['src_guids'] = ru.getSelectedTracksGUIDs()
+    -- if rp.category == 0 then
+      rp['src_guids'] = ru.getSelectedTracksGUIDs()
+    -- end
   end
 
 
@@ -142,6 +146,9 @@ function rlib_string.extractParamsFromString(rp, str)
 
     local ret, rp = rlib_targets.setRouteTargetGuids(rp, 'dst_guids', dst_tr_split)
   end
+
+  -- log.user('rstr', format.block(rp.src_guids), format.block(rp.dst_guids))
+
 
   -- rp = assignGUIDsFromUserInput(rp, src_tr_data, dst_tr_data)
 

@@ -62,10 +62,11 @@ function actions.gput()
 end
 
 function actions.sidechainToGhostKick()
-  syntax_utils.applyKeydFxToSelTrks(
+  log.clear()
+  apply_funcs.applyKeydFxToSelTrks(
     true, -- tr_filt_hook
     'SC_GHOST_KICK', -- fx_gui_name
-    'ReaSamplOmatic5000', -- fx_search_str
+    'ReaComp (Cockos)', -- fx_search_str
     { -- fx_params
       [0] = 0.25,
       [1] = 0.06,

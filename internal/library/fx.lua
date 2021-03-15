@@ -45,32 +45,34 @@ reaper.TrackFX_CopyToTrack(src_track, src_fx, dest_track, dest_fx, is_move)
 
 
 function fx_util.insertFxToLastIndex(guid_tr, fx_str, is_rec_fx)
-  local tr = ru.getTrackByGUID(guid)
-  return reaper.TrackFX_AddByName(tr, fx_str, true, -1) -- add to last index
+  local tr = ru.getTrackByGUID(guid_tr)
+  return reaper.TrackFX_AddByName(tr, fx_str, is_rec_fx, -1) -- add to last index
 end
 
 
 -- check if named fx exists. this is much more specific than only looking for a
 -- specific fx since two instances of same fx can different purposes...
-function fx_util.trackHasFxChainString(guid, fx_str, is_rec_fx)
+function fx_util.trackHasFxChainString(guid_tr, fx_str, is_rec_fx)
+  local found = false
 
-  local tr = ru.getTrackByGUID(guid)
+  local tr = ru.getTrackByGUID(guid_tr)
 
   if is_rec_fx then
     local tc = reaper.TrackFX_GetRecCount(tr) - 1
     for i = 0, tc - 1 do
       local fxc_str = fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, i, true) -- TODO rec fx
-      if fx_str == fxc_str then return true end
+      if fx_str == fxc_str then found = true end
     end
 
   else
     local tc = reaper.TrackFX_GetCount(tr) - 1
-    for i = 0, tc - 1 do
+    for i = 0, tc do
       local fxc_str = fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, i, false) -- TODO rec fx
-      if fx_str == fxc_str then return true end
+      log.user(fxc_str, fx_str)
+      if fx_str == fxc_str then found = true end
     end
   end
-  return false
+  return found
 end
 
 
@@ -141,20 +143,20 @@ end
 
 
 
-function setFxParamsFromTable(tr_guid, fx_idx, t_params)
-    local tr = ru.getTrackByGUID(guid)
+function fx_util.setFxParamsFromTable(guid_tr, fx_idx, t_params)
+    local tr = ru.getTrackByGUID(guid_tr)
     for i, parm in pairs(t_params) do
       retval, parname = reaper.TrackFX_GetParamName( tr, fx_idx, i, '' )
-      log.user(i, parname, parm)
-      -- local ret = reaper.TrackFX_SetParam(tr, fx_idx, i, parm)
+      -- log.user(i, parname, parm)
+      local ret = reaper.TrackFX_SetParam(tr, fx_idx, i, parm)
     end
 end
 
 
-function insertFxToLastIdxAndGuiRename(guid_tr, fx_search_str, fx_gui_name)
-    local fx_idx = fx_util.insertFxToLastIndex(guid_tr, fx_search_str, false)
-    fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, fx_idx, true, fx_gui_name)
-end
+-- function insertFxToLastIdxAndGuiRename(guid_tr, fx_search_str, fx_gui_name)
+--     local fx_idx = fx_util.insertFxToLastIndex(guid_tr, fx_search_str, false)
+--     fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, fx_idx, true, fx_gui_name)
+-- end
 
 
 -- DON'T USE  `TRACKS`
@@ -230,7 +232,8 @@ end
 
 function fx_util.insertFxToLastIdxAndGuiRename(guid_tr, fx_search_str,fx_gui_name)
   local fx_idx = fx_util.insertFxToLastIndex(guid_tr, fx_search_str, false)
-  fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, fx_idx, true, fx_gui_name)
+  fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, fx_idx, false, fx_gui_name)
+  return fx_idx
 end
 
 

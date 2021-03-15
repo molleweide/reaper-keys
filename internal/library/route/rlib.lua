@@ -17,7 +17,7 @@ local rlib = {}
 
 local div = '\n##########################################\n\n'
 
-function lrp(r)
+function rlib.lrp(r)
   log.user(div, format.block(r))
 end
 

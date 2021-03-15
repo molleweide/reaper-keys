@@ -63,6 +63,7 @@ function routing.updateState(route_str, coded_sources, coded_dests)
   local rp = rc
   local _
 
+  -- log.user('route_str: ', route_str)
   -- !!!!
   --  I set remove_routes explicitly here. Why?
   --    Because on my second laptop this prop gets converted
@@ -80,6 +81,8 @@ function routing.updateState(route_str, coded_sources, coded_dests)
   ret, rp = rlib_string.extractParamsFromString(rp, route_str)
   if not ret then return end -- something went wrong
 
+  -- log.user('pre assign coded targets')
+
   if coded_sources ~= nil then
     rp.coded_targets = true
     ret, rp = rlib_targets.setRouteTargetGuids(rp, 'src_guids', coded_sources)
@@ -88,6 +91,8 @@ function routing.updateState(route_str, coded_sources, coded_dests)
     rp.coded_targets = true
     ret, rp = rlib_targets.setRouteTargetGuids(rp, 'dst_guids', coded_dests)
   end
+
+  -- rlib.lrp(rp)
 
   if rp.remove_routes then
     rlib.handleRemoval(rp)
