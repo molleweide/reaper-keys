@@ -44,7 +44,8 @@ reaper.TrackFX_CopyToTrack(src_track, src_fx, dest_track, dest_fx, is_move)
 -----------------------------------]]--
 
 
-function fx_util.insertFxToLastIndex(tgui, fx_str, is_rec_fx)
+function fx_util.insertFxToLastIndex(guid_tr, fx_str, is_rec_fx)
+  local tr = ru.getTrackByGUID(guid)
   return reaper.TrackFX_AddByName(tr, fx_str, true, -1) -- add to last index
 end
 
@@ -58,14 +59,14 @@ function fx_util.trackHasFxChainString(guid, fx_str, is_rec_fx)
   if is_rec_fx then
     local tc = reaper.TrackFX_GetRecCount(tr) - 1
     for i = 0, tc - 1 do
-      local fxc_str = fx_util.getSetTrackFxNameByFxChainIndex(tr, i, true) -- TODO rec fx
+      local fxc_str = fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, i, true) -- TODO rec fx
       if fx_str == fxc_str then return true end
     end
 
   else
     local tc = reaper.TrackFX_GetCount(tr) - 1
     for i = 0, tc - 1 do
-      local fxc_str = fx_util.getSetTrackFxNameByFxChainIndex(tr, i, false) -- TODO rec fx
+      local fxc_str = fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, i, false) -- TODO rec fx
       if fx_str == fxc_str then return true end
     end
   end
@@ -74,7 +75,8 @@ end
 
 
 -- add ability to add last fx index
-function fx_util.insertFxAtIndex(tr, fx_str, fx_insertTo_idx, is_rec_fx)
+function fx_util.insertFxAtIndex(guid_tr, fx_str, fx_insertTo_idx, is_rec_fx)
+  local tr, tr_idx = getTrackByGUID(search_guid)
   local is_move_flag = true -- required on order to reorder tracks
   if is_rec_fx then
     reaper.TrackFX_AddByName(tr, fx_str, true, -1) -- add to last index
@@ -96,18 +98,18 @@ function fx_util.insertFxAtIndex(tr, fx_str, fx_insertTo_idx, is_rec_fx)
   end
 end
 
-function fx_util.replaceFxAtIndex(tr, fx_str, fx_insertTo_idx, is_rec_fx)
-
+function fx_util.replaceFxAtIndex(guid_tr, fx_str, fx_insertTo_idx, is_rec_fx)
   if is_rec_fx then
-    fx_util.removeFxAtIndex(tr, fx_insertTo_idx, true)
-    fx_util.insertFxAtIndex(tr, fx_str, fx_insertTo_idx, true)
+    fx_util.removeFxAtIndex(guid_tr, fx_insertTo_idx, true)
+    fx_util.insertFxAtIndex(guid_tr, fx_str, fx_insertTo_idx, true)
   else
-    fx_util.removeFxAtIndex(tr, fx_insertTo_idx)
-    fx_util.insertFxAtIndex(tr, fx_str, fx_insertTo_idx)
+    fx_util.removeFxAtIndex(guid_tr, fx_insertTo_idx)
+    fx_util.insertFxAtIndex(guid, fx_str, fx_insertTo_idx)
   end
 end
 
-function fx_util.removeFxAtIndex(tr, fx_rm_idx, is_rec_fx)
+function fx_util.removeFxAtIndex(guid_tr, fx_rm_idx, is_rec_fx)
+  local tr, tr_idx = getTrackByGUID(guid_tr)
   if is_rec_fx then
     reaper.TrackFX_Delete(tr, REC_FX + fx_rm_idx)
   else
@@ -115,7 +117,8 @@ function fx_util.removeFxAtIndex(tr, fx_rm_idx, is_rec_fx)
   end
 end
 
-function fx_util.removeAllFXAfterIndex(tr, index)
+function fx_util.removeAllFXAfterIndex(guid_tr, index)
+  local tr, tr_idx = getTrackByGUID(guid_tr)
   local tc = reaper.TrackFX_GetCount(tr)
   local num_fx_after_i = tc - index
   while(num_fx_after_i > 0 ) do
@@ -127,11 +130,12 @@ function fx_util.removeAllFXAfterIndex(tr, index)
   end
 end
 
-function fx_util.setParamForFxAtIndex(tr, fx_idx, param, value, is_rec_fx)
+function fx_util.setParamForFxAtIndex(guid_tr, fx_idx, param, value, is_rec_fx)
+  local tr, tr_idx = getTrackByGUID(guid_tr)
   if is_rec_fx then
-      reaper.TrackFX_SetParam(tr, REC_FX + fx_idx, param, value)
+      reaper.TrackFX_SetParam(guid_tr, REC_FX + fx_idx, param, value)
   else
-      reaper.TrackFX_SetParam(tr, fx_idx, param, value)
+      reaper.TrackFX_SetParam(guid_tr, fx_idx, param, value)
   end
 end
 
@@ -147,16 +151,16 @@ function setFxParamsFromTable(tr_guid, fx_idx, t_params)
 end
 
 
-function insertFxToLastIdxAndGuiRename(trguid, fx_search_str,fx_gui_name)
-    local fx_idx = fx_util.insertFxToLastIndex(guid, fx_search_str, false)
-    local tr = ru.getTrackByGUID(t_tr.guid) -- fix !!!!!
-    -- fx_util.getSetTrackFxNameByFxChainIndex(trguid, fx_idx, true, fx_gui_name)
+function insertFxToLastIdxAndGuiRename(guid_tr, fx_search_str, fx_gui_name)
+    local fx_idx = fx_util.insertFxToLastIndex(guid_tr, fx_search_str, false)
+    fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, fx_idx, true, fx_gui_name)
 end
 
 
 -- DON'T USE  `TRACKS`
 --    ONLY GUID
-function fx_util.getSetTrackFxNameByFxChainIndex(tr, idx_fx, is_rec_fx, newName)
+function fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, idx_fx, is_rec_fx, newName)
+  local tr, tr_idx = getTrackByGUID(guid_tr)
   local strT, found, slot = {}
   local Pcall
   local FXGUID
@@ -223,7 +227,21 @@ function fx_util.getSetTrackFxNameByFxChainIndex(tr, idx_fx, is_rec_fx, newName)
   return trFxNameStr
 end
 
-function fx_util.bypassFX()
+
+function fx_util.insertFxToLastIdxAndGuiRename(guid_tr, fx_search_str,fx_gui_name)
+  local fx_idx = fx_util.insertFxToLastIndex(guid_tr, fx_search_str, false)
+  fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, fx_idx, true, fx_gui_name)
+end
+
+
+function fx_util.fxSetBypass(guid_tr, fx_idx, bypass)
+  -- 0 = off
+  -- 1 = one
+  -- 2 = toggle
+end
+
+function fx_util.fxBypassToggle(guid_tr, fx_idx)
+  fx_util.fxSetBypass(guid_tr, fx_idx, 2)
 end
 
 return fx_util

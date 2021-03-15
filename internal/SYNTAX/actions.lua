@@ -55,9 +55,17 @@ function actions.gput()
   actions.applyConfigs()
 end
 
--- create binding!!
 function actions.sidechainToGhostKick()
-  sidechainToGhostKick('ghostkick', 'SC_GHOST_KICK', 'MASB')
+  syntax_utils.applyKeydFxToSelTrks(
+    '(ghostkick)$[0|2]', -- recieve from ghostkick
+    'ReaSamplOmatic5000', -- add fx
+    'SC_GHOST_KICK', -- if not fx gui name
+    { -- fx params
+      [0] = 0.25,
+      [1] = 0.06,
+      [8] = ((1/1084)*2)
+    },
+    true) -- tr class type filter
 end
 
 return actions

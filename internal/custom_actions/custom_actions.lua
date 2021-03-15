@@ -91,7 +91,8 @@ function trackUpdateName(set_prefix)
   end
 end
 
-function updateMidiPreProcessorByInputDevice(tr)
+function updateMidiPreProcessorByInputDevice(guid_tr)
+  local tr, tr_idx = getTrackByGUID(guid_tr)
   local tr_rec_in = reaper.GetMediaTrackInfo_Value(tr, 'I_RECINPUT')
   local midi_device_offset = 4096
   local device_mask = 2016
@@ -105,34 +106,33 @@ function updateMidiPreProcessorByInputDevice(tr)
 
   if enabled_device == nil then return end
   if enabled_device == io.midi.vkb then
-    fx.setParamForFxAtIndex(tr, 0, 1, 0, true) -- set device
-    fx.setParamForFxAtIndex(tr, 0, 2, 0, true) -- set mode
+    fx.setParamForFxAtIndex(guid_tr, 0, 1, 0, true) -- set device
+    fx.setParamForFxAtIndex(guid_tr, 0, 2, 0, true) -- set mode
   end
 
   if enabled_device == io.midi.qmk then
-    fx.setParamForFxAtIndex(tr, 0, 1, 1, true) -- set device
-    fx.setParamForFxAtIndex(tr, 0, 2, 1, true) -- set mode
+    fx.setParamForFxAtIndex(guid_tr, 0, 1, 1, true) -- set device
+    fx.setParamForFxAtIndex(guid_tr, 0, 2, 1, true) -- set mode
   end
 
   if enabled_device == io.midi.roland then
-    fx.setParamForFxAtIndex(tr, 0, 1, 2, true) -- set device
-    fx.setParamForFxAtIndex(tr, 0, 2, 6, true) -- set mode
+    fx.setParamForFxAtIndex(guid_tr, 0, 1, 2, true) -- set device
+    fx.setParamForFxAtIndex(guid_tr, 0, 2, 6, true) -- set mode
   end
 end
 
-
 function custom_actions.setupMidiInputPreProcessorOnSelTrks()
-  for i = 1, reaper.CountSelectedTracks(0) do
-    local tr = reaper.GetSelectedTrack(0,i-1)
-    -- local _, name = reaper.GetTrackName(tr, "")
-    local zeroth_idx_name = fx.getSetTrackFxNameByFxChainIndex(tr, 0, true) -- TODO rec fx
+  local t_sel = ru.getSelectedTracksGUIDs()
+  for i = 1, #t_sel do
+    local guid_tr = t_sel.guid
+    local zeroth_idx_name = fx.getSetTrackFxNameByFxChainIndex(guid_tr, 0, true) -- TODO rec fx
     if zeroth_idx_name == 'RK_MIDI_PRE_PROCESSOR' then
-      updateMidiPreProcessorByInputDevice(tr)
+      updateMidiPreProcessorByInputDevice(guid_tr)
     else
       local fx_str = 'midi-rec-pre.jsfx' -- INSERT MIDI PRE PROCESSOR JSFX
-      fx.insertFxAtIndex(tr, fx_str, 0, true)
-      fx.getSetTrackFxNameByFxChainIndex(tr,0, true, 'RK_MIDI_PRE_PROCESSOR')
-      updateMidiPreProcessorByInputDevice(tr)
+      fx.insertFxAtIndex(guid_tr, fx_str, 0, true)
+      fx.getSetTrackFxNameByFxChainIndex(guid_tr,0, true, 'RK_MIDI_PRE_PROCESSOR')
+      updateMidiPreProcessorByInputDevice(guid_tr)
     end
   end
 end

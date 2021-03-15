@@ -68,40 +68,15 @@ function mod.applyMappedOptMChildren(parent_obj, opt_m_children, count_w_range)
 end
 
 
-function mod.sidechainToGhostKick(rec_from_track_name_match, fx_gui_name, fn_filt)
-
-  -- use class filter, 'MASB' to make sure i only route tracks
-  -- that make sense. ie. in this case only audio out tracks.
-  -- not midi out tracks, eg. 'GC'
-  --
-  -- pass this as a filter function.
-  -- so that I can submit a pr without having to submit my sytax files.
-
+function mod.applyKeydFxToSelTrks(route_str, fx_search_str, fx_gui_name, fx_params, fn_filt)
   local t_sel = ru.getSelectedTracksGUIDs()
   for i, t_tr in pairs(t_sel) do
-
-    -- CHECK IF GUI NAME EXISTS
-    if not fx_util.trackHasFxChainString(t_tr.guid, fx_gui_name, false) then
-
-
-    -- ADD FX >>> insertFxToLastIdxAndGuiRename(trguid, fx_search_str,fx_gui_name) ??
-    --    how do i search and replace all tr >>> guid
-    local fx_search_str = "ReaSamplOmatic5000"
-    local fx_idx = fx_util.insertFxToLastIndex(t_tr.guid, fx_search_str, false)
-    local tr = ru.getTrackByGUID(t_tr.guid) -- fix
-    fx_util.getSetTrackFxNameByFxChainIndex(tr, fx_idx, true, fx_gui_name)
-
-
-    --  SET FX PARAMS | thresh, ratio, aux
-    local t_params = { [0] = 0.25, [1] = 0.06, [8] = ((1/1084)*2) }
-    fx_util.setFxParamsFromTable(tr_guid, fx_idx, t_params)
-
-
-    -- ROUTE CREATE RECIEVE FROM GHOST
-    local route_str = '('..rec_from_track_name_match..')$[0|2]'
-    log.user('route_str: ' .. route_str)
-    -- trr.updateState(route_str, t_tr.guid)
-
+    local passed_filter = false
+    if fn_filt or fn_filt() then passed_filter = true end
+    if passed_filter and not fx_util.trackHasFxChainString(t_tr.guid, fx_gui_name, false) then
+    fx_util.insertFxToLastIdxAndGuiRename(guid_tr, fx_search_str, fx_gui_name)
+    fx_util.setFxParamsFromTable(t_tr.guid, fx_idx, fx_params)
+    trr.updateState(route_str, t_tr.guid)
     end
   end
 end
