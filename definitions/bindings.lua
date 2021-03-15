@@ -40,7 +40,7 @@ return {
           ["R"] = "RepeatInsertTimeSelection",
           ["S"] = "SaveAllTracksAsTemplate",
           ["w"] = "ApplyConfigs",
-          ["sk"] = "sidechainToGhosKick",
+          ["sk"] = "sidechainSelToGhostKick",
       }}
     },
   },

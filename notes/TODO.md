@@ -4,8 +4,6 @@
     test add fx 
     create route
 
-- log fx params detailed
-
 - fx mode
 
 - midi actions!

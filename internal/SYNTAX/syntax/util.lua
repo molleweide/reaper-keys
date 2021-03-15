@@ -1,6 +1,7 @@
 local rc = require('definitions.routing')
 local syntax_utils = require('SYNTAX.lib.util')
 local trr = require('library.routing')
+local fx_util = require('library.fx')
 local fx = require('SYNTAX.lib.fx')
 local midi = require('SYNTAX.lib.midi')
 
@@ -54,6 +55,8 @@ function mod.applyZoneDefaultRoutes(trk_obj, zone_name)
   end
 end
 
+
+-- CREATE MIDI LANE MAPPINGS
 function mod.applyMappedOptMChildren(parent_obj, opt_m_children, count_w_range)
   for k=1, #opt_m_children do
     local rev_idx = #opt_m_children + 1 - k -- reverse idx !!!
@@ -64,7 +67,7 @@ function mod.applyMappedOptMChildren(parent_obj, opt_m_children, count_w_range)
   end
 end
 
---
+
 function mod.sidechainToGhostKick(rec_from_track_name_match, fx_gui_name, fn_filt)
 
   -- use class filter, 'MASB' to make sure i only route tracks
@@ -80,22 +83,24 @@ function mod.sidechainToGhostKick(rec_from_track_name_match, fx_gui_name, fn_fil
     -- CHECK IF GUI NAME EXISTS
     if not fx_util.trackHasFxChainString(t_tr.guid, fx_gui_name, false) then
 
-    -- ADD FX > refactor into funcion addSideChainFx(trguid, fx_search_str,fx_gui_name) ??
-    --    also pass fx params as a table.
-    --      just for fun make things easier to manage.
+
+    -- ADD FX >>> insertFxToLastIdxAndGuiRename(trguid, fx_search_str,fx_gui_name) ??
+    --    how do i search and replace all tr >>> guid
     local fx_search_str = "ReaSamplOmatic5000"
     local fx_idx = fx_util.insertFxToLastIndex(t_tr.guid, fx_search_str, false)
-    local tr = ru.getTrackByGUID(t_tr.guid)
-    fx.getSetTrackFxNameByFxChainIndex(tr, tc, true, fx_gui_name)
+    local tr = ru.getTrackByGUID(t_tr.guid) -- fix
+    fx_util.getSetTrackFxNameByFxChainIndex(tr, fx_idx, true, fx_gui_name)
 
-    --  SET FX PARAMS | mv to setFxParamsFromTable(tr_guid, fx_idx, t_params)
-    reaper.TrackFX_SetParam(tr, fx_idx, 0, threshold)
-    reaper.TrackFX_SetParam(tr, fx_idx, 1, ratio)
-    reaper.TrackFX_SetParam(tr, fx_idx, 8, (1/1084)*2)
+
+    --  SET FX PARAMS | thresh, ratio, aux
+    local t_params = { [0] = 0.25, [1] = 0.06, [8] = ((1/1084)*2) }
+    fx_util.setFxParamsFromTable(tr_guid, fx_idx, t_params)
+
 
     -- ROUTE CREATE RECIEVE FROM GHOST
     local route_str = '('..rec_from_track_name_match..')$[0|2]'
-    trr.updateState(route_str, t_tr.guid)
+    log.user('route_str: ' .. route_str)
+    -- trr.updateState(route_str, t_tr.guid)
 
     end
   end

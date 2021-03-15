@@ -135,6 +135,27 @@ function fx_util.setParamForFxAtIndex(tr, fx_idx, param, value, is_rec_fx)
   end
 end
 
+
+
+function setFxParamsFromTable(tr_guid, fx_idx, t_params)
+    local tr = ru.getTrackByGUID(guid)
+    for i, parm in pairs(t_params) do
+      retval, parname = reaper.TrackFX_GetParamName( tr, fx_idx, i, '' )
+      log.user(i, parname, parm)
+      -- local ret = reaper.TrackFX_SetParam(tr, fx_idx, i, parm)
+    end
+end
+
+
+function insertFxToLastIdxAndGuiRename(trguid, fx_search_str,fx_gui_name)
+    local fx_idx = fx_util.insertFxToLastIndex(guid, fx_search_str, false)
+    local tr = ru.getTrackByGUID(t_tr.guid) -- fix !!!!!
+    -- fx_util.getSetTrackFxNameByFxChainIndex(trguid, fx_idx, true, fx_gui_name)
+end
+
+
+-- DON'T USE  `TRACKS`
+--    ONLY GUID
 function fx_util.getSetTrackFxNameByFxChainIndex(tr, idx_fx, is_rec_fx, newName)
   local strT, found, slot = {}
   local Pcall

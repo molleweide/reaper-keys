@@ -5,16 +5,12 @@
 local lib = require('library')
 -- provides functions which are specific to reaper-keys, such as macros
 -- search for 'lib' in the default actions file to see examples
+
 local custom = require('custom_actions')
 -- provides custom functions which make use of the reaper api
 -- search for 'custom' in the default actions file to see examples
 
-local dev = require('utils.dev')
-
-
 local syntax = require('SYNTAX.actions')
-
--- local reaper_syntax = require('reaper_syntax')
 
 -- naming conventions:
 -- a noun implies an action which selects the noun, or a movement to it's position
@@ -25,7 +21,6 @@ local syntax = require('SYNTAX.actions')
 return {
   FuzzyFx = "_RSd7bf7022d92114682d354e90dbe8aef580a5ef5c",
   ApplyConfigs = syntax.applyConfigs,
-  LogLastTouchFxParams = dev.logLastTouchedFxParams,
   TrackInSet_MIDI_QMK = {lib.io_device.setInputTo_MIDI_QMK, custom.setupMidiInputPreProcessorOnSelTrks},
   TrackInSet_MIDI_GRAND_ROLAND = {lib.io_device.setInputTo_MIDI_GRAND_ROLAND, custom.setupMidiInputPreProcessorOnSelTrks},
   TrackInSet_MIDI_VIRTUAL = {lib.io_device.setInputTo_MIDI_VIRTUAL, custom.setupMidiInputPreProcessorOnSelTrks},
@@ -33,7 +28,7 @@ return {
   gCut = syntax.gcut,
   gPut = syntax.gput,
   gYank = syntax.gyank,
-  sidechainToGhosKick = syntax.sidechainToGhosKick,
+  sidechainToGhostKick = syntax.sidechainToGhostKick,
   -- SaveAllTracksAsTemplate = { -- not working!!!
   --   "Reset",
   --   "FirstTrack",

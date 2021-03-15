@@ -1,5 +1,6 @@
 local lib = require('library')
 local custom = require('custom_actions')
+local dev = require('utils.dev')
 
 return {
   ActivateNextMidiItem = {40833, midiCommand=true},
@@ -75,6 +76,9 @@ return {
   DeleteMark = {lib.marks.delete, registerAction=true},
   DeleteNote = {40002, midiCommand=true},
   DeleteTimeline = 40201,
+  devLogAllParamsOfLastTouchedFx = dev.logLastTouchedFxParams,
+  devLogLastTouchedFxParamDetailed = dev.logLastTouchedFxParamDetails,
+  devLogPaths = dev.logPaths,
   InsertTrackFromTemplate = 46000,
   EnterTrackAbove = {"InsertTrackAbove", "ColorTrackWithTrackBelow", "RenameTrack"},
   EnterTrackBelow = {"InsertTrackBelow", "ColorTrackWithTrackAbove", "RenameTrack"},

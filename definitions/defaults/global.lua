@@ -129,6 +129,11 @@ return {
     }},
     ["<SPC>"] = { "+leader commands", {
         ["<SPC>"] = "ShowActionList",
+        ["d"] = { "+zoom/scroll", {
+            ["l"] = "devLogAllParamsOfLastTouchedFx",
+            ["L"] = "devLogLastTouchedFxParamDetailed",
+            ["p"] = "devLogPaths",
+        }},
         ["i"] = { "+i/o device", {
           ["q"] = "TrackInSet_MIDI_QMK",
           ["g"] = "TrackInSet_MIDI_GRAND_ROLAND",

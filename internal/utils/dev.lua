@@ -51,7 +51,7 @@ function dev.logLastTouchedFxParams()
 end
 
 -- create binding C-, 'L'
-function logLastTouchedFxParamDetails()
+function dev.logLastTouchedFxParamDetails()
   retval, tracknumber, fxnumber, paramnumber = reaper.GetLastTouchedFX()
   if retval then
     tr =  reaper.CSurf_TrackFromID( tracknumber, false )
