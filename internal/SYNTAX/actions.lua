@@ -57,15 +57,16 @@ end
 
 function actions.sidechainToGhostKick()
   syntax_utils.applyKeydFxToSelTrks(
-    '(ghostkick)$[0|2]', -- recieve from ghostkick
-    'ReaSamplOmatic5000', -- add fx
-    'SC_GHOST_KICK', -- if not fx gui name
-    { -- fx params
+    true, -- tr_filt_hook
+    'SC_GHOST_KICK', -- fx_gui_name
+    'ReaSamplOmatic5000', -- fx_search_str
+    { -- fx_params
       [0] = 0.25,
       [1] = 0.06,
-      [8] = ((1/1084)*2)
+      [8] = (1/1084)*2
     },
-    true) -- tr class type filter
+    '(ghostkick)$[0|2]' -- route_str | recieve from name match tr
+  )
 end
 
 return actions

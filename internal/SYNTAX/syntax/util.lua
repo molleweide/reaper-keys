@@ -67,8 +67,8 @@ function mod.applyMappedOptMChildren(parent_obj, opt_m_children, count_w_range)
   end
 end
 
-
-function mod.applyKeydFxToSelTrks(route_str, fx_search_str, fx_gui_name, fx_params, fn_filt)
+-- move to lib
+function mod.applyKeydFxToSelTrks(fn_filt, fx_gui_name, fx_search_str, fx_params, route_str)
   local t_sel = ru.getSelectedTracksGUIDs()
   for i, t_tr in pairs(t_sel) do
     local passed_filter = false
