@@ -19,11 +19,15 @@ function actions.applyConfigs()
 
     for j, LVL2_obj in pairs(LVL1_obj.children) do ------------- lvl 2 ------------
 
+      -- log.user(LVL3_obj.trackIndex, LVL3_obj.name)
+
       local count_w_range = 24 -- put in config
       syntax_utils.setClassTrackInfo(config.classes, LVL2_obj)
       local opt_m_children = {}
 
       for k, LVL3_obj in pairs(LVL2_obj.children) do ----------- lvl 3 ------------
+
+        -- log.user(LVL3_obj.trackIndex, LVL3_obj.name)
 
         syntax_utils.setClassTrackInfo(config.classes, LVL3_obj) -- why pass config? stupid..
         opt_m_children = apply_funcs.prepareMidiTracksForLaneMapping(LVL2_obj, LVL3_obj, opt_m_children)
@@ -31,6 +35,8 @@ function actions.applyConfigs()
         apply_funcs.applyZoneDefaultRoutes(LVL3_obj, LVL1_obj.name)
 
         for l, LVL4_obj in pairs(LVL3_obj.children) do ----------- lvl 4 ------------
+
+          -- log.user(LVL3_obj.trackIndex, LVL3_obj.name)
 
           apply_funcs.applyZoneDefaultRoutes(LVL4_obj, LVL1_obj.name) -- only works for MA not S atm
 

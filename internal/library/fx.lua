@@ -160,7 +160,7 @@ end
 -- DON'T USE  `TRACKS`
 --    ONLY GUID
 function fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, idx_fx, is_rec_fx, newName)
-  local tr, tr_idx = getTrackByGUID(guid_tr)
+  local tr, tr_idx = ru.getTrackByGUID(guid_tr)
   local strT, found, slot = {}
   local Pcall
   local FXGUID

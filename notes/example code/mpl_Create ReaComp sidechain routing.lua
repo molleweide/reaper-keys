@@ -98,7 +98,6 @@ function main(threshold, ratio, defsendvol)
 
 
 
-
   ---------------------------------------------------------------------
   function CheckFunctions(str_func) local SEfunc_path = reaper.GetResourcePath()..'/Scripts/MPL Scripts/Functions/mpl_Various_functions.lua' local f = io.open(SEfunc_path, 'r')  if f then f:close() dofile(SEfunc_path) if not _G[str_func] then  reaper.MB('Update '..SEfunc_path:gsub('%\\', '/')..' to newer version', '', 0) else return true end  else reaper.MB(SEfunc_path:gsub('%\\', '/')..' missing', '', 0) end   end
   --------------------------------------------------------------------
@@ -109,7 +108,6 @@ function main(threshold, ratio, defsendvol)
     main(threshold, ratio, defsendvol)
     Undo_EndBlock('Create ReaComp sidechain routing', -1)
   end
-
 
 
 

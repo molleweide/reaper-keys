@@ -1,5 +1,6 @@
 local ru = require('custom_actions.utils')
 local log = require('utils.log')
+local format = require('utils.format')
 local tr_util = require('utils.track')
 local table_util = require('utils.table')
 
@@ -13,8 +14,12 @@ function targets.setRouteTargetGuids(rp, key, new_tracks_data)
   local tr_guids = {}
   -- log.user(key, format.block(type(new_tracks_data)))
   if type(new_tracks_data) ~= 'table' then -- NOT TABLE ::::::::::::::
-    if new_tracks_data == '<not_working_yet>' then
-      -- track
+    if type(new_tracks_data) == 'string' then
+      local match_t = tr_util.getMatchedTrackGUIDs(new_tracks_data)
+      if match_t ~= false then
+        local tr_guids = table_util.tableConcat(tr_guids, match_t)
+      end
+
     elseif ru.getTrackByGUID(new_tracks_data) ~= false then
       retval = true
       local tr, tr_idx = ru.getTrackByGUID(new_tracks_data)
@@ -28,8 +33,12 @@ function targets.setRouteTargetGuids(rp, key, new_tracks_data)
   else -- TABLE :::::::::::::::::::::::::::::::::::::::::::::::::::::
     retval = true
     for i = 1, #new_tracks_data do
-      if new_tracks_data == '<not_working_yet>' then
-        --
+      if type(new_tracks_data) == 'string' then
+        local match_t = tr_util.getMatchedTrackGUIDs(new_tracks_data[i])
+        if match_t ~= false then
+          local tr_guids = table_util.tableConcat(tr_guids, match_t)
+        end
+
       elseif ru.getTrackByGUID(new_tracks_data[i]) ~= false then
         local tr, tr_idx = ru.getTrackByGUID(new_tracks_data[i])
         local _, current_name = reaper.GetTrackName(tr)
@@ -42,12 +51,12 @@ function targets.setRouteTargetGuids(rp, key, new_tracks_data)
         local guid_from_tr = ru.getGUIDByTrack(tr)
         tr_guids[i] = { name = current_name, guid = guid_from_tr }
       else
-        local match_t = tr_util.getMatchedTrackGUIDs(new_tracks_data[i])
-        local tr_guids = table_util.tableConcat(tr_guids, match_t)
+        -- log.user('new tracks data NOT table but did not pass as TRACK/GUID')
       end
     end -- for
   end -- table
 
+  if #tr_guids == 0 then retval = false end
   if retval then rp[key] = tr_guids end
   return retval, rp
 end

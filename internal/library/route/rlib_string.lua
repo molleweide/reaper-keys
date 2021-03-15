@@ -1,5 +1,6 @@
 local ru = require('custom_actions.utils')
 local log = require('utils.log')
+local format = require('utils.format')
 local str_util = require('utils.string')
 local midi_util = require('utils.midi')
 local tr_util = require('utils.track')

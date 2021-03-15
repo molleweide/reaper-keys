@@ -1,8 +1,5 @@
 # FZF 
 
-
-
-
 fzf function
 
   - specify how/where to search

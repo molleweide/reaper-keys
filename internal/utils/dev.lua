@@ -50,7 +50,6 @@ function dev.logLastTouchedFxParams()
   reaper.defer(function() end)
 end
 
--- create binding C-, 'L'
 function dev.logLastTouchedFxParamDetails()
   retval, tracknumber, fxnumber, paramnumber = reaper.GetLastTouchedFX()
   if retval then
