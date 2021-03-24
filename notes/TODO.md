@@ -1,9 +1,8 @@
 # REAPER KEYS TODO
 
 # VKB
-- move vkb to def/global.lua
-- test vkb on 2nd laptop
-- create timeout noteoff
+- create timeout noteoff?
+    temporary until you can do note offs
 
 # FZF
 

@@ -678,4 +678,5 @@ return {
     TrackInSet_MIDI_VIRTUAL = {lib.io_device.setInputTo_MIDI_VIRTUAL, custom.setupMidiInputPreProcessorOnSelTrks},
     TrackInSet_MIDI_DEFAULT = {lib.io_device.setInputTo_MIDI_DEFAULT, custom.setupMidiInputPreProcessorOnSelTrks},
 
+  SetModeVKB = lib.state.setModeVirtualKeyboard,
   }

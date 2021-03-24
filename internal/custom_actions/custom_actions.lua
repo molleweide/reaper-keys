@@ -1,4 +1,5 @@
 local log = require('utils.log')
+local ru = require('custom_actions.utils')
 local config = require('definitions.config')
 local format = require('utils.format')
 local fx = require('library.fx')
@@ -124,7 +125,10 @@ end
 function custom_actions.setupMidiInputPreProcessorOnSelTrks()
   local t_sel = ru.getSelectedTracksGUIDs()
   for i = 1, #t_sel do
-    local guid_tr = t_sel.guid
+    local guid_tr = t_sel[i].guid
+
+    -- log.user('insid setup io', guid_tr)
+
     local zeroth_idx_name = fx.getSetTrackFxNameByFxChainIndex(guid_tr, 0, true) -- TODO rec fx
     if zeroth_idx_name == 'RK_MIDI_PRE_PROCESSOR' then
       updateMidiPreProcessorByInputDevice(guid_tr)

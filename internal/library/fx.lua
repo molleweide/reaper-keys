@@ -78,9 +78,10 @@ end
 
 -- add ability to add last fx index
 function fx_util.insertFxAtIndex(guid_tr, fx_str, fx_insertTo_idx, is_rec_fx)
-  local tr, tr_idx = getTrackByGUID(search_guid)
+  local tr, tr_idx = ru.getTrackByGUID(guid_tr)
   local is_move_flag = true -- required on order to reorder tracks
   if is_rec_fx then
+    log.user('pre add fx', tr)
     reaper.TrackFX_AddByName(tr, fx_str, true, -1) -- add to last index
     local fx_idx_last = reaper.TrackFX_GetRecCount(tr) - 1
     if fx_idx_last ~= fx_insertTo_idx then
@@ -111,7 +112,7 @@ function fx_util.replaceFxAtIndex(guid_tr, fx_str, fx_insertTo_idx, is_rec_fx)
 end
 
 function fx_util.removeFxAtIndex(guid_tr, fx_rm_idx, is_rec_fx)
-  local tr, tr_idx = getTrackByGUID(guid_tr)
+  local tr, tr_idx = ru.getTrackByGUID(guid_tr)
   if is_rec_fx then
     reaper.TrackFX_Delete(tr, REC_FX + fx_rm_idx)
   else
@@ -120,7 +121,7 @@ function fx_util.removeFxAtIndex(guid_tr, fx_rm_idx, is_rec_fx)
 end
 
 function fx_util.removeAllFXAfterIndex(guid_tr, index)
-  local tr, tr_idx = getTrackByGUID(guid_tr)
+  local tr, tr_idx = ru.getTrackByGUID(guid_tr)
   local tc = reaper.TrackFX_GetCount(tr)
   local num_fx_after_i = tc - index
   while(num_fx_after_i > 0 ) do
@@ -133,7 +134,7 @@ function fx_util.removeAllFXAfterIndex(guid_tr, index)
 end
 
 function fx_util.setParamForFxAtIndex(guid_tr, fx_idx, param, value, is_rec_fx)
-  local tr, tr_idx = getTrackByGUID(guid_tr)
+  local tr, tr_idx = ru.getTrackByGUID(guid_tr)
   if is_rec_fx then
       reaper.TrackFX_SetParam(guid_tr, REC_FX + fx_idx, param, value)
   else
