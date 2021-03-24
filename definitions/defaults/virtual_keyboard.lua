@@ -18,16 +18,81 @@
 --  you don't even have to load it
 --
 return {
+    -- go back
     ["e"] = "SetModeNormal",
     ["i"] = "SetModeNormal",
-    [";"] = "VKBSendMidi_A_2",
-    ["l"] = "VKBSendMidi_Gs2",
-    ["k"] = "VKBSendMidi_G_2",
-    ["j"] = "VKBSendMidi_Fs2",
-    ["h"] = "VKBSendMidi_F_2",
-    ["g"] = "VKBSendMidi_E_2",
-    ["f"] = "VKBSendMidi_Ds2",
-    ["d"] = "VKBSendMidi_D_2",
-    ["s"] = "VKBSendMidi_Cs2",
-    ["a"] = "VKBSendMidi_C_2",
+
+    -- note!!!
+    --
+    -- i have remapped my thumbs modifiers on LAPTOP
+    -- to be LT = tab, space, RT = enter
+    -- this is why i have mapped three notes to thumbs.
+    --
+    --    i use karabiner on macos to remap keys on macOS
+
+
+    -- layout
+    --
+    -- put this in config? / use multiple layouts?
+
+
+    -- other keys
+
+    -- ["="] = "A_4",
+    -- ["-"] = "A_4",
+    -- ["0"] = "A_4",
+    -- ["9"] = "A_4",
+    -- ["8"] = "Gs4",
+    -- ["7"] = "G_4",
+    -- ["6"] = "Fs4",
+    -- ["5"] = "F_4",
+    -- ["4"] = "E_4",
+    -- ["3"] = "Ds4",
+    -- ["2"] = "D_4",
+    -- ["1"] = "Cs4",
+
+    -- ["]"] = "A_3",
+    -- ["["] = "Gs3",
+    -- ["\\"] = "G_3",
+    -- ["'"] = "Fs3",
+
+    -- top keys
+    ["p"] = "F_3",
+    ["o"] = "E_3",
+    ["i"] = "Ds3",
+    ["u"] = "D_3",
+    ["y"] = "Cs3",
+    ["t"] = "C_3",
+    ["r"] = "B_2",
+    ["e"] = "As2",
+    ["w"] = "A_2",
+    ["q"] = "Gs2",
+
+    -- homerow
+    [";"] = "G_1",
+    ["l"] = "Fs1",
+    ["k"] = "F_1",
+    ["j"] = "E_1",
+    ["h"] = "Ds1",
+    ["g"] = "D_1",
+    ["f"] = "Cs1",
+    ["d"] = "C_1",
+    ["s"] = "B_0",
+    ["a"] = "As0",
+
+    -- lower keys
+    ["/"] = "A_0",
+    ["."] = "Gs0",
+    [","] = "G_0",
+    ["m"] = "Fs0",
+    ["n"] = "F_0",
+    ["b"] = "E_0",
+    ["v"] = "Ds0",
+    ["c"] = "D_0",
+    ["x"] = "Cs0",
+    ["z"] = "C_0",
+
+
+    -- lowest for me /
+    -- tab, space, enter
 }

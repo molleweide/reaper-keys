@@ -2,8 +2,10 @@
 
 # VKB
 
-- look at qmk and make vkb layout similar to that one
+- finish midi note layout. thumbs
+    tab/enter
 
+- create a setup in jsfx.
 
 
 - create timeout noteoff?
