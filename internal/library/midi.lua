@@ -46,7 +46,7 @@ function sendMidiNote(note_num)
   reaper.StuffMIDIMessage( MODE,  NOTE_OFF,  note_num,  VEL)
 end
 
-
+-- this string color makes it easier to read...
 local easy_read = [[
 \*\ eaper.StuffMIDIMessage(integer mode, integer msg1, integer msg2, integer msg3)
 
