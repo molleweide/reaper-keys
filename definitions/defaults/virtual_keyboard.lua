@@ -1,98 +1,65 @@
--- todo
---
---  i believe that I should be able to test now?!
---
---  it is quite annoying that i feel so annoyed by sitng at the cmputer.
---  but i really feel now that thingr are gong to get really nice.
---
---  i do believe that it hould be possible to do this machine learning hing
---  in reaper. it would be nice to have somebody to talk to that understands
---  music relly well that is also doing coding. becaue i do believe that
---
---  abcdefghijklmnopqrstuvwxyzåäö  str este  setns st s that
---  i don't understand wmy it is indenting like this.
---
---  marcur cannot imagine how powerful it is. because everything is kept
---  in code and all the functions are separated from the actual
---  keybindings this allows you to write code and instantly have it work.
---  you don't even have to load it
---
+-- ["\\"] = "xxx", -- backslask > key not added to reapr keys yet
+-- ["<backspace>"] = "xxx", -- backspace key not added to reapr keys yet
 return {
     -- go back
     ["e"] = "SetModeNormal",
     ["i"] = "SetModeNormal",
 
-    -- note!!!
-    --
-    -- i have remapped my thumbs modifiers on LAPTOP
-    -- to be LT = tab, space, RT = enter
-    -- this is why i have mapped three notes to thumbs.
-    --
-    --    i use karabiner on macos to remap keys on macOS
-
-
-    -- layout
-    --
-    -- put this in config? / use multiple layouts?
-
-
     -- other keys
 
-    -- ["="] = "A_4",
-    -- ["-"] = "A_4",
-    -- ["0"] = "A_4",
-    -- ["9"] = "A_4",
-    -- ["8"] = "Gs4",
-    -- ["7"] = "G_4",
-    -- ["6"] = "Fs4",
-    -- ["5"] = "F_4",
-    -- ["4"] = "E_4",
-    -- ["3"] = "Ds4",
-    -- ["2"] = "D_4",
-    -- ["1"] = "Cs4",
+    ["="] = "n47",
+    ["-"] = "n46",
+    ["0"] = "n45",
+    ["9"] = "n44",
+    ["8"] = "n43",
+    ["7"] = "n42",
+    ["6"] = "n41",
+    ["5"] = "n40",
+    ["4"] = "n39",
+    ["3"] = "n38",
+    ["2"] = "n37",
+    ["1"] = "n36",
 
-    -- ["]"] = "A_3",
-    -- ["["] = "Gs3",
-    -- ["\\"] = "G_3",
-    -- ["'"] = "Fs3",
+    ["]"] = "n35",
+    ["["] = "n34",
+    ["'"] = "n33",
+    ["<return>"] = "n32",
+    ["<TAB>"] = "n31",
+    ["<SPC>"] = "n30",
 
     -- top keys
-    ["p"] = "F_3",
-    ["o"] = "E_3",
-    ["i"] = "Ds3",
-    ["u"] = "D_3",
-    ["y"] = "Cs3",
-    ["t"] = "C_3",
-    ["r"] = "B_2",
-    ["e"] = "As2",
-    ["w"] = "A_2",
-    ["q"] = "Gs2",
+    ["p"] = "n29",
+    ["o"] = "n28",
+    ["i"] = "n27",
+    ["u"] = "n26",
+    ["y"] = "n25",
+    ["t"] = "n24",
+    ["r"] = "n23",
+    ["e"] = "n22",
+    ["w"] = "n21",
+    ["q"] = "n20",
 
     -- homerow
-    [";"] = "G_1",
-    ["l"] = "Fs1",
-    ["k"] = "F_1",
-    ["j"] = "E_1",
-    ["h"] = "Ds1",
-    ["g"] = "D_1",
-    ["f"] = "Cs1",
-    ["d"] = "C_1",
-    ["s"] = "B_0",
-    ["a"] = "As0",
+    [";"] = "n19",
+    ["l"] = "n18",
+    ["k"] = "n17",
+    ["j"] = "n16",
+    ["h"] = "n15",
+    ["g"] = "n14",
+    ["f"] = "n13",
+    ["d"] = "n12",
+    ["s"] = "n11",
+    ["a"] = "n10",
 
     -- lower keys
-    ["/"] = "A_0",
-    ["."] = "Gs0",
-    [","] = "G_0",
-    ["m"] = "Fs0",
-    ["n"] = "F_0",
-    ["b"] = "E_0",
-    ["v"] = "Ds0",
-    ["c"] = "D_0",
-    ["x"] = "Cs0",
-    ["z"] = "C_0",
-
-
-    -- lowest for me /
-    -- tab, space, enter
+    ["/"] = "n09",
+    ["."] = "n08",
+    [","] = "n07",
+    ["m"] = "n06",
+    ["n"] = "n05",
+    ["b"] = "n04",
+    ["v"] = "n03",
+    ["c"] = "n02",
+    ["x"] = "n01",
+    ["z"] = "n00",
 }

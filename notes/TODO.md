@@ -2,11 +2,7 @@
 
 # VKB
 
-- finish midi note layout. thumbs
-    tab/enter
-
-- create a setup in jsfx.
-
+- jsfx vkb midi mapping
 
 - create timeout noteoff?
     temporary until you can do note offs
