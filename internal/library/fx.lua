@@ -136,9 +136,9 @@ end
 function fx_util.setParamForFxAtIndex(guid_tr, fx_idx, param, value, is_rec_fx)
   local tr, tr_idx = ru.getTrackByGUID(guid_tr)
   if is_rec_fx then
-      reaper.TrackFX_SetParam(guid_tr, REC_FX + fx_idx, param, value)
+      reaper.TrackFX_SetParam(tr, REC_FX + fx_idx, param, value)
   else
-      reaper.TrackFX_SetParam(guid_tr, fx_idx, param, value)
+      reaper.TrackFX_SetParam(tr, fx_idx, param, value)
   end
 end
 

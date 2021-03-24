@@ -1,3 +1,4 @@
+local vkb_mode_layout = require('definitions.defaults.virtual_keyboard')
 return {
   timeline_motion = {
     ["0"] = "ProjectStart",
@@ -54,20 +55,8 @@ return {
     ["v"] = "SetModeNormal",
     ["o"] = "SwitchTimelineSelectionSide",
   },
-  vkb_command = {
-    ["e"] = "SetModeNormal",
-    ["i"] = "SetModeNormal",
-    [";"] = "VKBSendMidi_A_2",
-    ["l"] = "VKBSendMidi_Gs2",
-    ["k"] = "VKBSendMidi_G_2",
-    ["j"] = "VKBSendMidi_Fs2",
-    ["h"] = "VKBSendMidi_F_2",
-    ["g"] = "VKBSendMidi_E_2",
-    ["f"] = "VKBSendMidi_Ds2",
-    ["d"] = "VKBSendMidi_D_2",
-    ["s"] = "VKBSendMidi_Cs2",
-    ["a"] = "VKBSendMidi_C_2",
-  },
+  -- i named it vkb since it is outputting rk commands..
+  vkb_command = vkb_mode_layout,
   command = {
     ["."] = "RepeatLastCommand",
     ["@"] = "PlayMacro",

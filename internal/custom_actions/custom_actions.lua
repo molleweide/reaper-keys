@@ -93,7 +93,7 @@ function trackUpdateName(set_prefix)
 end
 
 function updateMidiPreProcessorByInputDevice(guid_tr)
-  local tr, tr_idx = getTrackByGUID(guid_tr)
+  local tr, tr_idx = ru.getTrackByGUID(guid_tr)
   local tr_rec_in = reaper.GetMediaTrackInfo_Value(tr, 'I_RECINPUT')
   local midi_device_offset = 4096
   local device_mask = 2016

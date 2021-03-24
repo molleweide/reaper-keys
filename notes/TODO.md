@@ -1,6 +1,11 @@
 # REAPER KEYS TODO
 
 # VKB
+
+- look at qmk and make vkb layout similar to that one
+
+
+
 - create timeout noteoff?
     temporary until you can do note offs
 
