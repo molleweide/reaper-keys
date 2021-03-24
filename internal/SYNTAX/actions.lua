@@ -64,13 +64,13 @@ end
 function actions.sidechainToGhostKick()
   log.clear()
   apply_funcs.applyKeydFxToSelTrks(
-    true, -- tr_filt_hook
-    'SC_GHOST_KICK', -- fx_gui_name
+    true,               -- tr_filt_hook
+    'SC_GHOST_KICK',    -- fx_gui_name
     'ReaComp (Cockos)', -- fx_search_str
-    { -- fx_params
-      [0] = 0.25,
-      [1] = 0.06,
-      [8] = (1/1084)*2
+    {
+      [0] = 0.25,           -- thres
+      [1] = 0.06,           -- ratio
+      [8] = (1/1084)*2      -- aux
     },
     '(ghostkick)$[0|2]' -- route_str | recieve from name match tr
   )

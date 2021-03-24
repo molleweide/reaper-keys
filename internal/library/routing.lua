@@ -44,26 +44,12 @@ local div = '\n##########################################\n\n'
 --      - mute
 --      - flip phase
 
-function routing.testCodedTargets()
-  -- func for testing that coded targets are working.
-  -- ie. using routing.updateState within code instead
-  -- of using it in-app.
-  log.user('test coded targets')
-  local guid_src = getMatchedTrackGUIDs('TEST_A')
-  local guid_dst = getMatchedTrackGUIDs('TEST_B')
-
-  log.user(format.block(guid_src[1]))
-
-  routing.create('[0|2]R', guid_src[#guid_src].guid, guid_dst[#guid_dst].guid)
-end
-
-
 function routing.updateState(route_str, coded_sources, coded_dests)
   -- log.clear()
   local rp = rc
   local _
 
-  -- log.user('route_str: ', route_str)
+
   -- !!!!
   --  I set remove_routes explicitly here. Why?
   --    Because on my second laptop this prop gets converted
@@ -71,18 +57,22 @@ function routing.updateState(route_str, coded_sources, coded_dests)
   --    This is really wierd. Anyways, luckilly it works by setting it here
   rp.remove_routes = false
 
+
+  -- ui / not embedded
   if route_str == nil then
     rp.user_input = true
     _, route_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
     if not _ then return end
   end
 
+
+  -- process route str
   local ret
   ret, rp = rlib_string.extractParamsFromString(rp, route_str)
   if not ret then return end -- something went wrong
 
-  -- log.user('pre assign coded targets')
 
+  -- embedded targets
   if coded_sources ~= nil then
     rp.coded_targets = true
     ret, rp = rlib_targets.setRouteTargetGuids(rp, 'src_guids', coded_sources)
@@ -92,8 +82,8 @@ function routing.updateState(route_str, coded_sources, coded_dests)
     ret, rp = rlib_targets.setRouteTargetGuids(rp, 'dst_guids', coded_dests)
   end
 
-  -- rlib.lrp(rp)
 
+  -- execute
   if rp.remove_routes then
     rlib.handleRemoval(rp)
   elseif not rp.user_input then
@@ -103,6 +93,7 @@ function routing.updateState(route_str, coded_sources, coded_dests)
   else
     log.user('<ROUTE COMMAND ABORTED>')
   end
+
 end
 
 function routing.trackHasSends(guid, cat)
@@ -115,7 +106,9 @@ function routing.trackHasSends(guid, cat)
 end
 
 function routing.removeAllSends(tr) rlib.removeAllRoutesTrack(tr) end
+
 function routing.removeAllRecieves(tr) rlib.removeAllRoutesTrack(tr, 1) end
+
 function routing.removeAllBoth(tr) rlib.removeAllRoutesTrack(tr, 2) end
 
 function routing.logRoutingInfoForSelectedTracks()
@@ -127,13 +120,25 @@ function routing.logRoutingInfoForSelectedTracks()
     local _, current_name = reaper.GetTrackName(tr)
 
     log.user('\n'..div..'\n:: routes for track #' .. tr_idx+1 .. ' `' .. current_name .. '`:')
+
     log.user('\n\tSENDs:')
     rlib_log.logRoutesByCategory(tr, rc.flags.CAT_SEND)
+
     log.user('\tRECIEVEs:')
     rlib_log.logRoutesByCategory(tr, rc.flags.CAT_REC)
+
     log.user('\tHARDWARE:')
     rlib_log.logRoutesByCategory(tr, rc.flags.CAT_HW)
+
   end
 end
+
+function routing.testCodedTargets()
+  local guid_src = getMatchedTrackGUIDs('TEST_A')
+  local guid_dst = getMatchedTrackGUIDs('TEST_B')
+  -- log.user(format.block(guid_src[1]))
+  routing.create('[0|2]R', guid_src[#guid_src].guid, guid_dst[#guid_dst].guid)
+end
+
 
 return routing

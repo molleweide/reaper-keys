@@ -68,7 +68,7 @@ function fx_util.trackHasFxChainString(guid_tr, fx_str, is_rec_fx)
     local tc = reaper.TrackFX_GetCount(tr) - 1
     for i = 0, tc do
       local fxc_str = fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, i, false) -- TODO rec fx
-      log.user(fxc_str, fx_str)
+      -- log.user(fxc_str, fx_str)
       if fx_str == fxc_str then found = true end
     end
   end
