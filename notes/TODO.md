@@ -2,10 +2,42 @@
 
 # VKB
 
-- jsfx vkb midi mapping
+- update reaper keys midi layout
+- modify keyb contoller keys
+- modify keyb split functions
+- modify `midi_device_vkb`
+- update qmk layout.
+- add qmk midi layout to jsfx project.
+- finished
+    >> now we have a nice method for working with any
+    >> kinds of midi devices.
+- cascading > create new custom keyboard by overwriting defaults??
+
+
+- vkb_lin/single/split
+
+- mv projects to ~/REAPER/projects
+
+- create better binding to enter midi mode
+    modifire-key
+
+- make sure i am referencing Effects/reaper-jsfx
+        and not /molleweide
+
+- lua run external script turn on karabiner midi layer.
 
 - create timeout noteoff?
     temporary until you can do note offs
+
+# TAP METRONOME REC CONVERT TO MIDI
+
+1. tap holddown
+2. record audio.
+3. shift stretch to fit in place
+3. insert audio from two beats before edit cursor
+4. convert hits to midi
+5. or use taps to record rhythm
+
 
 # FZF
 

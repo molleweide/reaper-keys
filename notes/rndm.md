@@ -1,5 +1,21 @@
 # RNDM
 
+this is nice. it turns out that i am going to succeed
+in making his vkb working.
+
+if i do it relly well hen i will b able to generalize t later
+into a super nice midi production workflow.
+
+the important thing now is that i just get to a point 
+where i can start to move hit aound a little bit more fluently.
+
+if i can make and record beats and i can test to make sure that
+shit is synced across computers i will be on top of the fucking world.
+
+
+
+
+
 # other
 
 ## regions =================================================
