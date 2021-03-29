@@ -1,33 +1,13 @@
 # REAPER KEYS TODO
 
 # VKB
+- vkb layout path config karb commands
+- super fast vkb mode enter
 
-- update reaper keys midi layout
-- modify keyb contoller keys
-- modify keyb split functions
-- modify `midi_device_vkb`
-- update qmk layout.
-- add qmk midi layout to jsfx project.
-- finished
-    >> now we have a nice method for working with any
-    >> kinds of midi devices.
-- cascading > create new custom keyboard by overwriting defaults??
-
-
-- vkb_lin/single/split
+# STRUCTURE
 
 - mv projects to ~/REAPER/projects
 
-- create better binding to enter midi mode
-    modifire-key
-
-- make sure i am referencing Effects/reaper-jsfx
-        and not /molleweide
-
-- lua run external script turn on karabiner midi layer.
-
-- create timeout noteoff?
-    temporary until you can do note offs
 
 # TAP METRONOME REC CONVERT TO MIDI
 
@@ -38,13 +18,11 @@
 4. convert hits to midi
 5. or use taps to record rhythm
 
-
 # FZF
 
-# GUI
+# LIVE
 
-- learn gui
-    what to do
+# GUI
 
 # FX
 
@@ -55,6 +33,8 @@
     rename main synth to `SRC_1`
     open add fx window
     replace with selection
+
+# MIDI
 
 - midi actions!
     get fast

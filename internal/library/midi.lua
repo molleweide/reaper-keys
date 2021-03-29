@@ -30,6 +30,30 @@ local midi = {}
 --  [1] = { val = function(note_start_index, range)
 --          return note_start_index + range - 1 end} -- high thresh
 
+function midi.sendMidiNote_71() sendMidiNote(61) end
+function midi.sendMidiNote_70() sendMidiNote(70) end
+function midi.sendMidiNote_69() sendMidiNote(69) end
+function midi.sendMidiNote_68() sendMidiNote(68) end
+function midi.sendMidiNote_67() sendMidiNote(67) end
+function midi.sendMidiNote_66() sendMidiNote(66) end
+function midi.sendMidiNote_65() sendMidiNote(65) end
+function midi.sendMidiNote_64() sendMidiNote(64) end
+function midi.sendMidiNote_63() sendMidiNote(63) end
+function midi.sendMidiNote_62() sendMidiNote(62) end
+function midi.sendMidiNote_61() sendMidiNote(61) end
+function midi.sendMidiNote_60() sendMidiNote(60) end
+
+function midi.sendMidiNote_59() sendMidiNote(59) end
+function midi.sendMidiNote_58() sendMidiNote(58) end
+function midi.sendMidiNote_57() sendMidiNote(57) end
+function midi.sendMidiNote_56() sendMidiNote(56) end
+function midi.sendMidiNote_55() sendMidiNote(55) end
+function midi.sendMidiNote_54() sendMidiNote(54) end
+function midi.sendMidiNote_53() sendMidiNote(53) end
+function midi.sendMidiNote_52() sendMidiNote(52) end
+function midi.sendMidiNote_51() sendMidiNote(51) end
+function midi.sendMidiNote_50() sendMidiNote(50) end
+function midi.sendMidiNote_49() sendMidiNote(49) end
 function midi.sendMidiNote_48() sendMidiNote(48) end
 
 function midi.sendMidiNote_47() sendMidiNote(47) end

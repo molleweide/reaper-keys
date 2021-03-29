@@ -1,9 +1,19 @@
+local log = require('utils.log')
 local state_interface = require('state_machine.state_interface')
 local config = require('definitions.config')
+
+
+-- turn of dual keys for vitrual keyboard on macOS,
+--  later this should be refactored into config!
+local karabiner_path            = '/Library/Application\\ Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli'
+local karb_normal_mode_profile  = karabiner_path .. " --select-profile 'Molleweide'"
+local karb_vkb_mode_profile     = karabiner_path .. " --select-profile 'Moll_NDK'"
+
 
 local state = {}
 
 function state.setModeNormal()
+  os.execute(karb_normal_mode_profile)
   state_interface.setMode('normal')
 end
 
@@ -27,6 +37,34 @@ function state.setModeVisualTimeline()
 end
 
 function state.setModeVirtualKeyboard()
+  -- before we enter mode.
+  --  first turn of dual-function-keys
+
+
+
+  -- function getOS()
+      -- fh,err = io.popen("uname -o 2>/dev/null","r")
+      -- if fh then osname = fh:read() end
+      -- log.user(fh, osname)
+      -- if osname then return osname end
+    -- local BinaryFormat = package.cpath:match("%p[\\|/]?%p(%a+)")
+    -- if BinaryFormat == "dll" then
+    --         return "Windows"
+    -- elseif BinaryFormat == "so" then
+    --         return "Linux"
+    -- elseif BinaryFormat == "dylib" then
+    --         return "MacOS"
+    -- end
+    -- return "unknown"
+  -- end
+  -- os = getOS()
+
+  -- log.user('OS: ' .. os)
+
+  -- https://unix.stackexchange.com/questions/8101/how-to-insert-the-result-of-a-command-into-the-text-in-vim/8109#8109
+  -- how do i get the output from a shell comm
+
+  os.execute(karb_vkb_mode_profile)
   state_interface.setMode('vkb')
 end
 
