@@ -1,9 +1,8 @@
 # REAPER KEYS TODO
 
 # VKB
-- enter layer run exec commands
-    karab config pathcommand
 - super fast vkb mode enter
+    SPC j and w
 
 # STRUCTURE
 

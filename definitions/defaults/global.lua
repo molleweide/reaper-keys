@@ -79,7 +79,6 @@ return {
     ["<C-z>"] = "ZoomUndo",
     ["<C-Z>"] = "ZoomRedo",
     ["v"] = "SetModeVisualTimeline",
-    ["<CM-M>"] = "SetModeVKB",
     ["<M-v>"] = "ClearTimelineSelectionAndSetModeVisualTimeline",
     ["<C-SPC>"] = "ToggleViewMixer",
     ["<ESC>"] = "Reset",
@@ -132,6 +131,7 @@ return {
     }},
     ["<SPC>"] = { "+leader commands", {
         ["<SPC>"] = "ShowActionList",
+        ["w"] = "SetModeVKB",
         ["d"] = { "+zoom/scroll", {
             ["l"] = "devLogAllParamsOfLastTouchedFx",
             ["L"] = "devLogLastTouchedFxParamDetailed",
