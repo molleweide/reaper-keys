@@ -3,17 +3,10 @@ local state_interface = require('state_machine.state_interface')
 local config = require('definitions.config')
 
 
--- turn of dual keys for vitrual keyboard on macOS,
---  later this should be refactored into config!
-local karabiner_path            = '/Library/Application\\ Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli'
-local karb_normal_mode_profile  = karabiner_path .. " --select-profile 'Molleweide'"
-local karb_vkb_mode_profile     = karabiner_path .. " --select-profile 'Moll_NDK'"
-
-
 local state = {}
 
 function state.setModeNormal()
-  os.execute(karb_normal_mode_profile)
+  os.execute(config.run_ext_cmd_on_enter_mode.normal)
   state_interface.setMode('normal')
 end
 
@@ -64,7 +57,7 @@ function state.setModeVirtualKeyboard()
   -- https://unix.stackexchange.com/questions/8101/how-to-insert-the-result-of-a-command-into-the-text-in-vim/8109#8109
   -- how do i get the output from a shell comm
 
-  os.execute(karb_vkb_mode_profile)
+  os.execute(config.run_ext_cmd_on_enter_mode.vkb)
   state_interface.setMode('vkb')
 end
 
