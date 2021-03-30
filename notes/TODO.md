@@ -1,22 +1,17 @@
 # REAPER KEYS TODO
 
-# VKB
-- super fast vkb mode enter
-    SPC j and w
+
+
+config os > win/linux/macos
+if macos
+    loop through commands
+- also disable hammerspoon
+- disable off key repeat
 
 # STRUCTURE
 
 - mv projects to ~/REAPER/projects
 
-
-# TAP METRONOME REC CONVERT TO MIDI
-
-1. tap holddown
-2. record audio.
-3. shift stretch to fit in place
-3. insert audio from two beats before edit cursor
-4. convert hits to midi
-5. or use taps to record rhythm
 
 # FZF
 
@@ -62,3 +57,12 @@
     very interesting config variable for ui dev
 
 * hide tracks?!
+
+# TAP METRONOME REC CONVERT TO MIDI
+
+1. tap holddown
+2. record audio.
+3. shift stretch to fit in place
+3. insert audio from two beats before edit cursor
+4. convert hits to midi
+5. or use taps to record rhythm

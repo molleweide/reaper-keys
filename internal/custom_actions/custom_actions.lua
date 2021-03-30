@@ -113,12 +113,12 @@ function updateMidiPreProcessorByInputDevice(guid_tr)
 
   if enabled_device == io.midi.qmk then
     fx.setParamForFxAtIndex(guid_tr, 0, 1, 1, true) -- set device
-    fx.setParamForFxAtIndex(guid_tr, 0, 2, 1, true) -- set mode
+    fx.setParamForFxAtIndex(guid_tr, 0, 2, 4, true) -- set mode
   end
 
   if enabled_device == io.midi.roland then
     fx.setParamForFxAtIndex(guid_tr, 0, 1, 2, true) -- set device
-    fx.setParamForFxAtIndex(guid_tr, 0, 2, 6, true) -- set mode
+    fx.setParamForFxAtIndex(guid_tr, 0, 2, 8, true) -- set mode
   end
 end
 
