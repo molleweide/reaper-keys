@@ -25,6 +25,10 @@ return {
   -- create you custom name prefix
   name_prefix_match_str = '^%a%:.*%:',
 
+  -- TODO
+  --
+  -- add command turn off key repeat.
+  -- also turn hammrspoon.
   run_ext_cmd_on_enter_mode = {
     normal  = MACOS_PATH_KARABINER_CLI .. " --select-profile 'Molleweide'",
     vkb     = MACOS_PATH_KARABINER_CLI .. " --select-profile 'Moll_NDK'",

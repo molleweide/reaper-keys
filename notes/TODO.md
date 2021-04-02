@@ -1,12 +1,18 @@
 # REAPER KEYS TODO
 
-
-
 config os > win/linux/macos
 if macos
     loop through commands
 - also disable hammerspoon
 - disable off key repeat
+
+# SWITCH WINDOWS
+
+how to switch from fx to main?
+
+# REATICULATE
+- watch videos
+- how can i incorporate this into reaper-keys?
 
 # STRUCTURE
 

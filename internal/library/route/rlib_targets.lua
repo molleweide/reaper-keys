@@ -52,6 +52,7 @@ function targets.setRouteTargetGuids(rp, key, new_tracks_data)
         tr_guids[i] = { name = current_name, guid = new_tracks_data[i] }
 
         -- table number string
+        -- should i really use this one??
       elseif tonumber(new_tracks_data[i]) ~= nil then
         local tr = reaper.GetTrack(0, tonumber(new_tracks_data[i]) - 1)
         local _, current_name = reaper.GetTrackName(tr)

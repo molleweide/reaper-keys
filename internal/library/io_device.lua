@@ -25,7 +25,7 @@ function setMidiInForSingleTrack(tr, chan, dev_name)
   if not dev_name then dev_name = io.midi.vkb end
   for i = 0, 64 do
     local retval, nameout = reaper.GetMIDIInputName( i, '' )
-    if nameout ~= '' then log.user(nameout) end
+    -- if nameout ~= '' then log.user(nameout) end
     if nameout:lower():match(dev_name:lower()) then dev_id = i end
   end
 
