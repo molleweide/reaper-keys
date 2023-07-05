@@ -1,0 +1,2 @@
+SCR 4 0 "_reaper_keys_main_H" "[reaper-keys] [key_press] [H]" ./reaper-keys/key_scripts/main_(S-h).lua
+KEY 5 72 _reaper_keys_main_H 0
