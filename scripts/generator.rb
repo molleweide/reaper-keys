@@ -2,6 +2,8 @@
 
 require('./scripts/key_definitions')
 
+# TODO: rename script_id -> action_command_id
+
 class Generator
   def initialize(root_dir_path, keymap_path, key_script_dir)
     @root_dir_path = root_dir_path
