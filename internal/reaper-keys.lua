@@ -34,14 +34,14 @@ end
 local input = require('state_machine')
 local log = require('utils.log')
 
-function errorHandler(err)
+local function errorHandler(err)
   log.error(err)
   log.error(debug.traceback())
 end
 
 -- Xpcall is used to protect code execution from errors - the errorHandler
 -- function will be called instead.
-function doInput(key_press)
+local function doInput(key_press)
   xpcall(input, errorHandler, key_press)
 end
 
