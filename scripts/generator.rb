@@ -93,6 +93,13 @@ class Generator
     open(@keymap_path, 'a') { |file| file.puts key_line }
   end
 
+  # Sets up the environment, including module paths, and then executes a
+  # specific function (doInput) with predefined input parameters (key and
+  # context).
+  #
+  # The package.path line appends the root path to the package.path variable, which is used
+  # by Lua to locate and load modules. It adds the root path followed by
+  # '?.lua', allowing Lua to search for modules in the specified root path.
   def gen_key_script(key, context, path)
     key_script_header = ''"
 local info = debug.getinfo(1,'S');
