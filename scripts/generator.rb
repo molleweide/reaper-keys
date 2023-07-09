@@ -2,8 +2,6 @@
 
 require('./scripts/key_definitions')
 
-# TODO: rename script_id -> action_command_id !!!!!
-
 class Generator
   def initialize(root_dir_path, keymap_path, key_script_dir)
     @root_dir_path = root_dir_path
@@ -12,11 +10,14 @@ class Generator
   end
 
   def format_shifted_letter(key_mod, letter)
+    # if only
     modifier_keys_excluding_shift = key_mod[/(.*)S/, 1]
     key = ''
     key_name = "(#{key_mod}-#{letter})"
+
     if modifier_keys_excluding_shift == ''
       key = letter.upcase
+      # key = "#{letter}_upper"
     else
       key = "<#{modifier_keys_excluding_shift}-#{letter.upcase}>"
       key_name = "(#{key_mod}-#{letter})"
@@ -54,7 +55,7 @@ class Generator
         key_mod = key_mod[/([CM]+)S/, 1]
         modded_key = shifted_key
         if key_mod
-          modded_key, = format_modded_key(shifted_key, shifted_key, 'shifted', key_mod)
+          modded_key, modded_key_name = format_modded_key(shifted_key, shifted_key, 'shifted', key_mod)
         end
 
         if KeyDefinitions::MOD_DECREMENTED_KEYS.detect { |x| x == key }
@@ -115,7 +116,15 @@ local doInput = require('internal.reaper-keys')
     script_path = @key_script_dir + "#{context}_#{key_name}.lua"
     gen_key_script(key, context, script_path)
 
-    reaper_key_script_id = "_reaper_keys_#{context}_#{key}"
+    # handle upper cased alphabetic chars in Action IDs
+    # script_key = (key == key.upcase && key == key.match?(/[[:alpha:]]/)) ? "#{char.downcase}_upper" : char
+    script_key = key
+    if key.length == 1 && key == key.upcase && key.match?(/[[:alpha:]]/)
+      script_key = "#{key.downcase}_upper"
+      # puts "#{key} -> #{script_key}"
+    end
+
+    reaper_key_script_id = "_reaper_keys_#{context}_#{script_key}"
     reaper_script_path = './' + @root_dir_path + script_path
 
     put_keymap_scr_line(key, context_id, reaper_key_script_id, reaper_script_path)
@@ -123,6 +132,9 @@ local doInput = require('internal.reaper-keys')
   end
 
   def gen_interface
+    # reset/empty key-map file
+    open(@keymap_path, 'w') {}
+
     KeyDefinitions::CONTEXTS.each do |context, context_id|
       KeyDefinitions::KEY_TABLE.each do |key_table_name, key_table|
         unmodded_key_type_id = key_table[:key_type_id]
