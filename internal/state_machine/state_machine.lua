@@ -7,9 +7,9 @@ local log = require('utils.log')
 local format = require('utils.format')
 local feedback = require('gui.feedback.controller')
 
-local state_machine = {}
+-- local state_machine = {}
 
-function updateWithKeyPress(state, key_press)
+local function updateWithKeyPress(state, key_press)
   local new_state = state
   if state['key_sequence'] == "" then
     new_state['context'] = key_press['context']
@@ -23,7 +23,7 @@ function updateWithKeyPress(state, key_press)
   return new_state, nil
 end
 
-function step(state, key_press)
+local function step(state, key_press)
   local message = ""
   local new_state, err = updateWithKeyPress(state, key_press)
   if err ~= nil then
@@ -57,7 +57,8 @@ function step(state, key_press)
   return new_state
 end
 
-function input(key_press)
+--- @key_press     eg. {['key'] = '<C-h>', ['context'] = 'main'}
+local function input(key_press)
   log.info("\n++++\ninput: " .. format.line(key_press))
   feedback.clear()
 

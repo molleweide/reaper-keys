@@ -2,3 +2,8 @@ SCR 4 0 "_reaper_keys_main_h" "[reaper-keys] [key_press] [h]" ./reaper-keys/key_
 KEY 1 72 _reaper_keys_main_h 0
 SCR 4 0 "_reaper_keys_main_H" "[reaper-keys] [key_press] [H]" ./reaper-keys/key_scripts/main_(S-h).lua
 KEY 5 72 _reaper_keys_main_H 0
+
+
+SCR 4 0 "_reaper_keys_main_h_upper" "[reaper-keys] [key_press] [h_upper]" ./reaper-keys/key_scripts/main_(S-h).lua
+KEY 5 72 _reaper_keys_main_h_upper 0
+
