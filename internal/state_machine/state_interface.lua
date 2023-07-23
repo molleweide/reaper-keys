@@ -6,21 +6,25 @@ local utils = require('command.utils')
 local state_interface= {}
 local state_table_name = "state"
 
+-- map state to state key
 function state_interface.set(state)
   reaper_state.set(state_table_name, state)
 end
 
+-- get state, update key, reset state
 function state_interface.setKey(key, value)
   local state = state_interface.get()
   state[key] = value
   state_interface.set(state)
 end
 
+-- get state and return key
 function state_interface.getKey(key)
   local state = state_interface.get()
   return state[key]
 end
 
+-- get state; return reset state if err
 function state_interface.get()
     local state = reaper_state.get(state_table_name)
     if not state then
@@ -29,6 +33,8 @@ function state_interface.get()
     end
   return state
 end
+
+-- TODO: annotate below functions
 
 -- FIXME reduntant functions
 

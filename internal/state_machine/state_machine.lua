@@ -57,7 +57,13 @@ local function step(state, key_press)
   return new_state
 end
 
---- @key_press     eg. {['key'] = '<C-h>', ['context'] = 'main'}
+-- NOTE: For each key press
+--  1. get previous state
+--  2. create new state from previous state and current key press
+--  3. set new stat
+--  4. pass state to UI and update
+--
+-- @key_press     eg. {['key'] = '<C-h>', ['context'] = 'main'}
 local function input(key_press)
   log.info("\n++++\ninput: " .. format.line(key_press))
   feedback.clear()

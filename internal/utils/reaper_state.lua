@@ -2,6 +2,30 @@ local log = require('utils.log')
 local format = require('utils.format')
 local serpent = require('serpent')
 
+-- NOTE: Reaper state uses `ExtState` to manage data.
+--  AVAILABLE APIS:
+--
+--    reaper.DeleteExtState(string section, string key, boolean persist)
+--        Delete the extended state value for a specific section and key. persist=true means the value should remain deleted the next time REAPER is opened. See SetExtState, GetExtState, HasExtState.
+--
+--    boolean retval, optional string key, optional string val = reaper.EnumProjExtState(ReaProject proj, string extname, integer idx)
+--        Enumerate the data stored with the project for a specific extname. Returns false when there is no more data. See SetProjExtState, GetProjExtState.
+--
+--    string reaper.GetExtState(string section, string key)
+--        Get the extended state value for a specific section and key. See SetExtState, DeleteExtState, HasExtState.
+--
+--    integer retval, string val = reaper.GetProjExtState(ReaProject proj, string extname, string key)
+--        Get the value previously associated with this extname and key, the last time the project was saved. See SetProjExtState, EnumProjExtState.
+--
+--    boolean reaper.HasExtState(string section, string key)
+--        Returns true if there exists an extended state value for a specific section and key. See SetExtState, GetExtState, DeleteExtState.
+--
+--    reaper.SetExtState(string section, string key, string value, boolean persist)
+--        Set the extended state value for a specific section and key. persist=true means the value should be stored and reloaded the next time REAPER is opened. See GetExtState, DeleteExtState, HasExtState.
+--
+--    integer reaper.SetProjExtState(ReaProject proj, string extname, string key, string value)
+--        Save a key/value pair for a specific extension, to be restored the next time this specific project is loaded. Typically extname will be the name of a reascript or extension section. If key is NULL or "", all extended data for that extname will be deleted. If val is NULL or "", the data previously associated with that key will be deleted. Returns the size of the state for this extname. See GetProjExtState, EnumProjExtState.
+
 local reaper_state = {}
 
 local namespace = "reaper_keys"
