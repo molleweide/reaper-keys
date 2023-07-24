@@ -19,7 +19,11 @@ function utils.qualifiesAsRepeatableCommand(command)
   return false
 end
 
-function handleCommand(state, command)
+--- Execute command based on current key sequence if possible
+---@param state table
+---@param command table
+---@return table, string
+local function handleCommand(state, command)
   reaper.Undo_BeginBlock()
   local new_state = state
 

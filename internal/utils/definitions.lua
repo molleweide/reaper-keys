@@ -57,6 +57,10 @@ local definition_tables = {
   midi = concatEntryTables(require('definitions.defaults.midi'), user_definitions.midi ),
 }
 
+--- Take binding trees and concatenate all possible entries based on the
+--- current key press context.
+---@param context string
+---@return table
 function definitions.getPossibleEntries(context)
   local merged_table = {}
   merged_table = concatEntryTables(merged_table, definition_tables['global'])

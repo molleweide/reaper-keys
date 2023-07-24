@@ -6,7 +6,10 @@ local action_sequence_definitions = {
   midi = require('command.action_sequence_functions.midi'),
 }
 
-function concatTables(...)
+--- Takes an array of tables and flattens them into one big table.
+---@vararg table (how do I write this type name??)
+---@return table
+local function concatTables(...)
   local t = {}
   for n = 1,select("#",...) do
     local arg = select(n,...)
@@ -21,7 +24,34 @@ function concatTables(...)
   return t
 end
 
-function getPossibleActionSequenceFunctionPairs(context, mode)
+--- Takes action_sequence_functions tables, gets all combinations based on
+--- context and mode and flattens the action function pair into a single table.
+--- Eg.
+--- {
+---   ...,
+---   ...,
+---   {
+---     { 'command' },
+---     function(action) runner.runAction(action) end
+---   },
+---   {
+---     { 'timeline_operator', 'timeline_selector' },
+---     function(timeline_operator, timeline_selector)
+---       local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+---        ...
+---     end
+---   },
+---   {
+---     { 'timeline_operator', 'timeline_motion' },
+---     function() ... end,
+---   }
+---   ...,
+---   ...,
+--- }
+---@param context string
+---@param mode string
+---@return table
+local function getPossibleActionSequenceFunctionPairs(context, mode)
   local possible_sequence_function_pairs = concatTables(
     action_sequence_definitions[context][mode],
     action_sequence_definitions['global'][mode],
@@ -32,19 +62,24 @@ function getPossibleActionSequenceFunctionPairs(context, mode)
   return possible_sequence_function_pairs
 end
 
+---
+---@param context string
+---@param mode string
+---@return table
 function action_sequences.getPossibleActionSequences(context, mode)
+
   local action_sequence_function_pairs = getPossibleActionSequenceFunctionPairs(context, mode)
 
-  local action_sequences = {}
+  local possible_action_sequences = {}
   for _, action_sequence_function_pair in ipairs(action_sequence_function_pairs) do
     local action_sequence = action_sequence_function_pair[1]
-    table.insert(action_sequences, action_sequence)
+    table.insert(possible_action_sequences, action_sequence)
   end
 
-  return action_sequences
+  return possible_action_sequences
 end
 
-function checkIfActionSequencesAreEqual(seq1, seq2)
+local function checkIfActionSequencesAreEqual(seq1, seq2)
   if #seq1 ~= #seq2 then return false end
   for i=1,#seq1 do
     if seq1[i] ~= seq2[i] then

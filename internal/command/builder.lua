@@ -54,7 +54,12 @@ function stripNextActionKeyInKeySequence(key_sequence, action_type_entries)
   return nil, nil, false
 end
 
-function buildCommandWithSequence(key_sequence, action_sequence, entries)
+---
+---@param key_sequence string|nil
+---@param action_sequence table
+---@param entries table
+---@return table|nil command
+local function buildCommandWithSequence(key_sequence, action_sequence, entries)
   local command = {
     action_sequence = {},
     action_keys = {},
@@ -62,6 +67,7 @@ function buildCommandWithSequence(key_sequence, action_sequence, entries)
 
   local rest_of_key_sequence = key_sequence
   for _, action_type in pairs(action_sequence) do
+    local action_key, found
     rest_of_key_sequence, action_key, found = stripNextActionKeyInKeySequence(rest_of_key_sequence, entries[action_type])
     if not found then
       return nil
@@ -78,11 +84,17 @@ function buildCommandWithSequence(key_sequence, action_sequence, entries)
   return command
 end
 
-function buildCommand(state)
-  local action_sequences = action_sequences.getPossibleActionSequences(state['context'], state['mode'])
+--- Get possible action sequences from state.
+--- Get possible entries from context
+--- Loop act seq build command from seq
+--- Return command
+---@param state table
+---@return table|nil command
+local function buildCommand(state)
+  local possible_sequences = action_sequences.getPossibleActionSequences(state['context'], state['mode'])
   local entries = definitions.getPossibleEntries(state['context'])
 
-  for _, action_sequence in pairs(action_sequences) do
+  for _, action_sequence in pairs(possible_sequences) do
     local command = buildCommandWithSequence(state['key_sequence'], action_sequence, entries)
     if command then
       command['mode'] = state['mode']
