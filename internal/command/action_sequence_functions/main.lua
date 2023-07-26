@@ -3,6 +3,9 @@ local state_interface = require('state_machine.state_interface')
 local config = require('definitions.config')
 local reaper_utils = require('custom_actions.utils')
 
+--- NOTE: Table containing { action_sequence <-> action_function } pairs
+--        The [ action sequence ] should be handled in the way of the [ action function ]
+--        by passing the the action sequence as parameters to the action function
 return {
   all_modes = {
     {

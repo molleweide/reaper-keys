@@ -58,27 +58,31 @@ local function getPossibleActionSequenceFunctionPairs(context, mode)
     action_sequence_definitions[context]['all_modes'],
     action_sequence_definitions['global']['all_modes']
   )
-
   return possible_sequence_function_pairs
 end
 
----
+--- Takes the flattened list of actions sequence function (ASF) pairs,
+--- and returns all possible action sequences mapped into their own table.
 ---@param context string
 ---@param mode string
----@return table
+---@return table possible_action_sequences
 function action_sequences.getPossibleActionSequences(context, mode)
-
   local action_sequence_function_pairs = getPossibleActionSequenceFunctionPairs(context, mode)
-
+  -- TODO: use lib/refactor into `map` function??
+  --
+  -- filter out only AS from ARFPs
   local possible_action_sequences = {}
   for _, action_sequence_function_pair in ipairs(action_sequence_function_pairs) do
     local action_sequence = action_sequence_function_pair[1]
     table.insert(possible_action_sequences, action_sequence)
   end
-
   return possible_action_sequences
 end
 
+---
+---@param seq1 table
+---@param seq2 table
+---@return boolean
 local function checkIfActionSequencesAreEqual(seq1, seq2)
   if #seq1 ~= #seq2 then return false end
   for i=1,#seq1 do

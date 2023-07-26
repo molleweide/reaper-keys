@@ -104,6 +104,9 @@ function utils.getEntry(key_sequence, entries)
   end
 end
 
+--- ???
+---@param entry_value table|string
+---@return boolean
 function utils.isFolder(entry_value)
   if entry_value then
     if entry_value[1] and type(entry_value[1]) == "string" then

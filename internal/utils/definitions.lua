@@ -1,8 +1,15 @@
 local utils = require('command.utils')
+local format = require("utils.format")
+local log = require('utils.log')
+local user_definitions = require('definitions.bindings')
 
 local definitions = {}
 
-function concatEntries(t1, t2)
+--- Recursively merge the bindings entries giving precedence to t2.
+---@param t1 table
+---@param t2 table
+---@return table
+local function concatEntries(t1, t2)
   local merged_entries = {}
   for key_sequence,entry_value in pairs(t1) do
     merged_entries[key_sequence] = entry_value
@@ -14,6 +21,7 @@ function concatEntries(t1, t2)
       merged_value = nil
     end
 
+    -- ???
     local t1_value = merged_entries[key_sequence]
     if utils.isFolder(t2_value) and utils.isFolder(t1_value) and t1_value[1] == t2_value[1] then
         local folder_1_entries = t1_value[2]
@@ -31,7 +39,12 @@ function concatEntries(t1, t2)
 end
 
 
-function concatEntryTables(t1,t2)
+--- Merge tables t1 and t2.
+--- I believe the second t2 takes precedence just like with vim.tbl_merge force
+---@param t1 table
+---@param t2 table
+---@return table
+local function concatEntryTables(t1,t2)
   local merged_tables = t1
   for action_type, entries in pairs(t1) do
     if t2[action_type] then
@@ -49,27 +62,37 @@ function concatEntryTables(t1,t2)
   return merged_tables
 end
 
-
-local user_definitions = require('definitions.bindings')
+-- global = {
+--   timeline_motion = {
+--     ["0"] = "ProjectStart",
+--     ["<C-$>"] = "ProjectEnd",
+--     ...
+--     user_bind1...
+--     user_bind2...
+--   }
+--   ...
+-- }
 local definition_tables = {
   global = concatEntryTables(require('definitions.defaults.global'), user_definitions.global ),
   main = concatEntryTables(require('definitions.defaults.main'), user_definitions.main ),
   midi = concatEntryTables(require('definitions.defaults.midi'), user_definitions.midi ),
 }
 
---- Take binding trees and concatenate all possible entries based on the
---- current key press context.
+--- Based on `global` and `context`, merge possible entry bind sequences into
+--- one table.
 ---@param context string
 ---@return table
 function definitions.getPossibleEntries(context)
   local merged_table = {}
   merged_table = concatEntryTables(merged_table, definition_tables['global'])
   merged_table = concatEntryTables(merged_table, definition_tables[context])
-
   return merged_table
 end
 
--- this reverses the keys and values of entries
+-- This reverses the keys and values of entries
+---
+---@param entries
+---@return
 function definitions.getBindings(entries)
   local bindings = {}
   if not entries then

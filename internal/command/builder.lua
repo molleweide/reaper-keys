@@ -84,7 +84,7 @@ local function buildCommandWithSequence(key_sequence, action_sequence, entries)
   return command
 end
 
---- Get possible action sequences from state.
+--- Get possible action sequences AS (not ASFPs) from state.
 --- Get possible entries from context
 --- Loop act seq build command from seq
 --- Return command
@@ -93,6 +93,8 @@ end
 local function buildCommand(state)
   local possible_sequences = action_sequences.getPossibleActionSequences(state['context'], state['mode'])
   local entries = definitions.getPossibleEntries(state['context'])
+
+  log.debug(">>>" .. format.block( entries ))
 
   for _, action_sequence in pairs(possible_sequences) do
     local command = buildCommandWithSequence(state['key_sequence'], action_sequence, entries)

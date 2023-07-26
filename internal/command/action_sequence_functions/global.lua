@@ -8,7 +8,7 @@ local function invalidSequenceCall(...)
   log.trace(debug.traceback())
 end
 
---- NOTE: Table containing { action_sequence <-> action_function } pairs
+--- NOTE: Table containing { action_sequence <-> action_function } (ASFPs) pairs
 --        The [ action sequence ] should be handled in the way of the [ action function ]
 return {
   all_modes = {
