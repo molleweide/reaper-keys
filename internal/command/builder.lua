@@ -5,7 +5,11 @@ local getAction = require('utils.get_action')
 local format = require('utils.format')
 local log = require('utils.log')
 
-function getActionKey(key_sequence, entries)
+---
+---@param key_sequence string
+---@param entries table
+---@return table|nil
+local function getActionKey(key_sequence, entries)
   local action_name = utils.getEntryForKeySequence(key_sequence, entries)
   if action_name and not utils.isFolder(action_name) and (not utils.checkIfActionHasOptionSet(action_name, 'registerAction') or utils.checkIfActionHasOptionSet(action_name, 'registerOptional')) then
     return action_name
@@ -34,10 +38,16 @@ function getActionKey(key_sequence, entries)
   return nil
 end
 
-function stripNextActionKeyInKeySequence(key_sequence, action_type_entries)
+---
+---@param key_sequence string|nil
+---@param action_type_entries table
+---@return string|nil, table|nil, boolean
+local function stripNextActionKeyInKeySequence(key_sequence, action_type_entries)
   if not action_type_entries then
     return nil, nil, false
   end
+
+  -- log.debug("strip: " .. key_sequence .. " >>> " .. format.block(action_type_entries))
 
   local rest_of_key_sequence = ""
   local key_sequence_for_action_type = key_sequence
@@ -47,6 +57,7 @@ function stripNextActionKeyInKeySequence(key_sequence, action_type_entries)
       return rest_of_key_sequence, action_key, true
     end
 
+    local last_key
     key_sequence_for_action_type, last_key = utils.splitLastKey(key_sequence_for_action_type)
     rest_of_key_sequence = last_key .. rest_of_key_sequence
   end
@@ -56,8 +67,8 @@ end
 
 ---
 ---@param key_sequence string|nil
----@param action_sequence table
----@param entries table
+---@param action_sequence table AS: { "command" }
+---@param entries table {...}
 ---@return table|nil command
 local function buildCommandWithSequence(key_sequence, action_sequence, entries)
   local command = {
@@ -66,6 +77,8 @@ local function buildCommandWithSequence(key_sequence, action_sequence, entries)
   }
 
   local rest_of_key_sequence = key_sequence
+
+
   for _, action_type in pairs(action_sequence) do
     local action_key, found
     rest_of_key_sequence, action_key, found = stripNextActionKeyInKeySequence(rest_of_key_sequence, entries[action_type])
@@ -77,6 +90,7 @@ local function buildCommandWithSequence(key_sequence, action_sequence, entries)
     end
   end
 
+  -- means we couldn't run through the whole KS
   if #rest_of_key_sequence > 0 then
     return nil
   end
@@ -85,7 +99,7 @@ local function buildCommandWithSequence(key_sequence, action_sequence, entries)
 end
 
 --- Get possible action sequences AS (not ASFPs) from state.
---- Get possible entries from context
+--- Get possible key binds entries from context as one table
 --- Loop act seq build command from seq
 --- Return command
 ---@param state table
@@ -93,8 +107,6 @@ end
 local function buildCommand(state)
   local possible_sequences = action_sequences.getPossibleActionSequences(state['context'], state['mode'])
   local entries = definitions.getPossibleEntries(state['context'])
-
-  log.debug(">>>" .. format.block( entries ))
 
   for _, action_sequence in pairs(possible_sequences) do
     local command = buildCommandWithSequence(state['key_sequence'], action_sequence, entries)
