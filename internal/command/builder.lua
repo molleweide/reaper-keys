@@ -8,7 +8,7 @@ local log = require('utils.log')
 ---
 ---@param key_sequence string
 ---@param entries table
----@return table|nil
+---@return table|string|nil
 local function getActionKey(key_sequence, entries)
   local action_name = utils.getEntryForKeySequence(key_sequence, entries)
   if action_name and not utils.isFolder(action_name) and (not utils.checkIfActionHasOptionSet(action_name, 'registerAction') or utils.checkIfActionHasOptionSet(action_name, 'registerOptional')) then
@@ -39,7 +39,7 @@ local function getActionKey(key_sequence, entries)
 end
 
 ---
----@param key_sequence string|nil
+---@param key_sequence string
 ---@param action_type_entries table
 ---@return string|nil, table|nil, boolean
 local function stripNextActionKeyInKeySequence(key_sequence, action_type_entries)
@@ -59,6 +59,7 @@ local function stripNextActionKeyInKeySequence(key_sequence, action_type_entries
 
     local last_key
     key_sequence_for_action_type, last_key = utils.splitLastKey(key_sequence_for_action_type)
+    -- log.debug("STRIP: " .. key_sequence_for_action_type .. " " .. last_key)
     rest_of_key_sequence = last_key .. rest_of_key_sequence
   end
 
@@ -78,6 +79,7 @@ local function buildCommandWithSequence(key_sequence, action_sequence, entries)
 
   local rest_of_key_sequence = key_sequence
 
+  -- log.debug("RKS:" .. rest_of_key_sequence)
 
   for _, action_type in pairs(action_sequence) do
     local action_key, found
@@ -102,6 +104,20 @@ end
 --- Get possible key binds entries from context as one table
 --- Loop act seq build command from seq
 --- Return command
+---
+--- command: {
+---   action_keys = {
+---     {
+---       "LeftGridDivision",
+---       prefixedRepetitions = 2
+---     }
+---   },
+---   action_sequence = {
+---     "timeline_motion"
+---   },
+---   context = "main",
+---   mode = "visual_timeline"
+--- }
 ---@param state table
 ---@return table|nil command
 local function buildCommand(state)
@@ -113,6 +129,7 @@ local function buildCommand(state)
     if command then
       command['mode'] = state['mode']
       command['context'] = state['context']
+      -- log.debug("COMMAND: " .. format.block(command))
       return command
     end
   end

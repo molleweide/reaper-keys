@@ -45,7 +45,7 @@ end
 ---
 ---@param state table
 ---@param key_press table
----@return table
+---@return table|nil
 local function step(state, key_press)
   local message = ""
 
@@ -59,17 +59,14 @@ local function step(state, key_press)
 
   log.info("New key sequence: " .. new_state["key_sequence"])
 
-  -- TODO: walkthrough build command pipeline
   local command = buildCommand(new_state)
   if command then
     log.trace("Command built: " .. format.block(command))
-    -- TODO: walkthrough build command pipeline
     new_state, message = handleCommand(new_state, command)
     feedback.displayMessage(message)
     return new_state
   end
 
-  -- TODO: walkthrough build command pipeline
   local future_entries = getPossibleFutureEntries(new_state)
   if not future_entries then
     new_state["key_sequence"] = ""
@@ -77,7 +74,7 @@ local function step(state, key_press)
     return new_state
   end
 
-  local message = format.keySequence(state["key_sequence"], true)
+  message = format.keySequence(state["key_sequence"], true)
   message = message .. "-"
   feedback.displayMessage(message)
   feedback.displayCompletions(future_entries)

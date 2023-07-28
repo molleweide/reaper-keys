@@ -1,5 +1,6 @@
 local string_util = require('string')
 local log = require('utils.log')
+-- local format = require('utils.format')
 local ser = require('serpent')
 
 local utils = {}
@@ -105,9 +106,13 @@ function utils.getEntry(key_sequence, entries)
 end
 
 --- ???
+--- {
+---   "arst"
+--- }
 ---@param entry_value table|string
 ---@return boolean
 function utils.isFolder(entry_value)
+  -- log.debug("entry_value:" .. entry_value)
   if entry_value then
     if entry_value[1] and type(entry_value[1]) == "string" then
       if entry_value[2] and type(entry_value[2]) == "table" then
@@ -159,6 +164,10 @@ function utils.splitLastKey(key_sequence)
   return table.concat(keys, "", 1, #keys - 1), keys[#keys]
 end
 
+--- Recursively get the Action for a key sequence
+---@param key_sequence string
+---@param entries table
+---@return string|nil
 function utils.getEntryForKeySequence(key_sequence, entries)
   local entry = entries[key_sequence]
   if entry and not utils.isFolder(entry) then
