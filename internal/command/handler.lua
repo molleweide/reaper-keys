@@ -22,10 +22,12 @@ end
 --- Execute command based on current key sequence if possible
 ---@param state table
 ---@param command table
----@return table, string
+---@return table|nil, string
 local function handleCommand(state, command)
   reaper.Undo_BeginBlock()
   local new_state = state
+
+  -- log.debug("handle >>> " .. format.block(command))
 
   if meta_command.isMetaCommand(command) then
     new_state = meta_command.executeMetaCommand(state, command)

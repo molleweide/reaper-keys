@@ -90,7 +90,20 @@ end
 --
 ---@param key_press table eg. {['key'] = '<C-h>', ['context'] = 'main'}
 local function input(key_press)
-  log.info("\n++++\ninput: " .. format.line(key_press))
+
+  -- TODO: log more info such as active window
+  --
+  --  https://forums.cockos.com/showthread.php?p=2057648
+  --  https://forum.cockos.com/showthread.php?t=171332
+  --
+  -- HWND reaper.TrackFX_GetFloatingWindow(MediaTrack track, integer index)
+  -- HWND reaper.TakeFX_GetFloatingWindow(MediaItem_Take take, integer index)
+  --   returns HWND of floating window for effect index, if any
+  -- integer reaper.TakeFX_GetChainVisible(MediaItem_Take take)
+  -- integer reaper.TrackFX_GetChainVisible(MediaTrack track)
+  --   returns index of effect visible in chain, or -1 for chain hidden, or -2 for chain visible but no effect selected
+
+  log.info("\n+++++++++++++++++++++++++++++++++++++++++++\ninput: " .. format.line(key_press))
   feedback.clear()
 
   local state = state_interface.get()
@@ -101,6 +114,7 @@ local function input(key_press)
   feedback.update()
 
   log.info("new state: " .. format.block(new_state))
+  log.info("\n===========================================\ninput: " .. format.line(key_press))
 end
 
 return input
