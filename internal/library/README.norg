@@ -1,0 +1,7 @@
+
+./library is the `reaper-keys` library used throughout core/internals
+
+TODO
+
+  walk through all reaper scripts i have and compile them into lua
+  modules here that will make life easier

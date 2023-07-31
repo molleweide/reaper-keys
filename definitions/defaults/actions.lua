@@ -1,5 +1,6 @@
 local lib = require('library')
 local custom = require('custom_actions')
+local media_explorer = require('library.media_explorer')
 local dev = require('utils.dev')
 
 return {
@@ -637,6 +638,8 @@ return {
   RouteRemoveAllSends = lib.routing.removeAllSends,
   RouteRemoveAllRecieves = lib.routing.removeAllRecieves,
   RouteTestCodedT = lib.routing.testCodedTargets,
+
+  MediaExplorerToggle = media_explorer.toggle,
 
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,

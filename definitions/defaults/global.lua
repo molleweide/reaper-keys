@@ -340,6 +340,7 @@ return {
         ["g"] = { "+global", {
             ["Q"] = "Quit",
             ["g"] = "SetGridDivision",
+            ["m"] = "MediaExplorerToggle",
             ["r"] = "ResetControlDevices",
             [","] = "ShowPreferences",
             ["S"] = "UnsoloAllItems",
