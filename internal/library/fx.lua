@@ -133,6 +133,14 @@ function fx_util.removeAllFXAfterIndex(guid_tr, index)
   end
 end
 
+-- NOTE: is_rec_fx is optional right??
+
+--- Given track guid, update FX param for FX index..
+---@param guid_tr string
+---@param fx_idx integer
+---@param param integer
+---@param value number|string
+---@param is_rec_fx boolean
 function fx_util.setParamForFxAtIndex(guid_tr, fx_idx, param, value, is_rec_fx)
   local tr, tr_idx = ru.getTrackByGUID(guid_tr)
   if is_rec_fx then
@@ -142,8 +150,10 @@ function fx_util.setParamForFxAtIndex(guid_tr, fx_idx, param, value, is_rec_fx)
   end
 end
 
-
-
+---
+---@param guid_tr string
+---@param fx_idx int
+---@param t_params table
 function fx_util.setFxParamsFromTable(guid_tr, fx_idx, t_params)
     local tr = ru.getTrackByGUID(guid_tr)
     for i, parm in pairs(t_params) do

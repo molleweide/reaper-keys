@@ -151,6 +151,7 @@ return {
             ["g"] = "SetMidiGridDivision",
             ["q"] = "Quantize",
             ["Q"] = "ToggleInputQuantize",
+            ["s"] = "MidiVoxSetCurrentDrumTrigNote",
             [","] = {"+options", {
                 ["g"] = "ToggleMidiEditorUsesMainGridDivision",
                 ["s"] = "ToggleMidiSnap",
@@ -190,7 +191,7 @@ return {
             ["m"] = "ToggleMuteItem",
             ["d"] = "DeleteActiveTake",
             ["S"] = "UnselectItems",
-            ["e"] = "OpenMidiEditor",
+            ["E"] = "OpenMidiEditor",
             ["T"] = "OpenEmptyItemNoteEditor",
             ["c"] = "CropToActiveTake",
             ["o"] = "OpenInMidiEditor",

@@ -1,6 +1,7 @@
 local lib = require('library')
 local custom = require('custom_actions')
 local media_explorer = require('library.media_explorer')
+local midi2vox = require('library.vox_to_midi')
 local dev = require('utils.dev')
 
 return {
@@ -640,6 +641,8 @@ return {
   RouteTestCodedT = lib.routing.testCodedTargets,
 
   MediaExplorerToggle = media_explorer.toggle,
+
+  MidiVoxSetCurrentDrumTrigNote = midi2vox.setDrumTrigMIDIOutFromCurrentNote,
 
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,

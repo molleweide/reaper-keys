@@ -89,12 +89,11 @@ local function input(key_press)
 	log.info("\n+++++++++++++++++++++++++++++++++++++++++++\ninput: " .. format.line(key_press))
 	feedback.clear()
 
-	-- log start
-	    local tr = reaper.GetSelectedTrack(0,0)
-	local tci = reaper.TrackFX_GetChainVisible(tr)
-
-	log.debug("tci -> ".. tci)
-	-- log end
+	-- -- log start
+	--     local tr = reaper.GetSelectedTrack(0,0)
+	-- local tci = reaper.TrackFX_GetChainVisible(tr)
+	-- log.debug("tci -> ".. tci)
+	-- -- log end
 
 	local state = state_interface.get()
 	local new_state = step(state, key_press)
@@ -104,6 +103,7 @@ local function input(key_press)
 	feedback.update()
 
 	log.info("new state: " .. format.block(new_state))
+	-- why am i printing at the end??
 	log.info("\n===========================================\ninput: " .. format.line(key_press))
 end
 
