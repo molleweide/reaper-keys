@@ -8,18 +8,19 @@ local format = require("utils.format")
 
 local vox2midi = {}
 
+
+--- Updates a parameter in the drum trigger src track based on the currently
+--- selected note row, so that one can control the output pitch of the midi
+--- trigger note.
 vox2midi.setDrumTrigMIDIOutFromCurrentNote = function()
 	local me = reaper.MIDIEditor_GetActive()
 	local active_row = reaper.MIDIEditor_GetSetting_int(me, "active_note_row")
-
 	local match_vox_src = tr.getMatchedTrackGUIDs("vox2DrumsTrigSrc")
-
 	if match_vox_src then
-		local audio_to_drum_trig_idx = 2
 		local fx_by_name = fx.getFxIndexByName(match_vox_src[1].guid, "JS: Audio To MIDI Drum Trigger")
-		log.info(">>>>> ", format.block(fx_by_name))
-
-		fx.setParamForFxAtIndex(match_vox_src[1].guid, audio_to_drum_trig_idx, 5, active_row, false)
+		if fx_by_name then
+			fx.setParamForFxAtIndex(match_vox_src[1].guid, fx_by_name[1].idx, 5, active_row, false)
+		end
 	end
 end
 
