@@ -12,6 +12,8 @@ local custom = require('custom_actions')
 
 local syntax = require('SYNTAX.actions')
 
+local fuzzy = require('library.fzf.fzf')
+
 -- naming conventions:
 -- a noun implies an action which selects the noun, or a movement to it's position
 -- simple verbs are usually operators, such as 'change'
@@ -19,7 +21,7 @@ local syntax = require('SYNTAX.actions')
 
 
 return {
-  FuzzyFx = "_RSd7bf7022d92114682d354e90dbe8aef580a5ef5c",
+  FuzzyFx = fuzzy.init,
   ApplyConfigs = syntax.applyConfigs,
   TrackInSet_MIDI_QMK = {lib.io_device.setInputTo_MIDI_QMK, custom.setupMidiInputPreProcessorOnSelTrks},
   TrackInSet_MIDI_GRAND_ROLAND = {lib.io_device.setInputTo_MIDI_GRAND_ROLAND, custom.setupMidiInputPreProcessorOnSelTrks},
