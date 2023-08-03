@@ -10,19 +10,44 @@ local config = require('SYNTAX.config.config')
 
 local actions = {}
 
--- make recursive
+-- set class track info
+local function apply_class_track_info()
+  -- easy to make recursive
+end
+
+-- setup G with MIDI LANES (m=1)
+local function route_lanes()
+end
+
+-- setup M track with C MIDI SPLITS
+local function routeMidiSplits()
+end
+
+-- setup default zone routes
+local function setupDefaultZoneRoutes()
+end
+
+-- TODO: make recursive
 function actions.applyConfigs()
   log.clear()
+
+
   local vtt = syntax.getVerifiedTree()
+
+  -- TODO: refactor into function calls
+  --  each single function call should only do one thing
+
   for i, LVL1_obj in pairs(vtt) do ------------------------------ lvl 1 ------------
     syntax_utils.setClassTrackInfo(config.classes, LVL1_obj)
 
     for j, LVL2_obj in pairs(LVL1_obj.children) do ------------- lvl 2 ------------
 
-      -- log.user(LVL3_obj.trackIndex, LVL3_obj.name)
+      log.user(LVL2_obj.trackIndex, LVL2_obj.class, LVL2_obj.name)
 
       local count_w_range = 24 -- put in config
       syntax_utils.setClassTrackInfo(config.classes, LVL2_obj)
+
+      -- collect drum kit children -> needs reversed loop
       local opt_m_children = {}
 
       for k, LVL3_obj in pairs(LVL2_obj.children) do ----------- lvl 3 ------------
@@ -42,7 +67,9 @@ function actions.applyConfigs()
 
         end -- l
       end -- k
+
       apply_funcs.applyMappedOptMChildren(LVL2_obj, opt_m_children, count_w_range)
+
     end -- j
   end -- i
 end

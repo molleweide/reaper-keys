@@ -48,6 +48,8 @@ local div = '\n##########################################\n\n'
 
 function routing.updateState(route_str, coded_sources, coded_dests)
   -- log.clear()
+
+  -- get default route configs
   local rp = rc
   local _
 

@@ -165,6 +165,13 @@ end
 
 -- DON'T USE  `TRACKS`
 --    ONLY GUID
+--    REFACTOR: take options table as input instead. more readable
+--    {
+--      tr_guid = string, (track guid)
+--      fx_idx = number
+--      is_rec = bool,
+--      new_name = string
+--    }
 function fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, idx_fx, is_rec_fx, newName)
 	local tr, tr_idx = ru.getTrackByGUID(guid_tr)
 	local strT, found, slot = {}
@@ -251,7 +258,12 @@ function fx_util.fxBypassToggle(guid_tr, fx_idx)
 	fx_util.fxSetBypass(guid_tr, fx_idx, 2)
 end
 
+
+--- Get the index of an FX with name == "search_name"
 fx_util.getFxIndexByName = function(guid_tr, search_name)
+
+  -- TODO: handle regular expressions in search_name pattern string
+
 	-- TODO: handle is_rec_fx
 	local is_rec_fx = false
 

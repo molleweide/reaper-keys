@@ -5,6 +5,7 @@ function track.isSel()
 	return reaper.CountSelectedTracks(0) ~= 0
 end
 
+--- Get info for tracks matching search_name pattern
 function track.getMatchedTrackGUIDs(search_name)
 	if not search_name then
 		return nil

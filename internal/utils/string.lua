@@ -19,4 +19,16 @@ function string_util.getStringSplitPattern(pString, pPattern)
   return Table
 end
 
+-- TODO: move to utils/strings
+-- #1   any string
+-- #2   string of chars we want to see if any of them exists in str
+-- stringHasOneOfChars
+string_util.strHasOneOfChars = function(str,char_set)
+  local s,_ = string.find(str, "[".. char_set .."]")
+  -- log.user('matchSingleChar: ', string.find(str, "[".. char_set .."]"))
+  if s == 1 then return true end
+end
+
+
+
 return string_util
