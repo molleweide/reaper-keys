@@ -42,7 +42,7 @@ function actions.applyConfigs()
 
     for j, LVL2_obj in pairs(LVL1_obj.children) do ------------- lvl 2 ------------
 
-      log.user(LVL2_obj.trackIndex, LVL2_obj.class, LVL2_obj.name)
+      -- log.user(LVL2_obj.trackIndex, LVL2_obj.class, LVL2_obj.name)
 
       local count_w_range = 24 -- put in config
       syntax_utils.setClassTrackInfo(config.classes, LVL2_obj)

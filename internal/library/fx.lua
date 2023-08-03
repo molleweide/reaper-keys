@@ -172,7 +172,20 @@ end
 --      is_rec = bool,
 --      new_name = string
 --    }
-function fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, idx_fx, is_rec_fx, newName)
+function fx_util.getSetTrackFxNameByFxChainIndex(guid_tr_or_opts, idx_fx, is_rec_fx, newName)
+	local guid_tr = guid_tr_or_opts
+
+  -- handle opts table
+	if guid_tr_or_opts == nil then
+		return
+	elseif type(guid_tr_or_opts) == "table" then
+	  local t = guid_tr_or_opts
+		guid_tr = t.tr_guid
+		idx_fx = t.idx_fx
+		is_rec_fx = t.is_rec_fx
+		newName = t.newName
+	end
+
 	local tr, tr_idx = ru.getTrackByGUID(guid_tr)
 	local strT, found, slot = {}
 	local Pcall
@@ -258,11 +271,9 @@ function fx_util.fxBypassToggle(guid_tr, fx_idx)
 	fx_util.fxSetBypass(guid_tr, fx_idx, 2)
 end
 
-
 --- Get the index of an FX with name == "search_name"
 fx_util.getFxIndexByName = function(guid_tr, search_name)
-
-  -- TODO: handle regular expressions in search_name pattern string
+	-- TODO: handle regular expressions in search_name pattern string
 
 	-- TODO: handle is_rec_fx
 	local is_rec_fx = false
@@ -281,15 +292,14 @@ fx_util.getFxIndexByName = function(guid_tr, search_name)
 	for i = 0, tc - 1 do
 		local current_name = fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, i, is_rec_fx)
 		local ok, plugin_name = reaper.TrackFX_GetFXName(tr, i)
-    local fx_has_custom_name = true
-    if current_name == "\"\"" then
-      fx_has_custom_name = false
-    end
+		local fx_has_custom_name = true
+		if current_name == '""' then
+			fx_has_custom_name = false
+		end
 		if fx_has_custom_name then
 			if current_name:match(search_name) then
 				t[#t + 1] = { name = current_name, idx = i, guid = reaper.TrackFX_GetFXGUID(tr, i) }
-							log.info("entered current for", current_name)
-
+				log.info("entered current for", current_name)
 
 				found = true
 			end

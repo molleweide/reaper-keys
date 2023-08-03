@@ -39,8 +39,90 @@ local function getRSFXStrAndTrackName(old_has_div, old_fx_name)
 	return old_tr_name, old_rsfx_str
 end
 
+local function getPrevDataForFx(opts_global)
+	local old_fx_name = fx_util.getSetTrackFxNameByFxChainIndex({
+		guid_tr = opts_global.trk_obj.guid,
+		idx_fx = opts_global.new_fx_chain_idx,
+		is_rec_fx = false,
+	})
+	-- log.user('##chob/old_fx_name: ' .. child_obj.name .. ' | '.. tostring(old_fx_name))
+	local old_has_div = checkOldFxHasDiv(old_fx_name)
+	local old_tr_name, old_rsfx_str = getRSFXStrAndTrackName(old_has_div, old_fx_name)
+	return old_has_div, old_tr_name, old_rsfx_str
+end
+
+-- local function get_matches(opts)
+-- 	local tr_name_match = false
+-- 	local rsfx_str_match = false
+--
+-- 	if old_tr_name == opts.track_obj.name then
+-- 		tr_name_match = true
+-- 	end
+-- 	if old_rsfx_str == new_rsfx_str then
+-- 		rsfx_str_match = true
+-- 	end
+-- 	return tr_name_match, rsfx_str_match
+-- end
+
+local function rsfxHandleCode(opts_g, opts_rs)
+	if opts_rs.t_rsfx.code ~= nil then
+		if opts_rs.old_has_div then
+			if not opts_rs.rsfx_str_match then -- missmatch
+				fx_util.replaceFxAtIndex(opts_g.trk_obj.guid, opts_rs.t_rsfx.search_str, opts_g.new_fx_chain_idx) -- after existing
+			end
+		else -- prev not pre, but still pre syntax > insert at end of pre ( ?????? )
+			fx_util.insertFxAtIndex(opts_g.trk_obj.guid, opts_rs.t_rsfx.search_str, opts_g.new_fx_chain_idx) -- after existing
+		end
+
+		-- NOTE: what is this used for???
+		rs_fx_pre_count = opts_g.new_fx_chain_idx + 1
+	else
+		if opts_rs.old_has_div then
+			fx_util.removeFxAtIndex(opts_g.trk_obj.guid, opts_g.new_fx_chain_idx)
+		end
+	end -- A, then B,C
+end
+
+local function rsfxUdateFxName(opts_g, opts_rs)
+	if not opts_rs.tr_name_match or not opts_rs.rsfx_str_match then -- update name
+		fx_util.getSetTrackFxNameByFxChainIndex(
+			opts_g.trk_obj.guid,
+			opts_g.new_fx_chain_idx,
+			false,
+			opts_rs.new_fx_name
+		) -- update fxc name
+	end
+end
+
+local function rsfxUdateFxParams(i1, opts_g, opts_rs)
+	-- first handle regular fx params
+
+	-- TODO: nil check
+
+	for k, rsfx_parm in pairs(opts_rs.t_rsfx.fx_params) do
+		-- TODO: create guid api for this
+		reaper.TrackFX_SetParam(
+			opts_g.tr,
+			opts_g.new_fx_chain_idx,
+			k,
+			-- compute/call get param value
+			rsfx_parm.val(opts_g.proll_start_idx, opts_g.tr_range, i1)
+		)
+	end
+
+	-- TODO: then, handle named config params
+	if type(opts_rs.t_rsfx.named_config_params) == "function" then
+	  -- log.user(opts_g.trk_obj.name .. " -->> has config parms")
+	  --
+	  opts_rs.t_rsfx.named_config_params(opts_g, opts_rs.t_rsfx)
+	end
+
+	-- check if has named config params
+
+
+end
+
 local function getSingleRSFXName(child_obj, new_fx_chain_idx, RSFX_IDX, ridx, rsfx)
-	local div = "_"
 	local name_str = rsfx.code .. div .. new_fx_chain_idx .. div .. rsfx.rsfx_name .. div .. ridx
 	name_str = child_obj.name .. div .. name_str
 
@@ -65,112 +147,83 @@ local function computeSyntaxLength(child_obj, RSFX_LIST)
 	return fx_tot
 end
 
+local function handleFXChainSyntaxPostFx(opts_global)
+	if 0 < opts_global.old_fx_chain_count - opts_global.new_fx_chain_idx then
+		for _ = opts_global.new_fx_chain_idx, opts_global.old_fx_chain_count - 1 do
+			local ofxn =
+				fx_util.getSetTrackFxNameByFxChainIndex(opts_global.trk_obj.guid, opts_global.new_fx_chain_idx, false)
+			local old_has_div = checkOldFxHasDiv(ofxn)
+			if old_has_div then
+				fx_util.removeFxAtIndex(opts_global.trk_obj.guid, opts_global.new_fx_chain_idx) -- don't increment index if we remove
+			-- log.user('rm excess pre')
+			else
+				opts_global.new_fx_chain_idx = opts_global.new_fx_chain_idx + 1
+			end
+		end
+	end
+end
+
 function fx.applyConfFxToChildObj(child_obj, proll_start_idx, opt_type) -- change to drum_map_note_start
-	local tr, tr_idx = reaper_utils.getTrackByGUID(child_obj.guid)
-	if tr == nil then
+	local tr, _ = reaper_utils.getTrackByGUID(child_obj.guid)
+	if tr == nil or child_obj == nil then
 		return
 	end
-	local tr_range = 1
-	local tr_has_range = RS_TrObj.trackHasOption(child_obj, "nr")
-	if tr_has_range then
-		tr_range = child_obj.options.nr
-	end
+
+	local opts_global = {
+		tr = tr,
+		tr_range = RS_TrObj.trackHasOption(child_obj, "nr") and child_obj.options.nr or 1,
+		trk_obj = child_obj,
+		proll_start_idx = proll_start_idx,
+		opt_type = opt_type,
+		new_fx_chain_idx = 0,
+		old_fx_chain_count = reaper.TrackFX_GetCount(tr),
+	}
 
 	local RSFX_LIST = class_conf[child_obj.class].fx_syntax[opt_type]
-	local old_fx_chain_count = reaper.TrackFX_GetCount(tr)
-	local new_fx_chain_idx = 0
 
-	-- syntax fx --
-	for RSFX_IDX = 0, #RSFX_LIST do -- each syntax component =======================
-		-- spawn num, eg. if we should insert multiple instances in a row of fx ( i think )
-		local spawn_num = 1 -- is
-		local rsfx_use_spawn = RSFX_LIST[RSFX_IDX].spawnByRange -- if fx allows for tr_range
-		if tr_has_range and rsfx_use_spawn then
-			spawn_num = child_obj.options.nr
-		end
+	-- each syntax table component
+	for RSFX_IDX = 0, #RSFX_LIST do
+		-- TODO: attach this table as sub table of opts_g
+		local opts_rsfx_idx = {
+			spawn_num = (RS_TrObj.trackHasOption(child_obj, "nr") and RSFX_LIST[RSFX_IDX].spawnByRange)
+					and child_obj.options.nr
+				or 1,
+			t_rsfx = RSFX_LIST[RSFX_IDX],
+		}
 
-		for i1 = 0, spawn_num - 1 do -- syntax spawn num =============================
-			local old_fx_name = fx_util.getSetTrackFxNameByFxChainIndex(child_obj.guid, new_fx_chain_idx, false)
-			-- log.user('##chob/old_fx_name: ' .. child_obj.name .. ' | '.. tostring(old_fx_name))
+		for i1 = 0, opts_rsfx_idx.spawn_num - 1 do -- syntax spawn num =============================
+			-- TODO: put this into opts_rsfx_idx.old_data
+			local old_has_div, old_tr_name, old_rsfx_str = getPrevDataForFx(opts_global)
 
-			local old_has_div = checkOldFxHasDiv(old_fx_name)
-			local old_tr_name, old_rsfx_str = getRSFXStrAndTrackName(old_has_div, old_fx_name)
+			-- TODO: reduce paramaters to opts table
+			local new_fx_name, new_rsfx_str =
+				getSingleRSFXName(child_obj, opts_global.new_fx_chain_idx, RSFX_IDX, i1, RSFX_LIST[RSFX_IDX])
 
-			local new_fx_name, new_rsfx_str = getSingleRSFXName(child_obj, new_fx_chain_idx, RSFX_IDX, i1, RSFX_LIST[RSFX_IDX])
+			opts_rsfx_idx.old_has_div = old_has_div
+			opts_rsfx_idx.new_fx_name = new_fx_name
+			opts_rsfx_idx.tr_name_match = old_tr_name == child_obj.name and true or false
+			opts_rsfx_idx.rsfx_str_match = old_rsfx_str == new_rsfx_str and true or false
 
-			local tr_name_match = false
-			local rsfx_str_match = false
-
-			if old_tr_name == child_obj.name then
-				tr_name_match = true
-			end
-			if old_rsfx_str == new_rsfx_str then
-				rsfx_str_match = true
-			end
 			-- log.user(
 			--   '\n\n - fx info -----------------------------\n' ..
-			--   'tr_range: ' .. tr_range .. '\n' ..
+			--   'opts_global.tr_range: ' .. opts_global.tr_range .. '\n' ..
 			--   'old/new tr name: \t' .. old_tr_name .. ' => ' .. child_obj.name .. '\n' ..
 			--   -- 'new_pre_fx_count' .. new_pre_fx_count .. '\n' ..
 			--   'rsfx_str old/new: \t' .. tostring(old_rsfx_str) .. ' => ' .. new_rsfx_str ..  '\n' ..
 			--   'match name/rsfx: \t' .. tostring(tr_name_match) .. ' | ' .. tostring(rsfx_str_match) .. '\n'
 			--   )
 
-			-- A -----------------------------------------------------------------------
-			if RSFX_LIST[RSFX_IDX].code ~= nil then
-				if old_has_div then
-					if not rsfx_str_match then -- missmatch
-						local tr = reaper.GetTrack(0, child_obj.trackIndex) -- use guid!!!!!!!!!!!!!
+			rsfxHandleCode(opts_global, opts_rsfx_idx)
+			rsfxUdateFxName(opts_global, opts_rsfx_idx)
+			rsfxUdateFxParams(i1, opts_global, opts_rsfx_idx)
 
-						fx_util.replaceFxAtIndex(tr, RSFX_LIST[RSFX_IDX].search_str, new_fx_chain_idx) -- after existing
-					end
-				else -- prev not pre, but still pre syntax > insert at end of pre
-					-- local tr = reaper.GetTrack(0, child_obj.trackIndex)
-					fx_util.insertFxAtIndex(child_obj.guid, RSFX_LIST[RSFX_IDX].search_str, new_fx_chain_idx) -- after existing
-				end
-				rs_fx_pre_count = new_fx_chain_idx + 1
-			else
-				if old_has_div then
-					local tr = reaper.GetTrack(0, child_obj.trackIndex)
-					util.removeFxAtIndex(tr, new_fx_chain_idx)
-				end
-			end -- A, then B,C
-
-			-- update name
-			if not tr_name_match or not rsfx_str_match then -- update name
-				fx_util.getSetTrackFxNameByFxChainIndex(child_obj.guid, new_fx_chain_idx, false, new_fx_name) -- update fxc name
-			end
-
-			-- update FX params for
-			for k, rsfx_parm in pairs(RSFX_LIST[RSFX_IDX].fx_params) do
-				reaper.TrackFX_SetParam(tr, new_fx_chain_idx, k, rsfx_parm.val(proll_start_idx, tr_range, i1))
-			end
-
-			new_fx_chain_idx = new_fx_chain_idx + 1
+			opts_global.new_fx_chain_idx = opts_global.new_fx_chain_idx + 1
 		end -- FX
 	end -- RSFX_LIST
 
-	-- post syntax fx --
-	if 0 < old_fx_chain_count - new_fx_chain_idx then
-		for p1 = new_fx_chain_idx, old_fx_chain_count - 1 do
-			local ofxn = fx_util.getSetTrackFxNameByFxChainIndex(child_obj.guid, new_fx_chain_idx, false)
-			local old_has_div = false
-			if type(ofxn) == "string" then
-				if ofxn:match("_A_") then
-					old_has_div = true
-				end
-			end
-			if old_has_div then
-				local tr = reaper.GetTrack(0, child_obj.trackIndex)
-				fx_util.removeFxAtIndex(tr, new_fx_chain_idx) -- don't increment index if we remove
-			-- log.user('rm excess pre')
-			else
-				new_fx_chain_idx = new_fx_chain_idx + 1
-			end
-		end
-	end
+	handleFXChainSyntaxPostFx(opts_global)
 
-	-- log.user('new fx chain count: ' .. new_fx_chain_idx .. '\n\n\n')
+	-- log.user('new fx chain count: ' .. opts_global.new_fx_chain_idx .. '\n\n\n')
 
 	return true
 end

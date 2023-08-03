@@ -85,9 +85,13 @@ end
 --- Get state, compare to new state.
 ---@param key_press table eg. {['key'] = '<C-h>', ['context'] = 'main'}
 local function input(key_press)
-
 	log.info("\n+++++++++++++++++++++++++++++++++++++++++++\ninput: " .. format.line(key_press))
 	feedback.clear()
+
+	-- if not reaper.JS_Window_Find then
+	-- 	reaper.MB("Please install js_ReaScriptAPI extension", "Error", 0)
+	-- 	return
+	-- end
 
 	-- -- log start
 	--     local tr = reaper.GetSelectedTrack(0,0)
