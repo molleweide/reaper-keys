@@ -1,6 +1,7 @@
 -- dofile(reaper.GetResourcePath().."/UserPlugins/ultraschall_api.lua")
 local ru = require("custom_actions.utils")
 local log = require("utils.log")
+local format = require("utils.format")
 
 local fx_util = {}
 
@@ -180,11 +181,13 @@ function fx_util.getSetTrackFxNameByFxChainIndex(guid_tr_or_opts, idx_fx, is_rec
 		return
 	elseif type(guid_tr_or_opts) == "table" then
 	  local t = guid_tr_or_opts
-		guid_tr = t.tr_guid
+		guid_tr = t.guid_tr
 		idx_fx = t.idx_fx
 		is_rec_fx = t.is_rec_fx
 		newName = t.newName
 	end
+
+	-- log.user(guid_tr, idx_fx, is_rec_fx, newName)
 
 	local tr, tr_idx = ru.getTrackByGUID(guid_tr)
 	local strT, found, slot = {}

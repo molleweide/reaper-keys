@@ -88,31 +88,38 @@ return {
           -- 	-- .. file
           -- )
 
-          -- 1. get name before `.` (opts_g.trk_obj.name)
-          --  ignore this for now - just use the name
-
-          -- 2. run command find files containing `name before`
-
           local utils_io = require("utils.io")
 
-          local searchName = opts_g.trk_obj.name
-
-          local matchingFiles = utils_io.findWavFilesWithNameX(searchName)
-          -- for _, filePath in ipairs(matchingFiles) do
-          -- 	print(filePath)
-          -- end
-
-          if #matchingFiles > 0 then
-            reaper.TrackFX_SetNamedConfigParm(opts_g.tr, opts_g.new_fx_chain_idx, "FILE0", matchingFiles[1])
-            reaper.TrackFX_SetNamedConfigParm(opts_g.tr, opts_g.new_fx_chain_idx, "DONE", "")
+          local function getSubstringBeforePeriod(str)
+            local substring = string.match(str, "^(.-)%.") -- The pattern captures characters until the first period.
+            return substring
           end
 
-          -- 3. get first?
+          local searchName = getSubstringBeforePeriod( opts_g.trk_obj.name )
 
-          -- 4. write file path to rs5k
+          local matchingFiles = utils_io.findWavFilesWithNameX(searchName)
 
-          -- reaper.TrackFX_SetNamedConfigParm(track, rs5k_pos, "FILE0", filename)
-          -- reaper.TrackFX_SetNamedConfigParm(track, rs5k_pos, "DONE", "")
+          -- TODO: get random sample file index
+          local function getRandomIndexInRange(minIndex, maxIndex)
+            -- Calculate the random floating-point number between 0 and 1
+            local randomFloat = math.random()
+
+            -- Calculate the random index within the specified range
+            local rangeSize = maxIndex - minIndex + 1
+            local randomIndex = math.floor(randomFloat * rangeSize) + minIndex
+
+            return randomIndex
+          end
+
+          if #matchingFiles > 0 then
+            reaper.TrackFX_SetNamedConfigParm(
+              opts_g.tr,
+              opts_g.new_fx_chain_idx,
+              "FILE0",
+              matchingFiles[getRandomIndexInRange(1, #matchingFiles)]
+            )
+            reaper.TrackFX_SetNamedConfigParm(opts_g.tr, opts_g.new_fx_chain_idx, "DONE", "")
+          end
         end,
       },
     }, -- m

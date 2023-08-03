@@ -47,10 +47,16 @@ function getNameStringParts(tr_idx, trk_name)
 
 	-- NAME ERROR
 	local name_str = string.sub(trk_name, dividers[2] + 1, -1)
-	local name_charset = "^[%a%d/_-]*$"
+	local name_charset = "^[%a%d/_-]-%.?[%a%d/_-]-$"
 	if string.find(name_str, name_charset) == nil then
 		log.user(
-			"TrackNameError: " .. tr_idx .. " : Name string `" .. name_str .. "`, has to be of `" .. name_charset .. "` ."
+			"TrackNameError: "
+				.. tr_idx
+				.. " : Name string `"
+				.. name_str
+				.. "`, has to be of `"
+				.. name_charset
+				.. "` ."
 		) -- format.vttError()
 		return false
 	end
@@ -114,24 +120,29 @@ end
 
 ---
 ---@param tr_idx
----@param pp string previous prefix
----@param ne string next prefix
+---@param prev_prefix string
+---@param next_prefix string
 ---@return
-function verifyByComparing(tr_idx, pp, ne) -- prev / next entry
-	-- if str_type == 'allowed' and validNext(ne, 'ZGMCABS', 'character not allowed') then return true end
-	if pp == nil and validNext(ne, "Z", tr_idx, "first track needs to be of class Z") then
+function verifyByComparing(tr_idx, prev_prefix, next_prefix) -- prev / next entry
+	-- if str_type == 'allowed' and validNext(next_prefix, 'ZGMCABS', 'character not allowed') then return true end
+	if prev_prefix == nil and validNext(next_prefix, "Z", tr_idx, "first track needs to be of class Z") then
 		return true
 	end
 
 	-- same and conf.class.tree.repeatble??
-	if pp == ne and validNext(ne, "MABTS", tr_idx, "Only MABTS can come in sequence") then
+	if prev_prefix == next_prefix and validNext(next_prefix, "MABTS", tr_idx, "Only MABTS can come in sequence") then
 		return true
 	end
 
 	for _, c in pairs(class_configs) do
 		if
-			pp == c.prefix
-			and validNext(ne, c.treeProps.nxt, tr_idx, c.prefix .. " needs to be followed by a " .. c.treeProps.nxt)
+			prev_prefix == c.prefix
+			and validNext(
+				next_prefix,
+				c.treeProps.nxt,
+				tr_idx,
+				c.prefix .. " needs to be followed by a " .. c.treeProps.nxt
+			)
 		then
 			return true
 		end
@@ -140,13 +151,13 @@ function verifyByComparing(tr_idx, pp, ne) -- prev / next entry
 end
 
 ---
----@param next_string
+---@param next_prefix
 ---@param next_char_set
 ---@param err_trk_idx
 ---@param err_msg
-function validNext(next_string, next_char_set, err_trk_idx, err_msg)
-	-- log.user('validNext: ' .. next_string, next_char_set)
-	if util.strHasOneOfChars(next_string, next_char_set) then
+function validNext(next_prefix, next_char_set, err_trk_idx, err_msg)
+	-- log.user('validNext: ' .. next_prefix, next_char_set)
+	if util.strHasOneOfChars(next_prefix, next_char_set) then
 		return true
 	else
 		log.user("TrackNameError: " .. err_trk_idx .. " : " .. err_msg .. ".") -- format.vttError()
