@@ -123,6 +123,13 @@ return {
 						--        to narrow down the results eg. `bass.hard.whatever`
 						--
 
+
+            --
+            -- FIX: the (.) has to be optional. now if there is a single name,
+            -- ie. "snare" it will not find anything.
+            -- >> Allow for [string(.string)*] so that I can have variable
+            -- amoutns of dots in track names
+
 						local function getSubstringBeforePeriod(str)
 							local substring = string.match(str, "^(.-)%.") -- The pattern captures characters until the first period.
 							return substring

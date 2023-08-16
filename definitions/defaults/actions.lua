@@ -3,6 +3,7 @@ local custom = require('custom_actions')
 local media_explorer = require('library.media_explorer')
 local midi2vox = require('library.vox_to_midi')
 local dev = require('utils.dev')
+local midi_patterns = require('custom_actions.midi_patterns')
 
 return {
   ActivateNextMidiItem = {40833, midiCommand=true},
@@ -644,6 +645,8 @@ return {
   MediaExplorerToggle = media_explorer.toggle,
 
   MidiVoxSetCurrentDrumTrigNote = midi2vox.setDrumTrigMIDIOutFromCurrentNote,
+
+  NoteRowPattern = { midi_patterns.insertPatternForCurrentBarAndNoteRow, midiCommand=true },
 
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,

@@ -33,6 +33,7 @@ return {
     ["<C-->"] = "MidiZoomOutVert",
     ["Z"] = "CloseWindow",
     ["p"] = "MidiPaste",
+    ["P"] = "NoteRowPattern",
     ["S"] = "UnselectAllEvents",
     ["Y"] = "CopySelectedEvents",
     ["D"] = "CutSelectedEvents",
