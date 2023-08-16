@@ -22,6 +22,7 @@ function util.setClassTrackInfo(class_conf, trk_obj)
 end
 
 
+-- TODO: move to utils/strings
 -- #1   any string
 -- #2   string of chars we want to see if any of them exists in str
 -- stringHasOneOfChars

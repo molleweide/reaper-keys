@@ -192,6 +192,8 @@ function MediaExplorer_GetTimeSelection(force_readout)
     return start_secs ~= end_secs, start_secs, end_secs
 end
 
+
+-- TODO: move to util
 function GetLastFocusedFXContainer()
     local ret, tnum, inum, fnum = reaper.GetFocusedFX2()
 
@@ -219,6 +221,7 @@ function GetLastFocusedFXContainer()
 end
 
 function Main()
+
     --- Ensure hwnd for MX is valid (changes when docked etc.)
     if not reaper.ValidatePtr(mx, 'HWND') then
         mx = reaper.JS_Window_FindTop(mx_title, true)

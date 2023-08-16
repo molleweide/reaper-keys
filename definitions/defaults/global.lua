@@ -149,6 +149,7 @@ return {
         }},
         ["m"] = { "+midi", {
             ["g"] = "SetMidiGridDivision",
+            ["m"] = "SetModeMidi",
             ["q"] = "Quantize",
             ["Q"] = "ToggleInputQuantize",
             ["s"] = "MidiVoxSetCurrentDrumTrigNote",
@@ -194,7 +195,6 @@ return {
             ["E"] = "OpenMidiEditor",
             ["T"] = "OpenEmptyItemNoteEditor",
             ["c"] = "CropToActiveTake",
-            ["o"] = "OpenInMidiEditor",
             ["n"] = "ItemNormalize",
             ["g"] = "GroupItems",
             ["q"] = "QuantizeItems",

@@ -450,6 +450,7 @@ return {
   SetLoopStart = 40222,
   SetMidiGridDivision = custom.setMidiGridDivision,
   SetModeNormal = lib.state.setModeNormal,
+  SetModeMidi = lib.state.setModeMidi,
   PasteItemFxChain = {"_S&M_COPYFXCHAIN9", prefixRepetitionCount=true},
   SetModeVisualTimeline = lib.state.setModeVisualTimeline,
   ClearSelectedTimeline = custom.clearSelectedTimeline,

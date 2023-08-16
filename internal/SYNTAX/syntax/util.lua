@@ -22,6 +22,8 @@ function mod.applyChannelSplitRouting(trk_obj)
   if trk_obj.class == 'C' then
     trr.updateState('-#', trk_obj.guid)
     for s, split_obj in pairs(trk_obj.children) do
+
+      -- TODO: use string.format() as with doom here..
       trr.updateState('{0|'..s..'}', trk_obj.guid, split_obj.guid)
     end
   end
@@ -52,9 +54,10 @@ function mod.applyZoneDefaultRoutes(trk_obj, zone_name)
     end
 
     -- setup ghost kicks | mv to fn
-    if trk_obj.name:match('^kick') then
-      trr.updateState('(ghostkick)#[0|0]', trk_obj.guid)
-    end
+    -- if trk_obj.name:match('^kick') then
+    --   trr.updateState('(ghostkick)#[0|0]', trk_obj.guid)
+    -- end
+
   end
 end
 
@@ -64,9 +67,13 @@ function mod.applyMappedOptMChildren(parent_obj, opt_m_children, count_w_range)
   for k=1, #opt_m_children do
     local rev_idx = #opt_m_children + 1 - k -- reverse idx !!!
     local trk_obj = opt_m_children[rev_idx]
+
     trr.updateState('#{0|0}', parent_obj.guid, trk_obj.guid)
+
     fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
+
     count_w_range = midi.updatePianoRoll(parent_obj, trk_obj, count_w_range)
+
   end
 end
 

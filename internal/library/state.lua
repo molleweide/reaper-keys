@@ -29,6 +29,11 @@ function state.setModeVisualTimeline()
   end
 end
 
+function state.setModeMidi()
+  state_interface.setMode('midi')
+        log.user("mode midi !!!")
+end
+
 function state.setModeVirtualKeyboard()
   -- before we enter mode.
   --  first turn of dual-function-keys

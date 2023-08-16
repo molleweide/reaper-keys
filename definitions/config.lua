@@ -15,7 +15,7 @@ return {
   -- allow timeline movement when in visual track mode?
   allow_visual_track_timeline_movement = true,
   -- options in decreasing verbosity: [trace debug info warn user error fatal]
-  log_level = 'user',
+  log_level = 'info',
   repeatable_commands_action_type_match = {
     'command',
     'operator',
@@ -33,4 +33,9 @@ return {
     normal  = MACOS_PATH_KARABINER_CLI .. " --select-profile 'Molleweide'",
     vkb     = MACOS_PATH_KARABINER_CLI .. " --select-profile 'Moll_NDK'",
   },
+
+  path_presets = {
+    massive = "~/reaper/presets/massive"
+  }
+
 }
