@@ -141,6 +141,8 @@ midi_patterns.insertPatternFromString = function()
 
 	-- NOTE: EXAMPLES
 	--
+	-- -> SHORTHANDS:
+	--
 	--  a = 1/4
 	--  b = 1/8
 	--  c = 1/16 notes
@@ -160,7 +162,8 @@ midi_patterns.insertPatternFromString = function()
 	--             would create a pattern of length 11 QNs
 	--
 	--
-	--  -> specify explicit patterns:
+	--  -> SPECIFY EXPLICIT PATTERNS:
+	--
 	--    xoxx oxoo xkxo xkoo
 	--
 	--    x,k  = hit
@@ -174,6 +177,18 @@ midi_patterns.insertPatternFromString = function()
 	--  [xx]    -> [] indicates 32th notes
 	--
 	--  {}#
+	--
+	--
+	--  +(N)/-N    -> use to alternate note rows up or down, eg if you want
+	--                 get the feel of alternating hands
+	--                 x x x...
+	--                  x x
+	--
+	--  LAST CHUNK
+	--
+	--  xN or $N    -> to indicate number of repetitons of pattern
+	--
+	--  !      -> don't extend midi item if pattern overflows take end point.
 
 	-- TODO: parse each QN instance
 	--

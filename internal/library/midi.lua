@@ -347,12 +347,14 @@ local easy_read = [[
   returns true if device present
 ]]
 
+-- this is a test function i copied from MPLs scripts
 midi.reorderNotes = function()
 	-- for key in pairs(reaper) do
 	-- 	_G[key] = reaper[key]
 	-- end
 
 	function ReorderNotes(percent)
+
 		local ME = reaper.MIDIEditor_GetActive()
 		if not ME then
 			return
@@ -361,6 +363,7 @@ midi.reorderNotes = function()
 		if not take or not reaper.TakeIsMIDI(take) then
 			return
 		end
+
 		local last_t
 		for i = 1, ({ reaper.MIDI_CountEvts(take) })[2] do
 			local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = MIDI_GetNote(take, i - 1)
