@@ -1,6 +1,8 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
+local reaper_state = require("utils.reaper_state")
+
 local s = require("utils.string")
 
 local midi_patterns = {}
@@ -91,9 +93,6 @@ midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
 	reaper.MIDI_Sort(take)
 end
 
-
-
-
 -- NOTE: PATTERN SPEC
 --
 --  -> `134C` first, third, and fourth beats should have randomized sixteenth notes
@@ -112,63 +111,86 @@ end
 --            triplets or whatever notes for the beats.
 --
 --
---  -> specify explicit patterns:
---    xoxx oxoo xkxo xkoo
---
---    x,k  = hit
---    o    = no hit
---
---    () use () to indicate triples
 
+local state_table_name = "midipatterns"
 
-
+-- FIX: rename to `createNewPatternAndInsert`
 midi_patterns.insertPatternFromString = function()
-	-- ~ DRUM PATTERNS -> take input string -> store to project extstate/state ->
-	-- same way as `last search` is stored
+	local midi_patterns_state = reaper_state.get(state_table_name)
 
-	-- 2. store to project ext state.
-	-- 3. reuse logic from above to insert midi
+	log.user("PREV PATTERN:", format.block(midi_patterns_state))
 
+	local user_input_opts = {
+		-- todo:...
+	}
 	local input_placeholder = "a b c d x4"
-
-	local input_field_width = "350"
-
-	-- use string.format
-	local caption_csv = input_placeholder .. ",extrawidth=" .. input_field_width
+	local input_field_width = "extrawidth=350"
+	local caption_csv = string.format("%s,%s", input_placeholder, input_field_width)
 	local retvals_csv = ""
 
-	-- used for string splitting the input string.
+	-- pattern options
+	local pattern_opts = {
+		-- todo...
+	}
 	local pattern_sep = " "
 
-	-- NOTE: USER INUT
-
-	-- boolean retval, string retvals_csv = reaper.GetUserInputs(string title, integer num_inputs, string captions_csv, string retvals_csv)
-	--
-	-- Get values from the user.
-	--
-	-- If a caption begins with *, for example "*password", the edit field will
-	-- not display the input text.
-	--
-	-- Maximum fields is 16. Values are returned as a comma-separated string.
-	-- Returns false if the user canceled the dialog. You can supply special
-	-- extra information via additional caption fields: extrawidth=XXX to
-	-- increase text field width, separator=X to use a different separator for
-	-- returned fields.
-
-	-- retval, retvals_csv = reaper.GetUserInputs("Rename Tracks", 1, "Name:,Separator,extrawidth=200", "")
-	-- temp2, CCC = reaper.GetUserInputs("New Editcursor-position", 1, "Position in seconds,extrawidth=350", temp)
-	-- local retval, NameFile = reaper.GetUserInputs("Name File", 1, "Name File,extrawidth=150", "-Stem-")
-
 	local _, str_pat_input = reaper.GetUserInputs("pattern:", 1, input_placeholder, caption_csv, retvals_csv)
-
-	local t_pattern_strings = s.split(str_pat_input, " ")
-
-	-- TODO: STORE TO EXT STATE
-	-- previous_midi_pattern_string = xyz
-
-	-- FIX: pattern parsing and note insertion
+	local t_pattern_strings = s.split(str_pat_input, pattern_sep)
 
 	log.user("PATTERN STRING:", format.block(t_pattern_strings))
+
+	-- NOTE: EXAMPLES
+	--
+	--  a = 1/4
+	--  b = 1/8
+	--  c = 1/16 notes
+	--
+	--  eg. a $4 -> insert 4 QNs of quarter notes
+	--      b $2 -> insert 2 QN of consecutive 16th notes
+	--      c $8 -> insert 8 QNs of 1/8 notes
+	--
+	--  . (period) -> empty QN
+	--
+	--  ..       -> two empty quarter notes
+	--
+	--  .3     -> three empty QNs
+	--
+	--  ^     -> fill rest of measure with empty QNs
+	--             eg. if you have very large meter eg 11/4 then [ . a ^ x5 ]
+	--             would create a pattern of length 11 QNs
+	--
+	--
+	--  -> specify explicit patterns:
+	--    xoxx oxoo xkxo xkoo
+	--
+	--    x,k  = hit
+	--    o    = no hit
+	--
+	--    () use () to indicate triples
+	--
+	--
+	--  xx(xxx)    -> (xxx) indicates a triplet 24th note
+	--
+	--  [xx]    -> [] indicates 32th notes
+	--
+	--  {}#
+
+	-- TODO: parse each QN instance
+	--
+	-- ~ each delimited segment could describe something that is longer than
+	--   a QN - truncate info so that only QNs length blocks are used.
+
+	-- TODO: last repeat $5
+	--   handle repetition of pattern.
+	--   eg. ooxx 4$ -> repeat ooxx four times
+
+	reaper_state.set(state_table_name, { prev_pattern_string = str_pat_input })
 end
+
+midi_patterns.editPrevPatternAndInsert = function() end
+
+midi_patterns.repeatPrevPatternFromCurrentMeasure = function() end
+
+midi_patterns.repeatPrevPatternFromCursor = function() end
 
 return midi_patterns
