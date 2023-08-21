@@ -132,10 +132,11 @@ return {
     ["<SPC>"] = { "+leader commands", {
         ["<SPC>"] = "ShowActionList",
         ["w"] = "SetModeVKB",
-        ["d"] = { "+zoom/scroll", {
+        ["d"] = { "+dev", {
             ["l"] = "devLogAllParamsOfLastTouchedFx",
             ["L"] = "devLogLastTouchedFxParamDetailed",
             ["p"] = "devLogPaths",
+            ["n"] = "devlogLastTouchedFxNamedConfigParams",
         }},
         ["i"] = { "+i/o device", {
           ["q"] = "TrackInSet_MIDI_QMK",
@@ -150,6 +151,7 @@ return {
         ["m"] = { "+midi", {
             ["g"] = "SetMidiGridDivision",
             ["m"] = "SetModeMidi",
+            ["i"] = "MidiPatternInsertFromString",
             ["q"] = "Quantize",
             ["Q"] = "ToggleInputQuantize",
             ["s"] = "MidiVoxSetCurrentDrumTrigNote",

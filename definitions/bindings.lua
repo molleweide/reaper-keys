@@ -35,7 +35,7 @@ return {
 				"+leader commands",
 				{
 					["ll"] = "Launcher",
-					["T"] = { "+TESTING", {
+					["X"] = { "+TESTING", {
 						["T"] = "ReaperTesting",
 					} },
 				},

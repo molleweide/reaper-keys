@@ -108,8 +108,11 @@ return {
 					local retval, buf = reaper.TrackFX_GetNamedConfigParm(opts_g.tr, opts_g.new_fx_chain_idx, "FILE0")
 					-- log.user(opts_g.trk_obj.name .. ":", retval, buf, type(buf), buf == "", buf:find(wav_ext_pattern))
 
-					if buf:find(wav_ext_pattern) ~= nil then
-					else
+					local ignore_random = false
+
+					-- if ignore_random or buf:find(wav_ext_pattern) ~= nil then
+					--   -- dont do anything
+					-- else
 						log.user(opts_g.trk_obj.name .. " does not have samples. Fixing..")
 
 						local utils_io = require("utils.io")
@@ -169,7 +172,7 @@ return {
 							)
 							reaper.TrackFX_SetNamedConfigParm(opts_g.tr, opts_g.new_fx_chain_idx, "DONE", "")
 						end
-					end
+					-- end
 				end,
 			},
 		}, -- m

@@ -1,6 +1,8 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
+local s = require("utils.string")
+
 local midi_patterns = {}
 
 local function getMidiValidContext()
@@ -87,6 +89,86 @@ midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
 	end
 
 	reaper.MIDI_Sort(take)
+end
+
+
+
+
+-- NOTE: PATTERN SPEC
+--
+--  -> `134C` first, third, and fourth beats should have randomized sixteenth notes
+--
+--  -> `13B` first and third beat should have random eighth notes
+--
+--        (default is to specify QN with digits)
+--
+--        (use delimiter to separate digits if above 10, eg. 9,10,11,60)
+--
+--        this could actually be quite powerful for inserting rhythms.
+--
+--        -> `.15,65,98,00(15)` use (.) to specify that digits symbolize which
+--            eight note i am refering to and the chars coming after the digits
+--            specify how the notes should be inserted/randomized. eg use 16th, 8th,
+--            triplets or whatever notes for the beats.
+--
+--
+--  -> specify explicit patterns:
+--    xoxx oxoo xkxo xkoo
+--
+--    x,k  = hit
+--    o    = no hit
+--
+--    () use () to indicate triples
+
+
+
+midi_patterns.insertPatternFromString = function()
+	-- ~ DRUM PATTERNS -> take input string -> store to project extstate/state ->
+	-- same way as `last search` is stored
+
+	-- 2. store to project ext state.
+	-- 3. reuse logic from above to insert midi
+
+	local input_placeholder = "a b c d x4"
+
+	local input_field_width = "350"
+
+	-- use string.format
+	local caption_csv = input_placeholder .. ",extrawidth=" .. input_field_width
+	local retvals_csv = ""
+
+	-- used for string splitting the input string.
+	local pattern_sep = " "
+
+	-- NOTE: USER INUT
+
+	-- boolean retval, string retvals_csv = reaper.GetUserInputs(string title, integer num_inputs, string captions_csv, string retvals_csv)
+	--
+	-- Get values from the user.
+	--
+	-- If a caption begins with *, for example "*password", the edit field will
+	-- not display the input text.
+	--
+	-- Maximum fields is 16. Values are returned as a comma-separated string.
+	-- Returns false if the user canceled the dialog. You can supply special
+	-- extra information via additional caption fields: extrawidth=XXX to
+	-- increase text field width, separator=X to use a different separator for
+	-- returned fields.
+
+	-- retval, retvals_csv = reaper.GetUserInputs("Rename Tracks", 1, "Name:,Separator,extrawidth=200", "")
+	-- temp2, CCC = reaper.GetUserInputs("New Editcursor-position", 1, "Position in seconds,extrawidth=350", temp)
+	-- local retval, NameFile = reaper.GetUserInputs("Name File", 1, "Name File,extrawidth=150", "-Stem-")
+
+	local _, str_pat_input = reaper.GetUserInputs("pattern:", 1, input_placeholder, caption_csv, retvals_csv)
+
+	local t_pattern_strings = s.split(str_pat_input, " ")
+
+	-- TODO: STORE TO EXT STATE
+	-- previous_midi_pattern_string = xyz
+
+	-- FIX: pattern parsing and note insertion
+
+	log.user("PATTERN STRING:", format.block(t_pattern_strings))
 end
 
 return midi_patterns

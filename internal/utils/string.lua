@@ -1,5 +1,6 @@
 local string_util = {}
 
+-- FIX: what the fuck is this func doing?
 function string_util.getStringSplitPattern(pString, pPattern)
   local Table = {}  -- NOTE: use {n = 0} in Lua-5.0
   local fpat = "(.-)" .. pPattern
@@ -29,6 +30,13 @@ string_util.strHasOneOfChars = function(str,char_set)
   if s == 1 then return true end
 end
 
-
+string_util.split = function(str, sep)
+    local parts = {}
+    local pattern = string.format("([^%s]+)", sep)
+    for part in string.gmatch(str, pattern) do
+        table.insert(parts, part)
+    end
+    return parts
+end
 
 return string_util
