@@ -23,29 +23,29 @@ jGui = {
 	x = 0,
 	y = 0,
 	dockstate = 0,
-	
+
 	mouse = require ('REQ.mouse'),
 	kb = require('REQ.jKeyboard'),
-	
+
 	controls = {},
 	controlActive = false,
 	controlHover = false,
 	controlDrag = false,
-	
+
 	focus = false,
 	focusOrder = {},
 	focusOrderIndex = false,
-	
+
 	settings = {
 		fontsize = 10,
 		font = "Arial",
 		mouse_double_click_speed = 0.10,
 		font_color = {1,1,1,1}
 	},
-	
+
 	doExit = false,
 	imageId = 0,
-	
+
 	lastChar = false -- this is where reapers gfx.getChar() is stored
 }
 
@@ -93,7 +93,7 @@ function jGui:processKeyboard()
 		-- TODO process ESC here too!
 		if self.lastChar == self.kb.escape then
 			-- The escape closes the script and is not passed on to the control
-			self:onEsc()		
+			self:onEsc()
 		elseif self.lastChar == self.kb.enter and self.focus then -- ENTER
 			self.focus:_onEnter()
 		elseif self.lastChar == self.kb.tab and not self.kb.shift() then -- TAB
@@ -113,13 +113,13 @@ function jGui:processKeyboard()
 				self.focus:_onShiftTab()
 			else
 				self:focusPrev()
-			end		
+			end
 		elseif self.lastChar == self.kb.arrow_up then --   ARROW UP
 			if self.focus then
 				self.focus:_onArrowUp()
 			else
 				self:focusPrev()
-			end			
+			end
 		else -- A key was pressed. Send it to the control with keyboard focus
 			if self.focus then
 				self.focus:_onKeyboard(self.lastChar)
@@ -147,9 +147,9 @@ end
 function jGui:loop()
 	-- Get the keypresses
 	self:processKeyboard()
-	
+
 	self:update()
-	
+
 	self:refresh()
 
 	-- Refresh the gfx window
@@ -168,7 +168,7 @@ end
 
 function jGui:drawStr(sString, iX, iY, tFontColor)
 	tFontColor = tFontColor or self.settings.font_color
-	  
+
 	gfx.setfont(1, self.settings.font, self.settings.fontsize)
 	self:__setGfxColor(tFontColor)
 	gfx.x = iX
@@ -179,14 +179,14 @@ end
 function jGui:getControlHover()
 	for i, curControl in ipairs(self:getControlsByZInv()) do
 		curArea = curControl:getArea()
-		if curControl.mouse_input and 
-			curControl.visible and curArea[1] < gfx.mouse_x and gfx.mouse_x < curArea[3] and 
+		if curControl.mouse_input and
+			curControl.visible and curArea[1] < gfx.mouse_x and gfx.mouse_x < curArea[3] and
 			curArea[2] < gfx.mouse_y and gfx.mouse_y < curArea[4] then
-			
+
 			if curControl ~= self.controlHover and self.controlHover then -- When the user hovers from one button directly onto another
 				self.controlHover:_onMouseHoverOut()
 			end
-			
+
 			self.controlHover = curControl
 			curControl:_onMouseHover()
 
@@ -210,11 +210,11 @@ function jGui:controlAdd(oControl)
 	oControl:_init()
 	local iPos = #self.controls +1
 	self.controls[iPos] = oControl
-	
+
 	if oControl.focus_index then -- check if this control is tab-able
 		self.focusOrder[#self.focusOrder + 1] = oControl
 	end
-	
+
 	oControl.parentGui = self
 	return iPos
 end
@@ -274,10 +274,10 @@ function jGui:mouseUpdate()
   	local LB_DOWN = mouse.cap(mouse.LB)           -- Get current left mouse button state
   	local RB_DOWN = mouse.cap(mouse.RB)          -- Get current right mouse button state
   	local mx, my = gfx.mouse_x, gfx.mouse_y
-  
+
   -- (modded Schwa's GUI example)
   if (LB_DOWN and not RB_DOWN) or (RB_DOWN and not LB_DOWN) then   -- LMB or RMB pressed down?
-    if (mouse.last_LMB_state == false and not RB_DOWN) or (mouse.last_RMB_state == false and not LB_DOWN) then      
+    if (mouse.last_LMB_state == false and not RB_DOWN) or (mouse.last_RMB_state == false and not LB_DOWN) then
       if mouse.uptime and os.clock() - mouse.uptime < self.settings.mouse_double_click_speed and mouse.last_pressed_button == mouse.LB and LB_DOWN then
         self:OnMouseDoubleClickLMB(mx, my)
       else
@@ -286,11 +286,11 @@ function jGui:mouseUpdate()
     elseif mx ~= mouse.last_x or my ~= mouse.last_y then
       self:OnMouseDrag(mx, my, LB_DOWN, RB_DOWN)
     end
-      
+
   elseif not LB_DOWN and mouse.last_RMB_state or not RB_DOWN and mouse.last_LMB_state then
     self:OnMouseUp(mx, my, LB_DOWN, RB_DOWN)
   end
-  
+
 end
 
 function jGui:OnMouseDown(x, y, lmb_down, rmb_down)
@@ -325,8 +325,8 @@ function jGui:OnMouseUp(x, y, lmb_down, rmb_down)
   self.mouse.uptime = os.clock()
   self.mouse.dx = 0
   self.mouse.dy = 0
-  if not lmb_down and self.mouse.last_LMB_state then 
-  	self.mouse.last_LMB_state = false 
+  if not lmb_down and self.mouse.last_LMB_state then
+  	self.mouse.last_LMB_state = false
   	 if self.controlHover and self.controlHover == self.controlActive then
     	self.controlHover:_onMouseUp()
     elseif self.controlActive and self.controlDrag == self.controlActive then
@@ -335,7 +335,7 @@ function jGui:OnMouseUp(x, y, lmb_down, rmb_down)
     end
   end
   if not rmb_down and self.mouse.last_RMB_state then self.mouse.last_RMB_state = false end
-  
+
   self.controlActive = false
 end
 
@@ -351,14 +351,14 @@ end
 function jGui:OnMouseDrag(x, y, lmb_down, rmb_down)
   -- handle mouse dragging here, left mouse button only
   local mouse = self.mouse
-  
+
   if lmb_down then
   	mouse.last_x, mouse.last_y = x, y
   	mouse.dx = gfx.mouse_x - mouse.ox_l
   	mouse.dy = gfx.mouse_y - mouse.oy_l
   	mouse.capcnt = mouse.capcnt + 1
   end
-  
+
  -- self.self.controlHover
 	if self.controlActive then
 		self.controlDrag = self.controlActive
@@ -390,23 +390,23 @@ end
 
 function jGui:controlGetAll(tControls, key, value)
 	local tResult = {}
-	
+
 	for i, j in pairs(tControls) do
 		if j[key] == value then
 			tResult[#tResult + 1] = j
 		end
 	end
-	
+
 	return tResult
 end
 
 function jGui:controlGetAllValues(tControls, key)
 	local tResult = {}
-	
+
 	for i, j in pairs(tControls) do
 		tResult[#tResult + 1] = j[key]
 	end
-	
+
 	return tResult
 end
 
@@ -416,11 +416,11 @@ function jGui:setFocus(c)
 	if c == self.focus then -- already focussed on this control, nothing changes
 		return false
 	end
-	
+
 	if self.focus then -- blur the current focused control
 		self.focus:_onBlur()
 	end
-	
+
 	if c then
 		self.focus = c
 		c:_onFocus()
@@ -436,7 +436,7 @@ end
 
 function jGui:getNextFocus(bGetPrev)
 	local bGetPrev = bGetPrev or false
-	
+
 	if #self.focusOrder < 1 then -- nothing to be focussed on
 		return false
 	end
@@ -444,12 +444,12 @@ function jGui:getNextFocus(bGetPrev)
 	-- Check if there are any visible controls in the focus order
 	local focusOrderVisible = {}
 	for i, v in ipairs(self.focusOrder) do
-		if v.visible then 
+		if v.visible then
 			table.insert(focusOrderVisible, v)
 		end
 	end
 	if #focusOrderVisible < 1 then return false end -- There are no visible controls in the order
-	
+
 	if not self.focus then -- not focussed yet, start at 1 or last
 		if bGetPrev then
 			return focusOrderVisible[#focusOrderVisible]
@@ -457,7 +457,7 @@ function jGui:getNextFocus(bGetPrev)
 			return focusOrderVisible[1]
 		end
 	end
-	
+
 	for i, v in ipairs(focusOrderVisible) do
 		if v == self.focus then
 			if bGetPrev then
@@ -512,7 +512,7 @@ end
 function jGui:getImgId()
 	local r = self.imageId
 	self.imageId = self.imageId + 1
-	
+
 	return r
 end
 

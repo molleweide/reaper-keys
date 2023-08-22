@@ -4,34 +4,41 @@
 @noindex
 --]]
 
+-- NOTE: most of these functions could be moved into `fs.lua`
+
+---
+---@param sDir
+---@param bSkipRecursive
+---@param t
+---@return
 function getFilesRecursive(sDir, bSkipRecursive, t)
 	-- This function gets files and their path (recursivly) from a folder
 	-- sDirr needs to end with a slash! ("\\")
 	-- set bSkipRecursive = true to only look in the current folder
 	-- t can be empty or a table. If t is a table the results from this function will be added to it
 	-- the result is a table with {filename, path} as elements.
-	
+
 	local t = t or {}
 	local bSkipRecursive = bSkipRecursive or false
 	local i = 0
-	
+
 	-- If possbile first go recursivly into all subdirs
 	if not bSkipRecursive then
 		local sCurDir = reaper.EnumerateSubdirectories(sDir, i)
 		while sCurDir do
 			t = getFilesRecursive(sDir .. sCurDir .. "/", bSkipRecursive, t) -- changed / to \\ and back for mac (why did i have \\?)
-			
+
 			i = i + 1
 			sCurDir = reaper.EnumerateSubdirectories(sDir, i)
 		end
 	end
-	
+
 	-- Now gather files from this dir
 	i = 0
 	local sCurFile = reaper.EnumerateFiles(sDir, i)
 	while sCurFile do
 		t[#t+1] = {sCurFile, sDir}
-		
+
 		i = i+1
 		sCurFile = reaper.EnumerateFiles(sDir, i)
 	end
@@ -39,19 +46,31 @@ function getFilesRecursive(sDir, bSkipRecursive, t)
 	return t
 end
 
+--- TODO: fn param has to be renamed to something else. i associate `fn` with func
+--
+---@param fn
+---@return
 function jFilesRemoveExt(fn)
 	local r = fn:match("(.+)%..+")
     return r or fn -- if there is no . in the name return the original
 end
 
+---
+---@param path
+---@return
 function jFilesGetFilename(path)
     return path:match("^.+\\(.+)$")
 end
 
+---
+---@param path
+---@return
 function jFilesGetPath(path)
     return path:match("^(.+)\\.+$")
 end
 
+---
+---@param path
 function jFilesGetFileModifiedTimestamp(path)
     -- Be careful with this function as the system's date and time formatting determine the output
     local cmd = 'forfiles /P "'.. jFilesGetPath(path) .. '" /M "'.. jFilesGetFilename(path) ..'" /C "cmd /c echo @fdate @ftime"'
@@ -62,9 +81,12 @@ function jFilesGetFileModifiedTimestamp(path)
 		return false
 	else
 		return result
-	end	
+	end
 end
 
+---
+---@param source
+---@param dest
 function jFilesCopyFile(source, dest)
 	local cmd = 'COPY "' .. source .. '" "' .. dest .. '"'
 	-- msg(cmd)

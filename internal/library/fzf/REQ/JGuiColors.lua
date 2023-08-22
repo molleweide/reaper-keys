@@ -8,7 +8,7 @@ jGuiColors = {}
 
 function jGuiColors:get(sColor, opacity)
 	opacity = opacity or 1
-	
+
 	local myColors = {
 		white 			= 	    {	1,		1, 		1		},
 		black 			= 	    {	0, 		0, 		0		},
@@ -16,8 +16,8 @@ function jGuiColors:get(sColor, opacity)
 		green 			= 	    {	0, 		1, 		0		},
 		blue 			=    	{	0,	 	0, 		1		},
 		yellow			=		{	1,		1,		0		}
-	} 
-	
+	}
+
 	if not myColors[sColor] then
 		msg("Unknown color: " .. sColor)
 		return false
@@ -52,20 +52,20 @@ function jColor:new(o)
 	if type(o) == "table" then
 		newObject = o
 	end
-	
+
 	setmetatable(newObject, self)
 	self.__index = self
 
 	if type(o) == "string" then
 		newObject:make(o)
 	end
-	
+
 	return newObject
 end
 
 function jColor:make(sColor, opacity)
 	opacity = opacity or 1
-	
+
 	local myColors = {
 		white 			= 	    {	1,		1, 		1		},
 		black 			= 	    {	0, 		0, 		0		},

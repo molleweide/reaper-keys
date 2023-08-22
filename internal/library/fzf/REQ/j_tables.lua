@@ -4,6 +4,10 @@
 @noindex
 --]]
 
+---
+---@param st
+---@param iLevel
+---@return
 function tableToString(st, iLevel)
     iLevel = iLevel or 0
     if iLevel == 0 and type(st) ~= "table" then
@@ -22,6 +26,10 @@ function tableToString(st, iLevel)
     return sResult
 end
 
+---
+---@param t
+---@param sSeperator
+---@return
 function tableMultiConcat(t, sSeperator)
     --iLevel = iLevel or 0
     sResult = ""
@@ -32,19 +40,22 @@ function tableMultiConcat(t, sSeperator)
             sResult = sResult .. v .. sSeperator
         end
     end
-    return sResult    
+    return sResult
 end
 
+---
+---@param t
+---@param i
 function tableMultiGet(t, i)
     if type(t) ~= "table" then
         msg("tableMutliGet() error: Was expecting a table, didn't get one.")
         return false
     end
-    
+
     if #i == 1 then
         -- this is what we are looking for
         return t[i[1]]
-    elseif #i > 1 then  
+    elseif #i > 1 then
         j = table.remove(i, 1)
         return tableMultiGet(t[j], i)
     else
@@ -53,18 +64,22 @@ function tableMultiGet(t, i)
     end
 end
 
+---
+---@param t
+---@param i
+---@param v
 function tableMultiSet(t, i, v)
     if type(t) ~= "table" then
         msg("tableMultiSet() error: Was expecting a table, didn't get one.")
         --msg(t)
         return false
     end
-    
+
     if #i == 1 then
         -- this is what we are looking for
         t[i[1]] = v
         return true
-    elseif #i > 1 then  
+    elseif #i > 1 then
         j = table.remove(i, 1)
         return tableMultiSet(t[j], i, v)
     else
@@ -73,6 +88,10 @@ function tableMultiSet(t, i, v)
     end
 end
 
+---
+---@param t
+---@param s
+---@return
 function tableMultiCount(t, s)
     -- counts occurences of s in table t. Does brach search.
     -- uses string:find for compare
@@ -89,16 +108,18 @@ function tableMultiCount(t, s)
 end
 -- function stringExplode(s, sep)
 --     tResult = {}
-    
+
 --     for st in string.gmatch(s, "(.-)"..sep) do
 --         table.insert(tResult, st)
 --     end
-    
+
 --     return tResult
 -- end
 
 
 
+---
+---@param t
 function tablePrint(t)
     if type(t) ~= "table" then
         msg("TablePrint, got no table, value: " .. tostring(t))
@@ -108,6 +129,10 @@ function tablePrint(t)
     end
 end
 
+---
+---@param t
+---@param string
+---@return
 function tableSearch(t, string) -- NOT TESTED YET, works so far...
     if type(t) ~= "table" then
         msg("tableSearch(), got no table, value: " .. tostring(t))
@@ -119,11 +144,15 @@ function tableSearch(t, string) -- NOT TESTED YET, works so far...
             end
         end
     end
-    
+
     -- Default string not found
     return false -- Used to be 0
 end
 
+---
+---@param t
+---@param string
+---@return
 function tableFind(t, string) -- NOT TESTED YET, works so far... This one uses string.find() instead of == for comparison
     if type(t) ~= "table" then
         msg("tableSearch(), got no table, value: " .. tostring(t))
@@ -135,11 +164,15 @@ function tableFind(t, string) -- NOT TESTED YET, works so far... This one uses s
             end
         end
     end
-    
+
     -- Default string not found
     return 0
 end
 
+---
+---@param t
+---@param string
+---@return
 function tableSearchHeader(t, string)
     if type(t) ~= "table" then
         msg("tableSearch(), got no table, value: " .. tostring(t))
@@ -152,11 +185,15 @@ function tableSearchHeader(t, string)
             end
         end
     end
-    
+
     -- Default string not found
     return false
 end
 
+---
+---@param t1
+---@param t2
+---@return
 function jTablesGlue(t1, t2)
     -- Join together two tables, sticking t2 begin t1. Returns the result
 	return table.move(t2, 1, #t2, #t1 + 1, t1)

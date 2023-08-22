@@ -4,6 +4,11 @@
 @noindex
 --]]
 
+-- todo: move to `reaper_settings`
+
+---
+---@param file_name
+---@return
 function jSettingsReadFromFile(file_name)
 	-- Reads variables from a ini style text file
 	local f = io.open(file_name, "r")
@@ -18,6 +23,12 @@ function jSettingsReadFromFile(file_name)
 	return jSettingsRead(sContent)
 end
 
+---
+---@param file_name
+---@param inSection
+---@param inName
+---@param inValue
+---@param bSectionOptional
 function jSettingsWriteToFile(file_name, inSection, inName, inValue, bSectionOptional)
 	local bSectionOptional = bSectionOptional or false
 
@@ -34,6 +45,10 @@ function jSettingsWriteToFile(file_name, inSection, inName, inValue, bSectionOpt
 	f:close()
 end
 
+---
+---@param file_name
+---@param tKeys
+---@param bSectionOptional
 function jSettingsWriteToFileMultiple(file_name, tKeys, bSectionOptional)
 	local bSectionOptional = bSectionOptional or false
 
@@ -52,6 +67,9 @@ function jSettingsWriteToFileMultiple(file_name, tKeys, bSectionOptional)
 	f:close()
 end
 
+---
+---@param str
+---@return
 function jSettingsRead(str)
     -- Reads variables from a ini style string
 	-- Format for text file is: varname=value
@@ -83,12 +101,18 @@ function jSettingsRead(str)
 	return settingsData
 end
 
+---
+---@param inLine
+---@return
 function _jSettingsRemoveComments(inLine)
 	local lineClean = jStringExplode(inLine, ";")[1]
 	lineClean = jStringExplode(lineClean, "//")[1] -- First version used // for comments
 	return lineClean
 end
 
+---
+---@param inLine
+---@return
 function _jSettingsLineProcess(inLine)
 	local name = inLine:match("(.+)=(.-)")
 	local value = inLine:match(".+=(.+)")
@@ -101,6 +125,13 @@ function _jSettingsLineProcess(inLine)
 	return name, value, section
 end
 
+---
+---@param str
+---@param inSection
+---@param inName
+---@param inValue
+---@param bSectionOptional
+---@return
 function jSettingsWriteKey(str, inSection, inName, inValue, bSectionOptional)
 	local bSectionOptional = bSectionOptional or false
 	local newStr = ""
@@ -110,7 +141,7 @@ function jSettingsWriteKey(str, inSection, inName, inValue, bSectionOptional)
 	inSection = tostring(inSection)
 	inName = tostring(inName)
 	inValue = tostring(inValue)
-	
+
 	for line in str:gmatch("[^\r\n]+") do
 
 		local lineClean = _jSettingsRemoveComments(line)
@@ -146,10 +177,14 @@ function jSettingsWriteKey(str, inSection, inName, inValue, bSectionOptional)
 	return newStr, bSucces
 end
 
+---
+---@param file_name
+---@param default_file
+---@param content
 function jSettingsCreate(file_name, default_file, content)
 	local default_file = default_file or false
     local content = content or ""
-    
+
     if not io.open(file_name, "r") then
 		local file = io.open(file_name, "w")
 		if default_file then
@@ -169,6 +204,9 @@ function jSettingsCreate(file_name, default_file, content)
     end
 end
 
+---
+---@param value
+---@return
 function _jSettingsReadProcessValue(value)
 	value = jStringTrim(value)
     if value == "true" then
@@ -182,15 +220,19 @@ function _jSettingsReadProcessValue(value)
     return value
 end
 
+---
+---@param t
+---@param name
+---@param typeCheck
 function jSettingsGet(t, name, typeCheck)
-	
+
 	local value = t[name]
 	if value == nil then
 		msg("jSettingsGet(): Trying to read an empty setting: " .. name)
 		return nil
 	end
 
-	
+
 	if typeCheck == "table" then
 		if type(value) ~= typeCheck then
 			msg("jSettingsGet(): setting type does not match for: " .. name .. ". Wanted: " .. typeCheck .. ", got: " .. type(value))

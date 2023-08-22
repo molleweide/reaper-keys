@@ -89,6 +89,7 @@ function msg(m)
   return reaper.ShowConsoleMsg(tostring(m) .. "\n")
 end
 
+-- TODO: log all actions and see what is mapped here
 function jGetActions()
   -- local blacklist = {".*MIDI CC/OSC only%)$", ".*MIDI/OSC only.*", ".*MIDI CC/mousewheel.*", ".*MIDI CC relative/mousewheel.*"}
   -- local blacklist = {}
@@ -315,6 +316,10 @@ function jReadVstIni(ini_file_name, tRatingsData)
   return tResult
 end
 
+---
+---@param ini_file_name
+---@param tRatingsData
+---@return
 function jReadAuIni(ini_file_name, tRatingsData)
   local tResult = {}
 
@@ -354,6 +359,11 @@ function jReadAuIni(ini_file_name, tRatingsData)
   return tResult
 end
 
+--- Get track templates
+---@param tDirs
+---@param sRootDir
+---@param tRatingsData
+---@return
 function getTemplates(tDirs, sRootDir, tRatingsData)
   local tResult = {}
   for i, v in ipairs(tDirs) do
@@ -387,14 +397,25 @@ function getTemplates(tDirs, sRootDir, tRatingsData)
   return tTemplatesData
 end
 
+--- Is track template?
+---@param filename
+---@return
 function _jIsTemplate(filename)
   return filename:lower():find("%.rtracktemplate$")
 end
 
+--- Is FX chain?
+---@param filename
+---@return
 function _jIsFxChain(filename)
   return filename:lower():find("%.rfxchain$")
 end
 
+--- Get FX chain
+---@param tDirs
+---@param sRootDir
+---@param tRatingsData
+---@return
 function getFXChains(tDirs, sRootDir, tRatingsData)
   local tResult = {}
   for i, v in ipairs(tDirs) do
@@ -426,6 +447,12 @@ function getFXChains(tDirs, sRootDir, tRatingsData)
   return tFXChainData
 end
 
+--- Find VST
+---@param vstTable
+---@param sPattern
+---@param iInstance
+---@param iMaxResults
+---@param find_plain
 function findVst(vstTable, sPattern, iInstance, iMaxResults, find_plain)
   local iInstance = iInstance or false
   local find_plain = find_plain or true
@@ -570,6 +597,12 @@ function _jScroll(amount)
   UPDATE_RESULTS = true
 end
 
+---
+---@param gui
+---@param tControls
+---@param n
+---@param height
+---@param y_start
 function createResultButtons(gui, tControls, n, height, y_start)
   local x_start = 10
   local y_space = 0
@@ -674,6 +707,9 @@ function _makeColorsCatagory(b, info, color)
   info.colors_label = color
 end
 
+---
+---@param tButtons
+---@param tResults
 function showSearchResults(tButtons, tResults)
   for i, cIds in ipairs(tButtons) do
     local b = cIds[1]

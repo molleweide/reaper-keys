@@ -7,17 +7,17 @@
 MEDIA_TRACK_GET_INFO_VALUES = {
     mute = "B_MUTE",
     phase = "B_PHASE",
-    tracknumber = "IP_TRACKNUMBER", 
-    solo = "I_SOLO", 
-    fxen = "I_FXEN", 
-    recarm = "I_RECARM", 
+    tracknumber = "IP_TRACKNUMBER",
+    solo = "I_SOLO",
+    fxen = "I_FXEN",
+    recarm = "I_RECARM",
     recinput = "I_RECINPUT", -- : int * : record input. <0 = no input, 0..n = mono hardware input, 512+n = rearoute input, 1024 set for stereo input pair. 4096 set for MIDI input, if set, then low 5 bits represent channel (0=all, 1-16=only chan), then next 6 bits represent physical input (63=all, 62=VKB)
     recmode = "I_RECMODE", -- : int * : record mode (0=input, 1=stereo out, 2=none, 3=stereo out w/latcomp, 4=midi output, 5=mono out, 6=mono out w/ lat comp, 7=midi overdub, 8=midi replace
     recmon = "I_RECMON", -- : int * : record monitor (0=off, 1=normal, 2=not when playing (tapestyle))
     --I_RECMONITEMS : int * : monitor items while recording (0=off, 1=on)
     --I_AUTOMODE : int * : track automation mode (0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
     --I_NCHAN : int * : number of track channels, must be 2-64, even
-    selected = "I_SELECTED", 
+    selected = "I_SELECTED",
     --I_WNDH : int * : current TCP window height (Read-only)
     folderdepth = "I_FOLDERDEPTH", -- int * : folder depth change (0=normal, 1=track is a folder parent, -1=track is the last in the innermost folder, -2=track is the last in the innermost and next-innermost folders, etc
     --I_FOLDERCOMPACT : int * : folder compacting (only valid on folders), 0=normal, 1=small, 2=tiny children
@@ -25,7 +25,7 @@ MEDIA_TRACK_GET_INFO_VALUES = {
     --I_PERFFLAGS : int * : track perf flags (&1=no media buffering, &2=no anticipative FX)
     color = "I_CUSTOMCOLOR", -- int *",custom color, OS dependent color|0x100000 (i.e. ColorToNative(r,g,b)|0x100000). If you do not |0x100000, then it will not be used (though will store the color anyway).
     --I_HEIGHTOVERRIDE : int * : custom height override for TCP window. 0 for none, otherwise size in pixels
-    vol = "D_VOL", 
+    vol = "D_VOL",
     pan = "D_PAN",
     --D_WIDTH : double * : width of track (-1..1)
     --D_DUALPANL : double * : dualpan position 1 (-1..1), only if I_PANMODE==6
@@ -80,7 +80,7 @@ MEDIA_TRACK_SET_INFO_VALUES = {
 }
 
 MEDIA_TRACK_GET_SET_INFO_STRINGS = {
-    name = "P_NAME", 
+    name = "P_NAME",
     icon = "P_ICON",
     mcp_layout = "P_MCP_LAYOUT",
     tcp_layout = "P_TCP_LAYOUT"
@@ -229,7 +229,7 @@ function jError(msg, level)
 	level_msgs[1] = "*** J ERROR NOTICE : "
 	level_msgs[2] = "*** J ERROR WARNING: "
 	level_msgs[3] = "*** J ERROR !!!!!!!: "
-	
+
 	reaper.ShowConsoleMsg(level_msgs[level])
 	reaper.ShowConsoleMsg(tostring(msg))
 	reaper.ShowConsoleMsg("\n")

@@ -103,7 +103,7 @@ function JFx.prototype:getTrack()
 end
 
 function JFx.prototype:show(showFlag)
-	-- Shows the floating window. 
+	-- Shows the floating window.
 	-- Showflag can be used to use reaper functionality to show it with the chain (or even to hide it)
 	showFlag = showFlag or 3
 	reaper.TrackFX_Show(self:getTrack():getReaperTrack(), self.iFx, showFlag)
@@ -120,7 +120,7 @@ function JFx.prototype:getParam(iParam)
 	-- Returns number retval, number minval, number maxval
 	--[[ SAFETY CHECK?
 	if iParam >= self.paramcount then
-		jError("JFx:getParam(), effect param not found, iParam: " .. tostring(iParam), J_ERROR_WARNING) 
+		jError("JFx:getParam(), effect param not found, iParam: " .. tostring(iParam), J_ERROR_WARNING)
 		return false
 	end
 	]]
@@ -131,7 +131,7 @@ end
 
 function JFx.prototype:setParam(iParam, value)
 	-- Directly set an FX's parameter, can be handy sometimes
-	return reaper.TrackFX_SetParam(self:getTrack():getReaperTrack(), self.iFx, iParam, value)	
+	return reaper.TrackFX_SetParam(self:getTrack():getReaperTrack(), self.iFx, iParam, value)
 end
 
 function JFx.prototype:params(start, num)
@@ -148,8 +148,8 @@ function JFx.prototype:params(start, num)
 
 	return function ()
 		i = i + 1
-		if i <= n then 
-			return self:getParam(i-1) 
+		if i <= n then
+			return self:getParam(i-1)
 		end
 	end
 end
@@ -166,14 +166,14 @@ function JFx.prototype:getParamsByName(sPattern, iInstance, find_init, find_plai
 
     local tResult = {}
     local iCount = 0
-    
-	if type(iInstance) == "number" and iInstance <= 0 then 
-		jError("JFx:getParamsByName(), instance <= 0. First instance is 1! iInstance: " .. tostring(iInstance), J_ERROR_ERROR) 
+
+	if type(iInstance) == "number" and iInstance <= 0 then
+		jError("JFx:getParamsByName(), instance <= 0. First instance is 1! iInstance: " .. tostring(iInstance), J_ERROR_ERROR)
 		return false
-	end	
-	
+	end
+
     local iTracks = self.trackcount
-	
+
 	for t in self:params() do
 		if t.name:lower():find(sPattern:lower(), find_init, find_plain) then
 			iCount = iCount + 1
@@ -184,7 +184,7 @@ function JFx.prototype:getParamsByName(sPattern, iInstance, find_init, find_plai
             end
         end
     end
-    
+
     if not iInstance then
         -- return table
         if #tResult == 0 then
@@ -273,7 +273,7 @@ function JTrack:new(input)
 	else
 		o = {pTrack = input}
 	end
-	setmetatable(o, JTrack.mt)    
+	setmetatable(o, JTrack.mt)
 	return o
 end
 
@@ -333,7 +333,7 @@ function JTrack.prototype:getItem(idx)
 	local i = reaper.GetTrackMediaItem(self:getReaperTrack(), idx)
 
 	if not i then
-		jError("JTrack:getItem(idx), returned false for idx: " .. tostring(idx), J_ERROR_WARNING) 
+		jError("JTrack:getItem(idx), returned false for idx: " .. tostring(idx), J_ERROR_WARNING)
 		return false
 	end
 	return JItem:new({pItem = i, _parent = self})
@@ -344,10 +344,10 @@ function JTrack.prototype:getFx(idx)
 	-- Returns false if there is no fx at that position
 	-- SAFETY CHECK?
 	if idx >= self.fxcount then
-		jError("JTrack:getFx(idx), no fx idx: " .. tostring(idx), J_ERROR_WARNING) 
+		jError("JTrack:getFx(idx), no fx idx: " .. tostring(idx), J_ERROR_WARNING)
 		return false
 	end
-	
+
 	return JFx:new({iFx = idx, _parent = self})
 end
 
@@ -356,10 +356,10 @@ function JTrack.prototype:getSend(idx)
 	-- Returns false if there is no send at that position
 	-- SAFETY CHECK?
 	if idx >= self.sendcount then
-		jError("JTrack:getSend(idx), no send idx: " .. tostring(idx), J_ERROR_WARNING) 
+		jError("JTrack:getSend(idx), no send idx: " .. tostring(idx), J_ERROR_WARNING)
 		return false
 	end
-	
+
 	return JSend:new({iSend = idx, category = 0, _parent = self})
 end
 
@@ -377,21 +377,21 @@ function JTrack.prototype:getFxByName(sPattern, iInstance, find_init, find_plain
 	-- sPattern: Specify pattern to look for, case insensitive.
 	-- iInstance: leave empty (or false) to get a TABLE of all the tracks that match the pattern. Specify a number >= 0 to get the nth track that matches
 	-- The default searches from the first character (find_init = 1) and uses plain string (find_plain = true). See Lua's string.find() for more info
-	
+
 	local iInstance = iInstance or false
 	local find_init = find_init or 1
 	local find_plain = find_plain or true
-	
+
     local tResult = {}
     local iCount = 0
-  
-	if type(iInstance) == "number" and iInstance <= 0 then 
-		jError("JTrack:getFxByName(), instance <= 0. First instance is 1! iInstance: " .. tostring(iInstance), J_ERROR_ERROR) 
+
+	if type(iInstance) == "number" and iInstance <= 0 then
+		jError("JTrack:getFxByName(), instance <= 0. First instance is 1! iInstance: " .. tostring(iInstance), J_ERROR_ERROR)
 		return false
-	end	
-	
+	end
+
     local iTracks = self.fxcount
-	
+
 	for t in self:fx() do
 		if t.name:lower():find(sPattern:lower(), find_init, find_plain) then
 			iCount = iCount + 1
@@ -402,7 +402,7 @@ function JTrack.prototype:getFxByName(sPattern, iInstance, find_init, find_plain
             end
         end
     end
-    
+
     if not iInstance then
         -- return table
         if #tResult == 0 then
@@ -422,21 +422,21 @@ function JTrack.prototype:getSendByName(sPattern, iInstance, find_init, find_pla
 	-- iInstance: leave empty (or false) to get a TABLE of all the tracks that match the pattern. Specify a number >= 0 to get the nth track that matches
 	-- The default searches from the first character (find_init = 1) and uses plain string (find_plain = true). See Lua's string.find() for more info
 	-- When a table is requested it will be returned in reverse order
-	
+
 	local iInstance = iInstance or false
 	local find_init = find_init or 1
 	local find_plain = find_plain or true
-	
+
     local tResult = {}
     local iCount = 0
-  
-	if type(iInstance) == "number" and iInstance <= 0 then 
-		jError("JTrack:getSendByName(), instance <= 0. First instance is 1! iInstance: " .. tostring(iInstance), J_ERROR_ERROR) 
+
+	if type(iInstance) == "number" and iInstance <= 0 then
+		jError("JTrack:getSendByName(), instance <= 0. First instance is 1! iInstance: " .. tostring(iInstance), J_ERROR_ERROR)
 		return false
-	end	
-	
+	end
+
     local iTracks = self.sendcount
-	
+
 	for t in self:sends() do
 		if t.name:lower():find(sPattern:lower(), find_init, find_plain) then
 			iCount = iCount + 1
@@ -448,7 +448,7 @@ function JTrack.prototype:getSendByName(sPattern, iInstance, find_init, find_pla
             end
         end
     end
-    
+
     if not iInstance then
         -- return table
         if #tResult == 0 then
@@ -476,8 +476,8 @@ function JTrack.prototype:fx(start, num)
 
 	return function ()
 		i = i + 1
-		if i <= n then 
-			return self:getFx(i-1) 
+		if i <= n then
+			return self:getFx(i-1)
 		end
 	end
 end
@@ -496,8 +496,8 @@ function JTrack.prototype:sends(start, num)
 
 	return function ()
 		i = i + 1
-		if i <= n then 
-			return self:getSend(i-1) 
+		if i <= n then
+			return self:getSend(i-1)
 		end
 	end
 end
@@ -528,7 +528,7 @@ function JTrack.prototype:items(start, num, returnTable)
 		i = 0
 		return function ()
 			i = i + 1
-			if i <= n then 
+			if i <= n then
 				return itemTable[i]
 			end
 		end
@@ -537,12 +537,12 @@ end
 
 function JTrack.prototype:addFx(sFxName, recFx)
 	-- Inserts an effect by name. If succesful returns the fx (class)
-	
+
 	local bRecFx = recFx or false
 	local r = reaper.TrackFX_AddByName(self.pTrack, sFxName, bRecFx, -1)
 	if r >= 0 then
 		return self:getFx(r)
-	else 
+	else
 		return false
 	end
 end
@@ -635,7 +635,7 @@ function JTrack.prototype:getChildTracks(returnTable, recursive, returnOnlyLastT
 				return tChildren[#tChildren]
 			else -- return iterator
 				local i = 0
-				return function () 
+				return function ()
 					i = i + 1
 					return tChildren[i]
 				end
@@ -644,7 +644,7 @@ function JTrack.prototype:getChildTracks(returnTable, recursive, returnOnlyLastT
 		end
         nextTrack = nextTrack:getNextTrack()
 	end
-	
+
 	jError("getChildTracks(): did not find a closing track, it could be that the parent track is not properly closed.	", J_ERROR_ERROR)
 	return false -- coult not find a closing child
 
@@ -679,7 +679,7 @@ JStretchMarker.mt = {}
 
 function JStretchMarker:new(o)
     local o = o or {}
-    setmetatable(o, JStretchMarker.mt)    
+    setmetatable(o, JStretchMarker.mt)
     return o
 end
 
@@ -732,7 +732,7 @@ JTake.mt = {}
 
 function JTake:new(o)
     local o = o or {}
-    setmetatable(o, JTake.mt)    
+    setmetatable(o, JTake.mt)
     return o
 end
 
@@ -750,7 +750,7 @@ JTake.mt.__index = function (self, key)
 		end
 		local retval, val = reaper.GetSetMediaItemTakeInfo_String(self.pTake, MEDIA_ITEM_TAKE_GET_SET_INFO_STRINGS[key], "", false)
 		return val
-	elseif key == "stretchmarkercount" then 
+	elseif key == "stretchmarkercount" then
          return reaper.GetTakeNumStretchMarkers(self.pTake)
     end
 
@@ -809,8 +809,8 @@ function JTake.prototype:getStretchMarkers(start, num)
 
 	return function ()
 		i = i + 1
-		if i <= n then 
-			return self:getStretchMarker(i-1) 
+		if i <= n then
+			return self:getStretchMarker(i-1)
 		end
 	end
 end
@@ -839,7 +839,7 @@ function JTake.prototype:addFx(sFxName)
 	local r = reaper.TakeFX_AddByName(self.pTake, sFxName, -1)
 	if r >= 0 then
 		return r
-	else 
+	else
 		return false
 	end
 end
@@ -851,7 +851,7 @@ JItem.mt = {}
 
 function JItem:new(o)
     local o = o or {}
-    setmetatable(o, JItem.mt)    
+    setmetatable(o, JItem.mt)
     return o
 end
 
@@ -933,8 +933,8 @@ function JItem.prototype:getTakes(start, num)
 
 	return function ()
 		i = i + 1
-		if i <= n then 
-			return self:getTake(i-1) 
+		if i <= n then
+			return self:getTake(i-1)
 		end
 	end
 end
@@ -978,7 +978,7 @@ JProject.mt = {}
 function JProject:new(o)
     local o = o or {}
     setmetatable(o, JProject.mt)
-    
+
     return o
 end
 
@@ -996,7 +996,7 @@ JProject.mt.__index = function (table, key)
 		return false
 	end
 
-end	
+end
 
 function JProject.prototype:tracks(start, num)
 	-- Iterator to go through all the tracks in the project
@@ -1012,8 +1012,8 @@ function JProject.prototype:tracks(start, num)
 
 	return function ()
 		i = i + 1
-		if i <= n then 
-			return self:getTrack(i-1) 
+		if i <= n then
+			return self:getTrack(i-1)
 		end
 	end
 end
@@ -1044,8 +1044,8 @@ function JProject.prototype:selectedTracks(start, num, bReturnAll)
 	i = 0
 	return function ()
 		i = i + 1
-		if i <= n then 
-			return selectedTracks[i] 
+		if i <= n then
+			return selectedTracks[i]
 		end
 	end
 end
@@ -1062,10 +1062,10 @@ function JProject.prototype:getTrack(idx)
 	-- If there is no such track then it returns false
 	local idx = idx or 0
 	local t = JTrack:new({pTrack = reaper.GetTrack(self.pId, idx), _parentProject = self})
-	if not t.pTrack then 
-		jError("project:getTrack(idx), no track idx: " .. tostring(i), J_ERROR_NOTICE) 
+	if not t.pTrack then
+		jError("project:getTrack(idx), no track idx: " .. tostring(i), J_ERROR_NOTICE)
 		return false
-	end	
+	end
 	return t
 end
 
@@ -1076,8 +1076,8 @@ function JProject.prototype:getSelectedTrack(i)
     local t = JTrack:new()
 	t.pTrack = reaper.GetSelectedTrack2(self.pId, i, true)
 	t._parentProject = self
-	if not t.pTrack then 
-		jError("project:getSelectedTrack(), no selected track i: " .. tostring(i), J_ERROR_NOTICE) 
+	if not t.pTrack then
+		jError("project:getSelectedTrack(), no selected track i: " .. tostring(i), J_ERROR_NOTICE)
 		return false
 	end
     return t
@@ -1138,9 +1138,9 @@ function JProject.prototype:selectedItems(start, num, bWantTable)
 	i = 0
 	return function ()
 		i = i + 1
-		if i <= n then 
+		if i <= n then
 			-- msg(i .. " : " .. selectedTable[i].length)
-			return selectedTable[i] 
+			return selectedTable[i]
 		end
 	end
 
@@ -1152,21 +1152,21 @@ function JProject.prototype:getTracksByName(sPattern, iInstance, find_init, find
 	-- iInstance: leave empty (or false) to get a TABLE of all the tracks that match the pattern. Specify a number > 0 to get the nth track that matches
 	-- The default searches from the first character (find_init = 1) and uses plain string (find_plain = true). See Lua's string.find() for more info
 
-	
+
 	local iInstance = iInstance or false
 	local find_init = find_init or 1
 	local find_plain = find_plain or true
-	
+
     local tResult = {}
     local iCount = 0
-  
-	if type(iInstance) == "number" and iInstance <= 0 then 
-		jError("project:getTracksByName(), instance <= 0. First instance is 1! iInstance: " .. tostring(iInstance), J_ERROR_ERROR) 
+
+	if type(iInstance) == "number" and iInstance <= 0 then
+		jError("project:getTracksByName(), instance <= 0. First instance is 1! iInstance: " .. tostring(iInstance), J_ERROR_ERROR)
 		return false
-	end	
-	
+	end
+
     local iTracks = self.trackcount
-	
+
 	for t in self:tracks() do
 		if t.name:lower():find(sPattern:lower(), find_init, find_plain) then
 			iCount = iCount + 1
@@ -1177,7 +1177,7 @@ function JProject.prototype:getTracksByName(sPattern, iInstance, find_init, find
             end
         end
     end
-    
+
     if not iInstance then
         -- return table
         if #tResult == 0 then

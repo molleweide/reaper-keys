@@ -9,17 +9,17 @@ local jKeyboard = {
 
 	escape = 27,
 	delete = 6579564,
-	
+
 	arrow_up = 30064,
 	arrow_down = 1685026670,
 	arrow_left = 1818584692,
-	arrow_right = 1919379572,	
+	arrow_right = 1919379572,
 
 	home = 1752132965,
 	_end = 6647396,
-	
-	
-	space = 32, 
+
+
+	space = 32,
 	exclamation = 33, -- !
 	double_quote = 34, -- "
 	pound = 35, -- #
@@ -46,7 +46,7 @@ local jKeyboard = {
 	greater_than = 62, -- >
 	questionmark = 63, -- ?
 	at = 64, -- @
-	
+
 	A = 65,
 	B = 66,
 	C = 67,
@@ -73,7 +73,7 @@ local jKeyboard = {
 	X = 88,
 	Y = 89,
 	Z = 90,
-	
+
 	bracketsquare_open = 91, -- [ ???
 	backslash = 92, -- \
 	bracketsquare_close = 93, -- ]
@@ -107,7 +107,7 @@ local jKeyboard = {
 	x = 120,
 	y = 121,
 	z = 122,
-	
+
 	bracket2_open = 123, -- { ???
 	pipe = 124, -- |
 	bracket2_close = 125, -- }

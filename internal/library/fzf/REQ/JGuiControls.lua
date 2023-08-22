@@ -20,7 +20,7 @@ end
 
 jGuiControl = {
 	label = "",
-	
+
 	colors_label = {
 		normal = {.8, .8, .8, .8},
 		hover = {.8, .8, .8, 1},
@@ -35,7 +35,7 @@ jGuiControl = {
 	label_valign = "t",
 	label_padding = 0,
 	label_vpadding = 0,
-	
+
 	x = 0,
 	y = 0,
 	z = 0,
@@ -47,11 +47,11 @@ jGuiControl = {
 	border = true,
 	border_focus = false,
 	fill = false,
-	
+
 	active = false,
 	hover = false,
 	focus = false,
-	
+
 	controlType = "control",
 	parentGui = false,-- a reference to the parent GUI
 	focus_index = false, -- Used for tab indexing
@@ -62,7 +62,7 @@ function jGuiControl:new(o)
 	o = o or {}
 	setmetatable(o, self)
 	self.__index = self
-			
+
 	return o
 end
 
@@ -81,7 +81,7 @@ function jGuiControl:_init()
 		self.height = self:_calculateLabelSize()[2]
 		end
 		self:_calculateDimensions()
-	
+
 	self:__init()
 end
 
@@ -90,7 +90,7 @@ function jGuiControl:__init()
 end
 
 function jGuiControl:_calculateDimensions()
-	 	
+
 	 	self.area = {self.x, self.y, self.x + self.width, self.y + self.height}
 end
 
@@ -103,7 +103,7 @@ end
 function jGuiControl:setPos(x, y, bCenter)
 	x = x or self.x
 	y = y or self.y
-	
+
 	if not bCenter then
 		-- position is left upper corner
 		self.x = x
@@ -117,7 +117,7 @@ function jGuiControl:setPos(x, y, bCenter)
 		self.x = x - self.width/2
 		self.y = y - self.height/2
 	end
-			
+
 end
 
 function jGuiControl:getPos()
@@ -133,14 +133,14 @@ function jGuiControl:_draw()
 	if not self.visible then
 		return false
 	end
-	
+
 	-- else
 	-- gfx.setfont(1, self.label_font, self.label_fontsize)
-	
+
 	-- self:_setStateColor()
-	
+
 	self:_drawLabel()
-	
+
 	-- Draw a border around the control
 	if self.border then
 		gfx.rect(self.x, self.y, self.width, self.height, 0)
@@ -173,7 +173,7 @@ function jGuiControl:_onMouseUp()
 	if self.active then
 		self:_onMouseClick() -- first do internal click then the user defined onMouseClick()
 	end
-	
+
 	self.active = false
 end
 
@@ -231,7 +231,7 @@ end
 
 function jGuiControl:__setLabelXY(str)
 	-- sets gfx x and y to conform with align settings
-	
+
 	str = str or self.label
 	if self.label_align == "l" then
 		gfx.x = self.x + self.label_padding
@@ -377,9 +377,9 @@ function jGuiButtonToggle:_draw()
 	end
 	-- else
 
-	
+
 	self:_drawLabel()
-	
+
 	if self.border then
 		gfx.rect(self.x, self.y, self.width, self.height, 0)
 	end
@@ -387,7 +387,7 @@ end
 
 function jGuiButtonToggle:_drawLabel()
 	gfx.setfont(1, self.label_font, self.label_fontsize)
-	
+
 	if self.active == true then
 		jGuiControl:__setGfxColor(self.colors_label.active)
 	elseif self.hover == true and self.toggle_state == false then
@@ -443,7 +443,7 @@ function jGuiTextInput:_onKeyboard(key)
 	elseif key == self.kb.control_v and self.kb.control() then
 		local clip = reaper.CF_GetClipboard()
 		self.value = self.value:sub(0, self.carret_pos) .. clip .. self.value:sub(self.carret_pos + 1, -1)
-		self:__setCarretPos(self.carret_pos + #clip)	
+		self:__setCarretPos(self.carret_pos + #clip)
 	elseif key == self.kb.control_c and self.kb.control() then
 		reaper.CF_SetClipboard(self.value)
 	elseif key == self.kb.arrow_left then
@@ -459,7 +459,7 @@ function jGuiTextInput:_onKeyboard(key)
 		self:__setCarretPos(self.carret_pos + 1)
 	end
 	self.label = self.value
-	
+
 	self:onKeyboard(key) -- pass on the keypress to the used defined function
 end
 
@@ -472,15 +472,15 @@ function jGuiTextInput:_draw()
 	if not self.visible then
 		return false
 	end
-	
+
 	-- gfx.setfont(1, self.label_font, self.label_fontsize)
-	
+
 	-- self:_setStateColor()
 	-- self:__setLabelXY()
-	
+
 	-- gfx.drawstr(tostring(self.label))
 	self:_drawLabel()
-	
+
 	-- Draw a border around the control
 	if self.border then
 		gfx.rect(self.x, self.y, self.width, self.height, 0)
@@ -511,7 +511,7 @@ function jGuiTextInput:_drawCarret()
 	if self._carret_blink then return false end
 
 	local carretStringLen = gfx.measurestr(self.value:sub(0, self.carret_pos))
-	local carret_w = 2 --self.label_fontsize / 10	
+	local carret_w = 2 --self.label_fontsize / 10
 	local carret_h = self.label_fontsize - self.label_fontsize / 5
 
 	self:__setGfxColor(self.carret_color)
@@ -537,7 +537,7 @@ jGuiSlider = jGuiControl:new(
 {
 	value = 0,
 	init_value = 0,
-	
+
 	value_scaled = 0,
 	value_scaled_label = false,
 	value_min = 0,
@@ -546,8 +546,8 @@ jGuiSlider = jGuiControl:new(
 	value_options = {},
 	value_options_labels = {},
 	value_mode = "cont", -- cont/step/option
-	
-	-- mouse_y1 = false, 
+
+	-- mouse_y1 = false,
 	mouse_sensitivity = 0.005,
 	mouse_sensitivity_fine_factor = 0.5,
 	mouse_wheel_sensitivity = .4,
@@ -589,7 +589,7 @@ function jGuiSlider:valueScale()
 			self.value_scaled_label = false
 		end
  	end
-	
+
 	--msg(self.value .. " : " .. self.value_scaled)
 end
 
@@ -605,14 +605,14 @@ function jGuiSlider:valueUnscale()
 			return false
 		end
 		self.value = (r - 1) / (#self.value_options - 1)
-		
+
 		if self.value_options_labels[r] then
 			self.value_scaled_label = self.value_options_labels[r]
 		else
 			self.value_scaled_label = false
 		end
 	end
-	
+
 	--msg(self.value .. " : " .. self.value_scaled)
 end
 
@@ -628,26 +628,26 @@ function jGuiSlider:_draw()
 
 	-- else
 	-- gfx.setfont(1, self.label_font, self.label_fontsize)
-	
+
 	-- self:_setStateColor()
 	-- self:__setLabelXY()
-	
+
 	-- gfx.drawstr(tostring(self.label))
 	self:_drawLabel()
-	
+
 	local valueLabel = self:_makeLabel()
-	
+
 	self:__setLabelXY(valueLabel)
 	gfx.y = gfx.y + self.label_fontsize
 	gfx.drawstr(tostring(valueLabel))
-	
+
 	-- Draw a border around the control
 	if self.border then
 		gfx.rect(self.x, self.y, self.width, self.height, 0)
 	end
-	
-	
-	
+
+
+
 	if self.draw_fill then
 		jGuiControl:__setGfxColor(self.colors_label.fill)
 		if self.draw_direction == "horizontal" then
@@ -665,7 +665,7 @@ function jGuiSlider:_onMouseDown()
 end
 
 function jGuiSlider:_onMouseUp()
-	if self.active then		
+	if self.active then
 		self:_onMouseClick() -- first do internal click then the user defined onMouseClick()
 	end
 	self.active = false
@@ -692,7 +692,7 @@ function jGuiSlider:_onMouseDrag(dx, dy)
 	end
 	local dragResultY = self.init_value + dy * self.mouse_sensitivity * -1 * fineFactor
 	local result = 0
-	
+
 	dragResultY = self:__limitValue(dragResultY)
 	-- if dragResultY == 1 or dragResultY == 0 then
 	-- 	result = result + 2 -- reset y axis
@@ -800,7 +800,7 @@ function jGuiDial:_draw()
 
 	-- else
 	gfx.setfont(1, self.label_font, self.label_fontsize)
-	
+
 	if self.active == true then
 		self:__setGfxColor(self.colors_label.active)
 	elseif self.hover == true then
@@ -808,22 +808,22 @@ function jGuiDial:_draw()
 	else
 		self:__setGfxColor(self.colors_label.normal)
 	end
-		
+
 	gfx.x = self.x + self.width/2 - gfx.measurestr(self.label)/2
 	gfx.y = self.y + self.height/5 - self.label_fontsize
 	gfx.drawstr(tostring(self.label))
-	
+
 	local valueLabel = self:_makeLabel()
-	
+
 	gfx.x = self.x + self.width/2 - gfx.measurestr(valueLabel)/2
 	gfx.y = self.y + self.height - (self.height/5) -- - self.label_fontsize
 	gfx.drawstr(tostring(valueLabel))
-	
+
 	-- Draw a border around the control
 	if self.border then
 		gfx.rect(self.x, self.y, self.width, self.height, 0)
 	end
-	
+
 	local center_x = self.x + self.width/2
 	local center_y = self.y + self.height/2
 	local r = self.height/4
@@ -836,19 +836,19 @@ function jGuiDial:_draw()
 	end
 
 	gfx.circle(center_x, center_y, r, 1, 1)
-	
+
 	-- Draw the pointer
 	if self.hover or self.active == true then
 		self:__setGfxColor(self.colors_dial.pointer_hover)
 	else
 		self:__setGfxColor(self.colors_dial.pointer)
 	end
-	
+
 	local pointerHeight = (self.dialPointerHeight * self.height / 2)
 	local x1, y1 = self:__getEdgePoint(center_x, center_y, r, self.value)
 	local x3, y3 = self:__getEdgePoint(center_x, center_y, r - pointerHeight, self.value)
 	gfx.line(x1, y1, x3, y3, 1)
-	
+
 	-- Making a thicker pointer, didn't look nice
 	--[[
 	local pointerWidth = self.dialPointerWidth
@@ -872,7 +872,7 @@ end
 
 function jGuiDial:__setLabelXY(str)
 	-- sets gfx x and y to conform with align settings
-	
+
 	str = str or self.label
 	if self.label_align == "l" then
 		gfx.x = self.x
@@ -918,18 +918,18 @@ function jGuiImg:_init()
 		msg("jGuiImg Error: file or id not set")
 		return false
 	end
-	
+
 	gfx.loadimg(self.image_id, self.image_file)
-	
+
 	if self.width == -1 then
 		self.width, _ = gfx.getimgdim(self.image_id)
 		end
 		if self.height == -1 then
 		_, self.height = gfx.getimgdim(self.image_id)
 		end
-	
-	
-	
+
+
+
 	self:_calculateDimensions()
 	self:__init()
 end
@@ -939,12 +939,12 @@ function jGuiImg:_draw()
 	if not self.visible then
 		return false
 	end
-	
+
 	-- else
 	--Lua: gfx.blit(source, scale, rotation[, srcx, srcy, srcw, srch, destx, desty, destw, desth, rotxoffs, rotyoffs])
 	jGuiControl:__setGfxColor(self.colors_border.normal)
 	gfx.blit(self.image_id, 1, 0, 0, 0, self.width, self.height, self.x, self.y)
-	
+
 	-- Draw a border around the control
 	if self.border then
 		if self.active == true then
@@ -954,7 +954,7 @@ function jGuiImg:_draw()
 		else
 			jGuiControl:__setGfxColor(self.colors_border.normal)
 		end
-		
+
 		gfx.rect(self.x, self.y, self.width, self.height, 0)
 	end
 end
@@ -964,21 +964,21 @@ end
 
 jGuiText = jGuiControl:new({
 	label = "",
-	
+
 	colors_label = {.8, .8, .8, 1},
 	colors_fill = {.8, .8, .8, 1},
 	colors_border = {.8, .8, .8, 1},
 
 	label_align = "c",
 	label_valign = "t",
-	
+
 	x = 0,
 	y = 0,
 	width = -1,
 	height = -1,
 	visible = true,
 	border = false,
-		
+
 	controlType = "text",
 	mouse_input = false
 })
@@ -989,7 +989,7 @@ function jGuiText:_draw()
 	if not self.visible then
 		return false
 	end
-	
+
 	-- Draw a fill
 	jGuiControl:__setGfxColor(self.colors_fill)
 	if self.fill then
@@ -1003,7 +1003,7 @@ function jGuiText:_draw()
 	end
 
 	gfx.setfont(1, self.label_font, self.label_fontsize)
-	
+
 	jGuiControl:__setGfxColor(self.colors_label)
 
 	self:__setLabelXY()
@@ -1017,7 +1017,7 @@ end
 jGuiSub = jGuiControl:new(
 {
 	controlHover = false,
-	
+
 	-- jGuiParent = false,
 	-- width = 400,
 	-- height = 200,
@@ -1043,7 +1043,7 @@ end
 
 function jGuiSub:_init()
 	self:_calculateDimensions()
-	
+
 	for i, curControl in ipairs(self.controls) do
 		curControl:_init()
 	end
@@ -1066,14 +1066,14 @@ end
 function jGuiSub:_onMouseHover()
 	for i, curControl in ipairs(self:getControlsByZInv()) do
 		local curArea = curControl:getArea()
-		if curControl.mouse_input and 
-			curControl.visible and curArea[1] < gfx.mouse_x and gfx.mouse_x < curArea[3] and 
+		if curControl.mouse_input and
+			curControl.visible and curArea[1] < gfx.mouse_x and gfx.mouse_x < curArea[3] and
 			curArea[2] < gfx.mouse_y and gfx.mouse_y < curArea[4] then
-			
+
 			if curControl ~= self.controlHover and self.controlHover then -- When the user hovers from one button directly onto another
 				self.controlHover:_onMouseHoverOut()
 			end
-			
+
 			self.controlHover = curControl
 			curControl:_onMouseHover()
 

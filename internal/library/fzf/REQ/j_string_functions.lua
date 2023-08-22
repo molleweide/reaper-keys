@@ -4,6 +4,8 @@
 @noindex
 --]]
 
+-- NOTE: mv these to my `utils.strings.lua` file
+
 function jStringExplodeOld(s, sep)
     -- Explode a string by seperator
     -- Returns #1: Table with parts
@@ -11,7 +13,7 @@ function jStringExplodeOld(s, sep)
     -- If the seperator is NOT found it will return a table with 1 element and 0.
     local tResult = {}
     local i = 0
-    
+
     -- Check if the seperator  is found
     -- if not s:find(sep, 1, true) then
     --     table.insert(tResult, s)

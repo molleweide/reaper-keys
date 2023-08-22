@@ -115,7 +115,7 @@ return {
 					-- else
 						log.user(opts_g.trk_obj.name .. " does not have samples. Fixing..")
 
-						local utils_io = require("utils.io")
+						local utils_io = require("utils.fs")
 
 						--
 						-- SPLIT TRACK NAME BY PERIOD

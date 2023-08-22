@@ -4,6 +4,8 @@
 @noindex
 --]]
 
+-- NOTE: mv this to `utils.chunks.lua`
+
 require ('REQ.j_string_functions')
 require ('REQ.j_tables')
 local STR_FX_CHAIN = "<FXCHAIN"
