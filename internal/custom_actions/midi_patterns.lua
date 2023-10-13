@@ -390,6 +390,7 @@ midi_patterns.insertPatternFromString = function()
     end
     local unit_subtract_len = unit_multiplier
 
+
     log.user(unit_multiplier, unit_divider, "UNIT: [" .. unit .. "]")
 
     -- TODO: extract [], (), {}
@@ -397,9 +398,12 @@ midi_patterns.insertPatternFromString = function()
     local par_level = 0
     local cur_level = 0
     local brack_level = 0
+    local note_start = 0
+
+    local note_hit_idx = 1
+
     for i = 1, #unit do
       local char = unit:sub(i, i)
-      local found_special = false
 
       if char == "(" then
         par_level = par_level + 1
@@ -425,45 +429,30 @@ midi_patterns.insertPatternFromString = function()
         goto continue
       end
 
-      -- TODO: now how should i handle ({[]}) here now???
+      -- TODO: update the mult and divider
+      -- AND hit modulators {([])}
 
+      -- 0.25 by default
+      local note_step = unit_multiplier / unit_divider
 
-        ::continue::
+      local note_end_gap = 0.005
+      local note_duration = note_step - note_end_gap
+
+      table.insert(t_final_midi_notes, {
+        char = char,
+        time_pos_start = note_start,
+        time_pos_end = note_start + note_duration,
+      })
+
+      -- set vars for next round
+      note_start = note_start + note_step
+      unit_subtract_len = unit_subtract_len - note_step
+      ::continue::
     end
 
-
-    -- TODO: check balanced {([])} levels here??
-
-    local pattern_parens = "%((.-)%)"
-    local pattern_curly = "{(.-)}"
-    local pattern_brackets = "%[(.-)%]"
-
-    -- local extractedString = string.match(unit, pattern)
-    local paren_start, paren_finish, paren_capturedString = string.find(unit, pattern_parens)
-    local curly_start, curly_finish, curly_capturedString = string.find(unit, pattern_curly)
-    local brackets_start, brackets_finish, brackets_capturedString = string.find(unit, pattern_brackets)
-
-    log.user("parens:", paren_start, paren_finish, paren_capturedString)
-
-    -- NOTE: I can gmatch to capture balanced {([])}
-    --
-    -- local input = "aa(x(sd))"
-    -- local outermostCapturedString = ""
-    -- for capturedString in input:gmatch("%b()") do
-    -- 	outermostCapturedString = capturedString
-    -- end
-
-    -- TODO: for each note subtrack from the
-    unit_subtract_len = unit_subtract_len - 666
+    log.user("time even: ", unit_subtract_len)
 
     -- if `o` then ignore and step forward
-
-    -- create
-    -- table.insert(t_final_midi_notes, {
-    -- 	time_pos_start = note_start,
-    -- 	time_pos_end = note_start + note_duration,
-    -- })
-    --
 
     if unit_subtract_len > 0 then
       -- not enough notes for this unit
@@ -473,6 +462,8 @@ midi_patterns.insertPatternFromString = function()
 
     log.user("")
   end
+
+  -- log.user(unit_subtract_len, format.block(t_final_midi_notes))
 
   --  4. insert notes
 
