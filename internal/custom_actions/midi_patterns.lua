@@ -5,7 +5,7 @@ local reaper_state = require("utils.reaper_state")
 
 local s = require("utils.string")
 
-local PATTERN_PLACEHOLDER = "xo(xo) a b"
+local PATTERN_PLACEHOLDER = "xx(xxx)"
 
 -- TODO: handle case of single substring
 --
@@ -49,6 +49,16 @@ local function randomBool()
   return math.floor(math.random() + 0.5) == 1
 end
 
+local function remove_note_row(take, t_midi_events, active_note_row)
+  for i = 1, t_midi_events[2] do
+    local note_idx = i - 1
+    local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
+    if pitch == active_note_row then
+      reaper.MIDI_DeleteNote(take, note_idx)
+    end
+  end
+end
+
 midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
   local ret, ME, take = getMidiValidContext()
   if not ret then
@@ -71,22 +81,26 @@ midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
     noSortIn = true,
   }
 
-  for i = 1, t_midi_events[2] do
-    local note_idx = i - 1
-    local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
+  -- TODO: refactor into remove_note_row
+  --
+  remove_note_row(take, t_midi_events, active_note_row)
 
-    -- local note_time = reaper.MIDI_GetProjTimeFromPPQPos(take, startppqpos)
-    -- local retval, measures, cml, fullbeats, cdenom = reaper.TimeMap2_timeToBeats(0, reaper.GetCursorPosition())
-    -- log.user("note ppq time:", note_time)
-    -- log.user("chan", chan)
-
-    if pitch == active_note_row then
-      -- reaper.MIDI_SetNote(take, note_idx, true, muted, startppqpos, endppqpos, chan, pitch, vel, true)
-      reaper.MIDI_DeleteNote(take, note_idx)
-      -- else
-      -- 	-- reaper.MIDI_SetNote(take, note_idx, false, muted, startppqpos, endppqpos, chan, pitch, vel, true)
-    end
-  end
+  -- for i = 1, t_midi_events[2] do
+  --   local note_idx = i - 1
+  --   local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
+  --
+  --   -- local note_time = reaper.MIDI_GetProjTimeFromPPQPos(take, startppqpos)
+  --   -- local retval, measures, cml, fullbeats, cdenom = reaper.TimeMap2_timeToBeats(0, reaper.GetCursorPosition())
+  --   -- log.user("note ppq time:", note_time)
+  --   -- log.user("chan", chan)
+  --
+  --   if pitch == active_note_row then
+  --     -- reaper.MIDI_SetNote(take, note_idx, true, muted, startppqpos, endppqpos, chan, pitch, vel, true)
+  --     reaper.MIDI_DeleteNote(take, note_idx)
+  --     -- else
+  --     -- 	-- reaper.MIDI_SetNote(take, note_idx, false, muted, startppqpos, endppqpos, chan, pitch, vel, true)
+  --   end
+  -- end
 
   -- log.user(">>>", cursor_pos, retval, measures, cml, fullbeats, cdenom)
 
@@ -277,6 +291,13 @@ local state_table_name = "midipatterns"
 --    is the keybind for this action
 --
 midi_patterns.insertPatternFromString = function()
+
+  local ret, ME, take = getMidiValidContext()
+  if not ret then
+    return
+  end
+
+
   local midi_patterns_state = reaper_state.get(state_table_name)
 
   log.user("PREV PATTERN:", format.block(midi_patterns_state))
@@ -376,10 +397,12 @@ midi_patterns.insertPatternFromString = function()
 
   local t_final_midi_notes = {}
 
-  local unit_multiplier = 1
+  local unit_multiplier = 0.5
   local unit_divider = 4
 
   local found = true
+
+  local note_start = 0
 
   for _, unit in pairs(t_pat_multiplied) do
     if string.match(unit, "pattern") then
@@ -398,7 +421,7 @@ midi_patterns.insertPatternFromString = function()
     local par_level = 0
     local cur_level = 0
     local brack_level = 0
-    local note_start = 0
+
 
     local note_hit_idx = 1
 
@@ -435,14 +458,23 @@ midi_patterns.insertPatternFromString = function()
       -- 0.25 by default
       local note_step = unit_multiplier / unit_divider
 
+      if par_level == 1 then
+        note_step = (note_step * 2) / 3
+      end
+
+
       local note_end_gap = 0.005
       local note_duration = note_step - note_end_gap
 
-      table.insert(t_final_midi_notes, {
-        char = char,
-        time_pos_start = note_start,
-        time_pos_end = note_start + note_duration,
-      })
+      -- TODO: handle hit or pause (x or o)
+
+      if char == "x" then
+        table.insert(t_final_midi_notes, {
+          char = char,
+          time_pos_start = note_start,
+          time_pos_end = note_start + note_duration,
+        })
+      end
 
       -- set vars for next round
       note_start = note_start + note_step
@@ -463,18 +495,35 @@ midi_patterns.insertPatternFromString = function()
     log.user("")
   end
 
-  -- log.user(unit_subtract_len, format.block(t_final_midi_notes))
+  log.user(format.block(t_final_midi_notes))
 
-  --  4. insert notes
+  -- TODO: 4. insert notes
+  local insertion_data = {
+    selected = false,
+    muted = false,
+    chan = 0,
+    noSortIn = true,
+  }
 
-  -- todo: parse each QN instance
-  --
-  -- ~ each delimited segment could describe something that is longer than
-  --   a QN - truncate info so that only QNs length blocks are used.
+  local t_midi_events = { reaper.MIDI_CountEvts(take) }
+  local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
 
-  -- TODO: last repeat $5
-  --   handle repetition of pattern.
-  --   eg. ooxx 4$ -> repeat ooxx four times
+  remove_note_row(take, t_midi_events, active_note_row)
+
+  for _, t_note in ipairs(t_final_midi_notes) do
+    local ret = reaper.MIDI_InsertNote(
+      take,
+      insertion_data.selected,
+      insertion_data.muted,
+      reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
+      reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
+      insertion_data.chan,
+      active_note_row,
+      80,
+      insertion_data.noSortIn
+    )
+  end
+  reaper.MIDI_Sort(take)
 
   reaper_state.set(state_table_name, { prev_pattern_string = str_pat_input })
 end
