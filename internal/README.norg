@@ -1,0 +1,50 @@
+
+* TODO
+
+custom_actions/
+keys/
+library
+list_selector/
+syntax/
+utils/
+vendor/
+
+
+1. everything pertaining to the modal keybinds should go into its own directory.
+    Including the GUI directory.
+
+    keys/
+       command/
+       gui/
+       state_machine/
+
+
+2. mv the fzf to
+
+    list_selector/
+      ...
+
+
+
+* FILE STRUCTURE
+
+** command/ AND state_machine/
+
+  Hosts logic that makes modal keybinds
+
+** custom_actions/
+
+  hosts specific actions that are used in the definitis..actions table.
+  However, there seems to be some overlap btw `custom_actions` and `library`
+
+** library/
+
+  hosts reaper related modules and functions for anything pertaining to in-reaper
+  functionality
+
+** utils/
+
+  hosts reusable lua functions and modules pertaining to system and persistence.
+
+  eg. `reaper_state` is located under utils even though it is pertaining to
+  reaper api but this is because it is a generalized module for persisting data.

@@ -5,6 +5,28 @@ local reaper_state = require("utils.reaper_state")
 
 local s = require("utils.string")
 
+local PATTERN_PLACEHOLDER = "xoxo"
+
+-- TODO: handle case of single substring
+--
+--    if # = 1
+
+local SHORTHAND_CASES = {
+	["A"] = function(t, idx, val_in)
+		t[idx] = "matched regex. compute something based on:" .. val_in
+	end,
+	["a"] = "xoxo",
+	-- quarter note beats
+	["q4"] = "xxxx4", -- four QN hits, which in the end should
+	["2q"] = "xoxo4", -- four QN hits, which in the end should
+	["q2"] = "oxox4", -- four QN hits, which in the end should
+	["32"] = "xxx2,3",
+	-- test
+	["b"] = "xx(xxx)",
+	["c"] = "x[xx](xox)",
+	["d"] = "xxx2,3", -- 2-
+}
+
 local midi_patterns = {}
 
 local function getMidiValidContext()
@@ -93,7 +115,7 @@ midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
 	reaper.MIDI_Sort(take)
 end
 
--- NOTE: PATTERN SPEC
+-- NOTE: PATTERN SPEC v1
 --
 --  -> `134C` first, third, and fourth beats should have randomized sixteenth notes
 --
@@ -112,9 +134,141 @@ end
 --
 --
 
+-- NOTE: PATTERN SPEC V2
+--
+--
+-- 1. whitespace separated elemets `a $4 xoox oxox xoox xoxo`
+-- 2. a chunk starting with special char, eg $4. will multiply preceeding
+-- 3. xk == hit
+-- 4. o == no hit
+-- 5.
+--
+--  unit := represents a time block, based on musical time divisions
+--
+--  unit can be a short hand
+--
+--  unit is transformed into time division atoms
+--
+--      eg. 1 QN of sixteenth notes (xoxo)
+--          2 QN of 6 tripplets 1/12
+--          .5 QN of 2 16th
+--          .5 QN of 4 32
+--          3 QN of ???
+--          4 QN of ???
+--
+--          a = 1 QN of (xoxo)
+--          b = .5 QN of (xo)
+--          c do .25 QN of one 16th note (x)
+--
+--  -> NOTE: DEFAULT UNIT LENGTH = 1 QN, default atom divider is 16th note
+--
+--  xoxo    is 4 sixtenth notes
+--
+--  xx(xxx)     would be two notes and a tripplet in the current unit
+--              default is 1QN and 16th notes so this is [ xx(xxx) ]
+--
+--  x[xo](xox)     unit=1QN atom(x/o)=16
+--                  1 QN = [ x x:split x2:triple ]
+--                  ie. one sixteenth
+--                      two 32th notes
+--                      three 24th notes
+--                      == one full QN
+--
+-- NOTE: VARIABLE QN
+-- it is up to the user to make sure that the final length is correct when
+-- everything adds up
+--
+--    >>> NOTE: last number sets unit multiplier
+--
+--    >>> NOTE: divider = 16
+--
+--    >>>>>>>>> so the last two chars determine if there is a custom timing
+--    parsing.
+--
+-- -- TWO QUARTER NOTES
+--
+--  xxxx2
+--
+--  xxx2
+--
+--  xoxoxo2,6     becomes six notes over two QN, (including three pauses)
+--  alt. xoxoxo2+  or (=)
+--
+--  xxx2,3        becomes tree notes over two
+--  alt. xxx2-
+--
+--
+--  -- how to do 3/2 triplets?
+--
+--
+--
+--  [] = atom splitter
+--  () = two atoms
+--
+-- -> SHORTHANDS:
+--
+--  a = 1/4
+--  b = 1/8
+--  c = 1/16 notes
+--
+--  eg. a $4 -> insert 4 QNs of quarter notes
+--      b $2 -> insert 2 QN of consecutive 16th notes
+--      c $8 -> insert 8 QNs of 1/8 notes
+--
+--  . (period) -> empty QN
+--
+--  ..       -> two empty quarter notes
+--
+--  .3     -> three empty QNs -> (oooo oooo oooo)
+--
+--  ^     -> fill rest of measure with empty QNs
+--             eg. if you have very large meter eg 11/4 then [ . a ^ x5 ]
+--             would create a pattern of length 11 QNs
+--
+--
+--  -> SPECIFY EXPLICIT PATTERNS:
+--
+--    xoxx oxoo xkxo xkoo
+--
+--    x,k  = hit
+--    o    = no hit
+--
+--    should a single o == oooo
+--    and single x == xooo
+--
+--    () use () to indicate triples
+--
+--
+--  xx(xxx)    -> (xxx) indicates a triplet 24th note
+--
+--  [xx]    -> [] indicates 32th notes
+--
+--  QUESTION: I need a syntax for creating patterns that extend over multiple
+--  quarter notes, eg. 3/2 three notes over two.
+--      And then even go further and allow for writing {xxooxx} and have this
+--      be six notes over two
+--
+--  {}#
+--
+--
+--  +(N)/-N    -> use to alternate note rows up or down, eg if you want
+--                 get the feel of alternating hands
+--                 x x x...
+--                  x x
+--
+--  LAST CHUNK
+--
+--  xN or $N    -> to indicate number of repetitons of pattern
+--
+--  !      -> don't extend midi item if pattern overflows take end point.
 local state_table_name = "midipatterns"
 
 -- FIX: rename to `createNewPatternAndInsert`
+--
+--
+-- NOTE: leader m i
+--    is the keybind for this action
+--
 midi_patterns.insertPatternFromString = function()
 	local midi_patterns_state = reaper_state.get(state_table_name)
 
@@ -123,7 +277,9 @@ midi_patterns.insertPatternFromString = function()
 	local user_input_opts = {
 		-- todo:...
 	}
-	local input_placeholder = "a b c d x4"
+
+	local input_placeholder = PATTERN_PLACEHOLDER
+
 	local input_field_width = "extrawidth=350"
 	local caption_csv = string.format("%s,%s", input_placeholder, input_field_width)
 	local retvals_csv = ""
@@ -132,65 +288,93 @@ midi_patterns.insertPatternFromString = function()
 	local pattern_opts = {
 		-- todo...
 	}
-	local pattern_sep = " "
+
+	local pattern_sep = " " -- whitespace
 
 	local _, str_pat_input = reaper.GetUserInputs("pattern:", 1, input_placeholder, caption_csv, retvals_csv)
+
 	local t_pattern_strings = s.split(str_pat_input, pattern_sep)
 
-	log.user("PATTERN STRING:", format.block(t_pattern_strings))
+	-- log.user("PATTERN STRING:", format.block(t_pattern_strings))
 
-	-- NOTE: EXAMPLES
 	--
-	-- -> SHORTHANDS:
+	-- HANDLE MULTIPLIERS
 	--
-	--  a = 1/4
-	--  b = 1/8
-	--  c = 1/16 notes
-	--
-	--  eg. a $4 -> insert 4 QNs of quarter notes
-	--      b $2 -> insert 2 QN of consecutive 16th notes
-	--      c $8 -> insert 8 QNs of 1/8 notes
-	--
-	--  . (period) -> empty QN
-	--
-	--  ..       -> two empty quarter notes
-	--
-	--  .3     -> three empty QNs
-	--
-	--  ^     -> fill rest of measure with empty QNs
-	--             eg. if you have very large meter eg 11/4 then [ . a ^ x5 ]
-	--             would create a pattern of length 11 QNs
-	--
-	--
-	--  -> SPECIFY EXPLICIT PATTERNS:
-	--
-	--    xoxx oxoo xkxo xkoo
-	--
-	--    x,k  = hit
-	--    o    = no hit
-	--
-	--    () use () to indicate triples
-	--
-	--
-	--  xx(xxx)    -> (xxx) indicates a triplet 24th note
-	--
-	--  [xx]    -> [] indicates 32th notes
-	--
-	--  {}#
-	--
-	--
-	--  +(N)/-N    -> use to alternate note rows up or down, eg if you want
-	--                 get the feel of alternating hands
-	--                 x x x...
-	--                  x x
-	--
-	--  LAST CHUNK
-	--
-	--  xN or $N    -> to indicate number of repetitons of pattern
-	--
-	--  !      -> don't extend midi item if pattern overflows take end point.
 
-	-- TODO: parse each QN instance
+	local t_pat_multiplied = {}
+	local idx_mult_start = 1
+	local idx_at_mult = 1
+
+	local function insert_once(is_last)
+		local idx_stop = (not is_last and (idx_at_mult - 1)) or idx_at_mult
+		for m = idx_mult_start, idx_stop do
+			-- log.user(">> " .. t_pattern_strings[m])
+			table.insert(t_pat_multiplied, t_pattern_strings[m])
+		end
+	end
+
+	local function multiply(n)
+		for _ = 1, n do
+			insert_once()
+		end
+		idx_mult_start = idx_at_mult + 1
+	end
+
+	for i = 1, #t_pattern_strings do
+		local substring = t_pattern_strings[i]
+		idx_at_mult = i
+
+		-- log.user(idx_mult_start, idx_at_mult, substring)
+
+		-- if $N
+		if string.match(substring, "^%$") then
+			local secondChar = tonumber(substring:sub(2, 2))
+			-- log.user(string.format("Multiplier for [%s] -----------", substring))
+
+			multiply(secondChar)
+		end
+	end
+
+	if idx_mult_start ~= idx_at_mult then
+		insert_once(true)
+	end
+
+	-- log.user(idx_mult_start, idx_at_mult, format.block(t_pat_multiplied))
+
+	--
+	-- SHORTHAND SWITCH TRANSFORMER
+	--
+
+	local function case_apply(cases, i, str, t_target)
+		for pattern, value in pairs(cases) do
+			if string.match(str, pattern) then
+				if type(value) == "function" then
+					value(t_target, i, str)
+				else
+					t_target[i] = value
+				end
+			end
+		end
+	end
+
+	for i, str in ipairs(t_pat_multiplied) do
+		case_apply(SHORTHAND_CASES, i, str, t_pat_multiplied)
+	end
+
+	log.user(format.block(t_pat_multiplied))
+
+	-- TODO: add more shorthand mappings to prepare good test strings
+
+	--  3. render the final table of rhythm chunks
+	--
+	--    parse the raw rhythm units:
+	--
+	--    xoxo {xxo} xoxo xooo
+	--
+
+	--  4. insert notes
+
+	-- todo: parse each QN instance
 	--
 	-- ~ each delimited segment could describe something that is longer than
 	--   a QN - truncate info so that only QNs length blocks are used.
