@@ -1025,6 +1025,8 @@ function loadSettings()
 	return true
 end
 
+-- NOTE: all pickers below should go into the `./pickers.lua` file
+
 -- leader j f
 
 local function add_track_fx_picker()
@@ -1329,65 +1331,6 @@ local function test_picker()
 					b.visible = true
 					info.visible = true
 					b.highlight = highlights
-
-					local tTypes = {}
-
-					-- if fx.instrument then
-					-- 	if fx.vst3 then
-					-- 		tTypes[#tTypes + 1] = "VST3i"
-					-- 	elseif fx.dll or fx.vst then
-					-- 		tTypes[#tTypes + 1] = "VSTi"
-					-- 	end
-					-- 	-- _makeColorsCatagory(b, info, COLOR_VSTI)
-					-- else
-					-- 	if fx.vst3 then
-					-- 		tTypes[#tTypes + 1] = "VST3"
-					-- 	end
-					-- 	if fx.dll then
-					-- 		tTypes[#tTypes + 1] = "VST"
-					-- 	end
-					-- 	if fx.vst then
-					-- 		tTypes[#tTypes + 1] = "VST"
-					-- 	end
-					-- 	-- _makeColorsCatagory(b, info, COLOR_VST)
-					-- end
-
-					-- if fx.tracktemplate then
-					-- 	tTypes[#tTypes + 1] = "TEMP"
-					-- 	-- _makeColorsCatagory(b, info, COLOR_TEMPLATE)
-					-- end
-
-					-- if fx.fxchain then
-					-- 	tTypes[#tTypes + 1] = "FXCHAIN"
-					-- 	-- _makeColorsCatagory(b, info, COLOR_FXCHAIN)
-					-- end
-
-					-- if fx.jsfx then
-					-- 	tTypes[#tTypes + 1] = "JSFX"
-					-- 	-- _makeColorsCatagory(b, info, COLOR_JSFX)
-					-- end
-
-					-- if fx.action then
-					-- 	tTypes[#tTypes + 1] = "ACTION"
-					-- 	-- _makeColorsCatagory(b, info, COLOR_ACTION)
-					-- end
-
-					-- if fx.au then
-					-- 	tTypes[#tTypes + 1] = "AU"
-					-- 	-- _makeColorsCatagory(b, info, COLOR_AU)
-					-- end
-
-					-- if fx.aui then
-					-- 	tTypes[#tTypes + 1] = "AUi"
-					-- 	-- _makeColorsCatagory(b, info, COLOR_AUI)
-					-- end
-
-					-- local sTypes = ""
-					-- for _, sT in ipairs(tTypes) do
-					-- 	sTypes = sTypes .. " " .. sT
-					-- end
-
-					-- info.label = sTypes --.. "\n" .. fx.rating
 				else
 					b.visible = false
 					info.visible = false
@@ -1404,4 +1347,205 @@ local function test_picker()
 	end
 end
 
-return { add_track_fx = add_track_fx_picker, test = test_picker }
+local module = { add_track_fx = add_track_fx_picker, test = test_picker }
+
+-- * WHAT THINGS CAN BE CONTROLLED VIA FZF:
+--
+-- ** REAPERS PREFERENCES
+--
+--   This will allow me to automate and control anything in the preferences
+--   through the fzf interface.
+--
+-- *** Any text based configs etc. (.ini)
+
+
+module.picker_browse_reaper_preferences = function()
+end
+
+--
+-- ** TRACK FX LIST / CHAIN
+--
+--   I can use this window as a custom UI replacement for the FX window.
+--   Add custom actions for navigating up/down.
+--   I would have to create a new custom context for the FZF window.
+--
+--   TODO: get table of track_fx_list
+--   ~ full names
+--   ~ other info
+--   ...
+
+module.picker_browse_track_fx_list = function()
+	p = JProject:new()
+	reset_variables()
+	if not loadSettings() then
+		msg(
+			"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
+				.. SETTINGS_INI_FILE
+		)
+		return false
+	end
+
+	local function onenter(i)
+		if not tSearchResults then
+			return false
+		end -- results is empty
+		local fx = tSearchResults[i]
+		if not fx then
+			return false
+		end -- no such result
+
+		log.user("onenter:", i, format.block(fx))
+
+		return true
+	end
+
+	local opts = {
+		title = "Fast FX Finder",
+		width = WINDOW_WIDTH,
+		height = WINDOW_HEIGHT,
+		x = WINDOW_X,
+		y = WINDOW_Y,
+		dockstate = WINDOW_DOCK_STATE,
+		on_select_func = onenter,
+		results = {
+			"this",
+			"is",
+			"a",
+			"picker",
+			"test",
+			"xxxxxx",
+			"aaaaaa",
+			"vvvvvv",
+			"arst",
+			"XXX",
+			"89",
+			"=644ney",
+			"9n$)",
+			"(()())",
+		},
+		sort_comp = function(a, b)
+			if a > b then
+				return true
+			elseif a == b then
+				return a < b
+			else
+				return false
+			end
+		end,
+		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+			-- what todo here ??
+			return vstTable
+		end,
+		entry_maker = function(tButtons, tResults)
+			for i, cIds in ipairs(tButtons) do
+				local b = cIds[1]
+				local info = cIds[2]
+				local iStart = _round(i + SCROLL_RESULTS)
+				local highlights = jStringExplode(textBox.value, " ")
+
+				local showing
+				if iStart <= #tResults then
+					showing = iStart
+				else
+					showing = #tResults
+				end
+				LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
+
+				if tResults and iStart <= #tResults then
+					local item = tResults[iStart]
+					b.label = item
+					b.visible = true
+					info.visible = true
+					b.highlight = highlights
+				else
+					b.visible = false
+					info.visible = false
+				end
+			end
+		end,
+	}
+
+	if init_picker(opts, onenter) then
+		-- TODO: this logic should be put inside of init, so that I don't have to
+		-- keep reference of the GUI in this function
+		GUI:setReaperFocus()
+		loop()
+	end
+end
+
+--
+-- ** TRACK FX PARAMTERS, EG. REAEQ
+--
+--   Use the FZF window to filter fx parameters and perform mixing.
+--
+--   TODO: pick fx params for fx at index X in track Y
+
+module.picker_track_fx_params = function()
+end
+
+--
+-- ** TRACK MIXER
+--
+--   Manage all basic reaper track parameters
+--
+--   TODO: volume, pan, sends/recieves, phase, etc..
+
+module.picker_track_channel_mix_params = function()
+end
+
+--
+-- 5. TRACK ROUTES
+--
+--   CRUD UI for routes
+--
+--   TODO: list sends/recieves for track
+
+module.picker_track_channel_mix_params = function()
+end
+
+--
+-- 6. MIDI EDITOR TAKE-SELECTION-SETS
+--
+--   Select what group combination of tracks and items/takes that currently
+--   should be shown/visible in the MIDI Editor
+
+module.picker_midi_editor_take_screensets = function()
+end
+
+-- 7. TRACK LIST UI
+--
+--   Control and manage track list
+
+module.picker_track_list_ui = function()
+end
+
+-- 7. BROWSE PROJECTS/TABS (OPEN IN NEW TAB)
+--
+
+module.picker_browse_projects = function()
+end
+
+-- 8. BROWSE SYNTAX ZONES/GROUPS/TRACKS
+--
+--   ..and control parameters. implement multiple selection etc. for more
+--   granular selections and ability to customize the arrangement view.
+--
+--   TODO: zone, grouts, ...
+
+module.picker_track_syntax = function()
+end
+
+--
+-- 9. BROWSE MARKS / REGIONS
+--
+--   For super fast navigation and shit.
+
+module.picker_marks = function()
+end
+
+module.picker_regions = function()
+end
+
+
+
+return module
