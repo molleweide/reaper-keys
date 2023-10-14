@@ -101,6 +101,13 @@ function msg(m)
 	return reaper.ShowConsoleMsg(tostring(m) .. "\n")
 end
 
+local function reset_variables()
+	UPDATE_RATINGS = false
+	UPDATE_RESULTS = false
+	SCROLL_RESULTS = 0
+	RESULT_COUNT = 0
+end
+
 -- NOTE: this seems to create all possible actions, which are then assigned
 -- to each entry??
 --
@@ -627,7 +634,7 @@ end
 ---@param n
 ---@param height
 ---@param y_start
-function createResultButtons(gui, tControls, n, height, y_start)
+local function createResultButtons(gui, tControls, n, height, y_start)
 	local x_start = 10
 	local y_space = 0
 	local n_to_remove = 0
@@ -657,7 +664,9 @@ function createResultButtons(gui, tControls, n, height, y_start)
 			info.y = c.y
 
 			function c:onMouseClick()
-				selectFx(i + SCROLL_RESULTS)
+				gui.on_select_func(i + SCROLL_RESULTS, textBox.value)
+
+				-- selectFx(i + SCROLL_RESULTS)
 
 				gui:setFocus(textBox)
 				UPDATE_RESULTS = true
@@ -830,11 +839,31 @@ function sortByRating(a, b)
 	end
 end
 
+---
+---@param i
+---@return
 function selectFx(i)
+	-- FIX: i should prolly remove the undo points since
+	-- those are handled by RK
+
+	-- TODO: TRY THIS
+	-- ~ where does `i` come from
+	-- ~ in what list will we get data from
+	--
+
+	-- NOTE: so essentially most stuff in this function should be passed
+	-- as an option to the picker.
+	--
+	-- this is the `attach_mappings` entry.
+
+	log.user("SELECT FX: ", i)
+
 	if not tSearchResults then
 		return false
 	end -- results is empty
+
 	local fx = tSearchResults[i]
+
 	if not fx then
 		return false
 	end -- no such result
@@ -916,6 +945,10 @@ function selectFx(i)
 			-- end
 		end
 	elseif fx.action then
+		-- NOTE: this is how I can call regular actions from a fuzzy list.
+		-- This could also be used in combination with RK sequences and fuzzy
+		-- search next step to take
+
 		reaper.Main_OnCommandEx(fx.command, 1, 0)
 	-- msg(fx.command)
 	-- msg(fx.name)
@@ -1002,7 +1035,7 @@ local function load_plugin_data()
 	table.sort(tVstData, sortByRating)
 end
 
-local function create_main_text_input(gui)
+local function gui_create_main_text_box(gui, on_enter)
 	local text_input = jGuiTextInput:new()
 	text_input.x = 10
 	text_input.y = 10
@@ -1015,13 +1048,16 @@ local function create_main_text_input(gui)
 	text_input.label_padding = 3
 
 	function text_input:onEnter()
-		if selectFx(1) then
+		-- NOTE: this is where an FX is selected and applied to a track
+
+		if gui.on_select_func(1, textBox.value) then
 			gui:exit()
 		end
 		textBox.value = ""
 	end
 
-	return text_input
+	textBox = text_input
+	return textBox
 end
 
 local function create_control_label_stats(gui)
@@ -1032,7 +1068,8 @@ local function create_control_label_stats(gui)
 	ls.label_fontsize = math.tointeger(GUI_SIZE * 0.75)
 	ls.label_align = "r"
 	ls.border = false
-	return ls
+	LABEL_STATS = ls
+	return LABEL_STATS
 end
 
 --
@@ -1058,10 +1095,17 @@ local function gui_default_update(self)
 		-- search changed, update results
 		UPDATE_RESULTS = false
 		table.sort(tVstData, sortByRating)
+
+		-- NOTE: this is where the entries list is filtered
+
 		if lastSearch ~= textBox.value then -- only search again when input changes, not on scroll
+			-- findVst is used to filter entries
+
 			tSearchResults = findVst(tVstData, textBox.value, false, MAX_RESULTS)
+
 			lastSearch = textBox.value
 		end
+
 		RESULT_COUNT = #tSearchResults
 		showSearchResults(tResultButtons, tSearchResults)
 	end
@@ -1089,86 +1133,29 @@ end
 -- NOTE: INIT PICKER
 --
 
-function init_picker(opts)
+function init_picker(opts, on_enter)
 	-- reaper.ClearConsole()
-
+	tResultButtons = {}
 	load_plugin_data()
 
 	GUI = jGui:new(opts)
 
-	tResultButtons = {}
-
-	textBox = create_main_text_input(GUI)
-	GUI:controlAdd(textBox)
-
-	LABEL_STATS = create_control_label_stats(GUI)
-	GUI:controlAdd(LABEL_STATS)
+	GUI:controlAdd(gui_create_main_text_box(GUI, on_enter))
+	GUI:controlAdd(create_control_label_stats(GUI))
 
 	BUTTON_Y_START = GUI_SIZE * 1.5 + 15
 	-- createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, GUI_SIZE, BUTTON_Y_START)
-
 	GUI:setFocus(textBox)
 
-	-- function GUI:onResize()
-	-- 	textBox.width = self.width - 20
-	-- 	LABEL_STATS.x = GUI.width - LABEL_STATS.width - 12
-	-- 	local buttonsSpaceH = GUI.height - BUTTON_Y_START - 4
-	-- 	RESULTS_PER_PAGE = math.tointeger(buttonsSpaceH // GUI_SIZE)
-	-- 	-- msg(buttonsSpaceN)
-	-- 	createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, GUI_SIZE, BUTTON_Y_START)
-	-- 	UPDATE_RESULTS = true
-	-- 	self:controlInitAll()
-	-- end
+	-- add methods
+
+	-- does this call for a GUI:override(method) ?/
 
 	GUI.onResize = gui_default_on_resize
-
-	GUI:init()
-
-	-- FIX: GUI:update() should probably be a picker option
-
 	GUI.update = gui_default_update
-
-	log.user("XOXOXOXOXOXOXOXOXOXOXOXOXO")
-
-	-- function GUI:update()
-	-- 	if lastSearch ~= textBox.value then
-	-- 		SCROLL_RESULTS = 0 -- reset scrollbar on search update
-	-- 	end
-	-- 	if lastSearch ~= textBox.value or UPDATE_RESULTS then
-	-- 		-- search changed, update results
-	-- 		UPDATE_RESULTS = false
-	-- 		table.sort(tVstData, sortByRating)
-	-- 		if lastSearch ~= textBox.value then -- only search again when input changes, not on scroll
-	-- 			tSearchResults = findVst(tVstData, textBox.value, false, MAX_RESULTS)
-	-- 			lastSearch = textBox.value
-	-- 		end
-	-- 		RESULT_COUNT = #tSearchResults
-	-- 		showSearchResults(tResultButtons, tSearchResults)
-	-- 	end
-	-- end
-
-	-- FIX: this should also be a custom option
-
 	GUI.onExit = gui_default_on_exit
 
-	-- function GUI:onExit()
-	-- 	if UPDATE_RATINGS then
-	-- 		table.sort(tVstData, sortByRating)
-	-- 		jWriteVstData(DATA_INI_FILE, tVstData)
-	-- 	end
-	-- 	if WINDOW_SAVE_STATE then
-	-- 		local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
-	-- 		local dockstr = string.format("%d", dockstate)
-	-- 		jSettingsWriteToFileMultiple(SETTINGS_INI_FILE, {
-	-- 			{ "gui", "window_x", math.tointeger(wx) },
-	-- 			{ "gui", "window_y", math.tointeger(wy) },
-	-- 			{ "gui", "window_width", math.tointeger(ww) },
-	-- 			{ "gui", "window_height", math.tointeger(wh) },
-	-- 			{ "gui", "window_dock_state", dockstr },
-	-- 		}, true)
-	-- 	end
-	-- end
-
+	GUI:init()
 	return true
 end
 
@@ -1328,14 +1315,10 @@ end
 
 -- leader j f
 
-local function the_init()
+local function add_track_fx()
 	p = JProject:new()
 
-	-- resets
-	UPDATE_RATINGS = false
-	UPDATE_RESULTS = false
-	SCROLL_RESULTS = 0
-	RESULT_COUNT = 0
+	reset_variables()
 
 	if not loadSettings() then
 		msg(
@@ -1345,6 +1328,25 @@ local function the_init()
 		return false
 	end
 
+	local function entry_maker()
+	end
+
+	local function onenter(i)
+		if not tSearchResults then
+			return false
+		end -- results is empty
+
+		local fx = tSearchResults[i]
+
+		if not fx then
+			return false
+		end -- no such result
+
+		log.user("onenter:", i, format.block(fx))
+
+		return true
+	end
+
 	local opts = {
 		title = "Fast FX Finder",
 		width = WINDOW_WIDTH,
@@ -1352,37 +1354,61 @@ local function the_init()
 		x = WINDOW_X,
 		y = WINDOW_Y,
 		dockstate = WINDOW_DOCK_STATE,
+		on_select_func = onenter,
 	}
 
-	if init_picker(opts) then
+	if init_picker(opts, onenter) then
+		-- TODO: this logic should be put inside of init, so that I don't have to
+		-- keep reference of the GUI in this function
 		GUI:setReaperFocus()
-
-		-- NOTE: it is loop that processes interaction.
-		-- Inside i can find the
-		-- ~ logic for handling keypresses
-		-- ~ ui update func call
-		-- >>>>>>> the update function is created here!!
 		loop()
 	end
 end
 
--- -- leader j w
--- local function init_2_with_opts()
--- 	-- TODO: here refactor all input options into opts
---
--- 	local opts = {
--- 		title = "Fast FX Finder",
--- 		width = WINDOW_WIDTH,
--- 		height = WINDOW_HEIGHT,
--- 		x = WINDOW_X,
--- 		y = WINDOW_Y,
--- 		dockstate = WINDOW_DOCK_STATE,
--- 	}
---
--- 	if init() then
--- 		GUI:setReaperFocus()
--- 		loop()
--- 	end
--- end
+local function test_picker()
+	p = JProject:new()
 
-return { init = the_init, init_w_opts = init_2_with_opts }
+	reset_variables()
+
+	-- if not loadSettings() then
+	-- 	msg(
+	-- 		"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
+	-- 			.. SETTINGS_INI_FILE
+	-- 	)
+	-- 	return false
+	-- end
+
+	local function onenter(i)
+		if not tSearchResults then
+			return false
+		end -- results is empty
+
+		local fx = tSearchResults[i]
+
+		if not fx then
+			return false
+		end -- no such result
+
+		log.user("onenter:", i, format.block(fx))
+
+		return true
+	end
+
+	local opts = {
+		title = "Fast FX Finder",
+		width = WINDOW_WIDTH,
+		height = WINDOW_HEIGHT,
+		x = WINDOW_X,
+		y = WINDOW_Y,
+		dockstate = WINDOW_DOCK_STATE,
+		on_select_func = onenter,
+	}
+
+	if init_picker(opts, onenter) then
+		-- TODO: this logic should be put inside of init, so that I don't have to
+		-- keep reference of the GUI in this function
+		GUI:setReaperFocus()
+		loop()
+	end
+end
+return { add_track_fx = add_track_fx, test = test_picker }

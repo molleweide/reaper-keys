@@ -21,10 +21,9 @@ local cli = require('library.cli')
 -- simple verbs are usually operators, such as 'change'
 -- longer verbs are usually commands
 
-
 return {
-  FuzzyFx = fuzzy.init,
-  -- FuzzyFxWithOpts = fuzzy.init_w_opts,
+  FuzzyFx = fuzzy.add_track_fx,
+  FuzzyTest = fuzzy.test,
   Launcher = cli.run_launcher,
   ApplyConfigs = syntax.applyConfigs,
   TrackInSet_MIDI_QMK = {lib.io_device.setInputTo_MIDI_QMK, custom.setupMidiInputPreProcessorOnSelTrks},

@@ -15,7 +15,7 @@ return {
 						"+jjjjj",
 						{
 							["f"] = "FuzzyFx",
-							-- ["w"] = "FuzzyFxWithOpts",
+							["w"] = "FuzzyTest",
 						},
 					},
 				},
