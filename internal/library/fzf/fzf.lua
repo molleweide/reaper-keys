@@ -4,13 +4,6 @@
 @about
 	# Fast VST/FX Rack/Template Finder
 
-	-- TODO: pass single opts table.
-	--
-	--
-	-- NOTE: all options pertaining to the picker base gui should be
-	-- a class layer add upon the base jGui
-	--
-
 	A little window that allows for quick searching of FX (can be VST, templates or fxrack).
 
 	The script stores how often you select a certain FX and orders the list by how many times something is used.
@@ -799,16 +792,12 @@ local function gui_default_update(self)
 		UPDATE_RESULTS = false
 
 		------------------------------------------------------------------
-		--
-		-- TODO: i believe all this should go into the pickers update function
 
 		table.sort(T_VST_DATA, self.sort_comp)
 
-		-- NOTE: this is where the entries list is filtered
-
 		if lastSearch ~= textBox.value then -- only search again when input changes, not on scroll
-
-		  -- TODO: results_filter
+			-- TODO: how should I handle these params for the add_fx picker.
+			-- ... they should not be defaults ofc...
 
 			tSearchResults = self.results_filter(T_VST_DATA, textBox.value, false, MAX_RESULTS)
 
@@ -828,7 +817,7 @@ end
 
 local function gui_default_on_exit(self)
 	if UPDATE_RATINGS then
-		table.sort(T_VST_DATA, sortByRating)
+		table.sort(T_VST_DATA, self.sort_comp)
 		jWriteVstData(DATA_INI_FILE, T_VST_DATA)
 	end
 	if WINDOW_SAVE_STATE then
@@ -859,6 +848,8 @@ function init_picker(opts, on_enter)
 	-- load data
 
 	T_VST_DATA = opts.results
+
+	table.sort(T_VST_DATA, GUI.sort_comp)
 
 	GUI:controlAdd(gui_create_main_text_box(GUI, on_enter))
 	GUI:controlAdd(create_control_label_stats(GUI))
@@ -1085,7 +1076,7 @@ local function add_track_fx_picker()
 		end
 		-- msg(os.clock() - time)
 
-		table.sort(results, sortByRating)
+		-- table.sort(results, sortByRating)
 
 		return results
 	end
