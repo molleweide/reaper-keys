@@ -6,9 +6,10 @@
 
 	-- TODO: pass single opts table.
 	--
-	-- FIX: THESE
-	-- 1. refactor all options into a table
-	-- 2. refactor all files into modules,
+	--
+	-- NOTE: all options pertaining to the picker base gui should be
+	-- a class layer add upon the base jGui
+	--
 
 	A little window that allows for quick searching of FX (can be VST, templates or fxrack).
 
@@ -85,17 +86,6 @@ local SETTINGS_BASE_FOLDER = script_path
 local SETTINGS_INI_FILE = script_path .. "fx-finder-settings.ini"
 
 local SETTINGS_DEFAULT_FILE = script_path .. "REQ/fx-finder-settings-default.ini"
-
-local COLOR_VST = jColor:new({ 0.6, 0.6, 0.6, 1 })
-local COLOR_VSTI = jColor:new({ 0.8, 0.8, 0.5, 1 })
-local COLOR_FXCHAIN = jColor:new({ 0.5, 0.5, 0.8, 1 })
-local COLOR_TEMPLATE = jColor:new({ 0.5, 0.7, 0.5, 1 })
-local COLOR_JSFX = jColor:new({ 0.7, 0.5, 0.5, 1 })
-local COLOR_AU = jColor:new({ 0.5, 0.5, 0.7, 1 })
-local COLOR_AUI = jColor:new({ 0.5, 0.7, 0.7, 1 })
-local COLOR_ACTION = jColor:new({ 0.8, 0.5, 0.5, 1 })
-
-local tVstData = {}
 
 function msg(m)
 	return reaper.ShowConsoleMsg(tostring(m) .. "\n")
@@ -478,110 +468,106 @@ function getFXChains(tDirs, sRootDir, tRatingsData)
 	return tFXChainData
 end
 
---- Find VST
----@param vstTable
----@param sPattern
----@param iInstance
----@param iMaxResults
----@param find_plain
-function findVst(vstTable, sPattern, iInstance, iMaxResults, find_plain)
-	local iInstance = iInstance or false
-	local find_plain = find_plain or true
-	local iMaxResults = iMaxResults or false
-
-	local tResult = {}
-	local iCount = 0
-
-	if type(iInstance) == "number" and iInstance <= 0 then
-		jError("findVst(), instance <= 0. First instance is 1! iInstance: " .. tostring(iInstance), J_ERROR_ERROR)
-		return false
-	end
-
-	for i, t in ipairs(vstTable) do
-		local bMatch = true
-		-- Look for every word in the string
-		for token in string.gmatch(sPattern, "[^%s]+") do
-			-- local name = t.name
-			-- local name = _makeFxNameSearchable(t.name)
-			local name = t.desc -- no longer search in name but in description
-			token = token:lower()
-			if token == "@fx" or token == "@vst" then
-				if not t.dll and not t.vst and not t.vst3 then
-					bMatch = false
-					break
-				end
-			elseif token == "@temp" then
-				if not t.tracktemplate then
-					bMatch = false
-					break
-				end
-			elseif token == "@chain" then
-				if not t.fxchain then
-					bMatch = false
-					break
-				end
-			elseif token == "@vst3" then
-				if not t.vst3 then
-					bMatch = false
-					break
-				end
-			elseif token == "@i" then
-				if not t.instrument then
-					bMatch = false
-					break
-				end
-			elseif token == "@js" then
-				if not t.jsfx then
-					bMatch = false
-					break
-				end
-			elseif token == "@a" then
-				if not t.action then
-					bMatch = false
-					break
-				end
-			elseif token:match("^@.*") then -- prevents when you start typing a tag that all the search results disappear
-				bMatch = true
-			-- elseif not name:lower():find(token:lower(), 1, find_plain) then
-			-- 	bMatch = false
-			-- 	break
-			else
-				token = token:gsub("\\@", "@") -- replace escaped '@'
-				bMatch = name:lower():find(token:lower(), 1, find_plain)
-				if not bMatch then
-					break
-				end
-			end
-		end
-
-		if bMatch then
-			iCount = iCount + 1
-			if iInstance == false then
-				t.id = i -- keep track of position in main table
-				tResult[#tResult + 1] = t
-				if iMaxResults ~= false then
-					if #tResult >= iMaxResults then -- check if we already heave enough results
-						return tResult
-					end
-				end
-			elseif iInstance == iCount then
-				return t
-			end
-		end
-	end
-
-	if not iInstance then
-		-- return table
-		if #tResult == 0 then
-			return {} -- Used to return false but should be empty table
-		else
-			return tResult
-		end
-	else
-		-- instance not found
-		return false
-	end
-end
+-- --- Find VST
+-- --
+-- function findVst(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+-- 	local iInstance = iInstance or false
+-- 	local find_plain = find_plain or true
+-- 	local iMaxResults = iMaxResults or false
+--
+-- 	local tResult = {}
+-- 	local iCount = 0
+--
+-- 	if type(iInstance) == "number" and iInstance <= 0 then
+-- 		jError("findVst(), instance <= 0. First instance is 1! iInstance: " .. tostring(iInstance), J_ERROR_ERROR)
+-- 		return false
+-- 	end
+--
+-- 	for i, t in ipairs(vstTable) do
+-- 		local bMatch = true
+-- 		-- Look for every word in the string
+-- 		for token in string.gmatch(sPattern, "[^%s]+") do
+-- 			-- local name = t.name
+-- 			-- local name = _makeFxNameSearchable(t.name)
+-- 			local name = t.desc -- no longer search in name but in description
+-- 			token = token:lower()
+-- 			if token == "@fx" or token == "@vst" then
+-- 				if not t.dll and not t.vst and not t.vst3 then
+-- 					bMatch = false
+-- 					break
+-- 				end
+-- 			elseif token == "@temp" then
+-- 				if not t.tracktemplate then
+-- 					bMatch = false
+-- 					break
+-- 				end
+-- 			elseif token == "@chain" then
+-- 				if not t.fxchain then
+-- 					bMatch = false
+-- 					break
+-- 				end
+-- 			elseif token == "@vst3" then
+-- 				if not t.vst3 then
+-- 					bMatch = false
+-- 					break
+-- 				end
+-- 			elseif token == "@i" then
+-- 				if not t.instrument then
+-- 					bMatch = false
+-- 					break
+-- 				end
+-- 			elseif token == "@js" then
+-- 				if not t.jsfx then
+-- 					bMatch = false
+-- 					break
+-- 				end
+-- 			elseif token == "@a" then
+-- 				if not t.action then
+-- 					bMatch = false
+-- 					break
+-- 				end
+-- 			elseif token:match("^@.*") then -- prevents when you start typing a tag that all the search results disappear
+-- 				bMatch = true
+-- 			-- elseif not name:lower():find(token:lower(), 1, find_plain) then
+-- 			-- 	bMatch = false
+-- 			-- 	break
+-- 			else
+-- 				token = token:gsub("\\@", "@") -- replace escaped '@'
+-- 				bMatch = name:lower():find(token:lower(), 1, find_plain)
+-- 				if not bMatch then
+-- 					break
+-- 				end
+-- 			end
+-- 		end
+--
+-- 		if bMatch then
+-- 			iCount = iCount + 1
+-- 			if iInstance == false then
+-- 				t.id = i -- keep track of position in main table
+-- 				tResult[#tResult + 1] = t
+-- 				if iMaxResults ~= false then
+-- 					if #tResult >= iMaxResults then -- check if we already heave enough results
+-- 						return tResult
+-- 					end
+-- 				end
+-- 			elseif iInstance == iCount then
+-- 				return t
+-- 			end
+-- 		end
+-- 	end
+--
+-- 	if not iInstance then
+-- 		-- return table
+-- 		if #tResult == 0 then
+-- 			return {} -- Used to return false but should be empty table
+-- 		else
+-- 			return tResult
+-- 		end
+-- 	else
+-- 		-- instance not found
+-- 		return false
+-- 	end
+-- end
 
 jGuiHighlightControl = jGuiControl:new({ highlight = {}, color_highlight = { 1, 0.9, 0, 0.2 } })
 
@@ -628,12 +614,11 @@ function _jScroll(amount)
 	UPDATE_RESULTS = true
 end
 
----
----@param gui
----@param tControls
----@param n
----@param height
----@param y_start
+--
+-- NOTE: this creates the `results` list buttons and populates the
+-- `tResultButtons` table with them.
+--
+
 local function createResultButtons(gui, tControls, n, height, y_start)
 	local x_start = 10
 	local y_space = 0
@@ -664,7 +649,7 @@ local function createResultButtons(gui, tControls, n, height, y_start)
 			info.y = c.y
 
 			function c:onMouseClick()
-				gui.on_select_func(i + SCROLL_RESULTS, textBox.value)
+				gui.on_select_func(i + SCROLL_RESULTS)
 
 				-- selectFx(i + SCROLL_RESULTS)
 
@@ -732,266 +717,6 @@ function _round(inValue)
 	return math.floor(inValue + 0.5)
 end
 
-function _makeColorsCatagory(b, info, color)
-	b.colors_label = {}
-	b.colors_label.normal = color
-	b.colors_label.hover = color:lighter(0.2)
-	-- b.colors_label.hover = jColor:new("white")
-	info.colors_label = color
-end
-
----
----@param tButtons
----@param tResults
-function showSearchResults(tButtons, tResults)
-	for i, cIds in ipairs(tButtons) do
-		local b = cIds[1]
-		local info = cIds[2]
-		local iStart = _round(i + SCROLL_RESULTS)
-		local highlights = jStringExplode(textBox.value, " ")
-
-		local showing
-		if iStart <= #tResults then
-			showing = iStart
-		else
-			showing = #tResults
-		end
-		LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
-
-		if tResults and iStart <= #tResults then
-			local fx = tResults[iStart]
-			b.label = fx.desc
-			b.visible = true
-			info.visible = true
-			b.highlight = highlights
-
-			local tTypes = {}
-			if fx.instrument then
-				if fx.vst3 then
-					tTypes[#tTypes + 1] = "VST3i"
-				elseif fx.dll or fx.vst then
-					tTypes[#tTypes + 1] = "VSTi"
-				end
-				_makeColorsCatagory(b, info, COLOR_VSTI)
-			else
-				if fx.vst3 then
-					tTypes[#tTypes + 1] = "VST3"
-				end
-				if fx.dll then
-					tTypes[#tTypes + 1] = "VST"
-				end
-				if fx.vst then
-					tTypes[#tTypes + 1] = "VST"
-				end
-				_makeColorsCatagory(b, info, COLOR_VST)
-			end
-
-			if fx.tracktemplate then
-				tTypes[#tTypes + 1] = "TEMP"
-				_makeColorsCatagory(b, info, COLOR_TEMPLATE)
-			end
-
-			if fx.fxchain then
-				tTypes[#tTypes + 1] = "FXCHAIN"
-				_makeColorsCatagory(b, info, COLOR_FXCHAIN)
-			end
-
-			if fx.jsfx then
-				tTypes[#tTypes + 1] = "JSFX"
-				_makeColorsCatagory(b, info, COLOR_JSFX)
-			end
-
-			if fx.action then
-				tTypes[#tTypes + 1] = "ACTION"
-				_makeColorsCatagory(b, info, COLOR_ACTION)
-			end
-
-			if fx.au then
-				tTypes[#tTypes + 1] = "AU"
-				_makeColorsCatagory(b, info, COLOR_AU)
-			end
-
-			if fx.aui then
-				tTypes[#tTypes + 1] = "AUi"
-				_makeColorsCatagory(b, info, COLOR_AUI)
-			end
-
-			local sTypes = ""
-			for _, sT in ipairs(tTypes) do
-				sTypes = sTypes .. " " .. sT
-			end
-
-			info.label = sTypes --.. "\n" .. fx.rating
-		else
-			b.visible = false
-			info.visible = false
-		end
-	end
-end
-
-function sortByRating(a, b)
-	if a.rating > b.rating then
-		return true
-	elseif a.rating == b.rating then
-		return a.name < b.name
-	else
-		return false
-	end
-end
-
----
----@param i
----@return
-function selectFx(i)
-	-- FIX: i should prolly remove the undo points since
-	-- those are handled by RK
-
-	-- TODO: TRY THIS
-	-- ~ where does `i` come from
-	-- ~ in what list will we get data from
-	--
-
-	-- NOTE: so essentially most stuff in this function should be passed
-	-- as an option to the picker.
-	--
-	-- this is the `attach_mappings` entry.
-
-	log.user("SELECT FX: ", i)
-
-	if not tSearchResults then
-		return false
-	end -- results is empty
-
-	local fx = tSearchResults[i]
-
-	if not fx then
-		return false
-	end -- no such result
-
-	tVstData[fx.id].rating = tVstData[fx.id].rating + 1
-
-	reaper.Undo_BeginBlock2(p:getId())
-
-	if fx.tracktemplate then
-		-- This is a template, insert it
-		reaper.Main_openProject(_jPath(fx.path .. fx.filename))
-	elseif fx.fxchain then
-		if not GUI.kb.control() then -- Control not held, insert on tracks
-			-- Adds an FXCHAIN to a track. If there are no FX on the track an empty chain will be created first
-			local selectedTracks = p:selectedTracks(0, 0, true)
-			local bCreatedChain = false
-
-			for _, t in pairs(selectedTracks) do
-				if t.fxcount == 0 then
-					p:unselectAllTracks()
-					t.selected = 1
-					jCreateTrackChainForSelectedTracks()
-					bCreatedChain = true
-				end
-			end
-
-			for _, t in pairs(selectedTracks) do
-				if bCreatedChain then
-					t.selected = 1
-				end
-				local numFxBefore = t.fxcount
-				jFxChainAdd(t, jReadFxChainFromFile(_jPath(fx.path .. fx.filename)))
-				if FXCHAIN_FLOAT_WINDOWS then
-					for iFX = numFxBefore, t.fxcount - 1 do
-						t:getFx(iFX):show(3)
-					end
-				end
-			end
-
-			if TRACK_SHOW_FLAG == 1 and not FXCHAIN_FLOAT_WINDOWS then -- added for people using the fxchain window so the fx will show
-				local focusTrack = selectedTracks[1]
-				if focusTrack then
-					focusTrack:getFx(focusTrack.fxcount - 1):show(TRACK_SHOW_FLAG)
-				end
-			end
-
-			-- LEAVE THIS FOR FUTURE !!!!!!!!!!
-			-- else -- control held, try to add chain to items
-			-- reaper.ClearConsole()
-			-- for i in p:selectedItems() do
-			-- 	local take = i:getActiveTake()
-			-- 	local chunk = i:getStateChunk()
-			-- 	local takeNumber = math.tointeger(take.number)
-			-- 	-- msg(chunk)
-			-- 	-- msg("---")
-
-			-- 	msg(math.tointeger( takeNumber))
-			-- 	local fxChunk = ultraschall.GetFXStateChunk(chunk, takeNumber)
-			-- 	msg(fxChunk)
-			-- 	msg("after: ")
-			-- 	local fxString = jReadFxChainFromFile(fx.path .. fx.filename)
-			-- 	if not fxChunk then
-			-- 		-- No fx yet, create chunk:
-			-- 		msg("create new chunk...")
-			-- 		fxChunk = " <TAKEFX\n" .. fxString .. "\n  >"
-			-- 		takeNumber = 0
-			-- 	else
-			-- 		fxChunk =  fxChunk:gsub(">$", '') -- remove closing ">"
-			-- 		fxChunk = fxChunk .. "\n" .. fxString .. "\n>"
-			-- 	end
-			-- 	msg("fxChunk:")
-			-- 	msg(fxChunk)
-			-- 	msg("Chunk:")
-			-- 	msg(chunk)
-			-- 	local r, newChunk = ultraschall.SetFXStateChunk(chunk, fxChunk, takeNumber)
-			-- 	-- msg(newChunk)
-			-- 	-- i:setStateChunk(newChunk)
-
-			-- end
-		end
-	elseif fx.action then
-		-- NOTE: this is how I can call regular actions from a fuzzy list.
-		-- This could also be used in combination with RK sequences and fuzzy
-		-- search next step to take
-
-		reaper.Main_OnCommandEx(fx.command, 1, 0)
-	-- msg(fx.command)
-	-- msg(fx.name)
-	else
-		-- this is a vst or a jsfx
-		local typeInfo = ""
-		if tVstData[fx.id].vst3 and PREFER_VST3 then -- prefer VST3 where available
-			typeInfo = "VST3:"
-		end
-
-		local fxString = ""
-		if fx.jsfx then
-			fxString = fx.filename
-		elseif fx.au then
-			fxString = fx.filename
-		elseif fx.aui then
-			fxString = fx.filename
-		else
-			fxString = typeInfo .. _removeVstiString(tVstData[fx.id].name)
-		end
-		if not GUI.kb.control() then -- Control not held, insert on tracks
-			for t in p:selectedTracks() do
-				local r = t:addFx(fxString)
-				if r then
-					r:show(TRACK_SHOW_FLAG)
-				end
-			end
-		else -- Control held, insert on items
-			for i in p:selectedItems() do
-				local take = i:getActiveTake()
-				local r = take:addFx(fxString)
-				if r >= 0 then
-					reaper.TakeFX_Show(take:getReaperTake(), r, ITEM_SHOW_FLAG) -- show FX
-				end
-			end
-		end
-	end
-	reaper.Undo_EndBlock2(p:getId(), "FAST FX FINDER: Add Fx", 0)
-
-	UPDATE_RATINGS = true
-	return true
-end
-
 function _removeVstiString(s)
 	return s:gsub("!!!VSTi", "")
 end
@@ -1004,35 +729,6 @@ function _jPath(p)
 		local r = p:gsub("\\", "/"):gsub("/+", "/")
 		return r
 	end
-end
-
-local function load_plugin_data()
-	tRatingData = jReadVstData(DATA_INI_FILE)
-	tVstData = jReadVstIni(VST_INI_FILE, tRatingData)
-
-	tTemplates = getTemplates(TEMPLATE_SUB_DIRS, TEMPLATE_ROOT_DIR, tRatingData)
-	tVstData = jTablesGlue(tTemplates, tVstData)
-
-	tFXChains = getFXChains(FXCHAIN_SUB_DIRS, FXCHAIN_ROOT_DIR, tRatingData)
-	tVstData = jTablesGlue(tFXChains, tVstData)
-
-	local tJsfx = jReadJsfxIni(JSFX_INI_FILE, tRatingData)
-	tVstData = jTablesGlue(tJsfx, tVstData)
-
-	if LOAD_AU then
-		local tAu = jReadAuIni(AU_INI_FILE, tRatingData)
-		tVstData = jTablesGlue(tAu, tVstData)
-	end
-
-	-- NOTE: is this where mappings are attached??
-	-- local time = os.clock()
-	if LOAD_ACTIONS then
-		local tActions = jGetActions()
-		tVstData = jTablesGlue(tActions, tVstData)
-	end
-	-- msg(os.clock() - time)
-
-	table.sort(tVstData, sortByRating)
 end
 
 local function gui_create_main_text_box(gui, on_enter)
@@ -1080,7 +776,14 @@ local function gui_default_on_resize(self)
 	textBox.width = self.width - 20
 	LABEL_STATS.x = GUI.width - LABEL_STATS.width - 12
 	local buttonsSpaceH = GUI.height - BUTTON_Y_START - 4
+
+	-- NOTE: this is where the results list is created.
+	-- Doesn't it make sense to add these types of option to the
+	-- GUI object so that I can always access settings via the GUI
+	-- name.
+
 	RESULTS_PER_PAGE = math.tointeger(buttonsSpaceH // GUI_SIZE)
+
 	-- msg(buttonsSpaceN)
 	createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, GUI_SIZE, BUTTON_Y_START)
 	UPDATE_RESULTS = true
@@ -1094,27 +797,39 @@ local function gui_default_update(self)
 	if lastSearch ~= textBox.value or UPDATE_RESULTS then
 		-- search changed, update results
 		UPDATE_RESULTS = false
-		table.sort(tVstData, sortByRating)
+
+		------------------------------------------------------------------
+		--
+		-- TODO: i believe all this should go into the pickers update function
+
+		table.sort(T_VST_DATA, self.sort_comp)
 
 		-- NOTE: this is where the entries list is filtered
 
 		if lastSearch ~= textBox.value then -- only search again when input changes, not on scroll
-			-- findVst is used to filter entries
 
-			tSearchResults = findVst(tVstData, textBox.value, false, MAX_RESULTS)
+		  -- TODO: results_filter
+
+			tSearchResults = self.results_filter(T_VST_DATA, textBox.value, false, MAX_RESULTS)
 
 			lastSearch = textBox.value
 		end
 
+		------------------------------------------------------------------
+
 		RESULT_COUNT = #tSearchResults
-		showSearchResults(tResultButtons, tSearchResults)
+
+		-- FIX: rename this to `display_maker`
+
+		self.entry_maker(tResultButtons, tSearchResults)
+		-- showSearchResults(tResultButtons, tSearchResults)
 	end
 end
 
 local function gui_default_on_exit(self)
 	if UPDATE_RATINGS then
-		table.sort(tVstData, sortByRating)
-		jWriteVstData(DATA_INI_FILE, tVstData)
+		table.sort(T_VST_DATA, sortByRating)
+		jWriteVstData(DATA_INI_FILE, T_VST_DATA)
 	end
 	if WINDOW_SAVE_STATE then
 		local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
@@ -1136,9 +851,14 @@ end
 function init_picker(opts, on_enter)
 	-- reaper.ClearConsole()
 	tResultButtons = {}
-	load_plugin_data()
 
 	GUI = jGui:new(opts)
+
+	-- TODO: i should attach results to the GUI object
+	--
+	-- load data
+
+	T_VST_DATA = opts.results
 
 	GUI:controlAdd(gui_create_main_text_box(GUI, on_enter))
 	GUI:controlAdd(create_control_label_stats(GUI))
@@ -1315,7 +1035,7 @@ end
 
 -- leader j f
 
-local function add_track_fx()
+local function add_track_fx_picker()
 	p = JProject:new()
 
 	reset_variables()
@@ -1328,10 +1048,56 @@ local function add_track_fx()
 		return false
 	end
 
-	local function entry_maker()
+	local function sortByRating(a, b)
+		if a.rating > b.rating then
+			return true
+		elseif a.rating == b.rating then
+			return a.name < b.name
+		else
+			return false
+		end
 	end
 
-	local function onenter(i)
+	local function get_plugin_results()
+		local results = {}
+		tRatingData = jReadVstData(DATA_INI_FILE)
+		results = jReadVstIni(VST_INI_FILE, tRatingData)
+
+		tTemplates = getTemplates(TEMPLATE_SUB_DIRS, TEMPLATE_ROOT_DIR, tRatingData)
+		results = jTablesGlue(tTemplates, results)
+
+		tFXChains = getFXChains(FXCHAIN_SUB_DIRS, FXCHAIN_ROOT_DIR, tRatingData)
+		results = jTablesGlue(tFXChains, results)
+
+		local tJsfx = jReadJsfxIni(JSFX_INI_FILE, tRatingData)
+		results = jTablesGlue(tJsfx, results)
+
+		if LOAD_AU then
+			local tAu = jReadAuIni(AU_INI_FILE, tRatingData)
+			results = jTablesGlue(tAu, results)
+		end
+
+		-- NOTE: is this where mappings are attached??
+		-- local time = os.clock()
+		if LOAD_ACTIONS then
+			local tActions = jGetActions()
+			results = jTablesGlue(tActions, results)
+		end
+		-- msg(os.clock() - time)
+
+		table.sort(results, sortByRating)
+
+		return results
+	end
+
+	local function entry_maker() end
+
+	local function selectFx(i)
+		-- todo: i should prolly remove the undo points since
+		-- those are handled by RK
+
+		log.user("SELECT FX: ", i)
+
 		if not tSearchResults then
 			return false
 		end -- results is empty
@@ -1342,8 +1108,127 @@ local function add_track_fx()
 			return false
 		end -- no such result
 
-		log.user("onenter:", i, format.block(fx))
+		T_VST_DATA[fx.id].rating = T_VST_DATA[fx.id].rating + 1
 
+		reaper.Undo_BeginBlock2(p:getId())
+
+		if fx.tracktemplate then
+			-- This is a template, insert it
+			reaper.Main_openProject(_jPath(fx.path .. fx.filename))
+		elseif fx.fxchain then
+			if not GUI.kb.control() then -- Control not held, insert on tracks
+				-- Adds an FXCHAIN to a track. If there are no FX on the track an empty chain will be created first
+				local selectedTracks = p:selectedTracks(0, 0, true)
+				local bCreatedChain = false
+
+				for _, t in pairs(selectedTracks) do
+					if t.fxcount == 0 then
+						p:unselectAllTracks()
+						t.selected = 1
+						jCreateTrackChainForSelectedTracks()
+						bCreatedChain = true
+					end
+				end
+
+				for _, t in pairs(selectedTracks) do
+					if bCreatedChain then
+						t.selected = 1
+					end
+					local numFxBefore = t.fxcount
+					jFxChainAdd(t, jReadFxChainFromFile(_jPath(fx.path .. fx.filename)))
+					if FXCHAIN_FLOAT_WINDOWS then
+						for iFX = numFxBefore, t.fxcount - 1 do
+							t:getFx(iFX):show(3)
+						end
+					end
+				end
+
+				if TRACK_SHOW_FLAG == 1 and not FXCHAIN_FLOAT_WINDOWS then -- added for people using the fxchain window so the fx will show
+					local focusTrack = selectedTracks[1]
+					if focusTrack then
+						focusTrack:getFx(focusTrack.fxcount - 1):show(TRACK_SHOW_FLAG)
+					end
+				end
+
+				-- LEAVE THIS FOR FUTURE !!!!!!!!!!
+				-- else -- control held, try to add chain to items
+				-- reaper.ClearConsole()
+				-- for i in p:selectedItems() do
+				-- 	local take = i:getActiveTake()
+				-- 	local chunk = i:getStateChunk()
+				-- 	local takeNumber = math.tointeger(take.number)
+				-- 	-- msg(chunk)
+				-- 	-- msg("---")
+
+				-- 	msg(math.tointeger( takeNumber))
+				-- 	local fxChunk = ultraschall.GetFXStateChunk(chunk, takeNumber)
+				-- 	msg(fxChunk)
+				-- 	msg("after: ")
+				-- 	local fxString = jReadFxChainFromFile(fx.path .. fx.filename)
+				-- 	if not fxChunk then
+				-- 		-- No fx yet, create chunk:
+				-- 		msg("create new chunk...")
+				-- 		fxChunk = " <TAKEFX\n" .. fxString .. "\n  >"
+				-- 		takeNumber = 0
+				-- 	else
+				-- 		fxChunk =  fxChunk:gsub(">$", '') -- remove closing ">"
+				-- 		fxChunk = fxChunk .. "\n" .. fxString .. "\n>"
+				-- 	end
+				-- 	msg("fxChunk:")
+				-- 	msg(fxChunk)
+				-- 	msg("Chunk:")
+				-- 	msg(chunk)
+				-- 	local r, newChunk = ultraschall.SetFXStateChunk(chunk, fxChunk, takeNumber)
+				-- 	-- msg(newChunk)
+				-- 	-- i:setStateChunk(newChunk)
+
+				-- end
+			end
+		elseif fx.action then
+			-- NOTE: this is how I can call regular actions from a fuzzy list.
+			-- This could also be used in combination with RK sequences and fuzzy
+			-- search next step to take
+
+			reaper.Main_OnCommandEx(fx.command, 1, 0)
+		-- msg(fx.command)
+		-- msg(fx.name)
+		else
+			-- this is a vst or a jsfx
+			local typeInfo = ""
+			if T_VST_DATA[fx.id].vst3 and PREFER_VST3 then -- prefer VST3 where available
+				typeInfo = "VST3:"
+			end
+
+			local fxString = ""
+			if fx.jsfx then
+				fxString = fx.filename
+			elseif fx.au then
+				fxString = fx.filename
+			elseif fx.aui then
+				fxString = fx.filename
+			else
+				fxString = typeInfo .. _removeVstiString(T_VST_DATA[fx.id].name)
+			end
+			if not GUI.kb.control() then -- Control not held, insert on tracks
+				for t in p:selectedTracks() do
+					local r = t:addFx(fxString)
+					if r then
+						r:show(TRACK_SHOW_FLAG)
+					end
+				end
+			else -- Control held, insert on items
+				for i in p:selectedItems() do
+					local take = i:getActiveTake()
+					local r = take:addFx(fxString)
+					if r >= 0 then
+						reaper.TakeFX_Show(take:getReaperTake(), r, ITEM_SHOW_FLAG) -- show FX
+					end
+				end
+			end
+		end
+		reaper.Undo_EndBlock2(p:getId(), "FAST FX FINDER: Add Fx", 0)
+
+		UPDATE_RATINGS = true
 		return true
 	end
 
@@ -1354,7 +1239,11 @@ local function add_track_fx()
 		x = WINDOW_X,
 		y = WINDOW_Y,
 		dockstate = WINDOW_DOCK_STATE,
-		on_select_func = onenter,
+		on_select_func = selectFx,
+		results = get_plugin_results(),
+		entry_maker = require("entry_makers.add_fx"),
+		sort_comp = sortByRating,
+		results_filter = require("results_filter.add_fx"),
 	}
 
 	if init_picker(opts, onenter) then
@@ -1367,16 +1256,14 @@ end
 
 local function test_picker()
 	p = JProject:new()
-
 	reset_variables()
-
-	-- if not loadSettings() then
-	-- 	msg(
-	-- 		"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
-	-- 			.. SETTINGS_INI_FILE
-	-- 	)
-	-- 	return false
-	-- end
+	if not loadSettings() then
+		msg(
+			"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
+				.. SETTINGS_INI_FILE
+		)
+		return false
+	end
 
 	local function onenter(i)
 		if not tSearchResults then
@@ -1402,6 +1289,13 @@ local function test_picker()
 		y = WINDOW_Y,
 		dockstate = WINDOW_DOCK_STATE,
 		on_select_func = onenter,
+		results = {
+			"this",
+			"is",
+			"a",
+			"picker",
+			"test",
+		},
 	}
 
 	if init_picker(opts, onenter) then
@@ -1411,4 +1305,5 @@ local function test_picker()
 		loop()
 	end
 end
-return { add_track_fx = add_track_fx, test = test_picker }
+
+return { add_track_fx = add_track_fx_picker, test = test_picker }

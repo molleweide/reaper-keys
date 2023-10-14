@@ -31,6 +31,8 @@ jGui = {
 	mouse = require("REQ.mouse"),
 	kb = require("REQ.jKeyboard"),
 
+	globals = {},
+
 	controls = {},
 	controlActive = false,
 	controlHover = false,
@@ -93,6 +95,11 @@ function jGui:processKeyboard()
 	-- this function handles the keyboard presses
 	self.lastChar = gfx.getchar()
 	if self.lastChar > 0 then
+
+    --
+    -- TODO: reuse my case switch logic here?
+    --
+
 		-- Process special keys
 		-- TODO process ESC here too!
 		if self.lastChar == self.kb.escape then
