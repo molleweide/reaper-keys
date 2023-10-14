@@ -24,6 +24,7 @@ local cli = require('library.cli')
 
 return {
   FuzzyFx = fuzzy.init,
+  -- FuzzyFxWithOpts = fuzzy.init_w_opts,
   Launcher = cli.run_launcher,
   ApplyConfigs = syntax.applyConfigs,
   TrackInSet_MIDI_QMK = {lib.io_device.setInputTo_MIDI_QMK, custom.setupMidiInputPreProcessorOnSelTrks},

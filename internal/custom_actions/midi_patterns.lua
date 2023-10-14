@@ -321,7 +321,10 @@ local state_table_name = "midipatterns"
 --    is the keybind for this action
 --
 --
--- TODO: leader m I -> insert pattern at cursor position
+-- TODO: leader m i -> insert pattern at cursor position
+--       leader m I -> insert beginning of measure
+--       .....      -> beginning of take??
+--
 --
 -- TODO: leade m R -> replace selected note with pattern
 --        requires only one note to be selected???
@@ -335,17 +338,20 @@ midi_patterns.insertPatternFromString = function()
     return
   end
 
+  -- local midi_patterns_state = reaper_state.get(state_table_name)
+  -- -- log.user("PREV PATTERN:", format.block(midi_patterns_state))
 
-  local midi_patterns_state = reaper_state.get(state_table_name)
-
-  log.user("PREV PATTERN:", format.block(midi_patterns_state))
+  -- TODO: send http request to nvim and prompt nvim for string input,
+  --       and send the string back to reaper via OSC
+  -- 1. play around with neovim http server
+  -- 2. prompt for nui.input on event.
+  -- 3. send data back to reaper over OSC
 
   local input_placeholder = PATTERN_PLACEHOLDER
   local input_field_width = "extrawidth=350"
   local caption_csv = string.format("%s,%s", input_placeholder, input_field_width)
   local retvals_csv = ""
   local pattern_sep = " " -- whitespace
-
   local _, str_pat_input = reaper.GetUserInputs("pattern:", 1, input_placeholder, caption_csv, retvals_csv)
   local t_pattern_strings = s.split(str_pat_input, pattern_sep)
   local t_pat_multiplied = handle_multipliers(t_pattern_strings)

@@ -7,7 +7,20 @@ return {
 		timeline_operator = {},
 		timeline_selector = {},
 		visual_timeline_command = {},
-		command = {},
+		command = {
+			["<SPC>"] = {
+				"+leader commands",
+				{
+					["j"] = {
+						"+jjjjj",
+						{
+							["f"] = "FuzzyFx",
+							-- ["w"] = "FuzzyFxWithOpts",
+						},
+					},
+				},
+			},
+		},
 	},
 	main = {
 		track_motion = {},

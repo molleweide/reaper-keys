@@ -4,17 +4,21 @@
 @noindex
 --]]
 
+local log = require("utils.log")
+local format = require("utils.format")
+
 J_SCRIPT_DIR = reaper.GetResourcePath() .. "/Scripts/LUA/" -- This should not be there for reascript version??
 package.path = package.path .. ";" .. J_SCRIPT_DIR .. "?.lua"
 
-require('REQ.JGuiColors')
-require ('REQ.JGuiControls')
-require ('REQ.JGuiFunctions')
+require("REQ.JGuiColors")
+require("REQ.JGuiControls")
+require("REQ.JGuiFunctions")
+
+log.user("###### J_SCRIPT_DIR:", J_SCRIPT_DIR)
 
 ----------
 -- This GUI class deals with the GUI and sending mouse info to the controls in it
 -- Mouse script was largeley based of Schwa's GUI example
-
 
 jGui = {
 	title = "",
@@ -24,8 +28,8 @@ jGui = {
 	y = 0,
 	dockstate = 0,
 
-	mouse = require ('REQ.mouse'),
-	kb = require('REQ.jKeyboard'),
+	mouse = require("REQ.mouse"),
+	kb = require("REQ.jKeyboard"),
 
 	controls = {},
 	controlActive = false,
@@ -40,20 +44,20 @@ jGui = {
 		fontsize = 10,
 		font = "Arial",
 		mouse_double_click_speed = 0.10,
-		font_color = {1,1,1,1}
+		font_color = { 1, 1, 1, 1 },
 	},
 
 	doExit = false,
 	imageId = 0,
 
-	lastChar = false -- this is where reapers gfx.getChar() is stored
+	lastChar = false, -- this is where reapers gfx.getChar() is stored
 }
 
 function jGui:new(o)
 	o = o or {}
-    setmetatable(o, self)
-    self.__index = self
-    return o
+	setmetatable(o, self)
+	self.__index = self
+	return o
 end
 
 function jGui:init()
@@ -66,7 +70,7 @@ function jGui:init()
 end
 
 function jGui:refresh()
-	if (self.width ~= gfx.w or self.height ~= gfx.h) then
+	if self.width ~= gfx.w or self.height ~= gfx.h then
 		self:_resize()
 	end
 	self:getControlHover()
@@ -108,7 +112,7 @@ function jGui:processKeyboard()
 			else
 				self:focusNext()
 			end
-		elseif (self.lastChar == self.kb.tab and self.kb.shift()) then -- SHIFT TAB
+		elseif self.lastChar == self.kb.tab and self.kb.shift() then -- SHIFT TAB
 			if self.focus then
 				self.focus:_onShiftTab()
 			else
@@ -179,10 +183,14 @@ end
 function jGui:getControlHover()
 	for i, curControl in ipairs(self:getControlsByZInv()) do
 		curArea = curControl:getArea()
-		if curControl.mouse_input and
-			curControl.visible and curArea[1] < gfx.mouse_x and gfx.mouse_x < curArea[3] and
-			curArea[2] < gfx.mouse_y and gfx.mouse_y < curArea[4] then
-
+		if
+			curControl.mouse_input
+			and curControl.visible
+			and curArea[1] < gfx.mouse_x
+			and gfx.mouse_x < curArea[3]
+			and curArea[2] < gfx.mouse_y
+			and gfx.mouse_y < curArea[4]
+		then
 			if curControl ~= self.controlHover and self.controlHover then -- When the user hovers from one button directly onto another
 				self.controlHover:_onMouseHoverOut()
 			end
@@ -208,7 +216,7 @@ end
 
 function jGui:controlAdd(oControl)
 	oControl:_init()
-	local iPos = #self.controls +1
+	local iPos = #self.controls + 1
 	self.controls[iPos] = oControl
 
 	if oControl.focus_index then -- check if this control is tab-able
@@ -252,7 +260,9 @@ function jGui:controlDelete(inC)
 			bSucces = true
 		end
 	end
-	if not bSucces then msg("Unable to remove control!") end
+	if not bSucces then
+		msg("Unable to remove control!")
+	end
 	for i, c in pairs(self.focusOrder) do
 		if self.focusOrder[i] == inC then
 			table.remove(self.focusOrder, i)
@@ -260,42 +270,52 @@ function jGui:controlDelete(inC)
 		end
 	end
 
-	if self.controlActive == inC then self.controlActive = false end
-	if self.controlHover == inC then self.controlHover = false end
-	if self.controlDrag == inC then self.controlDrag = false end
-	if self.focus == inC then self.focus = false end
+	if self.controlActive == inC then
+		self.controlActive = false
+	end
+	if self.controlHover == inC then
+		self.controlHover = false
+	end
+	if self.controlDrag == inC then
+		self.controlDrag = false
+	end
+	if self.focus == inC then
+		self.focus = false
+	end
 
 	self:updateFocusOrder()
-
 end
 
 function jGui:mouseUpdate()
 	local mouse = self.mouse
-  	local LB_DOWN = mouse.cap(mouse.LB)           -- Get current left mouse button state
-  	local RB_DOWN = mouse.cap(mouse.RB)          -- Get current right mouse button state
-  	local mx, my = gfx.mouse_x, gfx.mouse_y
+	local LB_DOWN = mouse.cap(mouse.LB) -- Get current left mouse button state
+	local RB_DOWN = mouse.cap(mouse.RB) -- Get current right mouse button state
+	local mx, my = gfx.mouse_x, gfx.mouse_y
 
-  -- (modded Schwa's GUI example)
-  if (LB_DOWN and not RB_DOWN) or (RB_DOWN and not LB_DOWN) then   -- LMB or RMB pressed down?
-    if (mouse.last_LMB_state == false and not RB_DOWN) or (mouse.last_RMB_state == false and not LB_DOWN) then
-      if mouse.uptime and os.clock() - mouse.uptime < self.settings.mouse_double_click_speed and mouse.last_pressed_button == mouse.LB and LB_DOWN then
-        self:OnMouseDoubleClickLMB(mx, my)
-      else
-      	self:OnMouseDown(mx, my, LB_DOWN, RB_DOWN)
-      end
-    elseif mx ~= mouse.last_x or my ~= mouse.last_y then
-      self:OnMouseDrag(mx, my, LB_DOWN, RB_DOWN)
-    end
-
-  elseif not LB_DOWN and mouse.last_RMB_state or not RB_DOWN and mouse.last_LMB_state then
-    self:OnMouseUp(mx, my, LB_DOWN, RB_DOWN)
-  end
-
+	-- (modded Schwa's GUI example)
+	if (LB_DOWN and not RB_DOWN) or (RB_DOWN and not LB_DOWN) then -- LMB or RMB pressed down?
+		if (mouse.last_LMB_state == false and not RB_DOWN) or (mouse.last_RMB_state == false and not LB_DOWN) then
+			if
+				mouse.uptime
+				and os.clock() - mouse.uptime < self.settings.mouse_double_click_speed
+				and mouse.last_pressed_button == mouse.LB
+				and LB_DOWN
+			then
+				self:OnMouseDoubleClickLMB(mx, my)
+			else
+				self:OnMouseDown(mx, my, LB_DOWN, RB_DOWN)
+			end
+		elseif mx ~= mouse.last_x or my ~= mouse.last_y then
+			self:OnMouseDrag(mx, my, LB_DOWN, RB_DOWN)
+		end
+	elseif not LB_DOWN and mouse.last_RMB_state or not RB_DOWN and mouse.last_LMB_state then
+		self:OnMouseUp(mx, my, LB_DOWN, RB_DOWN)
+	end
 end
 
 function jGui:OnMouseDown(x, y, lmb_down, rmb_down)
 	local mouse = self.mouse
-  -- LMB clicked
+	-- LMB clicked
 	if not rmb_down and lmb_down and mouse.last_LMB_state == false then
 		mouse.last_LMB_state = true
 		mouse.ox_l, mouse.oy_l = x, y
@@ -307,7 +327,7 @@ function jGui:OnMouseDown(x, y, lmb_down, rmb_down)
 			-- Shift focus
 			self:setFocus(self.controlHover)
 		else
-		-- now new control, blur focus
+			-- now new control, blur focus
 			self:setFocus(false)
 		end
 	end
@@ -318,55 +338,57 @@ function jGui:OnMouseDown(x, y, lmb_down, rmb_down)
 		mouse.last_pressed_button = mouse.RB
 		--msg("rmb click")
 	end
-	mouse.capcnt = 0       -- reset mouse capture count
+	mouse.capcnt = 0 -- reset mouse capture count
 end
 
 function jGui:OnMouseUp(x, y, lmb_down, rmb_down)
-  self.mouse.uptime = os.clock()
-  self.mouse.dx = 0
-  self.mouse.dy = 0
-  if not lmb_down and self.mouse.last_LMB_state then
-  	self.mouse.last_LMB_state = false
-  	 if self.controlHover and self.controlHover == self.controlActive then
-    	self.controlHover:_onMouseUp()
-    elseif self.controlActive and self.controlDrag == self.controlActive then
-		-- Ending a drag (no not hovering)
-		self.controlActive:_onMouseUp()
-    end
-  end
-  if not rmb_down and self.mouse.last_RMB_state then self.mouse.last_RMB_state = false end
+	self.mouse.uptime = os.clock()
+	self.mouse.dx = 0
+	self.mouse.dy = 0
+	if not lmb_down and self.mouse.last_LMB_state then
+		self.mouse.last_LMB_state = false
+		if self.controlHover and self.controlHover == self.controlActive then
+			self.controlHover:_onMouseUp()
+		elseif self.controlActive and self.controlDrag == self.controlActive then
+			-- Ending a drag (no not hovering)
+			self.controlActive:_onMouseUp()
+		end
+	end
+	if not rmb_down and self.mouse.last_RMB_state then
+		self.mouse.last_RMB_state = false
+	end
 
-  self.controlActive = false
+	self.controlActive = false
 end
 
 function jGui:OnMouseDoubleClickLMB(x, y)
-  -- handle mouse double click here
-  local mouse = self.mouse
-  mouse.last_LMB_state = true
-  mouse.ox_l, mouse.oy_l = x, y
-  mouse.last_pressed_button = false
-  --msg("double click")
+	-- handle mouse double click here
+	local mouse = self.mouse
+	mouse.last_LMB_state = true
+	mouse.ox_l, mouse.oy_l = x, y
+	mouse.last_pressed_button = false
+	--msg("double click")
 end
 
 function jGui:OnMouseDrag(x, y, lmb_down, rmb_down)
-  -- handle mouse dragging here, left mouse button only
-  local mouse = self.mouse
+	-- handle mouse dragging here, left mouse button only
+	local mouse = self.mouse
 
-  if lmb_down then
-  	mouse.last_x, mouse.last_y = x, y
-  	mouse.dx = gfx.mouse_x - mouse.ox_l
-  	mouse.dy = gfx.mouse_y - mouse.oy_l
-  	mouse.capcnt = mouse.capcnt + 1
-  end
+	if lmb_down then
+		mouse.last_x, mouse.last_y = x, y
+		mouse.dx = gfx.mouse_x - mouse.ox_l
+		mouse.dy = gfx.mouse_y - mouse.oy_l
+		mouse.capcnt = mouse.capcnt + 1
+	end
 
- -- self.self.controlHover
+	-- self.self.controlHover
 	if self.controlActive then
 		self.controlDrag = self.controlActive
 		local res = self.controlActive:_onMouseDrag(mouse.dx, mouse.dy)
-		if res&1==1 then -- control maxed out, reset startpoint
+		if res & 1 == 1 then -- control maxed out, reset startpoint
 			mouse.ox_l = gfx.mouse_x
 		end
-		if res&2==2 then -- control maxed out, reset startpoint
+		if res & 2 == 2 then -- control maxed out, reset startpoint
 			mouse.oy_l = gfx.mouse_y
 		end
 	end
@@ -448,7 +470,9 @@ function jGui:getNextFocus(bGetPrev)
 			table.insert(focusOrderVisible, v)
 		end
 	end
-	if #focusOrderVisible < 1 then return false end -- There are no visible controls in the order
+	if #focusOrderVisible < 1 then
+		return false
+	end -- There are no visible controls in the order
 
 	if not self.focus then -- not focussed yet, start at 1 or last
 		if bGetPrev then
@@ -533,13 +557,13 @@ function jGui._sortByZInv(b, a)
 end
 
 function jGui:getControlsByZ()
-	local res = {table.unpack(self.controls)}
+	local res = { table.unpack(self.controls) }
 	table.sort(res, self._sortByZ)
 	return res
 end
 
 function jGui:getControlsByZInv()
-	local res = {table.unpack(self.controls)}
+	local res = { table.unpack(self.controls) }
 	table.sort(res, self._sortByZInv)
 	return res
 end
