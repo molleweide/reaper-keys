@@ -1,36 +1,21 @@
 local log = require("utils.log")
 local format = require("utils.format")
-
 local reaper_state = require("utils.reaper_state")
-
 local s = require("utils.string")
 
+local SHORTHAND_CASES = require("definitions.pattern_shorthands")
 local PATTERN_PLACEHOLDER = "xx(xxx)"
-
--- TODO: handle case of single substring
---
---    if # = 1
-
-local SHORTHAND_CASES = {
-  ["A"] = function(t, idx, val_in)
-    t[idx] = "matched regex. compute something based on:" .. val_in
-  end,
-  ["a"] = "xoxo",
-  -- quarter note beats
-  ["q4"] = "xxxx4", -- four QN hits, which in the end should
-  ["2q"] = "xoxo4", -- four QN hits, which in the end should
-  ["q2"] = "oxox4", -- four QN hits, which in the end should
-  ["32"] = "xxx2,3",
-  -- test
-  ["b"] = "xx(xxx)",
-  ["c"] = "x[xx](xox)",
-  ["d"] = "xxx2,3", -- 2-
+local midi_insertion_data_default = {
+  selected = false,
+  muted = false,
+  chan = 0,
+  noSortIn = true,
 }
 
-local UNITS = {
-  ["16th"] = 0.125,
-  ["QN"] = 1,
-}
+-- local UNITS = {
+--   ["16th"] = 0.125,
+--   ["QN"] = 1,
+-- }
 
 local midi_patterns = {}
 
@@ -59,6 +44,70 @@ local function remove_note_row(take, t_midi_events, active_note_row)
   end
 end
 
+local function handle_multipliers(t_pattern_strings)
+  local t_pat_multiplied = {}
+  local idx_mult_start = 1
+  local idx_at_mult = 1
+
+  local function insert_once(is_last)
+    local idx_stop = (not is_last and (idx_at_mult - 1)) or idx_at_mult
+    for m = idx_mult_start, idx_stop do
+      -- log.user(">> " .. t_pattern_strings[m])
+      table.insert(t_pat_multiplied, t_pattern_strings[m])
+    end
+  end
+
+  local function multiply(n)
+    for _ = 1, n do
+      insert_once()
+    end
+    idx_mult_start = idx_at_mult + 1
+  end
+
+  for i = 1, #t_pattern_strings do
+    local substring = t_pattern_strings[i]
+    idx_at_mult = i
+
+    -- log.user(idx_mult_start, idx_at_mult, substring)
+
+    -- if $N
+    if string.match(substring, "^%$") then
+      local secondChar = tonumber(substring:sub(2, 2))
+      -- log.user(string.format("Multiplier for [%s] -----------", substring))
+
+      multiply(secondChar)
+    end
+  end
+
+  -- == 1 handles case where there is only one substring
+  if idx_mult_start ~= idx_at_mult or idx_at_mult == 1 then
+    insert_once(true)
+  end
+  return t_pat_multiplied
+end
+
+local function case_apply(cases, i, str, t_target)
+  for pattern, value in pairs(cases) do
+    if string.match(str, pattern) then
+      if type(value) == "function" then
+        value(t_target, i, str)
+      else
+        t_target[i] = value
+      end
+    end
+  end
+end
+
+local function apply_shorthands(t_patterns, cases)
+  for i, str in ipairs(t_patterns) do
+    case_apply(cases, i, str, t_patterns)
+  end
+end
+
+--
+-- MODULE FUNCS BELOW
+--
+
 midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
   local ret, ME, take = getMidiValidContext()
   if not ret then
@@ -74,33 +123,7 @@ midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
   local note_duration = sixteen_note_len - note_end_gap
   local retval, measures, cml, fullbeats, cdenom = reaper.TimeMap2_timeToBeats(0, cursor_pos)
 
-  local insertion_data = {
-    selected = false,
-    muted = false,
-    chan = 0,
-    noSortIn = true,
-  }
-
-  -- TODO: refactor into remove_note_row
-  --
   remove_note_row(take, t_midi_events, active_note_row)
-
-  -- for i = 1, t_midi_events[2] do
-  --   local note_idx = i - 1
-  --   local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
-  --
-  --   -- local note_time = reaper.MIDI_GetProjTimeFromPPQPos(take, startppqpos)
-  --   -- local retval, measures, cml, fullbeats, cdenom = reaper.TimeMap2_timeToBeats(0, reaper.GetCursorPosition())
-  --   -- log.user("note ppq time:", note_time)
-  --   -- log.user("chan", chan)
-  --
-  --   if pitch == active_note_row then
-  --     -- reaper.MIDI_SetNote(take, note_idx, true, muted, startppqpos, endppqpos, chan, pitch, vel, true)
-  --     reaper.MIDI_DeleteNote(take, note_idx)
-  --     -- else
-  --     -- 	-- reaper.MIDI_SetNote(take, note_idx, false, muted, startppqpos, endppqpos, chan, pitch, vel, true)
-  --   end
-  -- end
 
   -- log.user(">>>", cursor_pos, retval, measures, cml, fullbeats, cdenom)
 
@@ -119,14 +142,14 @@ midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
     if t_note.flag then
       local ret = reaper.MIDI_InsertNote(
         take,
-        insertion_data.selected,
-        insertion_data.muted,
+        midi_insertion_data_default.selected,
+        midi_insertion_data_default.muted,
         reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
         reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
-        insertion_data.chan,
+        midi_insertion_data_default.chan,
         active_note_row,
         80,
-        insertion_data.noSortIn
+        midi_insertion_data_default.noSortIn
       )
     end
   end
@@ -156,11 +179,14 @@ end
 -- NOTE: PATTERN SPEC V2
 --
 --
--- 1. whitespace separated elemets `a $4 xoox oxox xoox xoxo`
--- 2. a chunk starting with special char, eg $4. will multiply preceeding
+-- 1. whitespace separated units `a $4 xoox oxox xoox xoxo`
+-- 2. a unit starting with special char, eg $4. will multiply preceeding
 -- 3. xk == hit
 -- 4. o == no hit
--- 5.
+-- 5. [] make note length in half
+-- 6. { } divide note length by four again
+-- 7. () note length becomes two over three
+-- 8. [(***)] achieve tripple in unit divider position
 --
 --  unit := represents a time block, based on musical time divisions
 --
@@ -217,6 +243,10 @@ end
 --
 --  xxx2,3        becomes tree notes over two
 --  alt. xxx2-
+--
+--
+--  x{[xx]xx}(xxx)
+--  [(***)]  {***}
 --
 --
 --  -- how to do 3/2 triplets?
@@ -290,6 +320,14 @@ local state_table_name = "midipatterns"
 -- NOTE: leader m i
 --    is the keybind for this action
 --
+--
+-- TODO: leader m I -> insert pattern at cursor position
+--
+-- TODO: leade m R -> replace selected note with pattern
+--        requires only one note to be selected???
+--
+-- TODO: replace all selected notes with pattern??
+--
 midi_patterns.insertPatternFromString = function()
 
   local ret, ME, take = getMidiValidContext()
@@ -302,98 +340,21 @@ midi_patterns.insertPatternFromString = function()
 
   log.user("PREV PATTERN:", format.block(midi_patterns_state))
 
-  local user_input_opts = {
-    -- todo:...
-  }
-
   local input_placeholder = PATTERN_PLACEHOLDER
-
   local input_field_width = "extrawidth=350"
   local caption_csv = string.format("%s,%s", input_placeholder, input_field_width)
   local retvals_csv = ""
-
-  -- pattern options
-  local pattern_opts = {
-    -- todo...
-  }
-
   local pattern_sep = " " -- whitespace
 
   local _, str_pat_input = reaper.GetUserInputs("pattern:", 1, input_placeholder, caption_csv, retvals_csv)
-
   local t_pattern_strings = s.split(str_pat_input, pattern_sep)
+  local t_pat_multiplied = handle_multipliers(t_pattern_strings)
 
-  -- log.user("PATTERN STRING:", format.block(t_pattern_strings))
-
-  --
-  -- HANDLE MULTIPLIERS
-  --
-
-  local t_pat_multiplied = {}
-  local idx_mult_start = 1
-  local idx_at_mult = 1
-
-  local function insert_once(is_last)
-    local idx_stop = (not is_last and (idx_at_mult - 1)) or idx_at_mult
-    for m = idx_mult_start, idx_stop do
-      -- log.user(">> " .. t_pattern_strings[m])
-      table.insert(t_pat_multiplied, t_pattern_strings[m])
-    end
-  end
-
-  local function multiply(n)
-    for _ = 1, n do
-      insert_once()
-    end
-    idx_mult_start = idx_at_mult + 1
-  end
-
-  for i = 1, #t_pattern_strings do
-    local substring = t_pattern_strings[i]
-    idx_at_mult = i
-
-    -- log.user(idx_mult_start, idx_at_mult, substring)
-
-    -- if $N
-    if string.match(substring, "^%$") then
-      local secondChar = tonumber(substring:sub(2, 2))
-      -- log.user(string.format("Multiplier for [%s] -----------", substring))
-
-      multiply(secondChar)
-    end
-  end
-
-  if idx_mult_start ~= idx_at_mult then
-    insert_once(true)
-  end
-
-  -- log.user(idx_mult_start, idx_at_mult, format.block(t_pat_multiplied))
+  apply_shorthands(t_pat_multiplied, SHORTHAND_CASES)
 
   --
-  -- SHORTHAND SWITCH TRANSFORMER
+  -- 3. render the final table of midi notes
   --
-
-  local function case_apply(cases, i, str, t_target)
-    for pattern, value in pairs(cases) do
-      if string.match(str, pattern) then
-        if type(value) == "function" then
-          value(t_target, i, str)
-        else
-          t_target[i] = value
-        end
-      end
-    end
-  end
-
-  for i, str in ipairs(t_pat_multiplied) do
-    case_apply(SHORTHAND_CASES, i, str, t_pat_multiplied)
-  end
-
-  -- TODO: 3. render the final table of rhythm chunks
-  --    parse the raw rhythm units:
-  --    xoxo {xxo} xoxo xooo
-  --
-  --    and create
 
   local t_final_midi_notes = {}
 
@@ -466,9 +427,9 @@ midi_patterns.insertPatternFromString = function()
       local note_end_gap = 0.005
       local note_duration = note_step - note_end_gap
 
-      -- TODO: handle hit or pause (x or o)
-
-      if char == "x" then
+      -- TODO: handle both `x` and `k` for `hit`, ergonomic with alternating
+      -- fingers in qwerty...
+      if string.match(char, "[xk]") then
         table.insert(t_final_midi_notes, {
           char = char,
           time_pos_start = note_start,
@@ -497,13 +458,9 @@ midi_patterns.insertPatternFromString = function()
 
   log.user(format.block(t_final_midi_notes))
 
-  -- TODO: 4. insert notes
-  local insertion_data = {
-    selected = false,
-    muted = false,
-    chan = 0,
-    noSortIn = true,
-  }
+  --
+  -- 4. insert notes
+  --
 
   local t_midi_events = { reaper.MIDI_CountEvts(take) }
   local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
@@ -513,14 +470,14 @@ midi_patterns.insertPatternFromString = function()
   for _, t_note in ipairs(t_final_midi_notes) do
     local ret = reaper.MIDI_InsertNote(
       take,
-      insertion_data.selected,
-      insertion_data.muted,
+      midi_insertion_data_default.selected,
+      midi_insertion_data_default.muted,
       reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
       reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
-      insertion_data.chan,
+      midi_insertion_data_default.chan,
       active_note_row,
       80,
-      insertion_data.noSortIn
+      midi_insertion_data_default.noSortIn
     )
   end
   reaper.MIDI_Sort(take)
