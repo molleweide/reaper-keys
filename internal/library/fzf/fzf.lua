@@ -793,13 +793,14 @@ local function gui_default_update(self)
 
 		------------------------------------------------------------------
 
-		table.sort(T_VST_DATA, self.sort_comp)
+		table.sort(T_RESULTS, self.sort_comp)
 
 		if lastSearch ~= textBox.value then -- only search again when input changes, not on scroll
-			-- TODO: how should I handle these params for the add_fx picker.
-			-- ... they should not be defaults ofc...
+			--
+			-- TODO: i should attach the search results table to the GUI
+			-- so that I can pass it easilly to things later
 
-			tSearchResults = self.results_filter(T_VST_DATA, textBox.value, false, MAX_RESULTS)
+			tSearchResults = self.results_filter(T_RESULTS, textBox.value, false, MAX_RESULTS)
 
 			lastSearch = textBox.value
 		end
@@ -817,8 +818,8 @@ end
 
 local function gui_default_on_exit(self)
 	if UPDATE_RATINGS then
-		table.sort(T_VST_DATA, self.sort_comp)
-		jWriteVstData(DATA_INI_FILE, T_VST_DATA)
+		table.sort(T_RESULTS, self.sort_comp)
+		jWriteVstData(DATA_INI_FILE, T_RESULTS)
 	end
 	if WINDOW_SAVE_STATE then
 		local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
@@ -847,9 +848,9 @@ function init_picker(opts, on_enter)
 	--
 	-- load data
 
-	T_VST_DATA = opts.results
+	T_RESULTS = opts.results
 
-	table.sort(T_VST_DATA, GUI.sort_comp)
+	table.sort(T_RESULTS, GUI.sort_comp)
 
 	GUI:controlAdd(gui_create_main_text_box(GUI, on_enter))
 	GUI:controlAdd(create_control_label_stats(GUI))
@@ -1099,7 +1100,7 @@ local function add_track_fx_picker()
 			return false
 		end -- no such result
 
-		T_VST_DATA[fx.id].rating = T_VST_DATA[fx.id].rating + 1
+		T_RESULTS[fx.id].rating = T_RESULTS[fx.id].rating + 1
 
 		reaper.Undo_BeginBlock2(p:getId())
 
@@ -1186,7 +1187,7 @@ local function add_track_fx_picker()
 		else
 			-- this is a vst or a jsfx
 			local typeInfo = ""
-			if T_VST_DATA[fx.id].vst3 and PREFER_VST3 then -- prefer VST3 where available
+			if T_RESULTS[fx.id].vst3 and PREFER_VST3 then -- prefer VST3 where available
 				typeInfo = "VST3:"
 			end
 
@@ -1198,7 +1199,7 @@ local function add_track_fx_picker()
 			elseif fx.aui then
 				fxString = fx.filename
 			else
-				fxString = typeInfo .. _removeVstiString(T_VST_DATA[fx.id].name)
+				fxString = typeInfo .. _removeVstiString(T_RESULTS[fx.id].name)
 			end
 			if not GUI.kb.control() then -- Control not held, insert on tracks
 				for t in p:selectedTracks() do
@@ -1260,9 +1261,7 @@ local function test_picker()
 		if not tSearchResults then
 			return false
 		end -- results is empty
-
 		local fx = tSearchResults[i]
-
 		if not fx then
 			return false
 		end -- no such result
@@ -1286,7 +1285,115 @@ local function test_picker()
 			"a",
 			"picker",
 			"test",
+			"xxxxxx",
+			"aaaaaa",
+			"vvvvvv",
+			"arst",
+			"XXX",
+			"89",
+			"=644ney",
+			"9n$)",
+			"(()())",
 		},
+		sort_comp = function(a, b)
+			if a > b then
+				return true
+			elseif a == b then
+				return a < b
+			else
+				return false
+			end
+		end,
+		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+			-- what todo here ??
+			return vstTable
+		end,
+		entry_maker = function(tButtons, tResults)
+			for i, cIds in ipairs(tButtons) do
+				local b = cIds[1]
+				local info = cIds[2]
+				local iStart = _round(i + SCROLL_RESULTS)
+				local highlights = jStringExplode(textBox.value, " ")
+
+				local showing
+				if iStart <= #tResults then
+					showing = iStart
+				else
+					showing = #tResults
+				end
+				LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
+
+				if tResults and iStart <= #tResults then
+					local item = tResults[iStart]
+					b.label = item
+					b.visible = true
+					info.visible = true
+					b.highlight = highlights
+
+					local tTypes = {}
+
+					-- if fx.instrument then
+					-- 	if fx.vst3 then
+					-- 		tTypes[#tTypes + 1] = "VST3i"
+					-- 	elseif fx.dll or fx.vst then
+					-- 		tTypes[#tTypes + 1] = "VSTi"
+					-- 	end
+					-- 	-- _makeColorsCatagory(b, info, COLOR_VSTI)
+					-- else
+					-- 	if fx.vst3 then
+					-- 		tTypes[#tTypes + 1] = "VST3"
+					-- 	end
+					-- 	if fx.dll then
+					-- 		tTypes[#tTypes + 1] = "VST"
+					-- 	end
+					-- 	if fx.vst then
+					-- 		tTypes[#tTypes + 1] = "VST"
+					-- 	end
+					-- 	-- _makeColorsCatagory(b, info, COLOR_VST)
+					-- end
+
+					-- if fx.tracktemplate then
+					-- 	tTypes[#tTypes + 1] = "TEMP"
+					-- 	-- _makeColorsCatagory(b, info, COLOR_TEMPLATE)
+					-- end
+
+					-- if fx.fxchain then
+					-- 	tTypes[#tTypes + 1] = "FXCHAIN"
+					-- 	-- _makeColorsCatagory(b, info, COLOR_FXCHAIN)
+					-- end
+
+					-- if fx.jsfx then
+					-- 	tTypes[#tTypes + 1] = "JSFX"
+					-- 	-- _makeColorsCatagory(b, info, COLOR_JSFX)
+					-- end
+
+					-- if fx.action then
+					-- 	tTypes[#tTypes + 1] = "ACTION"
+					-- 	-- _makeColorsCatagory(b, info, COLOR_ACTION)
+					-- end
+
+					-- if fx.au then
+					-- 	tTypes[#tTypes + 1] = "AU"
+					-- 	-- _makeColorsCatagory(b, info, COLOR_AU)
+					-- end
+
+					-- if fx.aui then
+					-- 	tTypes[#tTypes + 1] = "AUi"
+					-- 	-- _makeColorsCatagory(b, info, COLOR_AUI)
+					-- end
+
+					-- local sTypes = ""
+					-- for _, sT in ipairs(tTypes) do
+					-- 	sTypes = sTypes .. " " .. sT
+					-- end
+
+					-- info.label = sTypes --.. "\n" .. fx.rating
+				else
+					b.visible = false
+					info.visible = false
+				end
+			end
+		end,
 	}
 
 	if init_picker(opts, onenter) then
