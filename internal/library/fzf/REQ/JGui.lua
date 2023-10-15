@@ -49,6 +49,9 @@ jGui = {
 		font_color = { 1, 1, 1, 1 },
 	},
 
+	t_results_data = {},
+	t_search_results = {},
+
 	doExit = false,
 	imageId = 0,
 

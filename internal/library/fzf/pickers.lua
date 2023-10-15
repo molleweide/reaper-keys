@@ -73,17 +73,17 @@ pickers.add_track_fx = function()
 
 	local function entry_maker() end
 
-	local function selectFx(i)
+	local function selectFx(self, i)
 		-- todo: i should prolly remove the undo points since
 		-- those are handled by RK
 
 		log.user("SELECT FX: ", i)
 
-		if not tSearchResults then
+		if not self.t_search_results then
 			return false
 		end -- results is empty
 
-		local fx = tSearchResults[i]
+		local fx = self.t_search_results[i]
 
 		if not fx then
 			return false
@@ -258,11 +258,11 @@ pickers.test_picker = function()
 	-- 	return false
 	-- end
 
-	local function onenter(i)
-		if not tSearchResults then
+	local function onenter(self, i)
+		if not self.t_search_results then
 			return false
 		end -- results is empty
-		local fx = tSearchResults[i]
+		local fx = self.t_search_results[i]
 		if not fx then
 			return false
 		end -- no such result
@@ -375,11 +375,11 @@ pickers.browse_track_fx_list = function()
 		return false
 	end
 
-	local function onenter(i)
-		if not tSearchResults then
+	local function onenter(self, i)
+		if not self.t_search_results then
 			return false
 		end -- results is empty
-		local fx = tSearchResults[i]
+		local fx = self.t_search_results[i]
 		if not fx then
 			return false
 		end -- no such result
@@ -561,5 +561,14 @@ pickers.envelope_template = function() end
 pickers.midi_cc_templates = function() end
 
 pickers.midi_note_articulation = function() end
+
+--
+-- PIKCKERS: items / takes
+--
+
+pickers.item_parameters = function() end
+
+pickers.take_parameters = function() end
+
 
 return pickers

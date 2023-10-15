@@ -4,6 +4,10 @@
 @about
 	# Fast VST/FX Rack/Template Finder
 
+	-- TODO: move all picker variables to GUI
+	--
+	-- TODO: start using ADD_TRACK_FX_OPTS
+
 	A little window that allows for quick searching of FX (can be VST, templates or fxrack).
 
 	The script stores how often you select a certain FX and orders the list by how many times something is used.
@@ -653,7 +657,7 @@ local function createResultButtons(gui, tControls, n, y_start)
 			info.y = c.y
 
 			function c:onMouseClick()
-				gui.on_select_func(i + SCROLL_RESULTS)
+				gui.on_select_func(gui, i + SCROLL_RESULTS)
 
 				-- selectFx(i + SCROLL_RESULTS)
 
@@ -750,7 +754,7 @@ local function gui_create_main_text_box(gui, on_enter)
 	function text_input:onEnter()
 		-- NOTE: this is where an FX is selected and applied to a track
 
-		if gui.on_select_func(1, textBox.value) then
+		if gui.on_select_func(gui, 1) then
 			gui:exit()
 		end
 		textBox.value = ""
@@ -803,12 +807,25 @@ local function gui_default_update(self)
 		UPDATE_RESULTS = false
 		table.sort(T_RESULTS, self.sort_comp)
 		if lastSearch ~= textBox.value then -- only search again when input changes, not on scroll
-			tSearchResults = self.results_filter(T_RESULTS, textBox.value, false, DEFAULT_OPTS.max_results)
+
+      --
+      -- TODO: attach results_filter as a method on GUI inside init()
+      -- so that I can call GUI.make_filter_results()
+      --
+
+			-- tSearchResults = self.results_filter(T_RESULTS, textBox.value, false, DEFAULT_OPTS.max_results)
+			self.t_search_results = self.results_filter(T_RESULTS, textBox.value, false, DEFAULT_OPTS.max_results)
+
+
 			lastSearch = textBox.value
 		end
-		RESULT_COUNT = #tSearchResults
-		-- rename this to `display_maker`
-		self.entry_maker(tResultButtons, tSearchResults)
+		RESULT_COUNT = #self.t_search_results
+
+		--
+		-- TODO: attach as method on GUI named `make_display_results`
+		--
+
+		self.entry_maker(tResultButtons, self.t_search_results)
 	end
 end
 
