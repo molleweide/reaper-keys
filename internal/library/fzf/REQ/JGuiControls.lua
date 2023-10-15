@@ -411,7 +411,7 @@ jGuiTextInput = jGuiControl:new(
 {
 	value = "",
 	controlType = "text_input",
-	kb = require('REQ.jKeyboard'),
+	kb = require('library.fzf.REQ.jKeyboard'),
 
 	border_focus = true,
 	-- color_focus_border = {1, .9, 0, .5},

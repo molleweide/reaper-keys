@@ -66,14 +66,14 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
-local script_path = debug.getinfo(1, "S").source:match([[^@?(.*[\/])[^\/]-$]])
-package.path = package.path .. ";" .. script_path .. "?.lua"
+-- local script_path = debug.getinfo(1, "S").source:match([[^@?(.*[\/])[^\/]-$]])
+-- package.path = package.path .. ";" .. script_path .. "?.lua"
 
-require("REQ.j_file_functions")
-require("REQ.j_tables")
-require("REQ.jGui")
-require("REQ.j_trackstatechunk_functions")
-require("REQ.j_settings_functions")
+require("library.fzf.REQ.j_file_functions")
+require("library.fzf.REQ.j_tables")
+require("library.fzf.REQ.jGui")
+require("library.fzf.REQ.j_trackstatechunk_functions")
+require("library.fzf.REQ.j_settings_functions")
 
 -- SOME SETUP
 -- local SETTINGS_BASE_FOLDER = script_path
