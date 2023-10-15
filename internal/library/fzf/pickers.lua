@@ -13,15 +13,20 @@ local tf = require("library.fzf.REQ.j_tables")
 require("library.fzf.REQ.JProjectClass")
 
 -- TODO: split `load_settings` into load vst settigs, and load GUI settings
+--
+
+local home = os.getenv("HOME")
+
+log.user("ENV: ", home)
 
 local script_path = debug.getinfo(1, "S").source:match([[^@?(.*[\/])[^\/]-$]])
 package.path = package.path .. ";" .. script_path .. "?.lua"
 
 -- move this to definitions dir
 local RK_FZF_ENV = {
-	SETTINGS_INI_FILE = script_path .. "fx-finder-settings.ini",
-	SETTINGS_DEFAULT_FILE = script_path .. "REQ/fx-finder-settings-default.ini",
-	RK_FZF_DIR = script_path,
+	SETTINGS_INI_FILE = home .. "/reaper/packages/reaper-keys/definitions/fx-finder-settings.ini",
+	SETTINGS_DEFAULT_FILE = home .. "/reaper/packages/reaper-keys/internal/library/fzf/fx-finder-settings-default.ini",
+	RK_FZF_DIR = home .. "/reaper/packages/reaper-keys/internal/library/fzf",
 }
 
 local pickers = {}
