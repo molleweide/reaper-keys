@@ -2,11 +2,24 @@ local log = require("utils.log")
 local format = require("utils.format")
 
 local fzf = require("library.fzf.fzf")
+local fu = require("library.fzf.utils")
+
+local data_loaders = require("library.fzf.data.load_plugins_data")
 
 -- does some nested requires that requires fzf to be loaded first, (for now...)
 require("library.fzf.REQ.JProjectClass")
 
 -- TODO: split `load_settings` into load vst settigs, and load GUI settings
+
+local script_path = debug.getinfo(1, "S").source:match([[^@?(.*[\/])[^\/]-$]])
+package.path = package.path .. ";" .. script_path .. "?.lua"
+
+-- move this to definitions dir
+local RK_FZF_ENV = {
+	SETTINGS_INI_FILE = script_path .. "fx-finder-settings.ini",
+	SETTINGS_DEFAULT_FILE = script_path .. "REQ/fx-finder-settings-default.ini",
+	RK_FZF_DIR = script_path,
+}
 
 local pickers = {}
 
@@ -21,11 +34,12 @@ pickers.add_track_fx = function()
 
 	fzf.reset_variables()
 
-	local ok, plugins_data = loadPluginSettings()
+	local ok, plugins_data = data_loaders.load_plugins_data(RK_FZF_ENV)
+
 	if not ok then
 		msg(
 			"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
-				.. SETTINGS_INI_FILE
+			-- .. SETTINGS_INI_FILE
 		)
 		return false
 	end
@@ -42,20 +56,20 @@ pickers.add_track_fx = function()
 
 	local function get_plugin_results()
 		local results = {}
-		tRatingData = jReadVstData(pluginsData.DATA_INI_FILE)
-		results = jReadVstIni(pluginsData.VST_INI_FILE, tRatingData)
+		tRatingData = fu.jReadVstData(pluginsData.DATA_INI_FILE)
+		results = fu.jReadVstIni(pluginsData.VST_INI_FILE, tRatingData)
 
-		tTemplates = getTemplates(pluginsData.TEMPLATE_SUB_DIRS, pluginsData.TEMPLATE_ROOT_DIR, tRatingData)
+		tTemplates = fu.getTemplates(pluginsData.TEMPLATE_SUB_DIRS, pluginsData.TEMPLATE_ROOT_DIR, tRatingData)
 		results = jTablesGlue(tTemplates, results)
 
-		tFXChains = getFXChains(pluginsData.FXCHAIN_SUB_DIRS, pluginsData.FXCHAIN_ROOT_DIR, tRatingData)
+		tFXChains = fu.getFXChains(pluginsData.FXCHAIN_SUB_DIRS, pluginsData.FXCHAIN_ROOT_DIR, tRatingData)
 		results = jTablesGlue(tFXChains, results)
 
-		local tJsfx = jReadJsfxIni(pluginsData.JSFX_INI_FILE, tRatingData)
+		local tJsfx = fu.jReadJsfxIni(pluginsData.JSFX_INI_FILE, tRatingData)
 		results = jTablesGlue(tJsfx, results)
 
 		if pluginsData.LOAD_AU then
-			local tAu = jReadAuIni(pluginsData.AU_INI_FILE, tRatingData)
+			local tAu = fu.jReadAuIni(pluginsData.AU_INI_FILE, tRatingData)
 			results = jTablesGlue(tAu, results)
 		end
 
@@ -96,7 +110,7 @@ pickers.add_track_fx = function()
 
 		if fx.tracktemplate then
 			-- This is a template, insert it
-			reaper.Main_openProject(_jPath(fx.path .. fx.filename))
+			reaper.Main_openProject(fu._jPath(fx.path .. fx.filename))
 		elseif fx.fxchain then
 			if not GUI.kb.control() then -- Control not held, insert on tracks
 				-- Adds an FXCHAIN to a track. If there are no FX on the track an empty chain will be created first
@@ -117,7 +131,7 @@ pickers.add_track_fx = function()
 						t.selected = 1
 					end
 					local numFxBefore = t.fxcount
-					jFxChainAdd(t, jReadFxChainFromFile(_jPath(fx.path .. fx.filename)))
+					jFxChainAdd(t, fu.jReadFxChainFromFile(fu._jPath(fx.path .. fx.filename)))
 					if pluginsData.FXCHAIN_FLOAT_WINDOWS then
 						for iFX = numFxBefore, t.fxcount - 1 do
 							t:getFx(iFX):show(3)
@@ -146,7 +160,7 @@ pickers.add_track_fx = function()
 				-- 	local fxChunk = ultraschall.GetFXStateChunk(chunk, takeNumber)
 				-- 	msg(fxChunk)
 				-- 	msg("after: ")
-				-- 	local fxString = jReadFxChainFromFile(fx.path .. fx.filename)
+				-- 	local fxString = fu.jReadFxChainFromFile(fx.path .. fx.filename)
 				-- 	if not fxChunk then
 				-- 		-- No fx yet, create chunk:
 				-- 		msg("create new chunk...")
@@ -189,7 +203,7 @@ pickers.add_track_fx = function()
 			elseif fx.aui then
 				fxString = fx.filename
 			else
-				fxString = typeInfo .. _removeVstiString(self.t_results_data[fx.id].name)
+				fxString = typeInfo .. fu._removeVstiString(self.t_results_data[fx.id].name)
 			end
 			if not GUI.kb.control() then -- Control not held, insert on tracks
 				for t in p:selectedTracks() do
@@ -215,6 +229,7 @@ pickers.add_track_fx = function()
 	end
 
 	local opts = {
+	  env = RK_FZF_ENV,
 		title = "Fast FX Finder",
 		width = 1000,
 		height = 700,
@@ -228,7 +243,7 @@ pickers.add_track_fx = function()
 		on_exit_callback = function(self)
 			if UPDATE_RATINGS then
 				table.sort(self.t_results_data, self.sort_comp)
-				jWriteVstData(pluginsData.DATA_INI_FILE, self.t_results_data)
+				fu.jWriteVstData(pluginsData.DATA_INI_FILE, self.t_results_data)
 				log.user("Updated ratings file!!")
 			end
 		end,
@@ -274,6 +289,7 @@ pickers.test_picker = function()
 	end
 
 	local opts = {
+	  env = RK_FZF_ENV,
 		title = "Test Picker",
 		on_select_func = onenter,
 		results = {
@@ -309,7 +325,7 @@ pickers.test_picker = function()
 			for i, cIds in ipairs(tButtons) do
 				local b = cIds[1]
 				local info = cIds[2]
-				local iStart = _round(i + SCROLL_RESULTS)
+				local iStart = fu._round(i + SCROLL_RESULTS)
 				local highlights = jStringExplode(textBox.value, " ")
 
 				local showing
@@ -432,7 +448,7 @@ pickers.browse_track_fx_list = function()
 			for i, cIds in ipairs(tButtons) do
 				local b = cIds[1]
 				local info = cIds[2]
-				local iStart = _round(i + SCROLL_RESULTS)
+				local iStart = fu._round(i + SCROLL_RESULTS)
 				local highlights = jStringExplode(textBox.value, " ")
 
 				local showing
@@ -570,5 +586,7 @@ pickers.midi_note_articulation = function() end
 pickers.item_parameters = function() end
 
 pickers.take_parameters = function() end
+
+pickers.load_track_from_presets = function() end
 
 return pickers

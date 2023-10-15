@@ -6,10 +6,12 @@
 
 -- todo: move to `reaper_settings`
 
+local settings_funcs = {}
+
 ---
 ---@param file_name
 ---@return
-function jSettingsReadFromFile(file_name)
+function settings_funcs.jSettingsReadFromFile(file_name)
 	-- Reads variables from a ini style text file
 	local f = io.open(file_name, "r")
 	if not f then
@@ -29,7 +31,7 @@ end
 ---@param inName
 ---@param inValue
 ---@param bSectionOptional
-function jSettingsWriteToFile(file_name, inSection, inName, inValue, bSectionOptional)
+function settings_funcs.jSettingsWriteToFile(file_name, inSection, inName, inValue, bSectionOptional)
 	local bSectionOptional = bSectionOptional or false
 
 	local f = io.open(file_name, "r")
@@ -181,7 +183,7 @@ end
 ---@param file_name
 ---@param default_file
 ---@param content
-function jSettingsCreate(file_name, default_file, content)
+function settings_funcs.jSettingsCreate(file_name, default_file, content)
 	local default_file = default_file or false
     local content = content or ""
 
@@ -224,7 +226,7 @@ end
 ---@param t
 ---@param name
 ---@param typeCheck
-function jSettingsGet(t, name, typeCheck)
+function settings_funcs.jSettingsGet(t, name, typeCheck)
 
 	local value = t[name]
 	if value == nil then
@@ -249,3 +251,13 @@ function jSettingsGet(t, name, typeCheck)
 		return v
 	end
 end
+
+function settings_funcs._joinSettingsTables(t1, t2)
+	local tResult = {}
+	for k, v in ipairs(t1) do
+		tResult[k] = { v, t2[k] }
+	end
+	return tResult
+end
+
+return settings_funcs
