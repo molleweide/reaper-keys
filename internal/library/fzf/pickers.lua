@@ -1,5 +1,13 @@
+local log = require("utils.log")
+local format = require("utils.format")
 
--- NOTE: all pickers below should go into the `./pickers.lua` file
+
+local fzf = require("library.fzf.fzf")
+
+-- does some nested requires that requires fzf to be loaded first, (for now...)
+require("library.fzf.REQ.JProjectClass")
+
+-- TODO: split `load_settings` into load vst settigs, and load GUI settings
 
 local pickers = {}
 
@@ -12,7 +20,7 @@ local pickers = {}
 pickers.add_track_fx = function()
 	p = JProject:new()
 
-	reset_variables()
+	fzf.reset_variables()
 
 	if not loadSettings() then
 		msg(
@@ -208,11 +216,10 @@ pickers.add_track_fx = function()
 
 	local opts = {
 		title = "Fast FX Finder",
-		width = WINDOW_WIDTH,
-		height = WINDOW_HEIGHT,
-		x = WINDOW_X,
-		y = WINDOW_Y,
-		dockstate = WINDOW_DOCK_STATE,
+		width = 1000,
+		height = 700,
+		x = 100,
+		y = 100,
 		on_select_func = selectFx,
 		results = get_plugin_results(),
 		entry_maker = require("entry_makers.add_fx"),
@@ -220,7 +227,7 @@ pickers.add_track_fx = function()
 		results_filter = require("results_filter.add_fx"),
 	}
 
-	if init_picker(opts, onenter) then
+	if fzf.init(opts, onenter) then
 		-- TODO: this logic should be put inside of init, so that I don't have to
 		-- keep reference of the GUI in this function
 		GUI:setReaperFocus()
@@ -232,10 +239,11 @@ end
 --
 --
 
-
 pickers.test_picker = function()
 	p = JProject:new()
-	reset_variables()
+
+	fzf.reset_variables()
+
 	if not loadSettings() then
 		msg(
 			"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
@@ -259,12 +267,7 @@ pickers.test_picker = function()
 	end
 
 	local opts = {
-		title = "Fast FX Finder",
-		width = WINDOW_WIDTH,
-		height = WINDOW_HEIGHT,
-		x = WINDOW_X,
-		y = WINDOW_Y,
-		dockstate = WINDOW_DOCK_STATE,
+		title = "Test Picker",
 		on_select_func = onenter,
 		results = {
 			"this",
@@ -324,14 +327,13 @@ pickers.test_picker = function()
 		end,
 	}
 
-	if init_picker(opts, onenter) then
+	if fzf.init(opts, onenter) then
 		-- TODO: this logic should be put inside of init, so that I don't have to
 		-- keep reference of the GUI in this function
 		GUI:setReaperFocus()
 		loop()
 	end
 end
-
 
 -- * WHAT THINGS CAN BE CONTROLLED VIA FZF:
 --
@@ -381,13 +383,14 @@ pickers.browse_track_fx_list = function()
 		return true
 	end
 
+	local make_results = function()
+		local selectedTracks = p:selectedTracks(0, 0, true)
+
+		log.user("selectedTracks in browse_fx_list:", selectedTracks)
+	end
+
 	local opts = {
-		title = "Fast FX Finder",
-		width = WINDOW_WIDTH,
-		height = WINDOW_HEIGHT,
-		x = WINDOW_X,
-		y = WINDOW_Y,
-		dockstate = WINDOW_DOCK_STATE,
+		title = "Browse track FX list",
 		on_select_func = onenter,
 		results = {
 			"this",
@@ -447,7 +450,7 @@ pickers.browse_track_fx_list = function()
 		end,
 	}
 
-	if init_picker(opts, onenter) then
+	if fzf.init(opts, onenter) then
 		-- TODO: this logic should be put inside of init, so that I don't have to
 		-- keep reference of the GUI in this function
 		GUI:setReaperFocus()

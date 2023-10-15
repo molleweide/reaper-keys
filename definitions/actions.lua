@@ -23,7 +23,7 @@ local cli = require('library.cli')
 
 return {
   PickerAddTrackFx = pickers.add_track_fx,
-  PickerTest = pickers.test_picker(),
+  PickerTest = pickers.test_picker,
   Launcher = cli.run_launcher,
   ApplyConfigs = syntax.applyConfigs,
   TrackInSet_MIDI_QMK = {lib.io_device.setInputTo_MIDI_QMK, custom.setupMidiInputPreProcessorOnSelTrks},

@@ -66,7 +66,6 @@ local script_path = debug.getinfo(1, "S").source:match([[^@?(.*[\/])[^\/]-$]])
 package.path = package.path .. ";" .. script_path .. "?.lua"
 
 require("REQ.j_file_functions")
-require("REQ.JProjectClass")
 require("REQ.j_tables")
 require("REQ.jGui")
 require("REQ.j_trackstatechunk_functions")
@@ -77,14 +76,15 @@ local SETTINGS_BASE_FOLDER = script_path
 
 -- move this to definitions dir
 local SETTINGS_INI_FILE = script_path .. "fx-finder-settings.ini"
-
 local SETTINGS_DEFAULT_FILE = script_path .. "REQ/fx-finder-settings-default.ini"
 
 function msg(m)
 	return reaper.ShowConsoleMsg(tostring(m) .. "\n")
 end
 
-local function reset_variables()
+local fzf = {}
+
+fzf.reset_variables = function()
 	UPDATE_RATINGS = false
 	UPDATE_RESULTS = false
 	SCROLL_RESULTS = 0
@@ -800,7 +800,7 @@ local function gui_default_update(self)
 			-- TODO: i should attach the search results table to the GUI
 			-- so that I can pass it easilly to things later
 
-			tSearchResults = self.results_filter(T_RESULTS, textBox.value, false, MAX_RESULTS)
+			tSearchResults = self.results_filter(T_RESULTS, textBox.value, false, DEFAULT_OPTS.max_results)
 
 			lastSearch = textBox.value
 		end
@@ -821,7 +821,7 @@ local function gui_default_on_exit(self)
 		table.sort(T_RESULTS, self.sort_comp)
 		jWriteVstData(DATA_INI_FILE, T_RESULTS)
 	end
-	if WINDOW_SAVE_STATE then
+	if self.window_save_state then
 		local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
 		local dockstr = string.format("%d", dockstate)
 		jSettingsWriteToFileMultiple(SETTINGS_INI_FILE, {
@@ -838,7 +838,29 @@ end
 -- NOTE: INIT PICKER
 --
 
-function init_picker(opts, on_enter)
+function fzf.init(opts, on_enter)
+	DEFAULT_OPTS = {
+		max_results = 50,
+		width = 500,
+		height = 250,
+		x = 100,
+		y = 100,
+		window_save_state = true,
+		window_dock_state = 0,
+		gui_size = 20,
+	}
+
+	-- apply defaults if not given
+	for k, v in pairs(DEFAULT_OPTS) do
+		local use_default = "n"
+		-- log.user("opts[k]", k, opts[k])
+		if opts[k] == nil then
+			opts[k] = v
+			use_default = "y"
+		end
+		log.user(string.format("Option [%s] (%s): %s", k, use_default, opts[k]))
+	end
+
 	-- reaper.ClearConsole()
 	tResultButtons = {}
 
@@ -849,6 +871,10 @@ function init_picker(opts, on_enter)
 	-- load data
 
 	T_RESULTS = opts.results
+
+	--
+	-- FIX: if sort_comp = false, then don't sort, ie. don't use default sort comparator
+	--
 
 	table.sort(T_RESULTS, GUI.sort_comp)
 
@@ -887,11 +913,28 @@ function _joinSettingsTables(t1, t2)
 	return tResult
 end
 
----
----@return
+--
+--
+-- FIX: don't use ini. keep everything in a lua table.
+--
+--
+-- TODO: create two tables
+-- ~ ADD_TRACK_FX_OPTS = {}
+-- ~ DEFAULT_OPTS = {}
+--
+-- i don't want to load all VST settings if I don't need them...
+--
+
 function loadSettings()
 	jSettingsCreate(SETTINGS_INI_FILE, SETTINGS_DEFAULT_FILE)
 	SETTINGS = assert(jSettingsReadFromFile(SETTINGS_INI_FILE), "Could not open settings file.")
+
+	ADD_TRACK_FX_OPTS = {}
+	DEFAULT_OPTS = {}
+
+	--
+	-- TODO: move all this to `user_settings_create_new`
+	--
 
 	-- new settings since 0.7.16, will be created if not present
 	if not SETTINGS["window_save_state"] then
@@ -954,6 +997,11 @@ function loadSettings()
 	-- 	SETTINGS['ultraschall_api_file'] = {"UserPlugins/ultraschall_api.lua"}
 	-- end
 
+	--
+	-- END -----
+	--
+	--
+
 	-- if true then return false end
 
 	VST_INI_FILE = _jPath(reaper.GetResourcePath() .. "/" .. jSettingsGet(SETTINGS, "vst_ini_file", "string"))
@@ -981,17 +1029,6 @@ function loadSettings()
 	TEMPLATE_SUBDIRS_ENABLE = jSettingsGet(SETTINGS, "template_subdirs_enable", "boolean")
 	FXCHAIN_SUBDIRS_ENABLE = jSettingsGet(SETTINGS, "fxchain_subdirs_enable", "boolean")
 
-	-- RESULTS_PER_PAGE = jSettingsGet(SETTINGS, 'results_per_page', "number")
-	MAX_RESULTS = jSettingsGet(SETTINGS, "max_results", "number")
-
-	WINDOW_WIDTH = jSettingsGet(SETTINGS, "window_width", "number")
-	WINDOW_HEIGHT = jSettingsGet(SETTINGS, "window_height", "number")
-	WINDOW_X = jSettingsGet(SETTINGS, "window_x", "number")
-	WINDOW_Y = jSettingsGet(SETTINGS, "window_y", "number")
-	WINDOW_SAVE_STATE = jSettingsGet(SETTINGS, "window_save_state", "boolean")
-	WINDOW_DOCK_STATE = jSettingsGet(SETTINGS, "window_dock_state", "number")
-	GUI_SIZE = jSettingsGet(SETTINGS, "gui_size", "number")
-
 	if PLUGIN_BLACKLIST_ENABLE then
 		PLUGIN_BLACKLIST = jSettingsGet(SETTINGS, "plugin_blacklist_regex", "table")
 	else
@@ -1016,6 +1053,63 @@ function loadSettings()
 		FXCHAIN_SUB_DIRS = { { "", true } }
 	end
 
+	ADD_TRACK_FX_OPTS = {
+		VST_INI_FILE = VST_INI_FILE,
+		AU_INI_FILE = AU_INI_FILE,
+		JSFX_INI_FILE = JSFX_INI_FILE,
+		DATA_INI_FILE = DATA_INI_FILE,
+		PREFER_VST3 = PREFER_VST3,
+		ITEM_SHOW_FLAG = ITEM_SHOW_FLAG,
+		TRACK_SHOW_FLAG = TRACK_SHOW_FLAG,
+		LOAD_ACTIONS = LOAD_ACTIONS,
+		FXCHAIN_FLOAT_WINDOWS = FXCHAIN_FLOAT_WINDOWS,
+		LOAD_AU = LOAD_AU,
+		TEMPLATE_ROOT_DIR = TEMPLATE_ROOT_DIR,
+		FXCHAIN_ROOT_DIR = FXCHAIN_ROOT_DIR,
+		PLUGIN_BLACKLIST_ENABLE = PLUGIN_BLACKLIST_ENABLE,
+		TEMPLATE_SUBDIRS_ENABLE = TEMPLATE_SUBDIRS_ENABLE,
+		FXCHAIN_SUBDIRS_ENABLE = FXCHAIN_SUBDIRS_ENABLE,
+		PLUGIN_BLACKLIST = PLUGIN_BLACKLIST,
+		TEMPLATE_SUB_DIRS = TEMPLATE_SUB_DIRS,
+		FXCHAIN_SUB_DIRS = FXCHAIN_SUB_DIRS,
+	}
+
+	--
+	-- DEFAULT OPTIONS
+	--
+
+	-- RESULTS_PER_PAGE = jSettingsGet(SETTINGS, 'results_per_page', "number")
+	MAX_RESULTS = jSettingsGet(SETTINGS, "max_results", "number")
+	WINDOW_WIDTH = jSettingsGet(SETTINGS, "window_width", "number")
+	WINDOW_HEIGHT = jSettingsGet(SETTINGS, "window_height", "number")
+	WINDOW_X = jSettingsGet(SETTINGS, "window_x", "number")
+	WINDOW_Y = jSettingsGet(SETTINGS, "window_y", "number")
+	WINDOW_SAVE_STATE = jSettingsGet(SETTINGS, "window_save_state", "boolean")
+	WINDOW_DOCK_STATE = jSettingsGet(SETTINGS, "window_dock_state", "number")
+
+  -- TODO: replace this with GUI/self.gui_size
+
+	GUI_SIZE = jSettingsGet(SETTINGS, "gui_size", "number")
+
+	-- [gui]
+	-- ; Visual settings
+	-- max_results=50 ; total number of results in the list (lower makes it faster but you wont see everything)
+	-- window_width=500
+	-- window_height=250
+	-- window_x=100
+	-- window_y=100
+	-- window_dock_state=0
+	-- gui_size=20 ; The size ot the text, everything will scale accordingly
+	-- window_save_state=true ; remeber where the window was last time
+
+	--
+	-- TODO: take the values from the default file and move them to here.
+	--
+
+	--
+	-- ULTRASCHALL
+	--
+
 	-- -- Load Ultraschall Api if available
 	-- ULTRASCHALL_API_ENABLED = reaper.file_exists(ULTRASCHALL_API_FILE)
 	-- if ULTRASCHALL_API_ENABLED then
@@ -1025,3 +1119,4 @@ function loadSettings()
 	return true
 end
 
+return fzf
