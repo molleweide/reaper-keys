@@ -21,7 +21,8 @@ pickers.add_track_fx = function()
 
 	fzf.reset_variables()
 
-	if not loadSettings() then
+	local ok, plugins_data = loadPluginSettings()
+	if not ok then
 		msg(
 			"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
 				.. SETTINGS_INI_FILE
@@ -41,26 +42,26 @@ pickers.add_track_fx = function()
 
 	local function get_plugin_results()
 		local results = {}
-		tRatingData = jReadVstData(DATA_INI_FILE)
-		results = jReadVstIni(VST_INI_FILE, tRatingData)
+		tRatingData = jReadVstData(pluginsData.DATA_INI_FILE)
+		results = jReadVstIni(pluginsData.VST_INI_FILE, tRatingData)
 
-		tTemplates = getTemplates(TEMPLATE_SUB_DIRS, TEMPLATE_ROOT_DIR, tRatingData)
+		tTemplates = getTemplates(pluginsData.TEMPLATE_SUB_DIRS, pluginsData.TEMPLATE_ROOT_DIR, tRatingData)
 		results = jTablesGlue(tTemplates, results)
 
-		tFXChains = getFXChains(FXCHAIN_SUB_DIRS, FXCHAIN_ROOT_DIR, tRatingData)
+		tFXChains = getFXChains(pluginsData.FXCHAIN_SUB_DIRS, pluginsData.FXCHAIN_ROOT_DIR, tRatingData)
 		results = jTablesGlue(tFXChains, results)
 
-		local tJsfx = jReadJsfxIni(JSFX_INI_FILE, tRatingData)
+		local tJsfx = jReadJsfxIni(pluginsData.JSFX_INI_FILE, tRatingData)
 		results = jTablesGlue(tJsfx, results)
 
-		if LOAD_AU then
-			local tAu = jReadAuIni(AU_INI_FILE, tRatingData)
+		if pluginsData.LOAD_AU then
+			local tAu = jReadAuIni(pluginsData.AU_INI_FILE, tRatingData)
 			results = jTablesGlue(tAu, results)
 		end
 
 		-- NOTE: is this where mappings are attached??
 		-- local time = os.clock()
-		if LOAD_ACTIONS then
+		if pluginsData.LOAD_ACTIONS then
 			local tActions = jGetActions()
 			results = jTablesGlue(tActions, results)
 		end
@@ -89,7 +90,7 @@ pickers.add_track_fx = function()
 			return false
 		end -- no such result
 
-		T_RESULTS[fx.id].rating = T_RESULTS[fx.id].rating + 1
+		self.t_results_data[fx.id].rating = self.t_results_data[fx.id].rating + 1
 
 		reaper.Undo_BeginBlock2(p:getId())
 
@@ -117,17 +118,17 @@ pickers.add_track_fx = function()
 					end
 					local numFxBefore = t.fxcount
 					jFxChainAdd(t, jReadFxChainFromFile(_jPath(fx.path .. fx.filename)))
-					if FXCHAIN_FLOAT_WINDOWS then
+					if pluginsData.FXCHAIN_FLOAT_WINDOWS then
 						for iFX = numFxBefore, t.fxcount - 1 do
 							t:getFx(iFX):show(3)
 						end
 					end
 				end
 
-				if TRACK_SHOW_FLAG == 1 and not FXCHAIN_FLOAT_WINDOWS then -- added for people using the fxchain window so the fx will show
+				if pluginsData.TRACK_SHOW_FLAG == 1 and not pluginsData.FXCHAIN_FLOAT_WINDOWS then -- added for people using the fxchain window so the fx will show
 					local focusTrack = selectedTracks[1]
 					if focusTrack then
-						focusTrack:getFx(focusTrack.fxcount - 1):show(TRACK_SHOW_FLAG)
+						focusTrack:getFx(focusTrack.fxcount - 1):show(pluginsData.TRACK_SHOW_FLAG)
 					end
 				end
 
@@ -176,7 +177,7 @@ pickers.add_track_fx = function()
 		else
 			-- this is a vst or a jsfx
 			local typeInfo = ""
-			if T_RESULTS[fx.id].vst3 and PREFER_VST3 then -- prefer VST3 where available
+			if self.t_results_data[fx.id].vst3 and pluginsData.PREFER_VST3 then -- prefer VST3 where available
 				typeInfo = "VST3:"
 			end
 
@@ -188,13 +189,13 @@ pickers.add_track_fx = function()
 			elseif fx.aui then
 				fxString = fx.filename
 			else
-				fxString = typeInfo .. _removeVstiString(T_RESULTS[fx.id].name)
+				fxString = typeInfo .. _removeVstiString(self.t_results_data[fx.id].name)
 			end
 			if not GUI.kb.control() then -- Control not held, insert on tracks
 				for t in p:selectedTracks() do
 					local r = t:addFx(fxString)
 					if r then
-						r:show(TRACK_SHOW_FLAG)
+						r:show(pluginsData.TRACK_SHOW_FLAG)
 					end
 				end
 			else -- Control held, insert on items
@@ -202,7 +203,7 @@ pickers.add_track_fx = function()
 					local take = i:getActiveTake()
 					local r = take:addFx(fxString)
 					if r >= 0 then
-						reaper.TakeFX_Show(take:getReaperTake(), r, ITEM_SHOW_FLAG) -- show FX
+						reaper.TakeFX_Show(take:getReaperTake(), r, pluginsData.ITEM_SHOW_FLAG) -- show FX
 					end
 				end
 			end
@@ -226,9 +227,9 @@ pickers.add_track_fx = function()
 		results_filter = require("results_filter.add_fx"),
 		on_exit_callback = function(self)
 			if UPDATE_RATINGS then
-				table.sort(T_RESULTS, self.sort_comp)
-				jWriteVstData(DATA_INI_FILE, T_RESULTS)
-			  log.user("Updated ratings file!!")
+				table.sort(self.t_results_data, self.sort_comp)
+				jWriteVstData(pluginsData.DATA_INI_FILE, self.t_results_data)
+				log.user("Updated ratings file!!")
 			end
 		end,
 	}
@@ -367,13 +368,13 @@ pickers.browse_reaper_preferences = function() end
 pickers.browse_track_fx_list = function()
 	p = JProject:new()
 	reset_variables()
-	if not loadSettings() then
-		msg(
-			"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
-				.. SETTINGS_INI_FILE
-		)
-		return false
-	end
+	-- if not loadSettings() then
+	-- 	msg(
+	-- 		"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
+	-- 			.. SETTINGS_INI_FILE
+	-- 	)
+	-- 	return false
+	-- end
 
 	local function onenter(self, i)
 		if not self.t_search_results then
@@ -569,6 +570,5 @@ pickers.midi_note_articulation = function() end
 pickers.item_parameters = function() end
 
 pickers.take_parameters = function() end
-
 
 return pickers

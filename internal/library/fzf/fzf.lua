@@ -6,7 +6,7 @@
 
 	-- TODO: move all picker variables to GUI
 	--
-	-- TODO: start using ADD_TRACK_FX_OPTS
+	-- TODO: start using pluginsData
 
 	A little window that allows for quick searching of FX (can be VST, templates or fxrack).
 
@@ -285,8 +285,8 @@ function jReadVstIni(ini_file_name, tRatingsData)
 			local sTypePart = line:match("(.+)=.+")
 
 			if sName and sName ~= "<SHELL>" then
-				local skip = _nameOnBlacklist(PLUGIN_BLACKLIST, sName .. sTypePart)
-				-- for _, skipName in ipairs(PLUGIN_BLACKLIST) do
+				local skip = _nameOnBlacklist(pluginsData.PLUGIN_BLACKLIST, sName .. sTypePart)
+				-- for _, skipName in ipairs(pluginsData.PLUGIN_BLACKLIST) do
 				-- 	if (sName..sTypePart):find(skipName) then
 				-- 		skip = true
 				-- 		break
@@ -805,17 +805,15 @@ local function gui_default_update(self)
 	if lastSearch ~= textBox.value or UPDATE_RESULTS then
 		-- search changed, update results
 		UPDATE_RESULTS = false
-		table.sort(T_RESULTS, self.sort_comp)
+		table.sort(self.t_results_data, self.sort_comp)
 		if lastSearch ~= textBox.value then -- only search again when input changes, not on scroll
+			--
+			-- TODO: attach results_filter as a method on GUI inside init()
+			-- so that I can call GUI.make_filter_results()
+			--
 
-      --
-      -- TODO: attach results_filter as a method on GUI inside init()
-      -- so that I can call GUI.make_filter_results()
-      --
-
-			-- tSearchResults = self.results_filter(T_RESULTS, textBox.value, false, DEFAULT_OPTS.max_results)
-			self.t_search_results = self.results_filter(T_RESULTS, textBox.value, false, DEFAULT_OPTS.max_results)
-
+			self.t_search_results =
+				self.results_filter(self.t_results_data, textBox.value, false, DEFAULT_OPTS.max_results)
 
 			lastSearch = textBox.value
 		end
@@ -847,6 +845,14 @@ local function gui_default_on_exit(self)
 	end
 end
 
+--
+-- FIX: REQUIRED OPTS
+--
+--  ~ make results func
+--  ~ sorting_func ??
+--  ~ on_select func ??
+--
+
 function fzf.init(opts, on_enter)
 	-- reaper.ClearConsole()
 	DEFAULT_OPTS = {
@@ -877,10 +883,11 @@ function fzf.init(opts, on_enter)
 
 	-- needs to be attached to GUI somehow, so that I can access them inside
 	-- of eg. on_select_func
-	T_RESULTS = opts.results
+	GUI.t_results_data = opts.results
 
 	-- todo: if sort_comp = false, then don't sort, ie. don't use default sort comparator
-	table.sort(T_RESULTS, GUI.sort_comp)
+	table.sort(GUI.t_results_data, GUI.sort_comp)
+
 	GUI:controlAdd(gui_create_main_text_box(GUI, on_enter))
 	GUI:controlAdd(create_control_label_stats(GUI))
 	BUTTON_Y_START = GUI.gui_size * 1.5 + 15
@@ -919,11 +926,11 @@ end
 -- NOTE: now loadSettings ONLY deals with options pertaining to the FX Finder
 -- picker.
 
-function loadSettings()
+function loadPluginSettings()
 	jSettingsCreate(SETTINGS_INI_FILE, SETTINGS_DEFAULT_FILE)
 	SETTINGS = assert(jSettingsReadFromFile(SETTINGS_INI_FILE), "Could not open settings file.")
 
-	ADD_TRACK_FX_OPTS = {}
+	pluginsData = {}
 	DEFAULT_OPTS = {}
 
 	--
@@ -996,76 +1003,51 @@ function loadSettings()
 	--
 	--
 
-	-- if true then return false end
-
-	VST_INI_FILE = _jPath(reaper.GetResourcePath() .. "/" .. jSettingsGet(SETTINGS, "vst_ini_file", "string"))
-	AU_INI_FILE = _jPath(reaper.GetResourcePath() .. "/" .. jSettingsGet(SETTINGS, "au_ini_file", "string"))
-	JSFX_INI_FILE = _jPath(reaper.GetResourcePath() .. "/" .. jSettingsGet(SETTINGS, "jsfx_ini_file", "string"))
-	DATA_INI_FILE = _jPath(SETTINGS_BASE_FOLDER .. jSettingsGet(SETTINGS, "fx_finder_data_file", "string"))
-	-- ULTRASCHALL_API_FILE = reaper.GetResourcePath() .. "/" .. jSettingsGet(SETTINGS, 'ultraschall_api_file', "string")
-
-	PREFER_VST3 = jSettingsGet(SETTINGS, "prefer_vst3", "boolean")
-	ITEM_SHOW_FLAG = jSettingsGet(SETTINGS, "item_show_flag", "number")
-	TRACK_SHOW_FLAG = jSettingsGet(SETTINGS, "track_show_flag", "number")
-	LOAD_ACTIONS = jSettingsGet(SETTINGS, "load_actions", "boolean")
-	FXCHAIN_FLOAT_WINDOWS = jSettingsGet(SETTINGS, "fxchain_float_windows", "boolean")
-
-	if reaper.GetOS() == "OSX64" or reaper.GetOS() == "OSX32" then
-		LOAD_AU = jSettingsGet(SETTINGS, "load_au", "boolean")
-	else
-		LOAD_AU = false
+	if not true then
+		-- what to do with this??
+		ULTRASCHALL_API_FILE = reaper.GetResourcePath()
+			.. "/"
+			.. jSettingsGet(SETTINGS, "ultraschall_api_file", "string")
 	end
 
-	TEMPLATE_ROOT_DIR = _jPath(reaper.GetResourcePath() .. "/" .. jSettingsGet(SETTINGS, "template_root_dir", "string"))
-	FXCHAIN_ROOT_DIR = _jPath(reaper.GetResourcePath() .. "/" .. jSettingsGet(SETTINGS, "fxchain_root_dir", "string"))
+	pluginsData = {
+		VST_INI_FILE = _jPath(reaper.GetResourcePath() .. "/" .. jSettingsGet(SETTINGS, "vst_ini_file", "string")),
+		AU_INI_FILE = _jPath(reaper.GetResourcePath() .. "/" .. jSettingsGet(SETTINGS, "au_ini_file", "string")),
+		JSFX_INI_FILE = _jPath(reaper.GetResourcePath() .. "/" .. jSettingsGet(SETTINGS, "jsfx_ini_file", "string")),
+		DATA_INI_FILE = _jPath(SETTINGS_BASE_FOLDER .. jSettingsGet(SETTINGS, "fx_finder_data_file", "string")),
+		PREFER_VST3 = jSettingsGet(SETTINGS, "prefer_vst3", "boolean"),
+		ITEM_SHOW_FLAG = jSettingsGet(SETTINGS, "item_show_flag", "number"),
+		TRACK_SHOW_FLAG = jSettingsGet(SETTINGS, "track_show_flag", "number"),
+		LOAD_ACTIONS = jSettingsGet(SETTINGS, "load_actions", "boolean"),
+		FXCHAIN_FLOAT_WINDOWS = jSettingsGet(SETTINGS, "fxchain_float_windows", "boolean"),
+		LOAD_AU = (reaper.GetOS() == "OSX64" or reaper.GetOS() == "OSX32")
+				and jSettingsGet(SETTINGS, "load_au", "boolean")
+			or false,
+		TEMPLATE_ROOT_DIR = _jPath(
+			reaper.GetResourcePath() .. "/" .. jSettingsGet(SETTINGS, "template_root_dir", "string")
+		),
+		FXCHAIN_ROOT_DIR = _jPath(
+			reaper.GetResourcePath() .. "/" .. jSettingsGet(SETTINGS, "fxchain_root_dir", "string")
+		),
+		PLUGIN_BLACKLIST_ENABLE = jSettingsGet(SETTINGS, "plugin_blacklist_enable", "boolean"),
+		TEMPLATE_SUBDIRS_ENABLE = jSettingsGet(SETTINGS, "template_subdirs_enable", "boolean"),
+		FXCHAIN_SUBDIRS_ENABLE = jSettingsGet(SETTINGS, "fxchain_subdirs_enable", "boolean"),
+		-- PLUGIN_BLACKLIST = PLUGIN_BLACKLIST,
+		PLUGIN_BLACKLIST = pluginsData.PLUGIN_BLACKLIST_ENABLE
+				and jSettingsGet(SETTINGS, "plugin_blacklist_regex", "table")
+			or {},
 
-	PLUGIN_BLACKLIST_ENABLE = jSettingsGet(SETTINGS, "plugin_blacklist_enable", "boolean")
-	TEMPLATE_SUBDIRS_ENABLE = jSettingsGet(SETTINGS, "template_subdirs_enable", "boolean")
-	FXCHAIN_SUBDIRS_ENABLE = jSettingsGet(SETTINGS, "fxchain_subdirs_enable", "boolean")
-
-	if PLUGIN_BLACKLIST_ENABLE then
-		PLUGIN_BLACKLIST = jSettingsGet(SETTINGS, "plugin_blacklist_regex", "table")
-	else
-		PLUGIN_BLACKLIST = {}
-	end
-
-	if TEMPLATE_SUBDIRS_ENABLE then
-		TEMPLATE_SUB_DIRS = _joinSettingsTables(
+		-- TEMPLATE_SUB_DIRS = TEMPLATE_SUB_DIRS,
+		TEMPLATE_SUB_DIRS = TEMPLATE_SUBDIRS_ENABLE and _joinSettingsTables(
 			jSettingsGet(SETTINGS, "template_subdirs_dir", "table"),
 			jSettingsGet(SETTINGS, "template_subdirs_rec", "table")
-		)
-	else
-		TEMPLATE_SUB_DIRS = { { "", true } }
-	end
+		) or { { "", true } },
 
-	if FXCHAIN_SUBDIRS_ENABLE then
-		FXCHAIN_SUB_DIRS = _joinSettingsTables(
+		-- FXCHAIN_SUB_DIRS = FXCHAIN_SUB_DIRS,
+		FXCHAIN_SUB_DIRS = FXCHAIN_SUBDIRS_ENABLE and _joinSettingsTables(
 			jSettingsGet(SETTINGS, "fxchain_subdirs_dir", "table"),
 			jSettingsGet(SETTINGS, "fxchain_subdirs_rec", "table")
-		)
-	else
-		FXCHAIN_SUB_DIRS = { { "", true } }
-	end
-
-	ADD_TRACK_FX_OPTS = {
-		VST_INI_FILE = VST_INI_FILE,
-		AU_INI_FILE = AU_INI_FILE,
-		JSFX_INI_FILE = JSFX_INI_FILE,
-		DATA_INI_FILE = DATA_INI_FILE,
-		PREFER_VST3 = PREFER_VST3,
-		ITEM_SHOW_FLAG = ITEM_SHOW_FLAG,
-		TRACK_SHOW_FLAG = TRACK_SHOW_FLAG,
-		LOAD_ACTIONS = LOAD_ACTIONS,
-		FXCHAIN_FLOAT_WINDOWS = FXCHAIN_FLOAT_WINDOWS,
-		LOAD_AU = LOAD_AU,
-		TEMPLATE_ROOT_DIR = TEMPLATE_ROOT_DIR,
-		FXCHAIN_ROOT_DIR = FXCHAIN_ROOT_DIR,
-		PLUGIN_BLACKLIST_ENABLE = PLUGIN_BLACKLIST_ENABLE,
-		TEMPLATE_SUBDIRS_ENABLE = TEMPLATE_SUBDIRS_ENABLE,
-		FXCHAIN_SUBDIRS_ENABLE = FXCHAIN_SUBDIRS_ENABLE,
-		PLUGIN_BLACKLIST = PLUGIN_BLACKLIST,
-		TEMPLATE_SUB_DIRS = TEMPLATE_SUB_DIRS,
-		FXCHAIN_SUB_DIRS = FXCHAIN_SUB_DIRS,
+		) or { { "", true } },
 	}
 
 	--
@@ -1078,7 +1060,7 @@ function loadSettings()
 	-- 	dofile(ULTRASCHALL_API_FILE)
 	-- end
 
-	return true
+	return true, pluginsData
 end
 
 return fzf
