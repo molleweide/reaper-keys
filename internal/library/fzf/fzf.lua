@@ -66,10 +66,10 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
-local sf = require("library.fzf.REQ.j_string_functions")
-local settings = require("library.fzf.REQ.j_settings_functions")
+local sf = require("utils.j_string_functions")
+local settings = require("utils.j_settings_functions")
 
-require("library.fzf.REQ.jGui")
+require("gui2.JGui")
 
 function msg(m)
 	return reaper.ShowConsoleMsg(tostring(m) .. "\n")
@@ -420,5 +420,5 @@ function loop()
 		gfx.quit()
 	end
 end
-
+-- fx-finder-settings.inifx-finder-data.ini
 return fzf

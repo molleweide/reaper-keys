@@ -1,8 +1,8 @@
-local ff = require("library.fzf.REQ.j_file_functions")
+local ff = require("utils.j_file_functions")
 
-local utils = {}
+local fzf_utils = {}
 
-function utils.jWriteVstData(file_name, t)
+function fzf_utils.jWriteVstData(file_name, t)
 	-- Write extended vst usage data
 	local sContent = ""
 
@@ -17,7 +17,7 @@ function utils.jWriteVstData(file_name, t)
 	file:close()
 end
 
-function utils.jReadVstData(file_name)
+function fzf_utils.jReadVstData(file_name)
 	-- Reads extended vst usage data
 	local vstData = {}
 	-- if the file doesnt exist create it
@@ -33,7 +33,7 @@ function utils.jReadVstData(file_name)
 	return vstData
 end
 
-function utils.jReadJsfxIniGetValuesFromString(st)
+function fzf_utils.jReadJsfxIniGetValuesFromString(st)
 	local doubleQuotedP1, doubleQuotedP2 = st:match('^"(.-)" (.+)')
 	local singleQuotedP1, singleQuotedP2 = st:match("^'(.-)' (.+)")
 	local noQuotedP1, noQuotedP2 = st:match("^(.-) (.+)")
@@ -57,7 +57,7 @@ function utils.jReadJsfxIniGetValuesFromString(st)
 	return false
 end
 
-function utils.jReadJsfxIni(ini_file_name, tRatingsData)
+function fzf_utils.jReadJsfxIni(ini_file_name, tRatingsData)
 	local i = 0
 	local tResult = {}
 
@@ -74,11 +74,11 @@ function utils.jReadJsfxIni(ini_file_name, tRatingsData)
 
 		if nameLine then
 			-- msg("NAME: " .. nameLine)
-			local fxName, fxDesc = utils.jReadJsfxIniGetValuesFromString(nameLine)
+			local fxName, fxDesc = fzf_utils.jReadJsfxIniGetValuesFromString(nameLine)
 			if fxName then -- succes, add!
 				local sName = "jsfx: " .. fxName -- add to make different from vst's with same name
 				fxDesc = fxDesc:gsub("^JS: ", "") -- remove "JS: " from description
-				local iRating = utils._getRating(tRatingsData, sName)
+				local iRating = fzf_utils._getRating(tRatingsData, sName)
 				tResult[#tResult + 1] = {
 					name = sName,
 					desc = fxDesc,
@@ -92,7 +92,7 @@ function utils.jReadJsfxIni(ini_file_name, tRatingsData)
 	return tResult
 end
 
-function utils._getRating(tRatingsData, sName)
+function fzf_utils._getRating(tRatingsData, sName)
 	if tRatingsData[sName] then
 		return math.floor(tRatingsData[sName].rating)
 	else
@@ -100,7 +100,7 @@ function utils._getRating(tRatingsData, sName)
 	end
 end
 
-function utils._nameOnBlacklist(tBlacklist, name)
+function fzf_utils._nameOnBlacklist(tBlacklist, name)
 	for _, skipName in ipairs(tBlacklist) do
 		if (name):find(skipName) then
 			return true
@@ -109,7 +109,7 @@ function utils._nameOnBlacklist(tBlacklist, name)
 	return false
 end
 
-function utils.jReadVstIni(ini_file_name, tRatingsData)
+function fzf_utils.jReadVstIni(ini_file_name, tRatingsData)
 	local i = 0
 	local tResult = {} -- the resulting table with VST's in it
 	local tLookup = {} -- a reversed table where tLookup["vst name"] = index in tResult (for checking if this fx already exists)
@@ -131,7 +131,7 @@ function utils.jReadVstIni(ini_file_name, tRatingsData)
 			local sTypePart = line:match("(.+)=.+")
 
 			if sName and sName ~= "<SHELL>" then
-				local skip = utils._nameOnBlacklist(pluginsData.PLUGIN_BLACKLIST, sName .. sTypePart)
+				local skip = fzf_utils._nameOnBlacklist(pluginsData.PLUGIN_BLACKLIST, sName .. sTypePart)
 				-- for _, skipName in ipairs(pluginsData.PLUGIN_BLACKLIST) do
 				-- 	if (sName..sTypePart):find(skipName) then
 				-- 		skip = true
@@ -141,7 +141,7 @@ function utils.jReadVstIni(ini_file_name, tRatingsData)
 
 				if not skip then
 					-- Get rating
-					local iRating = utils._getRating(tRatingsData, sName)
+					local iRating = fzf_utils._getRating(tRatingsData, sName)
 
 					local bInstrument = nil
 					if line:find(".+!!!VSTi") then
@@ -160,7 +160,7 @@ function utils.jReadVstIni(ini_file_name, tRatingsData)
 						bVst = true
 					end
 
-					local desc = utils._removeVstiString(sName)
+					local desc = fzf_utils._removeVstiString(sName)
 
 					if not tLookup[sName] then
 						table.insert(tResult, {
@@ -194,7 +194,7 @@ end
 ---@param ini_file_name
 ---@param tRatingsData
 ---@return
-function utils.jReadAuIni(ini_file_name, tRatingsData)
+function fzf_utils.jReadAuIni(ini_file_name, tRatingsData)
 	local tResult = {}
 
 	if not reaper.file_exists(ini_file_name) then
@@ -216,7 +216,7 @@ function utils.jReadAuIni(ini_file_name, tRatingsData)
 			if vendor and name and instrument then
 				local sName = "au: " .. name -- add to make different from vst's with same name
 				local fxDesc = name .. " (" .. vendor .. ")"
-				local iRating = utils._getRating(tRatingsData, sName)
+				local iRating = fzf_utils._getRating(tRatingsData, sName)
 				tResult[#tResult + 1] = {
 					name = sName,
 					desc = fxDesc,
@@ -238,7 +238,7 @@ end
 ---@param sRootDir
 ---@param tRatingsData
 ---@return
-function utils.getTemplates(tDirs, sRootDir, tRatingsData)
+function fzf_utils.getTemplates(tDirs, sRootDir, tRatingsData)
 	local tResult = {}
 	for i, v in ipairs(tDirs) do
 		tResult = ff.getFilesRecursive(sRootDir .. "/" .. v[1], not v[2], tResult)
@@ -248,10 +248,10 @@ function utils.getTemplates(tDirs, sRootDir, tRatingsData)
 	local tTemplatesData = {}
 	local count = 1
 	for i, v in ipairs(tResult) do
-		if utils._jIsTemplate(v[1]) then
+		if fzf_utils._jIsTemplate(v[1]) then
 			local sName = v[1] .. " (" .. v[2]:gsub(sRootDir, "") .. ")"
 			-- Get rating
-			local iRating = utils._getRating(tRatingsData, sName)
+			local iRating = fzf_utils._getRating(tRatingsData, sName)
 			-- local iRating = 0
 			-- if tRatingsData[sName] then
 			-- 	iRating = math.floor(tRatingsData[sName].rating)
@@ -274,14 +274,14 @@ end
 --- Is track template?
 ---@param filename
 ---@return
-function utils._jIsTemplate(filename)
+function fzf_utils._jIsTemplate(filename)
 	return filename:lower():find("%.rtracktemplate$")
 end
 
 --- Is FX chain?
 ---@param filename
 ---@return
-function utils._jIsFxChain(filename)
+function fzf_utils._jIsFxChain(filename)
 	return filename:lower():find("%.rfxchain$")
 end
 
@@ -290,7 +290,7 @@ end
 ---@param sRootDir
 ---@param tRatingsData
 ---@return
-function utils.getFXChains(tDirs, sRootDir, tRatingsData)
+function fzf_utils.getFXChains(tDirs, sRootDir, tRatingsData)
 	local tResult = {}
 	for i, v in ipairs(tDirs) do
 		tResult = ff.getFilesRecursive(sRootDir .. "/" .. v[1], not v[2], tResult)
@@ -299,7 +299,7 @@ function utils.getFXChains(tDirs, sRootDir, tRatingsData)
 	local tFXChainData = {}
 	local count = 1
 	for i, v in ipairs(tResult) do
-		if utils._jIsFxChain(v[1]) then
+		if fzf_utils._jIsFxChain(v[1]) then
 			local sName = v[1] .. " (" .. v[2]:gsub(sRootDir, "") .. ")"
 			-- Get rating
 			local iRating = 0
@@ -321,15 +321,15 @@ function utils.getFXChains(tDirs, sRootDir, tRatingsData)
 	return tFXChainData
 end
 
-function utils._round(inValue)
+function fzf_utils._round(inValue)
 	return math.floor(inValue + 0.5)
 end
 
-function utils._removeVstiString(s)
+function fzf_utils._removeVstiString(s)
 	return s:gsub("!!!VSTi", "")
 end
 
-function utils._jPath(p)
+function fzf_utils._jPath(p)
 	if reaper.GetOS() == "Win32" or reaper.GetOS() == "Win64" then
 		local r = p:gsub("/", "\\"):gsub("\\+", "\\")
 		return r
@@ -339,4 +339,4 @@ function utils._jPath(p)
 	end
 end
 
-return utils
+return fzf_utils

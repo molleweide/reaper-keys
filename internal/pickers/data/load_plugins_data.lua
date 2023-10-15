@@ -1,9 +1,9 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
-local fzfutils = require("library.fzf.utils")
+local fzfutils = require("utils.fzf")
 
-local settings = require("library.fzf.REQ.j_settings_functions")
+local settings = require("utils.j_settings_functions")
 
 
 local data_loaders = {}
@@ -155,7 +155,7 @@ function data_loaders.load_plugins_data(env)
 		JSFX_INI_FILE = fzfutils._jPath(
 			reaper.GetResourcePath() .. "/" .. settings.jSettingsGet(SETTINGS, "jsfx_ini_file", "string")
 		),
-		DATA_INI_FILE = fzfutils._jPath(env.RK_FZF_DIR .. settings.jSettingsGet(SETTINGS, "fx_finder_data_file", "string")),
+		DATA_INI_FILE = fzfutils._jPath(env.RK_DATA .. "/" .. settings.jSettingsGet(SETTINGS, "fx_finder_data_file", "string")),
 		PREFER_VST3 = settings.jSettingsGet(SETTINGS, "prefer_vst3", "boolean"),
 		ITEM_SHOW_FLAG = settings.jSettingsGet(SETTINGS, "item_show_flag", "number"),
 		TRACK_SHOW_FLAG = settings.jSettingsGet(SETTINGS, "track_show_flag", "number"),

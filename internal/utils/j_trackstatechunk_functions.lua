@@ -4,16 +4,16 @@
 @noindex
 --]]
 
-local string_funcs = require("library.fzf.REQ.j_string_functions")
+local string_funcs = require("utils.j_string_functions")
 
-local tbl_funcs = require("library.fzf.REQ.j_tables")
+local tbl_funcs = require("utils.j_tables")
 
 local chunk_funcs = {}
 
 -- NOTE: mv this to `utils.chunks.lua`
 
-require("library.fzf.REQ.j_settings_functions")
-require("library.fzf.REQ.j_tables")
+require("utils.j_settings_functions")
+require("utils.j_tables")
 local STR_FX_CHAIN = "<FXCHAIN"
 
 function chunk_funcs.jReadFxChainFromFile(fn)

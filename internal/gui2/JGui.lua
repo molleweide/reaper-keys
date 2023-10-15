@@ -10,9 +10,9 @@ local format = require("utils.format")
 -- J_SCRIPT_DIR = reaper.GetResourcePath() .. "/Scripts/LUA/" -- This should not be there for reascript version??
 -- package.path = package.path .. ";" .. J_SCRIPT_DIR .. "?.lua"
 
-require("library.fzf.REQ.JGuiColors")
-require("library.fzf.REQ.JGuiControls")
-require("library.fzf.REQ.JGuiFunctions")
+require("gui2.JGuiColors")
+require("gui2.JGuiControls")
+require("gui2.JGuiFunctions")
 
 log.user("###### J_SCRIPT_DIR:", J_SCRIPT_DIR)
 
@@ -28,8 +28,8 @@ jGui = {
 	y = 0,
 	dockstate = 0,
 
-	mouse = require("library.fzf.REQ.mouse"),
-	kb = require("library.fzf.REQ.jKeyboard"),
+	mouse = require("gui2.mouse"),
+	kb = require("gui2.jKeyboard"),
 
 	globals = {},
 

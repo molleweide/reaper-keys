@@ -8,7 +8,7 @@
 -- package.path = package.path .. ";" .. J_SCRIPT_DIR .. "?.lua"
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua"
-require('library.fzf.REQ.JProjectClassReq')
+require('gui2.JProjectClassReq')
 
 -- TODO:
 -- Make the new index functions so that if its not in one of the lists or in .prototype to show an error msg

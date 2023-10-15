@@ -12,7 +12,7 @@ local custom = require('custom_actions')
 
 local syntax = require('SYNTAX.actions')
 
-local pickers = require('library.fzf.pickers')
+local pickers = require('pickers.pickers')
 
 local cli = require('library.cli')
 

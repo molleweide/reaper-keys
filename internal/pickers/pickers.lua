@@ -2,31 +2,24 @@ local log = require("utils.log")
 local format = require("utils.format")
 
 local fzf = require("library.fzf.fzf")
-local fu = require("library.fzf.utils")
+local fu = require("utils.fzf")
+local sf = require("utils.j_string_functions")
+local tf = require("utils.j_tables")
 
-local data_loaders = require("library.fzf.data.load_plugins_data")
-
-local sf = require("library.fzf.REQ.j_string_functions")
-local tf = require("library.fzf.REQ.j_tables")
+local data_loaders = require("pickers.data.load_plugins_data")
 
 -- does some nested requires that requires fzf to be loaded first, (for now...)
-require("library.fzf.REQ.JProjectClass")
-
--- TODO: split `load_settings` into load vst settigs, and load GUI settings
---
+require("gui2.JProjectClass")
 
 local home = os.getenv("HOME")
 
-log.user("ENV: ", home)
-
-local script_path = debug.getinfo(1, "S").source:match([[^@?(.*[\/])[^\/]-$]])
-package.path = package.path .. ";" .. script_path .. "?.lua"
+local definitions_dir = "/reaper/packages/reaper-keys/definitions"
 
 -- move this to definitions dir
 local RK_FZF_ENV = {
-	SETTINGS_INI_FILE = home .. "/reaper/packages/reaper-keys/definitions/fx-finder-settings.ini",
-	SETTINGS_DEFAULT_FILE = home .. "/reaper/packages/reaper-keys/internal/library/fzf/fx-finder-settings-default.ini",
-	RK_FZF_DIR = home .. "/reaper/packages/reaper-keys/internal/library/fzf",
+	SETTINGS_INI_FILE = home .. definitions_dir .. "/fx-finder-settings.ini",
+	SETTINGS_DEFAULT_FILE = home .. definitions_dir .. "/defaults/fx-finder-settings-default.ini",
+	RK_DATA = home .. "/reaper/packages/reaper-keys/data",
 }
 
 local pickers = {}
@@ -237,7 +230,7 @@ pickers.add_track_fx = function()
 	end
 
 	local opts = {
-	  env = RK_FZF_ENV,
+		env = RK_FZF_ENV,
 		title = "Fast FX Finder",
 		width = 1000,
 		height = 700,
@@ -245,9 +238,9 @@ pickers.add_track_fx = function()
 		y = 100,
 		on_select_func = selectFx,
 		results = get_plugin_results(),
-		entry_maker = require("entry_makers.add_fx"),
+		entry_maker = require("pickers.entry_makers.add_fx"),
 		sort_comp = sortByRating,
-		results_filter = require("results_filter.add_fx"),
+		results_filter = require("pickers.results_filter.add_fx"),
 		on_exit_callback = function(self)
 			if UPDATE_RATINGS then
 				table.sort(self.t_results_data, self.sort_comp)
@@ -297,7 +290,7 @@ pickers.test_picker = function()
 	end
 
 	local opts = {
-	  env = RK_FZF_ENV,
+		env = RK_FZF_ENV,
 		title = "Test Picker",
 		on_select_func = onenter,
 		results = {

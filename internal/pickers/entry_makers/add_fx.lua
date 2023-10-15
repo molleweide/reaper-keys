@@ -1,5 +1,5 @@
-local fu = require("library.fzf.utils")
-local sf = require("library.fzf.REQ.j_string_functions")
+local fu = require("utils.fzf")
+local sf = require("utils.j_string_functions")
 
 local COLOR_VST = jColor:new({ 0.6, 0.6, 0.6, 1 })
 local COLOR_VSTI = jColor:new({ 0.8, 0.8, 0.5, 1 })

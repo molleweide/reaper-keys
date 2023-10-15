@@ -4,7 +4,7 @@
 @noindex
 --]]
 
-local sf = require("library.fzf.REQ.j_string_functions")
+local sf = require("utils.j_string_functions")
 
 local settings_funcs = {}
 

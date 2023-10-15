@@ -3,6 +3,8 @@ internal/gui/feedback/model_data.lua
 !/internal/saved/data/.gitkeep
 internal/state_machine/state.lua
 
+# Don't store the FZF plugins data
+data/fx-finder-data.ini
 
 # macos
 .DS_STORE
