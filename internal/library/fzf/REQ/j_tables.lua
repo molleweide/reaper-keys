@@ -4,11 +4,13 @@
 @noindex
 --]]
 
+local tbl_funcs = {}
+
 ---
 ---@param st
 ---@param iLevel
 ---@return
-function tableToString(st, iLevel)
+function tbl_funcs.tableToString(st, iLevel)
     iLevel = iLevel or 0
     if iLevel == 0 and type(st) ~= "table" then
         msg("TableToString ERROR: did not get table, value: " .. tostring(st))
@@ -19,7 +21,7 @@ function tableToString(st, iLevel)
         sResult = sResult .. string.rep("\t", iLevel) .. tostring(i) .. " => "
         if type(v) == "table" then
             sResult = sResult .. "[]" .. "\n"
-            sResult = sResult .. tableToString(v, iLevel+1)
+            sResult = sResult .. tbl_funcs.tableToString(v, iLevel+1)
     	else sResult = sResult .. (tostring(v)) .. "\n"
         end
 	end
@@ -30,12 +32,12 @@ end
 ---@param t
 ---@param sSeperator
 ---@return
-function tableMultiConcat(t, sSeperator)
+function tbl_funcs.tableMultiConcat(t, sSeperator)
     --iLevel = iLevel or 0
     sResult = ""
     for i,v in pairs(t) do
         if type(v) == "table" then
-            sResult = sResult .. tableMultiConcat(v, sSeperator)
+            sResult = sResult .. tbl_funcs.tableMultiConcat(v, sSeperator)
         else
             sResult = sResult .. v .. sSeperator
         end
@@ -46,7 +48,7 @@ end
 ---
 ---@param t
 ---@param i
-function tableMultiGet(t, i)
+function tbl_funcs.tableMultiGet(t, i)
     if type(t) ~= "table" then
         msg("tableMutliGet() error: Was expecting a table, didn't get one.")
         return false
@@ -57,7 +59,7 @@ function tableMultiGet(t, i)
         return t[i[1]]
     elseif #i > 1 then
         j = table.remove(i, 1)
-        return tableMultiGet(t[j], i)
+        return tbl_funcs.tableMultiGet(t[j], i)
     else
         msg("tableMultiGet() Error: Not in table.")
         return false
@@ -68,7 +70,7 @@ end
 ---@param t
 ---@param i
 ---@param v
-function tableMultiSet(t, i, v)
+function tbl_funcs.tableMultiSet(t, i, v)
     if type(t) ~= "table" then
         msg("tableMultiSet() error: Was expecting a table, didn't get one.")
         --msg(t)
@@ -81,7 +83,7 @@ function tableMultiSet(t, i, v)
         return true
     elseif #i > 1 then
         j = table.remove(i, 1)
-        return tableMultiSet(t[j], i, v)
+        return tbl_funcs.tableMultiSet(t[j], i, v)
     else
         msg("tableMultiSet() error: Not in table.")
         return false
@@ -92,14 +94,14 @@ end
 ---@param t
 ---@param s
 ---@return
-function tableMultiCount(t, s)
+function tbl_funcs.tableMultiCount(t, s)
     -- counts occurences of s in table t. Does brach search.
     -- uses string:find for compare
     iResult = 0
     for i, v in pairs(t) do
         if type(v) == "table" then
             -- go in branch
-            iResult = iResult + tableMultiCount(v, s)
+            iResult = iResult + tbl_funcs.tableMultiCount(v, s)
         elseif v:find(s) then
             iResult = iResult + 1
         end
@@ -120,12 +122,12 @@ end
 
 ---
 ---@param t
-function tablePrint(t)
+function tbl_funcs.tablePrint(t)
     if type(t) ~= "table" then
         msg("TablePrint, got no table, value: " .. tostring(t))
         return false
     else
-        msg(tableToString(t))
+        msg(tbl_funcs.tableToString(t))
     end
 end
 
@@ -133,7 +135,7 @@ end
 ---@param t
 ---@param string
 ---@return
-function tableSearch(t, string) -- NOT TESTED YET, works so far...
+function tbl_funcs.tableSearch(t, string) -- NOT TESTED YET, works so far...
     if type(t) ~= "table" then
         msg("tableSearch(), got no table, value: " .. tostring(t))
         return false
@@ -153,7 +155,7 @@ end
 ---@param t
 ---@param string
 ---@return
-function tableFind(t, string) -- NOT TESTED YET, works so far... This one uses string.find() instead of == for comparison
+function tbl_funcs.tableFind(t, string) -- NOT TESTED YET, works so far... This one uses string.find() instead of == for comparison
     if type(t) ~= "table" then
         msg("tableSearch(), got no table, value: " .. tostring(t))
         return false
@@ -173,7 +175,7 @@ end
 ---@param t
 ---@param string
 ---@return
-function tableSearchHeader(t, string)
+function tbl_funcs.tableSearchHeader(t, string)
     if type(t) ~= "table" then
         msg("tableSearch(), got no table, value: " .. tostring(t))
         return false
@@ -194,7 +196,9 @@ end
 ---@param t1
 ---@param t2
 ---@return
-function jTablesGlue(t1, t2)
+function tbl_funcs.jTablesGlue(t1, t2)
     -- Join together two tables, sticking t2 begin t1. Returns the result
 	return table.move(t2, 1, #t2, #t1 + 1, t1)
 end
+
+return tbl_funcs

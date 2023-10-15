@@ -1,3 +1,5 @@
+local ff = require("library.fzf.REQ.j_file_functions")
+
 local utils = {}
 
 function utils.jWriteVstData(file_name, t)
@@ -239,7 +241,7 @@ end
 function utils.getTemplates(tDirs, sRootDir, tRatingsData)
 	local tResult = {}
 	for i, v in ipairs(tDirs) do
-		tResult = getFilesRecursive(sRootDir .. "/" .. v[1], not v[2], tResult)
+		tResult = ff.getFilesRecursive(sRootDir .. "/" .. v[1], not v[2], tResult)
 	end
 
 	-- return tResult
@@ -291,7 +293,7 @@ end
 function utils.getFXChains(tDirs, sRootDir, tRatingsData)
 	local tResult = {}
 	for i, v in ipairs(tDirs) do
-		tResult = getFilesRecursive(sRootDir .. "/" .. v[1], not v[2], tResult)
+		tResult = ff.getFilesRecursive(sRootDir .. "/" .. v[1], not v[2], tResult)
 	end
 	-- return tResult
 	local tFXChainData = {}

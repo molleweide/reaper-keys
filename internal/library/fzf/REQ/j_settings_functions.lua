@@ -4,7 +4,7 @@
 @noindex
 --]]
 
--- todo: move to `reaper_settings`
+local sf = require("library.fzf.REQ.j_string_functions")
 
 local settings_funcs = {}
 
@@ -22,7 +22,7 @@ function settings_funcs.jSettingsReadFromFile(file_name)
 	local sContent = f:read("*all")
 	f:close()
 
-	return jSettingsRead(sContent)
+	return settings_funcs.jSettingsRead(sContent)
 end
 
 ---
@@ -42,7 +42,7 @@ function settings_funcs.jSettingsWriteToFile(file_name, inSection, inName, inVal
 
 	local sContent = f:read("*all")
 	f = io.open(file_name, "w")
-	sContent = jSettingsWriteKey(sContent, inSection, inName, inValue, bSectionOptional)
+	sContent = settings_funcs.jSettingsWriteKey(sContent, inSection, inName, inValue, bSectionOptional)
 	f:write(sContent)
 	f:close()
 end
@@ -51,7 +51,7 @@ end
 ---@param file_name
 ---@param tKeys
 ---@param bSectionOptional
-function jSettingsWriteToFileMultiple(file_name, tKeys, bSectionOptional)
+function settings_funcs.jSettingsWriteToFileMultiple(file_name, tKeys, bSectionOptional)
 	local bSectionOptional = bSectionOptional or false
 
 	local f = io.open(file_name, "r")
@@ -63,7 +63,7 @@ function jSettingsWriteToFileMultiple(file_name, tKeys, bSectionOptional)
 	local sContent = f:read("*all")
 	f = io.open(file_name, "w")
 	for _, v in pairs(tKeys) do
-		sContent = jSettingsWriteKey(sContent, v[1], v[2], v[3], bSectionOptional)
+		sContent = settings_funcs.jSettingsWriteKey(sContent, v[1], v[2], v[3], bSectionOptional)
 	end
 	f:write(sContent)
 	f:close()
@@ -72,7 +72,7 @@ end
 ---
 ---@param str
 ---@return
-function jSettingsRead(str)
+function settings_funcs.jSettingsRead(str)
     -- Reads variables from a ini style string
 	-- Format for text file is: varname=value
 	-- Comments can be made with ; or // (can be inline too)
@@ -80,10 +80,10 @@ function jSettingsRead(str)
 	local settingsData = {}
 
 	for line in str:gmatch("[^\r\n]+") do
-		local lineClean = _jSettingsRemoveComments(line)
-		local name, value, section = _jSettingsLineProcess(lineClean)
+		local lineClean = settings_funcs._jSettingsRemoveComments(line)
+		local name, value, section = settings_funcs._jSettingsLineProcess(lineClean)
 		if name then
-			value = _jSettingsReadProcessValue(value)
+			value = settings_funcs._jSettingsReadProcessValue(value)
 			-- msg("Var: " .. name .. ": " .. tostring(value))
 			if settingsData[name] then
 				settingsData[name][#settingsData[name]+1] = value
@@ -106,16 +106,16 @@ end
 ---
 ---@param inLine
 ---@return
-function _jSettingsRemoveComments(inLine)
-	local lineClean = jStringExplode(inLine, ";")[1]
-	lineClean = jStringExplode(lineClean, "//")[1] -- First version used // for comments
+function settings_funcs._jSettingsRemoveComments(inLine)
+	local lineClean = sf.jStringExplode(inLine, ";")[1]
+	lineClean = sf.jStringExplode(lineClean, "//")[1] -- First version used // for comments
 	return lineClean
 end
 
 ---
 ---@param inLine
 ---@return
-function _jSettingsLineProcess(inLine)
+function settings_funcs._jSettingsLineProcess(inLine)
 	local name = inLine:match("(.+)=(.-)")
 	local value = inLine:match(".+=(.+)")
 	if name then
@@ -134,7 +134,7 @@ end
 ---@param inValue
 ---@param bSectionOptional
 ---@return
-function jSettingsWriteKey(str, inSection, inName, inValue, bSectionOptional)
+function settings_funcs.jSettingsWriteKey(str, inSection, inName, inValue, bSectionOptional)
 	local bSectionOptional = bSectionOptional or false
 	local newStr = ""
 	local currentSection = false
@@ -146,8 +146,8 @@ function jSettingsWriteKey(str, inSection, inName, inValue, bSectionOptional)
 
 	for line in str:gmatch("[^\r\n]+") do
 
-		local lineClean = _jSettingsRemoveComments(line)
-		local name, value, section = _jSettingsLineProcess(lineClean)
+		local lineClean = settings_funcs._jSettingsRemoveComments(line)
+		local name, value, section = settings_funcs._jSettingsLineProcess(lineClean)
 		if section then
 			if currentSection == inSection and not bSucces then
 				-- We were the section we're looking for and now changing: key was not present, create...
@@ -209,13 +209,13 @@ end
 ---
 ---@param value
 ---@return
-function _jSettingsReadProcessValue(value)
-	value = jStringTrim(value)
+function settings_funcs._jSettingsReadProcessValue(value)
+	value = sf.jStringTrim(value)
     if value == "true" then
         value = true
     elseif value == "false" then
 		value = false
-	elseif jStringIsInt(value) then
+	elseif sf.jStringIsInt(value) then
 		value = math.tointeger(value)
     end
 

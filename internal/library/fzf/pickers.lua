@@ -6,6 +6,9 @@ local fu = require("library.fzf.utils")
 
 local data_loaders = require("library.fzf.data.load_plugins_data")
 
+local sf = require("library.fzf.REQ.j_string_functions")
+local tf = require("library.fzf.REQ.j_tables")
+
 -- does some nested requires that requires fzf to be loaded first, (for now...)
 require("library.fzf.REQ.JProjectClass")
 
@@ -60,24 +63,24 @@ pickers.add_track_fx = function()
 		results = fu.jReadVstIni(pluginsData.VST_INI_FILE, tRatingData)
 
 		tTemplates = fu.getTemplates(pluginsData.TEMPLATE_SUB_DIRS, pluginsData.TEMPLATE_ROOT_DIR, tRatingData)
-		results = jTablesGlue(tTemplates, results)
+		results = tf.jTablesGlue(tTemplates, results)
 
 		tFXChains = fu.getFXChains(pluginsData.FXCHAIN_SUB_DIRS, pluginsData.FXCHAIN_ROOT_DIR, tRatingData)
-		results = jTablesGlue(tFXChains, results)
+		results = tf.jTablesGlue(tFXChains, results)
 
 		local tJsfx = fu.jReadJsfxIni(pluginsData.JSFX_INI_FILE, tRatingData)
-		results = jTablesGlue(tJsfx, results)
+		results = tf.jTablesGlue(tJsfx, results)
 
 		if pluginsData.LOAD_AU then
 			local tAu = fu.jReadAuIni(pluginsData.AU_INI_FILE, tRatingData)
-			results = jTablesGlue(tAu, results)
+			results = tf.jTablesGlue(tAu, results)
 		end
 
 		-- NOTE: is this where mappings are attached??
 		-- local time = os.clock()
 		if pluginsData.LOAD_ACTIONS then
-			local tActions = jGetActions()
-			results = jTablesGlue(tActions, results)
+			local tActions = data_loaders.jGetActions()
+			results = tf.jTablesGlue(tActions, results)
 		end
 		-- msg(os.clock() - time)
 
@@ -326,7 +329,7 @@ pickers.test_picker = function()
 				local b = cIds[1]
 				local info = cIds[2]
 				local iStart = fu._round(i + SCROLL_RESULTS)
-				local highlights = jStringExplode(textBox.value, " ")
+				local highlights = sf.jStringExplode(textBox.value, " ")
 
 				local showing
 				if iStart <= #tResults then
@@ -449,7 +452,7 @@ pickers.browse_track_fx_list = function()
 				local b = cIds[1]
 				local info = cIds[2]
 				local iStart = fu._round(i + SCROLL_RESULTS)
-				local highlights = jStringExplode(textBox.value, " ")
+				local highlights = sf.jStringExplode(textBox.value, " ")
 
 				local showing
 				if iStart <= #tResults then

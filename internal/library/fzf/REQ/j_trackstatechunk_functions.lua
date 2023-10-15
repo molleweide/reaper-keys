@@ -4,25 +4,31 @@
 @noindex
 --]]
 
+local string_funcs = require("library.fzf.REQ.j_string_functions")
+
+local tbl_funcs = require("library.fzf.REQ.j_tables")
+
+local chunk_funcs = {}
+
 -- NOTE: mv this to `utils.chunks.lua`
 
 require("library.fzf.REQ.j_settings_functions")
 require("library.fzf.REQ.j_tables")
 local STR_FX_CHAIN = "<FXCHAIN"
 
-function jReadFxChainFromFile(fn)
+function chunk_funcs.jReadFxChainFromFile(fn)
 	local file = io.open(fn, "r")
 	local fxstr = file:read("a")
 	file:close()
 	return fxstr:match("^(.+)\n$")
 end
 
-function jFxChainAdd(t, strFxChain)
+function chunk_funcs.jFxChainAdd(t, strFxChain)
 	local chunk = t:getStateChunk()
-	local lines = jStringExplode(chunk, "\n")
+	local lines = string_funcs.jStringExplode(chunk, "\n")
 	table.remove(lines, #lines) -- remove last empty item
 
-	local fxChainPos = tableFind(lines, "^" .. STR_FX_CHAIN)
+	local fxChainPos = tbl_funcs.tableFind(lines, "^" .. STR_FX_CHAIN)
 
 	if fxChainPos == 0 then
 		msg("FX Chain should be created...")
@@ -59,7 +65,7 @@ function jFxChainAdd(t, strFxChain)
 	-- msg(t:getStateChunk())
 end
 
-function jCreateTrackChainForSelectedTracks()
+function chunk_funcs.jCreateTrackChainForSelectedTracks()
 	-- This is a hacky function to create empty FX chains for selected tracks, but its a lot easier than messing with the state chunk
 	reaper.Main_OnCommandEx(reaper.NamedCommandLookup("_S&M_SHOWFXCHAINSEL"), 1, 0) -- SWS/S&M: Show FX chain for selected tracks (selected FX)
 	reaper.Main_OnCommandEx(reaper.NamedCommandLookup("_S&M_HIDEFXCHAIN"), 1, 0) -- SWS/S&M: Hide FX chain windows for selected tracks

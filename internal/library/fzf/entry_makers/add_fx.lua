@@ -1,4 +1,5 @@
 local fu = require("library.fzf.utils")
+local sf = require("library.fzf.REQ.j_string_functions")
 
 local COLOR_VST = jColor:new({ 0.6, 0.6, 0.6, 1 })
 local COLOR_VSTI = jColor:new({ 0.8, 0.8, 0.5, 1 })
@@ -24,7 +25,7 @@ local function entry_maker(tButtons, tResults)
 		local b = cIds[1]
 		local info = cIds[2]
 		local iStart = fu._round(i + SCROLL_RESULTS)
-		local highlights = jStringExplode(textBox.value, " ")
+		local highlights = sf.jStringExplode(textBox.value, " ")
 
 		local showing
 		if iStart <= #tResults then

@@ -6,12 +6,14 @@
 
 -- NOTE: most of these functions could be moved into `fs.lua`
 
+local file_functions = {}
+
 ---
 ---@param sDir
 ---@param bSkipRecursive
 ---@param t
 ---@return
-function getFilesRecursive(sDir, bSkipRecursive, t)
+function file_functions.getFilesRecursive(sDir, bSkipRecursive, t)
 	-- This function gets files and their path (recursivly) from a folder
 	-- sDirr needs to end with a slash! ("\\")
 	-- set bSkipRecursive = true to only look in the current folder
@@ -26,7 +28,7 @@ function getFilesRecursive(sDir, bSkipRecursive, t)
 	if not bSkipRecursive then
 		local sCurDir = reaper.EnumerateSubdirectories(sDir, i)
 		while sCurDir do
-			t = getFilesRecursive(sDir .. sCurDir .. "/", bSkipRecursive, t) -- changed / to \\ and back for mac (why did i have \\?)
+			t = file_functions.getFilesRecursive(sDir .. sCurDir .. "/", bSkipRecursive, t) -- changed / to \\ and back for mac (why did i have \\?)
 
 			i = i + 1
 			sCurDir = reaper.EnumerateSubdirectories(sDir, i)
@@ -50,7 +52,7 @@ end
 --
 ---@param fn
 ---@return
-function jFilesRemoveExt(fn)
+function file_functions.jFilesRemoveExt(fn)
 	local r = fn:match("(.+)%..+")
     return r or fn -- if there is no . in the name return the original
 end
@@ -58,20 +60,20 @@ end
 ---
 ---@param path
 ---@return
-function jFilesGetFilename(path)
+function file_functions.jFilesGetFilename(path)
     return path:match("^.+\\(.+)$")
 end
 
 ---
 ---@param path
 ---@return
-function jFilesGetPath(path)
+function file_functions.jFilesGetPath(path)
     return path:match("^(.+)\\.+$")
 end
 
 ---
 ---@param path
-function jFilesGetFileModifiedTimestamp(path)
+function file_functions.jFilesGetFileModifiedTimestamp(path)
     -- Be careful with this function as the system's date and time formatting determine the output
     local cmd = 'forfiles /P "'.. jFilesGetPath(path) .. '" /M "'.. jFilesGetFilename(path) ..'" /C "cmd /c echo @fdate @ftime"'
 	local result = reaper.ExecProcess(cmd, 1000):match("^.+\n(.+)\n.-$")
@@ -87,7 +89,7 @@ end
 ---
 ---@param source
 ---@param dest
-function jFilesCopyFile(source, dest)
+function file_functions.jFilesCopyFile(source, dest)
 	local cmd = 'COPY "' .. source .. '" "' .. dest .. '"'
 	-- msg(cmd)
 	-- local r = reaper.ExecProcess(cmd, 1000)
@@ -95,6 +97,8 @@ function jFilesCopyFile(source, dest)
 	-- msg(r)
 end
 
--- function GetFileExtension(url)
+-- function file_functions.GetFileExtension(url)
 --     return url:match("^.+(%..+)$")
 -- end
+
+return file_functions

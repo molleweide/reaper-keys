@@ -69,11 +69,14 @@ local format = require("utils.format")
 -- local script_path = debug.getinfo(1, "S").source:match([[^@?(.*[\/])[^\/]-$]])
 -- package.path = package.path .. ";" .. script_path .. "?.lua"
 
-require("library.fzf.REQ.j_file_functions")
-require("library.fzf.REQ.j_tables")
+local sf = require("library.fzf.REQ.j_string_functions")
+local settings = require("library.fzf.REQ.j_settings_functions")
+
+-- require("library.fzf.REQ.j_file_functions")
+-- require("library.fzf.REQ.j_tables")
 require("library.fzf.REQ.jGui")
-require("library.fzf.REQ.j_trackstatechunk_functions")
-require("library.fzf.REQ.j_settings_functions")
+-- require("library.fzf.REQ.j_trackstatechunk_functions")
+-- require("library.fzf.REQ.j_settings_functions")
 
 -- SOME SETUP
 -- local SETTINGS_BASE_FOLDER = script_path
@@ -117,7 +120,7 @@ function jGuiHighlightControl:_drawLabel()
 	if self.highlight and #self.highlight > 0 then
 		for _, word in pairs(self.highlight) do
 			if word and word ~= "" then
-				local parts, r = jStringExplode(self.label, word, true)
+				local parts, r = sf.jStringExplode(self.label, word, true)
 				local totalX = 0
 				if #parts > 1 then
 					local highLightW, highLightH = gfx.measurestr(word)
@@ -353,7 +356,7 @@ local function gui_default_on_exit(self)
 	if self.window_save_state then
 		local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
 		local dockstr = string.format("%d", dockstate)
-		jSettingsWriteToFileMultiple(self.env.SETTINGS_INI_FILE, {
+		settings.jSettingsWriteToFileMultiple(self.env.SETTINGS_INI_FILE, {
 			{ "gui", "window_x", math.tointeger(wx) },
 			{ "gui", "window_y", math.tointeger(wy) },
 			{ "gui", "window_width", math.tointeger(ww) },
