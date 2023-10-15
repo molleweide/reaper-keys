@@ -14,8 +14,8 @@ return {
 					["j"] = {
 						"+jjjjj",
 						{
-							["f"] = "FuzzyFx",
-							["w"] = "FuzzyTest",
+							["f"] = "PickerAddTrackFx",
+							["w"] = "PickerTest",
 						},
 					},
 				},

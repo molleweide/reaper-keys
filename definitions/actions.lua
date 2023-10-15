@@ -12,7 +12,7 @@ local custom = require('custom_actions')
 
 local syntax = require('SYNTAX.actions')
 
-local fuzzy = require('library.fzf.fzf')
+local pickers = require('library.fzf.pickers')
 
 local cli = require('library.cli')
 
@@ -22,8 +22,8 @@ local cli = require('library.cli')
 -- longer verbs are usually commands
 
 return {
-  FuzzyFx = fuzzy.add_track_fx,
-  FuzzyTest = fuzzy.test,
+  PickerAddTrackFx = pickers.add_track_fx,
+  PickerTest = pickers.test_picker(),
   Launcher = cli.run_launcher,
   ApplyConfigs = syntax.applyConfigs,
   TrackInSet_MIDI_QMK = {lib.io_device.setInputTo_MIDI_QMK, custom.setupMidiInputPreProcessorOnSelTrks},
