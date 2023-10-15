@@ -84,6 +84,16 @@ end
 
 local fzf = {}
 
+--
+-- TODO: i think that these should be private vars attached to jGui.
+-- 1. add these vars to the jGui class
+-- 2. add a jGui method for resetting the vars
+-- 3. pass the GUI ref to all callbacks, so that vars can be referenced further.
+-- (4.) RATINGS only pertain to FX list.
+--          this needs to be passed to the picker as an option cb..
+--
+-- GUI
+
 fzf.reset_variables = function()
 	UPDATE_RATINGS = false
 	UPDATE_RESULTS = false
@@ -612,7 +622,8 @@ end
 -- `tResultButtons` table with them.
 --
 
-local function createResultButtons(gui, tControls, n, height, y_start)
+local function createResultButtons(gui, tControls, n, y_start)
+	local height = gui.gui_size
 	local x_start = 10
 	local y_space = 0
 	local n_to_remove = 0
@@ -729,8 +740,8 @@ local function gui_create_main_text_box(gui, on_enter)
 	text_input.x = 10
 	text_input.y = 10
 	text_input.width = 480
-	text_input.height = math.tointeger(GUI_SIZE * 1.5)
-	text_input.label_fontsize = math.tointeger(GUI_SIZE * 1.5)
+	text_input.height = math.tointeger(gui.gui_size * 1.5)
+	text_input.label_fontsize = math.tointeger(gui.gui_size * 1.5)
 	text_input.label_align = "l"
 	text_input.label_font = "Calibri"
 	text_input.focus_index = gui:getFocusIndex()
@@ -754,7 +765,7 @@ local function create_control_label_stats(gui)
 	ls.width = 50
 	ls.x = gui.width - ls.width - 12
 	ls.y = 10
-	ls.label_fontsize = math.tointeger(GUI_SIZE * 0.75)
+	ls.label_fontsize = math.tointeger(gui.gui_size * 0.75)
 	ls.label_align = "r"
 	ls.border = false
 	LABEL_STATS = ls
@@ -775,10 +786,10 @@ local function gui_default_on_resize(self)
 	-- GUI object so that I can always access settings via the GUI
 	-- name.
 
-	RESULTS_PER_PAGE = math.tointeger(buttonsSpaceH // GUI_SIZE)
+	RESULTS_PER_PAGE = math.tointeger(buttonsSpaceH // self.gui_size)
 
 	-- msg(buttonsSpaceN)
-	createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, GUI_SIZE, BUTTON_Y_START)
+	createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, BUTTON_Y_START)
 	UPDATE_RESULTS = true
 	self:controlInitAll()
 end
@@ -790,36 +801,21 @@ local function gui_default_update(self)
 	if lastSearch ~= textBox.value or UPDATE_RESULTS then
 		-- search changed, update results
 		UPDATE_RESULTS = false
-
-		------------------------------------------------------------------
-
 		table.sort(T_RESULTS, self.sort_comp)
-
 		if lastSearch ~= textBox.value then -- only search again when input changes, not on scroll
-			--
-			-- TODO: i should attach the search results table to the GUI
-			-- so that I can pass it easilly to things later
-
 			tSearchResults = self.results_filter(T_RESULTS, textBox.value, false, DEFAULT_OPTS.max_results)
-
 			lastSearch = textBox.value
 		end
-
-		------------------------------------------------------------------
-
 		RESULT_COUNT = #tSearchResults
-
-		-- FIX: rename this to `display_maker`
-
+		-- rename this to `display_maker`
 		self.entry_maker(tResultButtons, tSearchResults)
-		-- showSearchResults(tResultButtons, tSearchResults)
 	end
 end
 
 local function gui_default_on_exit(self)
-	if UPDATE_RATINGS then
-		table.sort(T_RESULTS, self.sort_comp)
-		jWriteVstData(DATA_INI_FILE, T_RESULTS)
+	if type(self.onExitUserCallback) == "function" then
+		-- because func is not created inside jGui, i need to pass self..
+		self.onExitUserCallback(self)
 	end
 	if self.window_save_state then
 		local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
@@ -834,11 +830,8 @@ local function gui_default_on_exit(self)
 	end
 end
 
---
--- NOTE: INIT PICKER
---
-
 function fzf.init(opts, on_enter)
+	-- reaper.ClearConsole()
 	DEFAULT_OPTS = {
 		max_results = 50,
 		width = 500,
@@ -861,36 +854,28 @@ function fzf.init(opts, on_enter)
 		log.user(string.format("Option [%s] (%s): %s", k, use_default, opts[k]))
 	end
 
-	-- reaper.ClearConsole()
 	tResultButtons = {}
 
 	GUI = jGui:new(opts)
 
-	-- TODO: i should attach results to the GUI object
-	--
-	-- load data
-
+	-- needs to be attached to GUI somehow, so that I can access them inside
+	-- of eg. on_select_func
 	T_RESULTS = opts.results
 
-	--
-	-- FIX: if sort_comp = false, then don't sort, ie. don't use default sort comparator
-	--
-
+	-- todo: if sort_comp = false, then don't sort, ie. don't use default sort comparator
 	table.sort(T_RESULTS, GUI.sort_comp)
-
 	GUI:controlAdd(gui_create_main_text_box(GUI, on_enter))
 	GUI:controlAdd(create_control_label_stats(GUI))
-
-	BUTTON_Y_START = GUI_SIZE * 1.5 + 15
-	-- createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, GUI_SIZE, BUTTON_Y_START)
+	BUTTON_Y_START = GUI.gui_size * 1.5 + 15
+	-- createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, BUTTON_Y_START)
 	GUI:setFocus(textBox)
 
 	-- add methods
-
-	-- does this call for a GUI:override(method) ?/
-
 	GUI.onResize = gui_default_on_resize
 	GUI.update = gui_default_update
+	if type(opts.on_exit_callback) == "function" then
+		GUI.onExitUserCallback = opts.on_exit_callback
+	end
 	GUI.onExit = gui_default_on_exit
 
 	GUI:init()
@@ -914,16 +899,8 @@ function _joinSettingsTables(t1, t2)
 end
 
 --
---
--- FIX: don't use ini. keep everything in a lua table.
---
---
--- TODO: create two tables
--- ~ ADD_TRACK_FX_OPTS = {}
--- ~ DEFAULT_OPTS = {}
---
--- i don't want to load all VST settings if I don't need them...
---
+-- NOTE: now loadSettings ONLY deals with options pertaining to the FX Finder
+-- picker.
 
 function loadSettings()
 	jSettingsCreate(SETTINGS_INI_FILE, SETTINGS_DEFAULT_FILE)
@@ -1073,38 +1050,6 @@ function loadSettings()
 		TEMPLATE_SUB_DIRS = TEMPLATE_SUB_DIRS,
 		FXCHAIN_SUB_DIRS = FXCHAIN_SUB_DIRS,
 	}
-
-	--
-	-- DEFAULT OPTIONS
-	--
-
-	-- RESULTS_PER_PAGE = jSettingsGet(SETTINGS, 'results_per_page', "number")
-	MAX_RESULTS = jSettingsGet(SETTINGS, "max_results", "number")
-	WINDOW_WIDTH = jSettingsGet(SETTINGS, "window_width", "number")
-	WINDOW_HEIGHT = jSettingsGet(SETTINGS, "window_height", "number")
-	WINDOW_X = jSettingsGet(SETTINGS, "window_x", "number")
-	WINDOW_Y = jSettingsGet(SETTINGS, "window_y", "number")
-	WINDOW_SAVE_STATE = jSettingsGet(SETTINGS, "window_save_state", "boolean")
-	WINDOW_DOCK_STATE = jSettingsGet(SETTINGS, "window_dock_state", "number")
-
-  -- TODO: replace this with GUI/self.gui_size
-
-	GUI_SIZE = jSettingsGet(SETTINGS, "gui_size", "number")
-
-	-- [gui]
-	-- ; Visual settings
-	-- max_results=50 ; total number of results in the list (lower makes it faster but you wont see everything)
-	-- window_width=500
-	-- window_height=250
-	-- window_x=100
-	-- window_y=100
-	-- window_dock_state=0
-	-- gui_size=20 ; The size ot the text, everything will scale accordingly
-	-- window_save_state=true ; remeber where the window was last time
-
-	--
-	-- TODO: take the values from the default file and move them to here.
-	--
 
 	--
 	-- ULTRASCHALL

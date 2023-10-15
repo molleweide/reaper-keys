@@ -1,7 +1,6 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
-
 local fzf = require("library.fzf.fzf")
 
 -- does some nested requires that requires fzf to be loaded first, (for now...)
@@ -225,6 +224,13 @@ pickers.add_track_fx = function()
 		entry_maker = require("entry_makers.add_fx"),
 		sort_comp = sortByRating,
 		results_filter = require("results_filter.add_fx"),
+		on_exit_callback = function(self)
+			if UPDATE_RATINGS then
+				table.sort(T_RESULTS, self.sort_comp)
+				jWriteVstData(DATA_INI_FILE, T_RESULTS)
+			  log.user("Updated ratings file!!")
+			end
+		end,
 	}
 
 	if fzf.init(opts, onenter) then
@@ -244,13 +250,13 @@ pickers.test_picker = function()
 
 	fzf.reset_variables()
 
-	if not loadSettings() then
-		msg(
-			"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
-				.. SETTINGS_INI_FILE
-		)
-		return false
-	end
+	-- if not loadSettings() then
+	-- 	msg(
+	-- 		"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
+	-- 			.. SETTINGS_INI_FILE
+	-- 	)
+	-- 	return false
+	-- end
 
 	local function onenter(i)
 		if not tSearchResults then

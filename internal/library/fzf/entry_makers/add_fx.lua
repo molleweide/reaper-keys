@@ -15,6 +15,8 @@ local function _makeColorsCatagory(b, info, color)
 	info.colors_label = color
 end
 
+-- TODO: SCROLL_RESULTS needs to be accessed via args
+
 local function entry_maker(tButtons, tResults)
 	for i, cIds in ipairs(tButtons) do
 		local b = cIds[1]
