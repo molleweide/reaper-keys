@@ -71,6 +71,8 @@ local settings = require("utils.j_settings_functions")
 
 require("gui2.JGui")
 
+-- TODO: remove this msg function -> replace all instances with `log.<level>`
+
 function msg(m)
 	return reaper.ShowConsoleMsg(tostring(m) .. "\n")
 end
@@ -84,8 +86,6 @@ local fzf = {}
 -- 3. pass the GUI ref to all callbacks, so that vars can be referenced further.
 -- (4.) RATINGS only pertain to FX list.
 --          this needs to be passed to the picker as an option cb..
---
--- GUI
 
 fzf.reset_variables = function()
 	UPDATE_RATINGS = false
@@ -94,6 +94,26 @@ fzf.reset_variables = function()
 	RESULT_COUNT = 0
 end
 
+
+--
+-- TODO: jscroll should be moved inside the GUI class
+--
+
+function _jScroll(amount)
+	SCROLL_RESULTS = SCROLL_RESULTS + amount
+	local maxScroll = RESULT_COUNT - RESULTS_PER_PAGE
+	if SCROLL_RESULTS > maxScroll then
+		SCROLL_RESULTS = maxScroll
+	end
+	if SCROLL_RESULTS < 0 then
+		SCROLL_RESULTS = 0
+	end
+	UPDATE_RESULTS = true
+end
+
+--
+-- NOTE: picker gui initiations
+--
 
 jGuiHighlightControl = jGuiControl:new({ highlight = {}, color_highlight = { 1, 0.9, 0, 0.2 } })
 
@@ -126,20 +146,6 @@ function jGuiHighlightControl:_drawLabel()
 
 	self:_setStateColor()
 	gfx.drawstr(tostring(self.label))
-end
-
--- TODO: jscroll should be moved inside the GUI class
-
-function _jScroll(amount)
-	SCROLL_RESULTS = SCROLL_RESULTS + amount
-	local maxScroll = RESULT_COUNT - RESULTS_PER_PAGE
-	if SCROLL_RESULTS > maxScroll then
-		SCROLL_RESULTS = maxScroll
-	end
-	if SCROLL_RESULTS < 0 then
-		SCROLL_RESULTS = 0
-	end
-	UPDATE_RESULTS = true
 end
 
 --
@@ -315,8 +321,7 @@ local function gui_default_update(self)
 			-- so that I can call GUI.make_filter_results()
 			--
 
-			self.t_search_results =
-				self.results_filter(self.t_results_data, textBox.value, false, self.max_results)
+			self.t_search_results = self.results_filter(self.t_results_data, textBox.value, false, self.max_results)
 
 			lastSearch = textBox.value
 		end
@@ -342,6 +347,11 @@ local function gui_default_on_exit(self)
 	if self.window_save_state then
 		local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
 		local dockstr = string.format("%d", dockstate)
+
+		-- TODO: is this a good location for this??..
+		--
+		-- maybe i should have custom save state for each picker by name/key?
+
 		settings.jSettingsWriteToFileMultiple(self.env.SETTINGS_INI_FILE, {
 			{ "gui", "window_x", math.tointeger(wx) },
 			{ "gui", "window_y", math.tointeger(wy) },
@@ -353,6 +363,10 @@ local function gui_default_on_exit(self)
 end
 
 --
+-- NOTE: init picker funcs below
+--
+
+--
 -- FIX: REQUIRED OPTS
 --
 --  ~ make results func
@@ -360,7 +374,7 @@ end
 --  ~ on_select func ??
 --
 
-function fzf.init(opts, on_enter)
+local function build_picker(opts, on_enter)
 	-- reaper.ClearConsole()
 	local DEFAULT_OPTS = {
 		max_results = 50,
@@ -413,12 +427,24 @@ function fzf.init(opts, on_enter)
 	return true
 end
 
-function loop()
+-- NOTE: - read up on what the defer function does??
+--       - what is gfx here?? does quit remove any and all instances of an object
+--         created with gfx??
+
+local function loop()
 	if GUI:loop() then
 		reaper.defer(loop)
 	else
 		gfx.quit()
 	end
 end
+
+fzf.init = function(opts, onenter)
+	if build_picker(opts, onenter) then
+		GUI:setReaperFocus()
+		loop()
+	end
+end
+
 -- fx-finder-settings.inifx-finder-data.ini
 return fzf

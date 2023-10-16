@@ -1,7 +1,7 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
-local fzf = require("library.fzf.fzf")
+local fzf = require("library.fzf")
 local fu = require("utils.fzf")
 local sf = require("utils.j_string_functions")
 local tf = require("utils.j_tables")
@@ -229,7 +229,7 @@ pickers.add_track_fx = function()
 		return true
 	end
 
-	local opts = {
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Fast FX Finder",
 		width = 1000,
@@ -248,14 +248,8 @@ pickers.add_track_fx = function()
 				log.user("Updated ratings file!!")
 			end
 		end,
-	}
+})
 
-	if fzf.init(opts, onenter) then
-		-- TODO: this logic should be put inside of init, so that I don't have to
-		-- keep reference of the GUI in this function
-		GUI:setReaperFocus()
-		loop()
-	end
 end
 
 ----------------------------------------------
@@ -289,7 +283,7 @@ pickers.test_picker = function()
 		return true
 	end
 
-	local opts = {
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Test Picker",
 		on_select_func = onenter,
@@ -349,14 +343,8 @@ pickers.test_picker = function()
 				end
 			end
 		end,
-	}
+})
 
-	if fzf.init(opts, onenter) then
-		-- TODO: this logic should be put inside of init, so that I don't have to
-		-- keep reference of the GUI in this function
-		GUI:setReaperFocus()
-		loop()
-	end
 end
 
 -- * WHAT THINGS CAN BE CONTROLLED VIA FZF:
@@ -413,7 +401,7 @@ pickers.browse_track_fx_list = function()
 		log.user("selectedTracks in browse_fx_list:", selectedTracks)
 	end
 
-	local opts = {
+	fzf.init({
 		title = "Browse track FX list",
 		on_select_func = onenter,
 		results = {
@@ -472,14 +460,17 @@ pickers.browse_track_fx_list = function()
 				end
 			end
 		end,
-	}
+	})
 
-	if fzf.init(opts, onenter) then
-		-- TODO: this logic should be put inside of init, so that I don't have to
-		-- keep reference of the GUI in this function
-		GUI:setReaperFocus()
-		loop()
-	end
+end
+
+--
+-- PICKERS: list all tracks
+--
+
+pickers.tracks = function()
+
+	-- TODO: reuse the get tracks from syntax tree here.
 end
 
 --
