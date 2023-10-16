@@ -3,6 +3,24 @@ local log = require('utils.log')
 local state_interface = require('state_machine.state_interface')
 local config = require('definitions.config')
 
+-- TEST:  1. set a temporary state if buildCommand(new_state) returns true
+--            build_state
+--            pre_exec_state.
+--            >>> this would allow me to access the state inside of the action
+--            instead which would be simplest.
+--            BUT
+--            why do I need temp state?
+--              why cant i just update the state incrementally?
+--        ~
+--        ~
+--        2. pass state down directly to action:
+--          replace all ASF func args with vararg. Then I'd know that 1 is always
+--          state, and remaining args are always the actions expected in the same order
+--          as the sequence table defines.
+--
+-- asf(...)
+-- state = select(1, ...)
+
 local function invalidSequenceCall(...)
   log.error("An action action_sequence without a command function was called.")
   log.trace(debug.traceback())
@@ -35,6 +53,7 @@ return {
     {
       { 'timeline_operator', 'timeline_motion' },
       function(timeline_operator, timeline_motion)
+
         local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 
         -- NOTE: create temporary selection that will be used later when applying

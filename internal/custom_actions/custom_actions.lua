@@ -169,8 +169,22 @@ function custom_actions.sidechainCompTracks(key_track_name)
   -- from ghost 1/2 into 3/4
 end
 
--- timeline_operator
-function custom_actions.insertMidiNotes()
+-- 1. this is a custom action
+--
+-- 2. it should be usable both as an operator, or as a motion.
+--
+-- 3. this requires differentiating whether we're executing as CMD or OP
+--
+-- 4. why? well, this action will both be used as an operator for inserting
+--    notes based on a motion, AND it will be used standalone using state
+--    to determine its parameters
+--
+--  FIX: rename to:
+--                    insert_midi_note_chunk
+--      why? well because this function can insert midi in many forms and
+--      therefore needs a bit more flexible.
+
+function custom_actions.insertMidiNotes(state)
   local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 
   local midi_insertion_data_default = {

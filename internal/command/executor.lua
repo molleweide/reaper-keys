@@ -27,6 +27,9 @@ local function executeCommand(command)
   -- log.debug("EXECUTE: act values = " .. format.block(action_values))
 
   -- execute action
+  --
+  -- NOTE: i would like to make new_state accessible as first parm in ASFs
+  --
   functionForCommand(table.unpack(action_values))
 end
 

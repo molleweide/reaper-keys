@@ -21,19 +21,19 @@ local feedback = require("gui.feedback.controller")
 ---@param key_press table
 ---@return table|nil, string|nil
 local function updateWithKeyPress(state, key_press)
-	local new_state = state
+  local new_state = state
 
-	if state["key_sequence"] == "" then
-		new_state["context"] = key_press["context"]
-	elseif state["context"] ~= key_press["context"] then
-		-- return err
-		return nil, "Undefined key sequence. Next key is in different context."
-	end
+  if state["key_sequence"] == "" then
+    new_state["context"] = key_press["context"]
+  elseif state["context"] ~= key_press["context"] then
+    -- return err
+    return nil, "Undefined key sequence. Next key is in different context."
+  end
 
-	local new_key_sequence = state["key_sequence"] .. key_press["key"]
-	new_state["key_sequence"] = new_key_sequence
+  local new_key_sequence = state["key_sequence"] .. key_press["key"]
+  new_state["key_sequence"] = new_key_sequence
 
-	return new_state, nil
+  return new_state, nil
 end
 
 -- compute new state from prev state and curr keypress
@@ -47,68 +47,91 @@ end
 ---@param key_press table
 ---@return table|nil
 local function step(state, key_press)
-	local message = ""
+  local message = ""
 
-	local new_state, err = updateWithKeyPress(state, key_press)
-	if err ~= nil then
-		new_state = state
-		new_state["key_sequence"] = ""
-		feedback.displayMessage(err)
-		return new_state
-	end
+  local new_state, err = updateWithKeyPress(state, key_press)
+  if err ~= nil then
+    new_state = state
+    new_state["key_sequence"] = ""
+    feedback.displayMessage(err)
+    return new_state
+  end
 
-	log.info("New key sequence: " .. new_state["key_sequence"])
+  log.info("New key sequence: " .. new_state["key_sequence"])
 
-	local command = buildCommand(new_state)
-	if command then
-		log.trace("Command built: " .. format.block(command))
-		new_state, message = handleCommand(new_state, command)
-		feedback.displayMessage(message)
-		return new_state
-	end
+  local command = buildCommand(new_state)
+  if command then
+    log.trace("Command built: " .. format.block(command))
 
-	local future_entries = getPossibleFutureEntries(new_state)
-	if not future_entries then
-		new_state["key_sequence"] = ""
-		feedback.displayMessage("Undefined key sequence")
-		return new_state
-	end
+    -- TEST: update state here half way through, so that current
+    -- state can be retrievable inside actions that vary behavior
+    -- depending on what ASF it is...
+    -- eg. operator/command
+    -- ~~~
+    -- ~~
+    -- the meta action file is getting and setting data with the
+    -- reaper_state file.
+    -- function reaper_state.set(table_name, lua_table)
+    --   local lua_table_string = serpent.dump(lua_table, { comment = false })
+    --   reaper.SetExtState(namespace, table_name, lua_table_string, true)
+    -- end
+    -- ~~
+    --    here:
+    --      reaper_state.setKeys('state2', new_state)
+    --    in_action:
+    --      local state = reaper_state.get('state2')
+    --    !!!!
+    --    !!! NOTE that this is a very simple solution which will allow
+    --    any custom action method to be reused across different types
+    --    of ASFs
 
-	message = format.keySequence(state["key_sequence"], true)
-	message = message .. "-"
-	feedback.displayMessage(message)
-	feedback.displayCompletions(future_entries)
+    new_state, message = handleCommand(new_state, command)
+    feedback.displayMessage(message)
+    return new_state
+  end
 
-	return new_state
+  local future_entries = getPossibleFutureEntries(new_state)
+  if not future_entries then
+    new_state["key_sequence"] = ""
+    feedback.displayMessage("Undefined key sequence")
+    return new_state
+  end
+
+  message = format.keySequence(state["key_sequence"], true)
+  message = message .. "-"
+  feedback.displayMessage(message)
+  feedback.displayCompletions(future_entries)
+
+  return new_state
 end
 
 --- Get state, compare to new state.
 ---@param key_press table eg. {['key'] = '<C-h>', ['context'] = 'main'}
 local function input(key_press)
-	log.info("\n+++++++++++++++++++++++++++++++++++++++++++\ninput: " .. format.line(key_press))
-	feedback.clear()
+  log.info("\n+++++++++++++++++++++++++++++++++++++++++++\ninput: " .. format.line(key_press))
+  feedback.clear()
 
-	-- if not reaper.JS_Window_Find then
-	-- 	reaper.MB("Please install js_ReaScriptAPI extension", "Error", 0)
-	-- 	return
-	-- end
+  -- if not reaper.JS_Window_Find then
+  -- 	reaper.MB("Please install js_ReaScriptAPI extension", "Error", 0)
+  -- 	return
+  -- end
 
-	-- -- log start
-	--     local tr = reaper.GetSelectedTrack(0,0)
-	-- local tci = reaper.TrackFX_GetChainVisible(tr)
-	-- log.debug("tci -> ".. tci)
-	-- -- log end
+  -- -- log start
+  --     local tr = reaper.GetSelectedTrack(0,0)
+  -- local tci = reaper.TrackFX_GetChainVisible(tr)
+  -- log.debug("tci -> ".. tci)
+  -- -- log end
 
-	local state = state_interface.get()
-	local new_state = step(state, key_press)
-	state_interface.set(new_state)
+  local state = state_interface.get()
+  local new_state = step(state, key_press)
+  state_interface.set(new_state)
 
-	feedback.displayState(new_state)
-	feedback.update()
+  feedback.displayState(new_state)
+  feedback.update()
 
-	log.info("new state: " .. format.block(new_state))
-	-- why am i printing at the end??
-	log.info("\n===========================================\ninput: " .. format.line(key_press))
+  log.info("new state: " .. format.block(new_state))
+  -- why am i printing at the end??
+  log.info("\n===========================================\ninput: " .. format.line(key_press))
 end
 
 return input

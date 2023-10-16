@@ -12,7 +12,7 @@ local state_interface = require('state_machine.state_interface')
 
 local runner = {}
 
-function runActionPart(id, midi_command)
+function runActionPart(id, is_reaper_midi_command)
   if type(id) == "function" then
     id()
     return
@@ -33,7 +33,7 @@ function runActionPart(id, midi_command)
     end
   end
 
-  if midi_command then
+  if is_reaper_midi_command then
     reaper.MIDIEditor_LastFocused_OnCommand(numeric_id, false)
   else
     reaper.Main_OnCommand(numeric_id, 0)
@@ -75,9 +75,9 @@ function runner.runAction(action)
     return
   end
 
-  midi_command = false
+  is_reaper_midi_command = false
   if action['midiCommand'] then
-    midi_command = true
+    is_reaper_midi_command = true
   end
 
   for i=1,repetitions*prefixedRepetitions do
@@ -85,7 +85,7 @@ function runner.runAction(action)
       if type(sub_action) == 'table' then
         runner.runAction(sub_action)
       else
-        runActionPart(sub_action, midi_command)
+        runActionPart(sub_action, is_reaper_midi_command)
       end
     end
   end
