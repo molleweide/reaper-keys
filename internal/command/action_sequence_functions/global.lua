@@ -36,8 +36,16 @@ return {
       { 'timeline_operator', 'timeline_motion' },
       function(timeline_operator, timeline_motion)
         local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+
+        -- NOTE: create temporary selection that will be used later when applying
+        -- the operator.
+        -- instead of passing positions to the operator, the operator gets the positions
+        -- from the temporary selection which is then set back.
         runner.makeSelectionFromTimelineMotion(timeline_motion, 1)
+
         runner.runAction(timeline_operator)
+
+        -- reset temp selection
         if type(timeline_operator) ~= 'table' or not timeline_operator['setTimeSelection'] then
           reaper.GetSet_LoopTimeRange(true, false, start_sel, end_sel, false)
         end

@@ -24,19 +24,15 @@ local RK_FZF_ENV = {
 
 local pickers = {}
 
--- leader j f
-
-----------------------------------------------
+--
 --
 --
 
 pickers.add_track_fx = function()
-	p = JProject:new()
 
-	fzf.reset_variables()
+  -- TODO: maybe plugins data loading should go into the PROJECTS class?
 
 	local ok, plugins_data = data_loaders.load_plugins_data(RK_FZF_ENV)
-
 	if not ok then
 		msg(
 			"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
@@ -107,7 +103,7 @@ pickers.add_track_fx = function()
 
 		self.t_results_data[fx.id].rating = self.t_results_data[fx.id].rating + 1
 
-		reaper.Undo_BeginBlock2(p:getId())
+		reaper.Undo_BeginBlock2(J_PROJECT_DATA:getId())
 
 		if fx.tracktemplate then
 			-- This is a template, insert it
@@ -115,12 +111,12 @@ pickers.add_track_fx = function()
 		elseif fx.fxchain then
 			if not GUI.kb.control() then -- Control not held, insert on tracks
 				-- Adds an FXCHAIN to a track. If there are no FX on the track an empty chain will be created first
-				local selectedTracks = p:selectedTracks(0, 0, true)
+				local selectedTracks = J_PROJECT_DATA:selectedTracks(0, 0, true)
 				local bCreatedChain = false
 
 				for _, t in pairs(selectedTracks) do
 					if t.fxcount == 0 then
-						p:unselectAllTracks()
+						J_PROJECT_DATA:unselectAllTracks()
 						t.selected = 1
 						jCreateTrackChainForSelectedTracks()
 						bCreatedChain = true
@@ -150,7 +146,7 @@ pickers.add_track_fx = function()
 				-- LEAVE THIS FOR FUTURE !!!!!!!!!!
 				-- else -- control held, try to add chain to items
 				-- reaper.ClearConsole()
-				-- for i in p:selectedItems() do
+				-- for i in J_PROJECT_DATA:selectedItems() do
 				-- 	local take = i:getActiveTake()
 				-- 	local chunk = i:getStateChunk()
 				-- 	local takeNumber = math.tointeger(take.number)
@@ -207,14 +203,14 @@ pickers.add_track_fx = function()
 				fxString = typeInfo .. fu._removeVstiString(self.t_results_data[fx.id].name)
 			end
 			if not GUI.kb.control() then -- Control not held, insert on tracks
-				for t in p:selectedTracks() do
+				for t in J_PROJECT_DATA:selectedTracks() do
 					local r = t:addFx(fxString)
 					if r then
 						r:show(pluginsData.TRACK_SHOW_FLAG)
 					end
 				end
 			else -- Control held, insert on items
-				for i in p:selectedItems() do
+				for i in J_PROJECT_DATA:selectedItems() do
 					local take = i:getActiveTake()
 					local r = take:addFx(fxString)
 					if r >= 0 then
@@ -223,7 +219,7 @@ pickers.add_track_fx = function()
 				end
 			end
 		end
-		reaper.Undo_EndBlock2(p:getId(), "FAST FX FINDER: Add Fx", 0)
+		reaper.Undo_EndBlock2(J_PROJECT_DATA:getId(), "FAST FX FINDER: Add Fx", 0)
 
 		UPDATE_RATINGS = true
 		return true
@@ -252,15 +248,11 @@ pickers.add_track_fx = function()
 
 end
 
-----------------------------------------------
+--
 --
 --
 
 pickers.test_picker = function()
-	p = JProject:new()
-
-	fzf.reset_variables()
-
 	-- if not loadSettings() then
 	-- 	msg(
 	-- 		"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
@@ -322,7 +314,6 @@ pickers.test_picker = function()
 				local info = cIds[2]
 				local iStart = fu._round(i + SCROLL_RESULTS)
 				local highlights = sf.jStringExplode(textBox.value, " ")
-
 				local showing
 				if iStart <= #tResults then
 					showing = iStart
@@ -330,7 +321,79 @@ pickers.test_picker = function()
 					showing = #tResults
 				end
 				LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
+				if tResults and iStart <= #tResults then
+					local item = tResults[iStart]
+					b.label = item
+					b.visible = true
+					info.visible = true
+					b.highlight = highlights
+				else
+					b.visible = false
+					info.visible = false
+				end
+			end
+		end,
+})
 
+end
+
+--
+-- picker: list all tracks
+--
+
+pickers.tracks = function()
+
+	-- TODO: reuse the get tracks from syntax tree here.
+
+  -- how do I get all tracks from vtt
+
+
+	fzf.init({
+		env = RK_FZF_ENV,
+		title = "Test Picker",
+		on_select_func = onenter,
+		results = {
+			"this",
+			"is",
+			"a",
+			"picker",
+			"test",
+			"xxxxxx",
+			"aaaaaa",
+			"vvvvvv",
+			"arst",
+			"XXX",
+			"89",
+			"=644ney",
+			"9n$)",
+			"(()())",
+		},
+		sort_comp = function(a, b)
+			if a > b then
+				return true
+			elseif a == b then
+				return a < b
+			else
+				return false
+			end
+		end,
+		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+			-- what todo here ??
+			return vstTable
+		end,
+		entry_maker = function(tButtons, tResults)
+			for i, cIds in ipairs(tButtons) do
+				local b = cIds[1]
+				local info = cIds[2]
+				local iStart = fu._round(i + SCROLL_RESULTS)
+				local highlights = sf.jStringExplode(textBox.value, " ")
+				local showing
+				if iStart <= #tResults then
+					showing = iStart
+				else
+					showing = #tResults
+				end
+				LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
 				if tResults and iStart <= #tResults then
 					local item = tResults[iStart]
 					b.label = item
@@ -396,7 +459,7 @@ pickers.browse_track_fx_list = function()
 	end
 
 	local make_results = function()
-		local selectedTracks = p:selectedTracks(0, 0, true)
+		local selectedTracks = J_PROJECT_DATA:selectedTracks(0, 0, true)
 
 		log.user("selectedTracks in browse_fx_list:", selectedTracks)
 	end
@@ -462,15 +525,6 @@ pickers.browse_track_fx_list = function()
 		end,
 	})
 
-end
-
---
--- PICKERS: list all tracks
---
-
-pickers.tracks = function()
-
-	-- TODO: reuse the get tracks from syntax tree here.
 end
 
 --

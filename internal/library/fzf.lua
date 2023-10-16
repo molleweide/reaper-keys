@@ -94,7 +94,6 @@ fzf.reset_variables = function()
 	RESULT_COUNT = 0
 end
 
-
 --
 -- TODO: jscroll should be moved inside the GUI class
 --
@@ -440,6 +439,14 @@ local function loop()
 end
 
 fzf.init = function(opts, onenter)
+
+  -- p is currently only accessed in picker definitions in [ internals/pickers ]
+  --
+  -- TODO: rename this variable
+
+	J_PROJECT_DATA = JProject:new()
+	fzf.reset_variables()
+
 	if build_picker(opts, onenter) then
 		GUI:setReaperFocus()
 		loop()

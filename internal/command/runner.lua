@@ -6,6 +6,10 @@ local format = require('utils.format')
 local reaper_utils = require('custom_actions.utils')
 local state_interface = require('state_machine.state_interface')
 
+--
+-- This file is responsible for running the actions of my action sequences.
+--
+
 local runner = {}
 
 function runActionPart(id, midi_command)

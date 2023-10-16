@@ -54,7 +54,7 @@ return {
   timeline_operator = {
     ["s"] = "SelectItemsAndSplit",
     ["<M-p>"] = "CopyAndFitByLooping",
-    ["<M-s>"] = "SeletEnvelopePoints",
+    ["<M-s>"] = "SelectEnvelopePoints",
     ["d"] = "CutItems",
     ["y"] = "CopyItems",
     ["<C-c>"] = "CopyItems",

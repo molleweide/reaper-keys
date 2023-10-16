@@ -4,10 +4,15 @@
 @noindex
 --]]
 
+-- TODO: maybe my track syntax should leverage this project class so that
+-- vtt can be a class with
+-- VTT = virtual_track_tree:new(opts = {})
+
 -- J_SCRIPT_DIR = reaper.GetResourcePath() .. "/Scripts/LUA/"
 -- package.path = package.path .. ";" .. J_SCRIPT_DIR .. "?.lua"
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua"
+
 require('gui2.JProjectClassReq')
 
 -- TODO:
