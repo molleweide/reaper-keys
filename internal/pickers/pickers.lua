@@ -28,7 +28,9 @@ local pickers = {}
 --
 --
 
-pickers.add_track_fx = function()
+pickers.add_track_fx = function(meta)
+
+  log.user(format.block(meta))
 
   -- TODO: maybe plugins data loading should go into the PROJECTS class?
 

@@ -25,6 +25,7 @@ return {
   },
   command = {
     ["C"] = "InsertNoteBlockCommand", -- testing
+    ["G"] = "MidiBlockPickerOperator", -- testing
     ["n"] = "AddNextNoteToSelection",
     ["N"] = "AddPrevNoteToSelection",
     ["+"] = "MidiZoomInHoriz",

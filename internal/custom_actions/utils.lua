@@ -1,4 +1,4 @@
-local log = require('utils.log')
+local log = require("utils.log")
 
 local utils = {}
 
@@ -6,7 +6,7 @@ function mergeItemPositionsLists(item_positions_list)
   local merged_list = {}
 
   function areRemainingItems()
-    for i,item_positions in ipairs(item_positions_list) do
+    for i, item_positions in ipairs(item_positions_list) do
       if #item_positions_list[i] ~= 0 then
         return true
       end
@@ -16,7 +16,7 @@ function mergeItemPositionsLists(item_positions_list)
 
   while areRemainingItems() do
     local next_item = nil
-    for i,item_positions in ipairs(item_positions_list) do
+    for i, item_positions in ipairs(item_positions_list) do
       local next_item_for_this_list = item_positions[1]
       if next_item_for_this_list then
         if not next_item or next_item_for_this_list.left < next_item.left then
@@ -35,16 +35,16 @@ end
 
 function getItemPositionsOnTracks(tracks)
   local item_positions_lists = {}
-  for i=1,#tracks do
+  for i = 1, #tracks do
     local current_track = tracks[i]
     local item_positions = {}
     local num_items_on_track = reaper.GetTrackNumMediaItems(current_track)
 
-    for j=1,num_items_on_track do
-      local item = reaper.GetTrackMediaItem(current_track, j-1)
+    for j = 1, num_items_on_track do
+      local item = reaper.GetTrackMediaItem(current_track, j - 1)
       local start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
       local length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-      item_positions[j] = {left=start, right=start+length}
+      item_positions[j] = { left = start, right = start + length }
     end
 
     item_positions_lists[i] = item_positions
@@ -56,8 +56,8 @@ end
 
 function utils.getItemPositionsOnSelectedTracks()
   local selected_tracks = {}
-  for i=0,reaper.CountSelectedTracks() do
-    selected_tracks[i] = reaper.GetSelectedTrack(0, i-1)
+  for i = 0, reaper.CountSelectedTracks() do
+    selected_tracks[i] = reaper.GetSelectedTrack(0, i - 1)
   end
 
   return getItemPositionsOnTracks(selected_tracks)
@@ -73,12 +73,12 @@ function utils.getBigItemPositionsOnSelectedTracks()
 
   local j = 1
   big_item_positions[j] = item_positions[1]
-  for i=1,#item_positions do
+  for i = 1, #item_positions do
     local next_item = item_positions[i]
     local current_big_item = big_item_positions[j]
     if next_item.left <= current_big_item.right and next_item.right > current_big_item.right then
-       current_big_item.right = next_item.right
-       big_item_positions[j] = current_big_item
+      current_big_item.right = next_item.right
+      big_item_positions[j] = current_big_item
     end
 
     if next_item.left > current_big_item.right then
@@ -92,7 +92,7 @@ end
 
 function utils.selectRegion(id)
   local ok, is_region, start_pos, end_pos, _, got_id = reaper.EnumProjectMarkers(id)
-  if ok and is_region  then
+  if ok and is_region then
     reaper.GetSet_LoopTimeRange(true, false, start_pos, end_pos, false)
     return true
   end
@@ -149,12 +149,13 @@ end
 -- any kind of base track functions.
 function utils.getGUIDByTrack(tr)
   for i = 0, reaper.CountTracks(0) - 1 do
-    local GUID = reaper.GetTrackGUID( tr )
-    if GUID ~= nil or GUID ~= "" then return GUID end
+    local GUID = reaper.GetTrackGUID(tr)
+    if GUID ~= nil or GUID ~= "" then
+      return GUID
+    end
   end
   return false
 end
-
 
 -- add return track name also??
 function utils.getTrackByGUID(search_guid)
@@ -162,9 +163,11 @@ function utils.getTrackByGUID(search_guid)
   -- if type(tr) == 'userdata' then return tr else return false end
   -- or just nil >> but it is really nice to get idx together with guid sometimes..
   for i = 0, reaper.CountTracks(0) - 1 do
-    local tr = reaper.GetTrack(0,i)
-    local GUID = reaper.GetTrackGUID( tr )
-    if GUID == search_guid then return tr, i end
+    local tr = reaper.GetTrack(0, i)
+    local GUID = reaper.GetTrackGUID(tr)
+    if GUID == search_guid then
+      return tr, i
+    end
   end
   return false
 end
@@ -181,9 +184,9 @@ end
 function utils.getSelectedTracks()
   local selected_tracks = {}
   local n_tracks = reaper.CountSelectedTracks()
-  for i=0,reaper.CountSelectedTracks()-1 do
+  for i = 0, reaper.CountSelectedTracks() - 1 do
     local track = reaper.GetSelectedTrack(0, i)
-    selected_tracks[i+1] = track
+    selected_tracks[i + 1] = track
   end
   return selected_tracks
 end
@@ -191,9 +194,9 @@ end
 function utils.getSelectedTracksGUIDs()
   local t = {}
   for i = 1, reaper.CountSelectedTracks(0) do
-    local tr = reaper.GetSelectedTrack(0,i-1)
+    local tr = reaper.GetSelectedTrack(0, i - 1)
     local _, current_name = reaper.GetTrackName(tr)
-    t[#t+1] = { name = current_name, guid = reaper.GetTrackGUID( tr ) }
+    t[#t + 1] = { name = current_name, guid = reaper.GetTrackGUID(tr) }
   end
   return t
 end
@@ -202,7 +205,7 @@ function utils.setTrackSelection(indices)
   local ScrollToSelectedTracks = 40913
   utils.unselectTracks()
   if indices then
-    for _,track_index in ipairs(indices) do
+    for _, track_index in ipairs(indices) do
       local track = reaper.GetTrack(0, track_index)
       if track then
         reaper.SetTrackSelected(track, true)
@@ -230,7 +233,7 @@ function utils.setCurrentTrack(index)
 
     local new_selection = previously_selected
     if previous_position and new_selection then
-      for i,selected_track_i in ipairs(new_selection) do
+      for i, selected_track_i in ipairs(new_selection) do
         if selected_track_i == previous_position then
           table.remove(new_selection, i)
         end
@@ -255,16 +258,27 @@ end
 function utils.getSelectedTrackIndices()
   local selected_tracks = utils.getSelectedTracks()
   local selected_track_indices = {}
-  for i,track in ipairs(selected_tracks) do
+  for i, track in ipairs(selected_tracks) do
     selected_track_indices[i] = reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") - 1
   end
   return selected_track_indices
 end
 
 function utils.unselectTracks()
-  for i,track in ipairs(utils.getSelectedTracks()) do
+  for i, track in ipairs(utils.getSelectedTracks()) do
     reaper.SetTrackSelected(track, false)
   end
+end
+
+function utils.getMidiValidContext()
+  local ME = reaper.MIDIEditor_GetActive()
+  local take = reaper.MIDIEditor_GetTake(ME)
+
+  local retval = true
+  if not ME or (not take or not reaper.TakeIsMIDI(take)) then
+    retval = false
+  end
+  return retval, ME, take
 end
 
 return utils
