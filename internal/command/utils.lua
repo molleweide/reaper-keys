@@ -1,7 +1,7 @@
-local string_util = require('string')
-local log = require('utils.log')
+local string_util = require("string")
+local log = require("utils.log")
 -- local format = require('utils.format')
-local ser = require('serpent')
+local ser = require("serpent")
 
 local utils = {}
 
@@ -15,7 +15,7 @@ function utils.stripBegginingKeys(full_key_sequence, start_key_sequence)
   end
 
   rest_of_sequence = ""
-  for i=1,#start_key_sequence do
+  for i = 1, #start_key_sequence do
     next_key, rest_of_sequence = utils.splitFirstKey(full_key_sequence)
     next_key_in_start = utils.splitFirstKey(start_key_sequence)
     if next_key_in_start ~= next_key then
@@ -35,14 +35,14 @@ end
 
 function utils.filterEntries(options, entries)
   local filtered_entries = {}
-  for key_seq,entry_val in pairs(entries) do
+  for key_seq, entry_val in pairs(entries) do
     if utils.isFolder(entry_val) then
       local folder = entry_val
       local folder_name = folder[1]
       local folder_table = folder[2]
       local filtered_entries_for_folder = utils.filterEntries(options, folder_table)
       if not noNextTableEntry(filtered_entries_for_folder) then
-        filtered_entries[key_seq] = {folder_name, filtered_entries_for_folder}
+        filtered_entries[key_seq] = { folder_name, filtered_entries_for_folder }
       end
     else
       local action_name = entry_val
@@ -70,21 +70,21 @@ function utils.checkIfActionHasOptionSet(action_name, option_name)
   end
 
   local action = getAction(action_name)
-  if action and type(action) == 'table' and action[option_name] then
+  if action and type(action) == "table" and action[option_name] then
     return true
   end
   return false
 end
 
 function utils.checkIfCommandsAreEqual(command1, command2)
-  if ser.block(command1, {comment=false}) == ser.block(command2, {comment=false}) then
+  if ser.block(command1, { comment = false }) == ser.block(command2, { comment = false }) then
     return true
   end
   return false
 end
 
 function utils.getActionTypeIndex(command, action_type)
-  for i,current_action_type in pairs(command.action_sequence) do
+  for i, current_action_type in pairs(command.action_sequence) do
     if current_action_type == action_type then
       return i
     end
@@ -97,7 +97,7 @@ function utils.getEntry(key_sequence, entries)
     return entries[key_sequence]
   end
   for k, sub_command_name in pairs(entries) do
-    if actions[sub_command_name]['format'] then
+    if actions[sub_command_name]["format"] then
       local match = string_util.match(key_sequence, k)
       if match then
       end
@@ -136,12 +136,12 @@ end
 
 function utils.splitKeysIntoTable(key_sequence)
   -- lua unfortunately has no '|' (or) operator in regex, so I make multiple and iterate
-  local key_capture_regex = {'^(<[^<>]+>)', '^(<[^<>]+[<>]>)', '^.'}
+  local key_capture_regex = { "^(<[^<>]+>)", "^(<[^<>]+[<>]>)", "^." }
 
   local keys = {}
   local i = 1
   while i <= #key_sequence do
-    for _,capture_regex in ipairs(key_capture_regex) do
+    for _, capture_regex in ipairs(key_capture_regex) do
       local next_key = string.match(key_sequence, capture_regex, i)
       if next_key then
         table.insert(keys, next_key)
@@ -177,22 +177,22 @@ function utils.getEntryForKeySequence(key_sequence, entries)
   local possible_folder = entries[first_key]
   if rest_of_key_sequence and utils.isFolder(possible_folder) then
     local folder_table = possible_folder[2]
-    return utils.getEntryForKeySequence(rest_of_key_sequence,  folder_table)
+    return utils.getEntryForKeySequence(rest_of_key_sequence, folder_table)
   end
   return nil
 end
 
 function table.shallow_copy(t)
   local t2 = {}
-  for k,v in pairs(t) do
+  for k, v in pairs(t) do
     t2[k] = v
   end
   return t2
 end
 
 function utils.getActionValue(action_key, action_type)
-  if type(action_key) ~= 'table' then
-    action_key = {action_key}
+  if type(action_key) ~= "table" then
+    action_key = { action_key }
   end
 
   local action_name = action_key[1]
@@ -203,8 +203,10 @@ function utils.getActionValue(action_key, action_type)
   end
 
   local action_value = table.shallow_copy(action_key)
-  if type(action) == 'table' then
-    for k,v in pairs(action) do action_value[k] = v end
+  if type(action) == "table" then
+    for k, v in pairs(action) do
+      action_value[k] = v
+    end
   else
     action_value[1] = action
   end
@@ -214,13 +216,19 @@ end
 
 function utils.getActionValues(command)
   local action_values = {}
-  for i,action_type in pairs(command.action_sequence) do
-      local action_value = utils.getActionValue(command.action_keys[i], action_type)
-      if not action_value then
-        return nil
-      end
-      table.insert(action_values, action_value)
+  for i, action_type in pairs(command.action_sequence) do
+    local action_value = utils.getActionValue(command.action_keys[i], action_type)
+    if not action_value then
+      return nil
     end
+    -- attach meta data so that I can access this in the action
+    -- itself.
+    action_value.meta = {
+      action_key = command.action_keys[i],
+      action_type = action_type,
+    }
+    table.insert(action_values, action_value)
+  end
   return action_values
 end
 

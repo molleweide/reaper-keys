@@ -14,7 +14,7 @@ require("gui2.JGuiColors")
 require("gui2.JGuiControls")
 require("gui2.JGuiFunctions")
 
-log.user("###### J_SCRIPT_DIR:", J_SCRIPT_DIR)
+-- log.user("###### J_SCRIPT_DIR:", J_SCRIPT_DIR)
 
 ----------
 -- This GUI class deals with the GUI and sending mouse info to the controls in it

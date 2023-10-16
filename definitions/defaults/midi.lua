@@ -7,6 +7,7 @@ return {
     ["y"] = "CopyNotes",
     ["c"] = "FitNotes",
     ["a"] = "InsertNote",
+    ["A"] = "InsertNoteBlock", -- testing
     ["g"] = "JoinNotes",
     ["s"] = "SelectNotes",
     ["z"] = "MidiZoomTimeSelection",
@@ -23,6 +24,7 @@ return {
     ["e"] = "EventSelectionEnd",
   },
   command = {
+    ["C"] = "InsertNoteBlockCommand", -- testing
     ["n"] = "AddNextNoteToSelection",
     ["N"] = "AddPrevNoteToSelection",
     ["+"] = "MidiZoomInHoriz",

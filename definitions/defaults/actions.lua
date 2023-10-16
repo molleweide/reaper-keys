@@ -3,6 +3,8 @@ local custom = require("custom_actions")
 local media_explorer = require("library.media_explorer")
 local midi2vox = require("library.vox_to_midi")
 local dev = require("utils.dev")
+
+-- this one should be included in the `custom_actions` namespace
 local midi_patterns = require("custom_actions.midi_patterns")
 
 return {
@@ -154,6 +156,8 @@ return {
 		"SelectNearestNote",
 		"FitNotes",
 	},
+	InsertNoteBlock = custom.insertMidiNoteChunk,
+	InsertNoteBlockCommand = custom.insertMidiNoteChunk,
 	InsertOrExtendMidiItem = 42069,
 	InsertTrackFromTrackTemplate = 46000,
 	InsertTrackAbove = { "_SWS_INSRTTRKABOVE", prefixRepetitionCount = true },

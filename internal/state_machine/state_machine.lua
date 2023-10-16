@@ -60,31 +60,9 @@ local function step(state, key_press)
   log.info("New key sequence: " .. new_state["key_sequence"])
 
   local command = buildCommand(new_state)
+
   if command then
     log.trace("Command built: " .. format.block(command))
-
-    -- TEST: update state here half way through, so that current
-    -- state can be retrievable inside actions that vary behavior
-    -- depending on what ASF it is...
-    -- eg. operator/command
-    -- ~~~
-    -- ~~
-    -- the meta action file is getting and setting data with the
-    -- reaper_state file.
-    -- function reaper_state.set(table_name, lua_table)
-    --   local lua_table_string = serpent.dump(lua_table, { comment = false })
-    --   reaper.SetExtState(namespace, table_name, lua_table_string, true)
-    -- end
-    -- ~~
-    --    here:
-    --      reaper_state.setKeys('state2', new_state)
-    --    in_action:
-    --      local state = reaper_state.get('state2')
-    --    !!!!
-    --    !!! NOTE that this is a very simple solution which will allow
-    --    any custom action method to be reused across different types
-    --    of ASFs
-
     new_state, message = handleCommand(new_state, command)
     feedback.displayMessage(message)
     return new_state
@@ -131,7 +109,7 @@ local function input(key_press)
 
   log.info("new state: " .. format.block(new_state))
   -- why am i printing at the end??
-  log.info("\n===========================================\ninput: " .. format.line(key_press))
+  log.info("\n===========================================\n\n")
 end
 
 return input

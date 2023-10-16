@@ -5,6 +5,8 @@ local utils = require('command.utils')
 
 local function executeCommand(command)
 
+  -- log.user("COMMAND:", format.block(command))
+
   -- act values = {
   --   {
   --     40286,
@@ -27,9 +29,8 @@ local function executeCommand(command)
   -- log.debug("EXECUTE: act values = " .. format.block(action_values))
 
   -- execute action
-  --
-  -- NOTE: i would like to make new_state accessible as first parm in ASFs
-  --
+  -- log.user("ACTION_VALUES:", format.block(action_values))
+  -- log.user("UNPACKED:", type(action_values[1]), format.block(action_values[2]))
   functionForCommand(table.unpack(action_values))
 end
 

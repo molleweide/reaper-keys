@@ -184,62 +184,70 @@ end
 --      why? well because this function can insert midi in many forms and
 --      therefore needs a bit more flexible.
 
-function custom_actions.insertMidiNotes(state)
+function custom_actions.insertMidiNoteChunk(meta)
   local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 
-  local midi_insertion_data_default = {
-    selected = false,
-    muted = false,
-    chan = 0,
-    noSortIn = true,
-  }
+  log.user("META:", format.block(meta))
 
-  local ret, ME, take = utils.getMidiValidContext()
-  if not ret then
-    return
+  if meta.action_type == "timeline_operator" then
+    log.user("OP")
+  elseif meta.action_type == "command" then
+    log.user("CMD")
   end
 
-  local cursor_pos = reaper.GetCursorPosition()
-  local t_midi_events = { reaper.MIDI_CountEvts(take) }
-  local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
-  local t_pattern = {}
-  local sixteen_note_len = 0.125
-  local note_end_gap = 0.005
-  local note_duration = sixteen_note_len - note_end_gap
-  local retval, measures, cml, fullbeats, cdenom = reaper.TimeMap2_timeToBeats(0, cursor_pos)
-
-  remove_note_row(take, t_midi_events, active_note_row)
-
-  -- log.user(">>>", cursor_pos, retval, measures, cml, fullbeats, cdenom)
-
-  for i = 0, 15 do
-    local note_start = i * sixteen_note_len
-    table.insert(t_pattern, {
-      flag = randomBool(),
-      time_pos_start = note_start,
-      time_pos_end = note_start + note_duration,
-    })
-  end
-
-  log.user(format.block(t_pattern))
-
-  for _, t_note in ipairs(t_pattern) do
-    if t_note.flag then
-      local ret = reaper.MIDI_InsertNote(
-        take,
-        midi_insertion_data_default.selected,
-        midi_insertion_data_default.muted,
-        reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
-        reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
-        midi_insertion_data_default.chan,
-        active_note_row,
-        80,
-        midi_insertion_data_default.noSortIn
-      )
-    end
-  end
-
-  reaper.MIDI_Sort(take)
+  -- local midi_insertion_data_default = {
+  --   selected = false,
+  --   muted = false,
+  --   chan = 0,
+  --   noSortIn = true,
+  -- }
+  --
+  -- local ret, ME, take = utils.getMidiValidContext()
+  -- if not ret then
+  --   return
+  -- end
+  --
+  -- local cursor_pos = reaper.GetCursorPosition()
+  -- local t_midi_events = { reaper.MIDI_CountEvts(take) }
+  -- local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
+  -- local t_pattern = {}
+  -- local sixteen_note_len = 0.125
+  -- local note_end_gap = 0.005
+  -- local note_duration = sixteen_note_len - note_end_gap
+  -- local retval, measures, cml, fullbeats, cdenom = reaper.TimeMap2_timeToBeats(0, cursor_pos)
+  --
+  -- remove_note_row(take, t_midi_events, active_note_row)
+  --
+  -- -- log.user(">>>", cursor_pos, retval, measures, cml, fullbeats, cdenom)
+  --
+  -- for i = 0, 15 do
+  --   local note_start = i * sixteen_note_len
+  --   table.insert(t_pattern, {
+  --     flag = randomBool(),
+  --     time_pos_start = note_start,
+  --     time_pos_end = note_start + note_duration,
+  --   })
+  -- end
+  --
+  -- log.user(format.block(t_pattern))
+  --
+  -- for _, t_note in ipairs(t_pattern) do
+  --   if t_note.flag then
+  --     local ret = reaper.MIDI_InsertNote(
+  --       take,
+  --       midi_insertion_data_default.selected,
+  --       midi_insertion_data_default.muted,
+  --       reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
+  --       reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
+  --       midi_insertion_data_default.chan,
+  --       active_note_row,
+  --       80,
+  --       midi_insertion_data_default.noSortIn
+  --     )
+  --   end
+  -- end
+  --
+  -- reaper.MIDI_Sort(take)
 end
 
 return custom_actions

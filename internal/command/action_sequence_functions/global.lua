@@ -1,7 +1,9 @@
-local runner = require('command.runner')
-local log = require('utils.log')
-local state_interface = require('state_machine.state_interface')
-local config = require('definitions.config')
+local log = require("utils.log")
+local format = require("utils.format")
+local runner = require("command.runner")
+local log = require("utils.log")
+local state_interface = require("state_machine.state_interface")
+local config = require("definitions.config")
 
 -- TEST:  1. set a temporary state if buildCommand(new_state) returns true
 --            build_state
@@ -31,28 +33,29 @@ end
 return {
   all_modes = {
     {
-      { 'command' },
+      { "command" },
       function(action)
         runner.runAction(action)
-      end
+      end,
     },
   },
   normal = {
     {
-      { 'timeline_operator', 'timeline_selector' },
+      { "timeline_operator", "timeline_selector" },
       function(timeline_operator, timeline_selector)
         local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
         runner.runAction(timeline_selector)
         runner.runAction(timeline_operator)
 
-        if type(timeline_operator) ~= 'table' or not timeline_operator['setTimeSelection'] then
+        if type(timeline_operator) ~= "table" or not timeline_operator["setTimeSelection"] then
           reaper.GetSet_LoopTimeRange(true, false, start_sel, end_sel, false)
         end
-      end
+      end,
     },
     {
-      { 'timeline_operator', 'timeline_motion' },
+      { "timeline_operator", "timeline_motion" },
       function(timeline_operator, timeline_motion)
+        log.user("ASF:", format.block(timeline_operator), format.block(timeline_motion))
 
         local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 
@@ -65,56 +68,56 @@ return {
         runner.runAction(timeline_operator)
 
         -- reset temp selection
-        if type(timeline_operator) ~= 'table' or not timeline_operator['setTimeSelection'] then
+        if type(timeline_operator) ~= "table" or not timeline_operator["setTimeSelection"] then
           reaper.GetSet_LoopTimeRange(true, false, start_sel, end_sel, false)
         end
-      end
+      end,
     },
     {
-      { 'timeline_motion' },
+      { "timeline_motion" },
       function(timeline_motion)
         runner.runAction(timeline_motion)
-      end
+      end,
     },
   },
   visual_timeline = {
     {
-      { 'visual_timeline_command' },
+      { "visual_timeline_command" },
       function(visual_timeline_command)
         runner.runAction(visual_timeline_command)
-      end
+      end,
     },
     {
-      { 'timeline_operator' },
+      { "timeline_operator" },
       function(timeline_operator)
         runner.runAction(timeline_operator)
         state_interface.setModeToNormal()
-        if not config['persist_visual_timeline_selection'] then
+        if not config["persist_visual_timeline_selection"] then
           runner.runAction("ClearTimeSelection")
         end
-      end
+      end,
     },
     {
-      { 'timeline_selector' },
+      { "timeline_selector" },
       function(timeline_selector)
         runner.runAction(timeline_selector)
-      end
+      end,
     },
     {
-      { 'timeline_motion' },
+      { "timeline_motion" },
       function(timeline_motion)
-        local args = {timeline_motion}
+        local args = { timeline_motion }
         local move_function = runner.runAction
         runner.extendTimelineSelection(move_function, args)
-      end
+      end,
     },
   },
   vkb = {
     {
-      { 'vkb_command' },
+      { "vkb_command" },
       function(action)
         runner.runAction(action)
-      end
+      end,
     },
   },
 }
