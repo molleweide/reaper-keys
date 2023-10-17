@@ -5,6 +5,11 @@ local format = require("utils.format")
 local fx = require("library.fx")
 local io = require("definitions.io")
 
+-- FIX: all custom actions should recieve an `opts` table from the
+-- runner function, so that you always know that you have all the info
+-- about the current state of new_state and all that pertains to the
+-- command.
+
 local utils = require("custom_actions.utils")
 
 --  Motion start/end points can be retrieved with the (temporary selection)
@@ -277,4 +282,76 @@ custom_actions.midiChordPicker = function(meta, opts)
     next = custom_actions.insertMidiNoteChunk,
   })
 end
+
+--
+-- fuzzy picker actions for jumping to objects
+--
+--   marker
+--   region
+--   item audio/midi
+--   take
+--   note
+--      by name
+--
+--      this would allow one to search around fast as fuck.
+
+local function moveFocusAndCursorToObjectAndDo(opts)
+  opts = opts or {}
+  log.user("MOVE TO OBJ ->", log.user(opts))
+
+  if opts.type == "item" then
+    pickers.all_items(meta, {
+      next = function(meta, next_opts)
+        -- with selected item do wath
+        if opts.midi == "enter" then
+          log.user("JUMP TO AND ENTER MIDI")
+
+          -- jump to midi item and enter MIDI Editor
+        else
+          -- jump to item in main
+          log.user("JUMP TO ITEM IN MAIN")
+        end
+      end,
+    })
+  end
+
+  if opts.type == "region" then
+    pickers.all_region(meta, {
+      next = function(meta, next_opts)
+        if opts.midi == "enter" then
+          log.user("JUMP TO REGION + TRY TO ENTER MIDI somehow...")
+        else
+          if opts.loop then
+            -- jump to item in main
+            log.user("JUMP TO REGION AND LOOP")
+          end
+        end
+      end,
+    })
+  end
+end
+
+--
+
+custom_actions.jumpToItemInMain = function()
+  moveFocusAndCursorToObjectAndDo({
+    type = "item",
+  })
+end
+
+custom_actions.jumpToMidiItemAndEnter = function(opts)
+  moveFocusAndCursorToObjectAndDo({
+    type = "item",
+    midi = "enter",
+  })
+end
+
+custom_actions.jumpToRegionAndLoop = function(opts)
+  moveFocusAndCursorToObjectAndDo({
+    type = "region",
+    midi = "enter",
+    loop = true,
+  })
+end
+
 return custom_actions

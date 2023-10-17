@@ -1,2 +1,10 @@
 this dir should probably be kept in the root dir and not under
 /internals
+
+
+
+* migrate pitch machine theory to LUA, parse JSON...
+
+if I keep the music theory tables here in lua, then i can use
+https://github.com/kcwiki/lua-json to parse them as json, and keep using in
+pitch machine, BUT i only have to maintain one original source

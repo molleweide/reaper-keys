@@ -7,7 +7,11 @@ constants.midi_insertion_data_default = {
   noSortIn = true,
 }
 
+-- look at my old pitch machine theory table and reuse it here.
 constants.t_chords = {
+  -- basic intervals
+
+  -- triads
   {
     "major",
     { 1, 5, 8 },
