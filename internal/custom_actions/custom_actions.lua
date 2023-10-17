@@ -212,6 +212,11 @@ function custom_actions.insertMidiNoteChunk(meta, opts)
 
   local cursor_pos = reaper.GetCursorPosition()
   local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
+
+
+  -- NOTE: when run as an operator + motion, then the LTr is already reset.
+  -- so i have to pass down the start/end positions manually via opts.
+
   local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 
   local t_note_pitches = {}

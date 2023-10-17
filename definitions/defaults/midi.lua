@@ -8,6 +8,7 @@ return {
     ["c"] = "FitNotes",
     ["a"] = "InsertNote",
     ["A"] = "InsertNoteBlock", -- testing
+    ["Q"] = "InsertMidiBlockPickerOperator", -- NOTE: test connect picker to motion
     ["g"] = "JoinNotes",
     ["s"] = "SelectNotes",
     ["z"] = "MidiZoomTimeSelection",
