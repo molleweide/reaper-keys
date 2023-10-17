@@ -8,6 +8,10 @@ local tf = require("utils.j_tables")
 
 local data_loaders = require("pickers.data.load_plugins_data")
 
+--
+-- NOTE: Shouldn't pickers, which are obviously `custom actions`, be moved
+-- to unders `internal/custom_actions/pickers` ??
+
 -- does some nested requires that requires fzf to be loaded first, (for now...)
 require("gui2.JProjectClass")
 
@@ -17,9 +21,9 @@ local definitions_dir = "/reaper/packages/reaper-keys/definitions"
 
 -- move this to definitions dir
 local RK_FZF_ENV = {
-	SETTINGS_INI_FILE = home .. definitions_dir .. "/fx-finder-settings.ini",
-	SETTINGS_DEFAULT_FILE = home .. definitions_dir .. "/defaults/fx-finder-settings-default.ini",
-	RK_DATA = home .. "/reaper/packages/reaper-keys/data",
+  SETTINGS_INI_FILE = home .. definitions_dir .. "/fx-finder-settings.ini",
+  SETTINGS_DEFAULT_FILE = home .. definitions_dir .. "/defaults/fx-finder-settings-default.ini",
+  RK_DATA = home .. "/reaper/packages/reaper-keys/data",
 }
 
 local pickers = {}
@@ -29,225 +33,221 @@ local pickers = {}
 --
 
 pickers.add_track_fx = function(meta)
-
   log.user(format.block(meta))
 
   -- TODO: maybe plugins data loading should go into the PROJECTS class?
 
-	local ok, plugins_data = data_loaders.load_plugins_data(RK_FZF_ENV)
-	if not ok then
-		msg(
-			"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
-			-- .. SETTINGS_INI_FILE
-		)
-		return false
-	end
+  local ok, plugins_data = data_loaders.load_plugins_data(RK_FZF_ENV)
+  if not ok then
+    msg(
+      "Something went wrong with loading of settings, aborting. Please check your settings file: \n"
+    -- .. SETTINGS_INI_FILE
+    )
+    return false
+  end
 
-	local function sortByRating(a, b)
-		if a.rating > b.rating then
-			return true
-		elseif a.rating == b.rating then
-			return a.name < b.name
-		else
-			return false
-		end
-	end
+  local function sortByRating(a, b)
+    if a.rating > b.rating then
+      return true
+    elseif a.rating == b.rating then
+      return a.name < b.name
+    else
+      return false
+    end
+  end
 
-	local function get_plugin_results()
-		local results = {}
-		tRatingData = fu.jReadVstData(pluginsData.DATA_INI_FILE)
-		results = fu.jReadVstIni(pluginsData.VST_INI_FILE, tRatingData)
+  local function get_plugin_results()
+    local results = {}
+    tRatingData = fu.jReadVstData(pluginsData.DATA_INI_FILE)
+    results = fu.jReadVstIni(pluginsData.VST_INI_FILE, tRatingData)
 
-		tTemplates = fu.getTemplates(pluginsData.TEMPLATE_SUB_DIRS, pluginsData.TEMPLATE_ROOT_DIR, tRatingData)
-		results = tf.jTablesGlue(tTemplates, results)
+    tTemplates = fu.getTemplates(pluginsData.TEMPLATE_SUB_DIRS, pluginsData.TEMPLATE_ROOT_DIR, tRatingData)
+    results = tf.jTablesGlue(tTemplates, results)
 
-		tFXChains = fu.getFXChains(pluginsData.FXCHAIN_SUB_DIRS, pluginsData.FXCHAIN_ROOT_DIR, tRatingData)
-		results = tf.jTablesGlue(tFXChains, results)
+    tFXChains = fu.getFXChains(pluginsData.FXCHAIN_SUB_DIRS, pluginsData.FXCHAIN_ROOT_DIR, tRatingData)
+    results = tf.jTablesGlue(tFXChains, results)
 
-		local tJsfx = fu.jReadJsfxIni(pluginsData.JSFX_INI_FILE, tRatingData)
-		results = tf.jTablesGlue(tJsfx, results)
+    local tJsfx = fu.jReadJsfxIni(pluginsData.JSFX_INI_FILE, tRatingData)
+    results = tf.jTablesGlue(tJsfx, results)
 
-		if pluginsData.LOAD_AU then
-			local tAu = fu.jReadAuIni(pluginsData.AU_INI_FILE, tRatingData)
-			results = tf.jTablesGlue(tAu, results)
-		end
+    if pluginsData.LOAD_AU then
+      local tAu = fu.jReadAuIni(pluginsData.AU_INI_FILE, tRatingData)
+      results = tf.jTablesGlue(tAu, results)
+    end
 
-		-- NOTE: is this where mappings are attached??
-		-- local time = os.clock()
-		if pluginsData.LOAD_ACTIONS then
-			local tActions = data_loaders.jGetActions()
-			results = tf.jTablesGlue(tActions, results)
-		end
-		-- msg(os.clock() - time)
+    -- NOTE: is this where mappings are attached??
+    -- local time = os.clock()
+    if pluginsData.LOAD_ACTIONS then
+      local tActions = data_loaders.jGetActions()
+      results = tf.jTablesGlue(tActions, results)
+    end
+    -- msg(os.clock() - time)
 
-		-- table.sort(results, sortByRating)
+    -- table.sort(results, sortByRating)
 
-		return results
-	end
+    return results
+  end
 
-	local function entry_maker() end
+  local function selectFx(self, i)
+    -- todo: i should prolly remove the undo points since
+    -- those are handled by RK
 
-	local function selectFx(self, i)
-		-- todo: i should prolly remove the undo points since
-		-- those are handled by RK
+    log.user("SELECT FX: ", i)
 
-		log.user("SELECT FX: ", i)
+    if not self.t_search_results then
+      return false
+    end -- results is empty
 
-		if not self.t_search_results then
-			return false
-		end -- results is empty
+    local fx = self.t_search_results[i]
 
-		local fx = self.t_search_results[i]
+    if not fx then
+      return false
+    end -- no such result
 
-		if not fx then
-			return false
-		end -- no such result
+    self.t_results_data[fx.id].rating = self.t_results_data[fx.id].rating + 1
 
-		self.t_results_data[fx.id].rating = self.t_results_data[fx.id].rating + 1
+    reaper.Undo_BeginBlock2(J_PROJECT_DATA:getId())
 
-		reaper.Undo_BeginBlock2(J_PROJECT_DATA:getId())
+    if fx.tracktemplate then
+      -- This is a template, insert it
+      reaper.Main_openProject(fu._jPath(fx.path .. fx.filename))
+    elseif fx.fxchain then
+      if not GUI.kb.control() then -- Control not held, insert on tracks
+        -- Adds an FXCHAIN to a track. If there are no FX on the track an empty chain will be created first
+        local selectedTracks = J_PROJECT_DATA:selectedTracks(0, 0, true)
+        local bCreatedChain = false
 
-		if fx.tracktemplate then
-			-- This is a template, insert it
-			reaper.Main_openProject(fu._jPath(fx.path .. fx.filename))
-		elseif fx.fxchain then
-			if not GUI.kb.control() then -- Control not held, insert on tracks
-				-- Adds an FXCHAIN to a track. If there are no FX on the track an empty chain will be created first
-				local selectedTracks = J_PROJECT_DATA:selectedTracks(0, 0, true)
-				local bCreatedChain = false
+        for _, t in pairs(selectedTracks) do
+          if t.fxcount == 0 then
+            J_PROJECT_DATA:unselectAllTracks()
+            t.selected = 1
+            jCreateTrackChainForSelectedTracks()
+            bCreatedChain = true
+          end
+        end
 
-				for _, t in pairs(selectedTracks) do
-					if t.fxcount == 0 then
-						J_PROJECT_DATA:unselectAllTracks()
-						t.selected = 1
-						jCreateTrackChainForSelectedTracks()
-						bCreatedChain = true
-					end
-				end
+        for _, t in pairs(selectedTracks) do
+          if bCreatedChain then
+            t.selected = 1
+          end
+          local numFxBefore = t.fxcount
+          jFxChainAdd(t, fu.jReadFxChainFromFile(fu._jPath(fx.path .. fx.filename)))
+          if pluginsData.FXCHAIN_FLOAT_WINDOWS then
+            for iFX = numFxBefore, t.fxcount - 1 do
+              t:getFx(iFX):show(3)
+            end
+          end
+        end
 
-				for _, t in pairs(selectedTracks) do
-					if bCreatedChain then
-						t.selected = 1
-					end
-					local numFxBefore = t.fxcount
-					jFxChainAdd(t, fu.jReadFxChainFromFile(fu._jPath(fx.path .. fx.filename)))
-					if pluginsData.FXCHAIN_FLOAT_WINDOWS then
-						for iFX = numFxBefore, t.fxcount - 1 do
-							t:getFx(iFX):show(3)
-						end
-					end
-				end
+        if pluginsData.TRACK_SHOW_FLAG == 1 and not pluginsData.FXCHAIN_FLOAT_WINDOWS then -- added for people using the fxchain window so the fx will show
+          local focusTrack = selectedTracks[1]
+          if focusTrack then
+            focusTrack:getFx(focusTrack.fxcount - 1):show(pluginsData.TRACK_SHOW_FLAG)
+          end
+        end
 
-				if pluginsData.TRACK_SHOW_FLAG == 1 and not pluginsData.FXCHAIN_FLOAT_WINDOWS then -- added for people using the fxchain window so the fx will show
-					local focusTrack = selectedTracks[1]
-					if focusTrack then
-						focusTrack:getFx(focusTrack.fxcount - 1):show(pluginsData.TRACK_SHOW_FLAG)
-					end
-				end
+        -- LEAVE THIS FOR FUTURE !!!!!!!!!!
+        -- else -- control held, try to add chain to items
+        -- reaper.ClearConsole()
+        -- for i in J_PROJECT_DATA:selectedItems() do
+        -- 	local take = i:getActiveTake()
+        -- 	local chunk = i:getStateChunk()
+        -- 	local takeNumber = math.tointeger(take.number)
+        -- 	-- msg(chunk)
+        -- 	-- msg("---")
 
-				-- LEAVE THIS FOR FUTURE !!!!!!!!!!
-				-- else -- control held, try to add chain to items
-				-- reaper.ClearConsole()
-				-- for i in J_PROJECT_DATA:selectedItems() do
-				-- 	local take = i:getActiveTake()
-				-- 	local chunk = i:getStateChunk()
-				-- 	local takeNumber = math.tointeger(take.number)
-				-- 	-- msg(chunk)
-				-- 	-- msg("---")
+        -- 	msg(math.tointeger( takeNumber))
+        -- 	local fxChunk = ultraschall.GetFXStateChunk(chunk, takeNumber)
+        -- 	msg(fxChunk)
+        -- 	msg("after: ")
+        -- 	local fxString = fu.jReadFxChainFromFile(fx.path .. fx.filename)
+        -- 	if not fxChunk then
+        -- 		-- No fx yet, create chunk:
+        -- 		msg("create new chunk...")
+        -- 		fxChunk = " <TAKEFX\n" .. fxString .. "\n  >"
+        -- 		takeNumber = 0
+        -- 	else
+        -- 		fxChunk =  fxChunk:gsub(">$", '') -- remove closing ">"
+        -- 		fxChunk = fxChunk .. "\n" .. fxString .. "\n>"
+        -- 	end
+        -- 	msg("fxChunk:")
+        -- 	msg(fxChunk)
+        -- 	msg("Chunk:")
+        -- 	msg(chunk)
+        -- 	local r, newChunk = ultraschall.SetFXStateChunk(chunk, fxChunk, takeNumber)
+        -- 	-- msg(newChunk)
+        -- 	-- i:setStateChunk(newChunk)
 
-				-- 	msg(math.tointeger( takeNumber))
-				-- 	local fxChunk = ultraschall.GetFXStateChunk(chunk, takeNumber)
-				-- 	msg(fxChunk)
-				-- 	msg("after: ")
-				-- 	local fxString = fu.jReadFxChainFromFile(fx.path .. fx.filename)
-				-- 	if not fxChunk then
-				-- 		-- No fx yet, create chunk:
-				-- 		msg("create new chunk...")
-				-- 		fxChunk = " <TAKEFX\n" .. fxString .. "\n  >"
-				-- 		takeNumber = 0
-				-- 	else
-				-- 		fxChunk =  fxChunk:gsub(">$", '') -- remove closing ">"
-				-- 		fxChunk = fxChunk .. "\n" .. fxString .. "\n>"
-				-- 	end
-				-- 	msg("fxChunk:")
-				-- 	msg(fxChunk)
-				-- 	msg("Chunk:")
-				-- 	msg(chunk)
-				-- 	local r, newChunk = ultraschall.SetFXStateChunk(chunk, fxChunk, takeNumber)
-				-- 	-- msg(newChunk)
-				-- 	-- i:setStateChunk(newChunk)
+        -- end
+      end
+    elseif fx.action then
+      -- NOTE: this is how I can call regular actions from a fuzzy list.
+      -- This could also be used in combination with RK sequences and fuzzy
+      -- search next step to take
 
-				-- end
-			end
-		elseif fx.action then
-			-- NOTE: this is how I can call regular actions from a fuzzy list.
-			-- This could also be used in combination with RK sequences and fuzzy
-			-- search next step to take
+      reaper.Main_OnCommandEx(fx.command, 1, 0)
+      -- msg(fx.command)
+      -- msg(fx.name)
+    else
+      -- this is a vst or a jsfx
+      local typeInfo = ""
+      if self.t_results_data[fx.id].vst3 and pluginsData.PREFER_VST3 then -- prefer VST3 where available
+        typeInfo = "VST3:"
+      end
 
-			reaper.Main_OnCommandEx(fx.command, 1, 0)
-		-- msg(fx.command)
-		-- msg(fx.name)
-		else
-			-- this is a vst or a jsfx
-			local typeInfo = ""
-			if self.t_results_data[fx.id].vst3 and pluginsData.PREFER_VST3 then -- prefer VST3 where available
-				typeInfo = "VST3:"
-			end
+      local fxString = ""
+      if fx.jsfx then
+        fxString = fx.filename
+      elseif fx.au then
+        fxString = fx.filename
+      elseif fx.aui then
+        fxString = fx.filename
+      else
+        fxString = typeInfo .. fu._removeVstiString(self.t_results_data[fx.id].name)
+      end
+      if not GUI.kb.control() then -- Control not held, insert on tracks
+        for t in J_PROJECT_DATA:selectedTracks() do
+          local r = t:addFx(fxString)
+          if r then
+            r:show(pluginsData.TRACK_SHOW_FLAG)
+          end
+        end
+      else -- Control held, insert on items
+        for i in J_PROJECT_DATA:selectedItems() do
+          local take = i:getActiveTake()
+          local r = take:addFx(fxString)
+          if r >= 0 then
+            reaper.TakeFX_Show(take:getReaperTake(), r, pluginsData.ITEM_SHOW_FLAG) -- show FX
+          end
+        end
+      end
+    end
+    reaper.Undo_EndBlock2(J_PROJECT_DATA:getId(), "FAST FX FINDER: Add Fx", 0)
 
-			local fxString = ""
-			if fx.jsfx then
-				fxString = fx.filename
-			elseif fx.au then
-				fxString = fx.filename
-			elseif fx.aui then
-				fxString = fx.filename
-			else
-				fxString = typeInfo .. fu._removeVstiString(self.t_results_data[fx.id].name)
-			end
-			if not GUI.kb.control() then -- Control not held, insert on tracks
-				for t in J_PROJECT_DATA:selectedTracks() do
-					local r = t:addFx(fxString)
-					if r then
-						r:show(pluginsData.TRACK_SHOW_FLAG)
-					end
-				end
-			else -- Control held, insert on items
-				for i in J_PROJECT_DATA:selectedItems() do
-					local take = i:getActiveTake()
-					local r = take:addFx(fxString)
-					if r >= 0 then
-						reaper.TakeFX_Show(take:getReaperTake(), r, pluginsData.ITEM_SHOW_FLAG) -- show FX
-					end
-				end
-			end
-		end
-		reaper.Undo_EndBlock2(J_PROJECT_DATA:getId(), "FAST FX FINDER: Add Fx", 0)
+    UPDATE_RATINGS = true
+    return true
+  end
 
-		UPDATE_RATINGS = true
-		return true
-	end
-
-	fzf.init({
-		env = RK_FZF_ENV,
-		title = "Fast FX Finder",
-		width = 1000,
-		height = 700,
-		x = 100,
-		y = 100,
-		on_select_func = selectFx,
-		results = get_plugin_results(),
-		entry_maker = require("pickers.entry_makers.add_fx"),
-		sort_comp = sortByRating,
-		results_filter = require("pickers.results_filter.add_fx"),
-		on_exit_callback = function(self)
-			if UPDATE_RATINGS then
-				table.sort(self.t_results_data, self.sort_comp)
-				fu.jWriteVstData(pluginsData.DATA_INI_FILE, self.t_results_data)
-				log.user("Updated ratings file!!")
-			end
-		end,
-})
-
+  fzf.init({
+    env = RK_FZF_ENV,
+    title = "Fast FX Finder",
+    width = 1000,
+    height = 700,
+    x = 100,
+    y = 100,
+    on_select_func = selectFx,
+    results = get_plugin_results(),
+    entry_maker = require("pickers.entry_makers.add_fx"),
+    sort_comp = sortByRating,
+    results_filter = require("pickers.results_filter.add_fx"),
+    on_exit_callback = function(self)
+      if UPDATE_RATINGS then
+        table.sort(self.t_results_data, self.sort_comp)
+        fu.jWriteVstData(pluginsData.DATA_INI_FILE, self.t_results_data)
+        log.user("Updated ratings file!!")
+      end
+    end,
+  })
 end
 
 --
@@ -255,88 +255,53 @@ end
 --
 
 pickers.test_picker = function()
-	-- if not loadSettings() then
-	-- 	msg(
-	-- 		"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
-	-- 			.. SETTINGS_INI_FILE
-	-- 	)
-	-- 	return false
-	-- end
+  -- if not loadSettings() then
+  -- 	msg(
+  -- 		"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
+  -- 			.. SETTINGS_INI_FILE
+  -- 	)
+  -- 	return false
+  -- end
 
-	local function onenter(self, i)
-		if not self.t_search_results then
-			return false
-		end -- results is empty
-		local fx = self.t_search_results[i]
-		if not fx then
-			return false
-		end -- no such result
+  local function onenter(self, i)
+    if not self.t_search_results then
+      return false
+    end -- results is empty
+    local fx = self.t_search_results[i]
+    if not fx then
+      return false
+    end -- no such result
 
-		log.user("onenter:", i, format.block(fx))
+    log.user("onenter:", i, format.block(fx))
 
-		return true
-	end
+    return true
+  end
 
-	fzf.init({
-		env = RK_FZF_ENV,
-		title = "Test Picker",
-		on_select_func = onenter,
-		results = {
-			"this",
-			"is",
-			"a",
-			"picker",
-			"test",
-			"xxxxxx",
-			"aaaaaa",
-			"vvvvvv",
-			"arst",
-			"XXX",
-			"89",
-			"=644ney",
-			"9n$)",
-			"(()())",
-		},
-		sort_comp = function(a, b)
-			if a > b then
-				return true
-			elseif a == b then
-				return a < b
-			else
-				return false
-			end
-		end,
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
-			-- what todo here ??
-			return vstTable
-		end,
-		entry_maker = function(tButtons, tResults)
-			for i, cIds in ipairs(tButtons) do
-				local b = cIds[1]
-				local info = cIds[2]
-				local iStart = fu._round(i + SCROLL_RESULTS)
-				local highlights = sf.jStringExplode(textBox.value, " ")
-				local showing
-				if iStart <= #tResults then
-					showing = iStart
-				else
-					showing = #tResults
-				end
-				LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
-				if tResults and iStart <= #tResults then
-					local item = tResults[iStart]
-					b.label = item
-					b.visible = true
-					info.visible = true
-					b.highlight = highlights
-				else
-					b.visible = false
-					info.visible = false
-				end
-			end
-		end,
-})
-
+  fzf.init({
+    env = RK_FZF_ENV,
+    title = "Test Picker",
+    on_select_func = onenter,
+    results = {
+      "this",
+      "is",
+      "a",
+      "picker",
+      "test",
+      "xxxxxx",
+      "aaaaaa",
+      "vvvvvv",
+      "arst",
+      "XXX",
+      "89",
+      "=644ney",
+      "9n$)",
+      "(()())",
+    },
+    results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+      -- what todo here ??
+      return vstTable
+    end,
+  })
 end
 
 --
@@ -344,72 +309,35 @@ end
 --
 
 pickers.tracks = function()
-
-	-- TODO: reuse the get tracks from syntax tree here.
+  -- TODO: reuse the get tracks from syntax tree here.
 
   -- how do I get all tracks from vtt
 
-
-	fzf.init({
-		env = RK_FZF_ENV,
-		title = "Test Picker",
-		on_select_func = onenter,
-		results = {
-			"this",
-			"is",
-			"a",
-			"picker",
-			"test",
-			"xxxxxx",
-			"aaaaaa",
-			"vvvvvv",
-			"arst",
-			"XXX",
-			"89",
-			"=644ney",
-			"9n$)",
-			"(()())",
-		},
-		sort_comp = function(a, b)
-			if a > b then
-				return true
-			elseif a == b then
-				return a < b
-			else
-				return false
-			end
-		end,
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
-			-- what todo here ??
-			return vstTable
-		end,
-		entry_maker = function(tButtons, tResults)
-			for i, cIds in ipairs(tButtons) do
-				local b = cIds[1]
-				local info = cIds[2]
-				local iStart = fu._round(i + SCROLL_RESULTS)
-				local highlights = sf.jStringExplode(textBox.value, " ")
-				local showing
-				if iStart <= #tResults then
-					showing = iStart
-				else
-					showing = #tResults
-				end
-				LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
-				if tResults and iStart <= #tResults then
-					local item = tResults[iStart]
-					b.label = item
-					b.visible = true
-					info.visible = true
-					b.highlight = highlights
-				else
-					b.visible = false
-					info.visible = false
-				end
-			end
-		end,
-})
-
+  fzf.init({
+    env = RK_FZF_ENV,
+    title = "Test Picker",
+    on_select_func = onenter,
+    results = {
+      "this",
+      "is",
+      "a",
+      "picker",
+      "test",
+      "xxxxxx",
+      "aaaaaa",
+      "vvvvvv",
+      "arst",
+      "XXX",
+      "89",
+      "=644ney",
+      "9n$)",
+      "(()())",
+    },
+    results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+      -- what todo here ??
+      return vstTable
+    end,
+  })
 end
 
 -- * WHAT THINGS CAN BE CONTROLLED VIA FZF:
@@ -436,97 +364,60 @@ pickers.browse_reaper_preferences = function() end
 --   ...
 
 pickers.browse_track_fx_list = function()
-	p = JProject:new()
-	reset_variables()
-	-- if not loadSettings() then
-	-- 	msg(
-	-- 		"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
-	-- 			.. SETTINGS_INI_FILE
-	-- 	)
-	-- 	return false
-	-- end
+  p = JProject:new()
+  reset_variables()
+  -- if not loadSettings() then
+  -- 	msg(
+  -- 		"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
+  -- 			.. SETTINGS_INI_FILE
+  -- 	)
+  -- 	return false
+  -- end
 
-	local function onenter(self, i)
-		if not self.t_search_results then
-			return false
-		end -- results is empty
-		local fx = self.t_search_results[i]
-		if not fx then
-			return false
-		end -- no such result
+  local function onenter(self, i)
+    if not self.t_search_results then
+      return false
+    end -- results is empty
+    local fx = self.t_search_results[i]
+    if not fx then
+      return false
+    end -- no such result
 
-		log.user("onenter:", i, format.block(fx))
+    log.user("onenter:", i, format.block(fx))
 
-		return true
-	end
+    return true
+  end
 
-	local make_results = function()
-		local selectedTracks = J_PROJECT_DATA:selectedTracks(0, 0, true)
+  local make_results = function()
+    local selectedTracks = J_PROJECT_DATA:selectedTracks(0, 0, true)
 
-		log.user("selectedTracks in browse_fx_list:", selectedTracks)
-	end
+    log.user("selectedTracks in browse_fx_list:", selectedTracks)
+  end
 
-	fzf.init({
-		title = "Browse track FX list",
-		on_select_func = onenter,
-		results = {
-			"this",
-			"is",
-			"a",
-			"picker",
-			"test",
-			"xxxxxx",
-			"aaaaaa",
-			"vvvvvv",
-			"arst",
-			"XXX",
-			"89",
-			"=644ney",
-			"9n$)",
-			"(()())",
-		},
-		sort_comp = function(a, b)
-			if a > b then
-				return true
-			elseif a == b then
-				return a < b
-			else
-				return false
-			end
-		end,
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
-			-- what todo here ??
-			return vstTable
-		end,
-		entry_maker = function(tButtons, tResults)
-			for i, cIds in ipairs(tButtons) do
-				local b = cIds[1]
-				local info = cIds[2]
-				local iStart = fu._round(i + SCROLL_RESULTS)
-				local highlights = sf.jStringExplode(textBox.value, " ")
-
-				local showing
-				if iStart <= #tResults then
-					showing = iStart
-				else
-					showing = #tResults
-				end
-				LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
-
-				if tResults and iStart <= #tResults then
-					local item = tResults[iStart]
-					b.label = item
-					b.visible = true
-					info.visible = true
-					b.highlight = highlights
-				else
-					b.visible = false
-					info.visible = false
-				end
-			end
-		end,
-	})
-
+  fzf.init({
+    title = "Browse track FX list",
+    on_select_func = onenter,
+    results = {
+      "this",
+      "is",
+      "a",
+      "picker",
+      "test",
+      "xxxxxx",
+      "aaaaaa",
+      "vvvvvv",
+      "arst",
+      "XXX",
+      "89",
+      "=644ney",
+      "9n$)",
+      "(()())",
+    },
+    results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+      -- what todo here ??
+      return vstTable
+    end,
+  })
 end
 
 --
@@ -614,7 +505,93 @@ pickers.file_browser = function() end
 --
 --   For super fast navigation and shit.
 
-pickers.chord_progressions = function() end
+pickers.chord_progression = function() end
+
+pickers.chord = function(meta, opts)
+  log.user("picker chord:", format.block(opts))
+
+  -- 1. i need to pass the raw t_chords to results
+  -- 2. create custom entry_maker that gets the chord name
+  -- 3. select chord[2] in `on_select_func`
+
+  local t_chords = {
+    {
+      "major",
+      { 1, 5, 9 },
+    },
+    {
+      "minor",
+      { 1, 4, 9 },
+    },
+  }
+
+  -- local results = function()
+  --   local res = {}
+  --   for k, v in pairs(t_chords) do
+  --     table.insert(res, v[1])
+  --   end
+  --   log.user(format.block(res))
+  --   return res
+  -- end
+
+  fzf.init({
+    env = RK_FZF_ENV,
+    title = string.format("%s: chord", meta.action_type),
+    on_select_func = function(self, i)
+      -- if not self.t_search_results then
+      --   return false
+      -- end -- results is empty
+      local chord = self.t_search_results[i]
+      log.user("selected chord:", format.block(chord))
+    end,
+    results = t_chords,
+    sort_comp = function(a, b)
+      a = a[1]
+      b = b[1]
+      if a > b then
+        return true
+      elseif a == b then
+        return a < b
+      else
+        return false
+      end
+    end,
+
+    -- RENAME: vstTable...
+    results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+      -- what todo here ??
+      return vstTable
+    end,
+    entry_maker = function(tButtons, tResults)
+      for i, cIds in ipairs(tButtons) do
+        local b = cIds[1]
+        local info = cIds[2]
+        local iStart = fu._round(i + SCROLL_RESULTS)
+        local highlights = sf.jStringExplode(textBox.value, " ")
+        local showing
+
+        if iStart <= #tResults then
+          showing = iStart
+        else
+          showing = #tResults
+        end
+
+        LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
+
+        if tResults and iStart <= #tResults then
+          local item = tResults[iStart]
+          b.label = item[1]
+          b.visible = true
+          info.visible = true
+          b.highlight = highlights
+        else
+          b.visible = false
+          info.visible = false
+        end
+      end
+    end,
+  })
+end
 
 --
 -- PICKER: envelopes / modulation

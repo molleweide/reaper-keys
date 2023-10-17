@@ -399,6 +399,15 @@ local function build_picker(opts, on_enter)
 
 	tResultButtons = {}
 
+	if not opts.sort_comp then
+	  opts.sort_comp = require("pickers.sorters.default")
+	end
+
+
+	if not opts.entry_maker then
+	  opts.entry_maker = require("pickers.entry_makers.default")
+	end
+
 	GUI = jGui:new(opts)
 
 	-- needs to be attached to GUI somehow, so that I can access them inside

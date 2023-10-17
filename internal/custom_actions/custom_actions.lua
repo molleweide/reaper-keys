@@ -183,6 +183,10 @@ end
 --                    insert_midi_note_chunk
 --      why? well because this function can insert midi in many forms and
 --      therefore needs a bit more flexible.
+--
+--
+-- TODO: refactor midi utils
+--
 
 function custom_actions.insertMidiNoteChunk(meta, opts)
   -- log.user("META:", format.block(meta))
@@ -256,4 +260,12 @@ function custom_actions.insertMidiNoteChunk(meta, opts)
   reaper.MIDI_Sort(take)
 end
 
+custom_actions.midiChordPicker = function(meta, opts)
+  local pickers = require("pickers.pickers")
+
+  pickers.chord(meta, {
+    next = custom_actions.insertMidiNoteChunk
+  })
+
+end
 return custom_actions
