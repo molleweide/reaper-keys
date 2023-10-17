@@ -514,14 +514,15 @@ pickers.chord = function(meta, opts)
   -- 2. create custom entry_maker that gets the chord name
   -- 3. select chord[2] in `on_select_func`
 
+  -- refactor into data
   local t_chords = {
     {
       "major",
-      { 1, 5, 9 },
+      { 1, 5, 8 },
     },
     {
       "minor",
-      { 1, 4, 9 },
+      { 1, 4, 8 },
     },
   }
 
@@ -542,7 +543,11 @@ pickers.chord = function(meta, opts)
       --   return false
       -- end -- results is empty
       local chord = self.t_search_results[i]
-      log.user("selected chord:", format.block(chord))
+      -- log.user("selected chord:", format.block(chord))
+
+      opts.next(meta, {
+        chord = chord
+      })
     end,
     results = t_chords,
     sort_comp = function(a, b)

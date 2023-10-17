@@ -189,8 +189,10 @@ end
 --
 
 function custom_actions.insertMidiNoteChunk(meta, opts)
+  opts = opts or {}
   -- log.user("META:", format.block(meta))
   -- refactor into eg. variables.lua
+
   local midi_insertion_data_default = {
     selected = false,
     muted = false,
@@ -209,13 +211,21 @@ function custom_actions.insertMidiNoteChunk(meta, opts)
 
   local t_note_pitches = {}
   local t_midi_notes = {}
+
+  -- duration
   local sixteen_note_len = 0.25
   local note_end_gap = 0.005
   local note_duration = sixteen_note_len - note_end_gap
 
-  -- create list of pitches to insert
-  table.insert(t_note_pitches, active_note_row)
-  table.insert(t_note_pitches, active_note_row + 5)
+  -- FIX: handle incoming chord here...
+
+  if opts.chord then
+    for _, chord_rel_pitch in ipairs(opts.chord[2]) do
+      table.insert(t_note_pitches, active_note_row + chord_rel_pitch - 1)
+    end
+  else
+    table.insert(t_note_pitches, active_note_row)
+  end
 
   local function note_start()
     if meta.action_type == "timeline_operator" then
@@ -264,8 +274,7 @@ custom_actions.midiChordPicker = function(meta, opts)
   local pickers = require("pickers.pickers")
 
   pickers.chord(meta, {
-    next = custom_actions.insertMidiNoteChunk
+    next = custom_actions.insertMidiNoteChunk,
   })
-
 end
 return custom_actions
