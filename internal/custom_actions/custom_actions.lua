@@ -196,8 +196,12 @@ end
 function custom_actions.insertMidiNoteChunk(meta, opts)
   opts = opts or {}
   -- log.user("META:", format.block(meta))
-  -- refactor into eg. variables.lua
 
+  if opts.move_cursor then
+    reaper.SetEditCurPos(meta.end_pos, false, false)
+  end
+
+  -- TODO: move to definitions/constants.lua
   local midi_insertion_data_default = {
     selected = false,
     muted = false,
@@ -213,11 +217,10 @@ function custom_actions.insertMidiNoteChunk(meta, opts)
   local cursor_pos = reaper.GetCursorPosition()
   local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
 
-
   -- NOTE: when run as an operator + motion, then the LTr is already reset.
   -- so i have to pass down the start/end positions manually via opts.
 
-  local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+  -- local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 
   local t_note_pitches = {}
   local t_midi_notes = {}
@@ -239,7 +242,7 @@ function custom_actions.insertMidiNoteChunk(meta, opts)
 
   local function note_start()
     if meta.action_type == "timeline_operator" then
-      return start_sel
+      return meta.start_pos
     elseif meta.action_type == "command" then
       return cursor_pos
     end
@@ -247,7 +250,7 @@ function custom_actions.insertMidiNoteChunk(meta, opts)
 
   local function note_end()
     if meta.action_type == "timeline_operator" then
-      return end_sel
+      return meta.end_pos
     elseif meta.action_type == "command" then
       return cursor_pos + note_duration
     end
@@ -285,6 +288,7 @@ custom_actions.midiChordPicker = function(meta, opts)
 
   pickers.chord(meta, {
     next = custom_actions.insertMidiNoteChunk,
+    move_cursor = true,
   })
 end
 
@@ -300,15 +304,15 @@ end
 --
 --      this would allow one to search around fast as fuck.
 
-local function moveFocusAndCursorToObjectAndDo(opts)
-  opts = opts or {}
-  log.user("MOVE TO OBJ ->", log.user(opts))
+local function moveToSelectObjectAndDo(config)
+  config = config or {}
+  log.user("MOVE TO OBJ ->", log.user(config))
 
-  if opts.type == "item" then
+  if config.type == "item" then
     pickers.all_items(meta, {
-      next = function(meta, next_opts)
+      next = function(meta, opts)
         -- with selected item do wath
-        if opts.midi == "enter" then
+        if config.midi == "enter" then
           log.user("JUMP TO AND ENTER MIDI")
 
           -- jump to midi item and enter MIDI Editor
@@ -320,13 +324,13 @@ local function moveFocusAndCursorToObjectAndDo(opts)
     })
   end
 
-  if opts.type == "region" then
+  if config.type == "region" then
     pickers.all_region(meta, {
-      next = function(meta, next_opts)
-        if opts.midi == "enter" then
+      next = function(meta, opts)
+        if config.midi == "enter" then
           log.user("JUMP TO REGION + TRY TO ENTER MIDI somehow...")
         else
-          if opts.loop then
+          if config.loop then
             -- jump to item in main
             log.user("JUMP TO REGION AND LOOP")
           end
@@ -339,20 +343,20 @@ end
 --
 
 custom_actions.jumpToItemInMain = function()
-  moveFocusAndCursorToObjectAndDo({
+  moveToSelectObjectAndDo({
     type = "item",
   })
 end
 
 custom_actions.jumpToMidiItemAndEnter = function(opts)
-  moveFocusAndCursorToObjectAndDo({
+  moveToSelectObjectAndDo({
     type = "item",
     midi = "enter",
   })
 end
 
 custom_actions.jumpToRegionAndLoop = function(opts)
-  moveFocusAndCursorToObjectAndDo({
+  moveToSelectObjectAndDo({
     type = "region",
     midi = "enter",
     loop = true,

@@ -45,7 +45,12 @@ return {
         -- the operator.
         -- instead of passing positions to the operator, the operator gets the positions
         -- from the temporary selection which is then set back.
-        runner.makeSelectionFromTimelineMotion(timeline_motion, 1)
+
+        local start, _end = runner.makeSelectionFromTimelineMotion(timeline_motion, 1)
+
+        timeline_operator.meta.start_pos = start
+        timeline_operator.meta.end_pos = _end
+
 
         runner.runAction(timeline_operator)
 

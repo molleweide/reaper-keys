@@ -104,6 +104,7 @@ function runner.makeSelectionFromTimelineMotion(timeline_motion, repetitions)
   reaper.SetEditCurPos(sel_start, false, false)
 
   reaper.GetSet_LoopTimeRange(true, false, sel_start, sel_end, false)
+  return sel_start, sel_end
 end
 
 function runner.extendTimelineSelection(movement, args)

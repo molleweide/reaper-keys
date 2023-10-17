@@ -482,7 +482,8 @@ pickers.track_syntax = function() end
 
 pickers.marks = function() end
 
-pickers.regions = function() end
+pickers.regions = function()
+end
 
 --
 -- PICKER: patterns
@@ -510,10 +511,6 @@ pickers.chord_progression = function() end
 pickers.chord = function(meta, opts)
   log.user("picker chord:", format.block(opts))
 
-  -- 1. i need to pass the raw t_chords to results
-  -- 2. create custom entry_maker that gets the chord name
-  -- 3. select chord[2] in `on_select_func`
-
   -- refactor into data
   local t_chords = {
     {
@@ -526,27 +523,15 @@ pickers.chord = function(meta, opts)
     },
   }
 
-  -- local results = function()
-  --   local res = {}
-  --   for k, v in pairs(t_chords) do
-  --     table.insert(res, v[1])
-  --   end
-  --   log.user(format.block(res))
-  --   return res
-  -- end
-
   fzf.init({
     env = RK_FZF_ENV,
     title = string.format("%s: chord", meta.action_type),
     on_select_func = function(self, i)
-      -- if not self.t_search_results then
-      --   return false
-      -- end -- results is empty
       local chord = self.t_search_results[i]
       -- log.user("selected chord:", format.block(chord))
-
       opts.next(meta, {
-        chord = chord
+        chord = chord,
+        move_cursor = opts.move_cursor
       })
     end,
     results = t_chords,
@@ -612,6 +597,10 @@ pickers.midi_note_articulation = function() end
 --
 -- PIKCKERS: items / takes
 --
+
+pickers.all_items = function ()
+
+end
 
 pickers.item_parameters = function() end
 
