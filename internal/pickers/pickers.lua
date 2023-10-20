@@ -482,8 +482,7 @@ pickers.track_syntax = function() end
 
 pickers.marks = function() end
 
-pickers.regions = function()
-end
+pickers.regions = function() end
 
 --
 -- PICKER: patterns
@@ -531,7 +530,7 @@ pickers.chord = function(meta, opts)
       -- log.user("selected chord:", format.block(chord))
       opts.next(meta, {
         chord = chord,
-        move_cursor = opts.move_cursor
+        move_cursor = opts.move_cursor,
       })
     end,
     results = t_chords,
@@ -598,14 +597,26 @@ pickers.midi_note_articulation = function() end
 -- PIKCKERS: items / takes
 --
 
-pickers.all_items = function ()
-
-end
+pickers.all_items = function() end
 
 pickers.item_parameters = function() end
 
 pickers.take_parameters = function() end
 
 pickers.load_track_from_presets = function() end
+
+--
+-- PIKCKERS: media explorer / custom (media) file browser
+--
+
+pickers.samples_explorer = function()
+  -- NOTE: this script supposedly show you how to preview audio samples.
+  -- /Users/hjalmarjakobsson/reaper/app/reaper/Scripts/ReaTeam Scripts/Project Properties/solger_ReaLauncher.lua
+
+  -- 1. make locateDb out of media samples.
+  -- (!)  set samples dir in user config + cronjob that updates this
+  -- 2. pass locate db output to picker.
+  -- 3. on select -> preview sample AND close
+end
 
 return pickers

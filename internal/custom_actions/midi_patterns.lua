@@ -1,3 +1,5 @@
+local utils = require("custom_actions.utils")
+
 local log = require("utils.log")
 local format = require("utils.format")
 local reaper_state = require("utils.reaper_state")
@@ -19,16 +21,16 @@ local midi_insertion_data_default = {
 
 local midi_patterns = {}
 
-local function getMidiValidContext()
-  local ME = reaper.MIDIEditor_GetActive()
-  local take = reaper.MIDIEditor_GetTake(ME)
-
-  local retval = true
-  if not ME or (not take or not reaper.TakeIsMIDI(take)) then
-    retval = false
-  end
-  return retval, ME, take
-end
+-- local function getMidiValidContext()
+--   local ME = reaper.MIDIEditor_GetActive()
+--   local take = reaper.MIDIEditor_GetTake(ME)
+--
+--   local retval = true
+--   if not ME or (not take or not reaper.TakeIsMIDI(take)) then
+--     retval = false
+--   end
+--   return retval, ME, take
+-- end
 
 local function randomBool()
   return math.floor(math.random() + 0.5) == 1
@@ -109,7 +111,7 @@ end
 --
 
 midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
-  local ret, ME, take = getMidiValidContext()
+  local ret, ME, take = utils.getMidiValidContext()
   if not ret then
     return
   end
@@ -333,7 +335,7 @@ local state_table_name = "midipatterns"
 --
 midi_patterns.insertPatternFromString = function()
 
-  local ret, ME, take = getMidiValidContext()
+  local ret, ME, take = utils.getMidiValidContext()
   if not ret then
     return
   end
@@ -352,7 +354,13 @@ midi_patterns.insertPatternFromString = function()
   local caption_csv = string.format("%s,%s", input_placeholder, input_field_width)
   local retvals_csv = ""
   local pattern_sep = " " -- whitespace
+
+  -- TODO: use custom jGui input here instead, rather than the reaper
+  -- GetUserInput, since it doesn't seem to be possible to customize the reaper
+  -- input that easilly.
+
   local _, str_pat_input = reaper.GetUserInputs("pattern:", 1, input_placeholder, caption_csv, retvals_csv)
+
   local t_pattern_strings = s.split(str_pat_input, pattern_sep)
   local t_pat_multiplied = handle_multipliers(t_pattern_strings)
 
