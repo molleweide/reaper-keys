@@ -147,4 +147,10 @@ function movement.snap()
   reaper.SetEditCurPos(snapped_pos, false, false)
 end
 
+function movement.lightspeed()
+  -- amagalma_Add all completely visible items in arrange viewport to selection (for all completely visible tracks).lua
+  --
+  -- this amagalma would allow for making lightspeed inside of reaper with items/midi notes.
+end
+
 return movement
