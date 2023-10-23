@@ -7,6 +7,8 @@ local fu = require("utils.fzf")
 local sf = require("utils.j_string_functions")
 local tf = require("utils.j_tables")
 
+local marks = require("utils.marks_regions")
+
 local data_loaders = require("pickers.data.load_plugins_data")
 
 --
@@ -369,19 +371,15 @@ pickers.browse_reaper_preferences = function()
 	-- SETTINGS = assert(settings.jSettingsReadFromFile(SETTINGS_INI_FILE), "Could not open settings file.")
 end
 
---
--- ** TRACK FX LIST / CHAIN
---
---   I can use this window as a custom UI replacement for the FX window.
---   Add custom actions for navigating up/down.
---   I would have to create a new custom context for the FZF window.
---
---   TODO: get table of track_fx_list
---   ~ full names
---   ~ other info
---   ...
+pickers.track_fx = function()
+	local t_track_fx = {}
 
-pickers.browse_track_fx_list = function()
+	-- ~ look at my track syntax
+	--
+	-- ~ get all track fx in table
+	--
+	-- ~ show in picker.
+
 	p = JProject:new()
 	reset_variables()
 	-- if not loadSettings() then
@@ -438,23 +436,6 @@ pickers.browse_track_fx_list = function()
 	})
 end
 
---
--- ** TRACK FX PARAMTERS, EG. REAEQ
---
---   Use the FZF window to filter fx parameters and perform mixing.
---
---   TODO: pick fx params for fx at index X in track Y
-
-pickers.track_fx = function()
-	local t_track_fx = {}
-
-	-- ~ look at my track syntax
-	--
-	-- ~ get all track fx in table
-	--
-	-- ~ show in picker.
-end
-
 pickers.track_fx_params = function()
 	-- local the_fx = ??
 
@@ -467,15 +448,9 @@ pickers.track_fx_params = function()
 	-- ~ make list of fx params
 end
 
---
--- ** TRACK MIXER
---
---   Manage all basic reaper track parameters
---
---   TODO: volume, pan, sends/recieves, phase, etc..
-
 pickers.track_channel_mix_params = function()
 	local t_track_params = {
+		-- volume =
 		-- pan =
 		-- phase =
 		-- solo =
@@ -511,29 +486,15 @@ pickers.midi_editor_take_screensets = function()
 	--
 end
 
--- 7. TRACK LIST UI
---
---   Control and manage track list
-
 pickers.track_list_ui = function() end
 
--- 7. BROWSE PROJECTS/TABS (OPEN IN NEW TAB)
---
-
-pickers.browse_projects = function()
+pickers.projects = function()
 	-- ReaProject retval, optional string projfn = reaper.EnumProjects(integer idx)
 	-- -- idx=-1 for current project,projfn can be NULL if not interested in filename. use idx 0x40000000 for currently rendering project, if any.
 
 	-- maybe i just need to do a bash script to collect all projects from
 	-- my projects dir.
 end
-
--- 8. BROWSE SYNTAX ZONES/GROUPS/TRACKS
---
---   ..and control parameters. implement multiple selection etc. for more
---   granular selections and ability to customize the arrangement view.
---
---   TODO: zone, grouts, ...
 
 -- 	FIX: make vtt into a class
 -- 	I need to make the vtt into a class so that I can attach methods to it
@@ -560,7 +521,9 @@ pickers.vtt_utils = function() end
 pickers.vtt_drum_kits = function() end
 
 pickers.marks = function()
-	local ok, old_mark = project_state.get("marks", register)
+	-- local ok, old_mark = project_state.get("marks", register)
+	-- mark['index'] = reaper.AddProjectMarker(0, true, mark.left, mark.right, register, -1)
+	local t_regions = marks.get_marks_and_regions(false)
 end
 
 pickers.regions = function()
@@ -571,27 +534,8 @@ pickers.regions = function()
 	-- reaper.EnumProjectMarkers3(ReaProject proj, integer idx)
 	--
 
-	-- NOTE: this chunk collects ALL regions || markers >> refactor into library/marks|regions.
-	--
-	-- local ret, num_markers, num_regions = reaper.CountProjectMarkers( 0 )
-	-- local num_total = num_markers + num_regions
-	-- if num_regions > 0 then
-	--   -- Single field
-	--   local ret_input, extension = reaper.GetUserInputs( "Extend Regions By Length", 1, "Length (seconds)", "1.0" )
-	--   if not ret_input then return end
-	--
-	--   local i = 0
-	--   while i < num_total do
-	--     local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3( 0, i )
-	--     if isrgn then
-	--       -- Process region
-	--       reaper.SetProjectMarker3( 0, markrgnindexnumber, isrgn, pos, rgnend + extension, name, color )
-	--     end
-	--     i = i + 1
-	--   end
-	-- else
-	--   msg("Project has no regions!")
-	-- end
+	local t_regions = marks.get_marks_and_regions(true)
+	-- pass this to picker
 end
 
 pickers.midi_patterns = function()
@@ -695,41 +639,49 @@ pickers.midi_note_articulation = function()
 end
 
 pickers.all_items = function()
-	-- for all tracks
+	-- TODO: i should use the flat array from vtt here!!
 
-	-- for i = 0, reaper.CountTracks(0) - 1 do
-	-- 	local tr = reaper.GetTrack(0, i)
-	-- 	local guid = reaper.GetTrackGUID(tr)
-	-- 	local _, track_name_raw = reaper.GetTrackName(tr)
-	-- 	next_prefix, next_options, next_track_name = getNameStringParts(i, track_name_raw)
-	-- 	-- syntax.verify
-	-- 	if verifyByComparing(i, prev_prefix, next_prefix) and next_prefix ~= false then
-	-- 		local next_track_obj = createTrackObj(guid, i, next_prefix, next_options, next_track_name) -- <<<<<<<< TODO
-	-- 		-- log.user('!!!')
-	-- 		vttInsertTrack(next_track_obj)
-	-- 		prev_prefix = next_prefix
-	-- 	else
-	-- 		break
-	-- 	end
-	-- end
+	local t_all_tracks = {}
+	for i = 0, reaper.CountTracks(0) - 1 do
+		local tr = reaper.GetTrack(0, i)
+		local guid = reaper.GetTrackGUID(tr)
+		local _, track_name_raw = reaper.GetTrackName(tr)
+		table.insert(t_all_tracks, {
+			guid = guid,
+			name = track_name_raw,
+		})
+	end
 
-	-- get all items
+	local t_all_items = {}
+	for _, tr in pairs(t_all_tracks) do
+		num_items = reaper.GetTrackNumMediaItems(tr)
+		if num_items > 0 then
+			-- first_item = reaper.GetTrackMediaItem(track, 0)
+			-- first_item_sel = reaper.IsMediaItemSelected(first_item)
 
-	-- num_items = reaper.GetTrackNumMediaItems(track)
-	-- if num_items > 0 then
-	--   reaper.Undo_BeginBlock()
-	--   reaper.Main_OnCommand(40289, 0)
-	--   first_item = reaper.GetTrackMediaItem(track, 0)
-	--   first_item_sel = reaper.IsMediaItemSelected(first_item)
-	--   for i = 0, num_items - 1 do
-	--     item = reaper.GetTrackMediaItem(track, i)
-	--     reaper.SetMediaItemSelected(item, not first_item_sel)
-	--   end
-	--   reaper.Undo_EndBlock("Toggle selecting all items on track under mouse cursor", 0)
-	-- end
+			for i = 0, num_items - 1 do
+				item = reaper.GetTrackMediaItem(track, i)
+				local item_cur_take = reaper.GetTake(item, 0)
+				local take_name = reaper.GetTakeName( item_cur_take )
+				table.insert(t_all_items, {
+					parent_track_id = guid,
+					item_idx = reaper.GetMediaItemInfo_Value(item, "IP_ITEMNUMBER"),
+					name = take_name,
+				})
+
+			end
+		end
+	end
+
+  -- TODO: pass all items to picker
+
 end
 
 pickers.all_visible_items = function()
+
+	-- NOTE: vtt should return an array of all track objects as well as the tree.
+	-- BOTH data structurs are important.
+
 	-- -- @description Add all completely visible items in arrange viewport to selection (for all completely visible tracks)
 	-- -- @author amagalma
 	-- -- @version 1.00

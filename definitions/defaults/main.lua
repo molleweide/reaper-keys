@@ -2,6 +2,7 @@ return {
   track_motion = {
     ["G"] = "LastTrack",
     ["gg"] = "FirstTrack",
+    -- i don't use folders so I could replace these.
     ["J"] = "NextFolderNear",
     ["K"] = "PrevFolderNear",
     ["/"] = "MatchedTrackForward",
@@ -11,6 +12,7 @@ return {
     [":"] = "TrackWithNumber",
     ["j"] = "NextTrack",
     ["k"] = "PrevTrack",
+    -- the num X by which I jump could be stored in a config or ini, and altered with fzf
     ["<C-b>"] = "Prev10Track",
     ["<C-f>"] = "Next10Track",
     ["<C-d>"] = "Next5Track",
@@ -18,6 +20,7 @@ return {
   },
   visual_track_command = {
     ["V"] = "SetModeNormal",
+    -- add these to pickers.track_params
     ["<C-h>"] = "NudgeTrackPanLeft",
     ["<C-l>"] = "NudgeTrackPanRight",
     ["<C-H>"] = "NudgeTrackPanLeft10Times",

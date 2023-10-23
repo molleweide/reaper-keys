@@ -2,19 +2,19 @@
 -- if you need help check out the documentation https://gwatcha.github.io/reaper-keys/configuration/actions.html
 -- see ./defaults/actions.lua for examples, as well as actions you can call
 
-local lib = require('library')
+local lib = require("library")
 -- provides functions which are specific to reaper-keys, such as macros
 -- search for 'lib' in the default actions file to see examples
 
-local custom = require('custom_actions')
+local custom = require("custom_actions")
 -- provides custom functions which make use of the reaper api
 -- search for 'custom' in the default actions file to see examples
 
-local syntax = require('SYNTAX.actions')
+local syntax = require("SYNTAX.actions")
 
-local pickers = require('pickers.pickers')
+local pickers = require("pickers.pickers")
 
-local cli = require('library.cli')
+local cli = require("library.cli")
 
 -- naming conventions:
 -- a noun implies an action which selects the noun, or a movement to it's position
@@ -22,26 +22,42 @@ local cli = require('library.cli')
 -- longer verbs are usually commands
 
 return {
-  PickerAddTrackFx = pickers.add_track_fx,
-  PickerTest = pickers.test_picker,
-  Launcher = cli.run_launcher,
-  ApplyConfigs = syntax.applyConfigs,
-  TrackInSet_MIDI_QMK = {lib.io_device.setInputTo_MIDI_QMK, custom.setupMidiInputPreProcessorOnSelTrks},
-  TrackInSet_MIDI_GRAND_ROLAND = {lib.io_device.setInputTo_MIDI_GRAND_ROLAND, custom.setupMidiInputPreProcessorOnSelTrks},
-  TrackInSet_MIDI_VIRTUAL = {lib.io_device.setInputTo_MIDI_VIRTUAL, custom.setupMidiInputPreProcessorOnSelTrks},
-  TrackInSet_MIDI_DEFAULT = {lib.io_device.setInputTo_MIDI_DEFAULT, custom.setupMidiInputPreProcessorOnSelTrks},
-  gCut = syntax.gcut,
-  gPut = syntax.gput,
-  gYank = syntax.gyank,
-  sidechainToGhostKick = syntax.sidechainToGhostKick,
-  -- SaveAllTracksAsTemplate = { -- not working!!!
-  --   "Reset",
-  --   "FirstTrack",
-  --   "SetModeVisualTrack", -- I lose visual???
-  --   "LastTrack",
-  --   -- "SaveTrackTempFromSelected"
-  -- },
-  ZoomProjectCustom = {"ZoomProject", "ApplyConfigs"},
-  -- custom zoom project where I always call apply tree after zoom + scroll
-  -- ArmTracksWithMidiRouter = { "ArmTracks", custom.hookUpMidiRouter }, -- hook setup midi router.
+	PickerAddTrackFx = pickers.add_track_fx,
+	PickerTest = pickers.test_picker,
+	PickerRegions = pickers.regions,
+	PickerMarks = pickers.marks,
+	PickerTrackFx = pickers.track_fx,
+	PickerTrackRoutes = pickers.track_routing,
+	PickerReaperProjects = pickers.projects,
+	-- PickerDrums = pickers.xx,
+	-- PickerMusic = pickers.xx,
+	-- PickerFX = pickers.xx,
+	PickerAllItems = pickers.all_items,
+	PickerAllItemsVisible = pickers.all_visible_items,
+	PickerSamples = pickers.samples_explorer,
+	PickerFileBrowser = pickers.file_browser,
+	-- PickerNewTracksFromPreset = pickers.xx,
+	Launcher = cli.run_launcher,
+	ApplyConfigs = syntax.applyConfigs,
+	TrackInSet_MIDI_QMK = { lib.io_device.setInputTo_MIDI_QMK, custom.setupMidiInputPreProcessorOnSelTrks },
+	TrackInSet_MIDI_GRAND_ROLAND = {
+		lib.io_device.setInputTo_MIDI_GRAND_ROLAND,
+		custom.setupMidiInputPreProcessorOnSelTrks,
+	},
+	TrackInSet_MIDI_VIRTUAL = { lib.io_device.setInputTo_MIDI_VIRTUAL, custom.setupMidiInputPreProcessorOnSelTrks },
+	TrackInSet_MIDI_DEFAULT = { lib.io_device.setInputTo_MIDI_DEFAULT, custom.setupMidiInputPreProcessorOnSelTrks },
+	gCut = syntax.gcut,
+	gPut = syntax.gput,
+	gYank = syntax.gyank,
+	sidechainToGhostKick = syntax.sidechainToGhostKick,
+	-- SaveAllTracksAsTemplate = { -- not working!!!
+	--   "Reset",
+	--   "FirstTrack",
+	--   "SetModeVisualTrack", -- I lose visual???
+	--   "LastTrack",
+	--   -- "SaveTrackTempFromSelected"
+	-- },
+	ZoomProjectCustom = { "ZoomProject", "ApplyConfigs" },
+	-- custom zoom project where I always call apply tree after zoom + scroll
+	-- ArmTracksWithMidiRouter = { "ArmTracks", custom.hookUpMidiRouter }, -- hook setup midi router.
 }

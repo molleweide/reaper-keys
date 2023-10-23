@@ -71,6 +71,9 @@ local settings = require("utils.j_settings_functions")
 
 require("gui2.JGui")
 
+-- TODO: always open fzf at cursor/selection so that I don't need to move
+-- my eyes.
+
 -- TODO: remove this msg function -> replace all instances with `log.<level>`
 
 function msg(m)
@@ -462,5 +465,4 @@ fzf.init = function(opts, onenter)
 	end
 end
 
--- fx-finder-settings.inifx-finder-data.ini
 return fzf
