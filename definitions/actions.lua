@@ -24,9 +24,13 @@ local cli = require("library.cli")
 return {
 	PickerAddTrackFx = pickers.add_track_fx,
 	PickerTest = pickers.test_picker,
+
+  -- todo: implement these now.
 	PickerRegions = pickers.regions,
 	PickerMarks = pickers.marks,
+
 	PickerTrackFx = pickers.track_fx,
+	PickerTrackAttr = pickers.track_attributes,
 	PickerTrackRoutes = pickers.track_routing,
 	PickerReaperProjects = pickers.projects,
 	-- PickerDrums = pickers.xx,

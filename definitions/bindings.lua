@@ -19,6 +19,7 @@ return {
 							["r"] = "PickerRegions",
 							["q"] = "PickerMarks",
 							["x"] = "PickerTrackFx",
+							["I"] = "PickerTrackAttr",
 							["a"] = "PickerTrackRoutes",
 							["p"] = "PickerReaperProjects",
 							["d"] = "PickerDrums",
