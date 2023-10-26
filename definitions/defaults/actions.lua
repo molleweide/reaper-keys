@@ -160,6 +160,8 @@ return {
 	InsertNoteBlockCommand = custom.insertMidiNoteChunk,
 	InsertMidiBlockPicker = custom.midiChordPicker,
 	InsertMidiBlockPickerOperator = custom.midiChordPicker,
+  InsertMidiStep_P1 = custom.midiStepRel_P1,
+  InsertMidiStep_m3 = custom.midiStepRel_m3,
 	InsertOrExtendMidiItem = 42069,
 	InsertTrackFromTrackTemplate = 46000,
 	InsertTrackAbove = { "_SWS_INSRTTRKABOVE", prefixRepetitionCount = true },

@@ -77,14 +77,47 @@ return {
 	  -- + move insertMidiNoteChunk to library/midi.lua
 	  --
 
-		["a"] = "InsertNoteBlockCommand", -- testing
-		["s"] = "InsertNoteBlockCommand", -- testing
-		["d"] = "InsertNoteBlockCommand", -- testing
-		["f"] = "InsertNoteBlockCommand", -- testing
-		["j"] = "InsertNoteBlockCommand", -- testing
-		["k"] = "InsertNoteBlockCommand", -- testing
-		["l"] = "InsertNoteBlockCommand", -- testing
-		[";"] = "InsertNoteBlockCommand", -- testing
+	  -- left hand
+
+		["q"] = "InsertMidiStep_P1",
+		["w"] = "InsertMidiStep_m2",
+		["e"] = "InsertMidiStep_M2",
+		["r"] = "InsertMidiStep_m3",
+		["t"] = "InsertMidiStep_m3",
+
+		["a"] = "InsertMidiStep_P1",
+		["s"] = "InsertMidiStep_m2",
+		["d"] = "InsertMidiStep_M2",
+		["f"] = "InsertMidiStep_m3",
+		["g"] = "InsertMidiStep_m3",
+
+		["z"] = "InsertMidiStep_P1",
+		["x"] = "InsertMidiStep_m2",
+		["c"] = "InsertMidiStep_M2",
+		["v"] = "InsertMidiStep_m3",
+		["b"] = "InsertMidiStep_m3",
+
+		-- right hand
+
+		["y"] = "InsertMidiStep_M3",
+		["u"] = "InsertMidiStep_M3",
+		["i"] = "InsertMidiStep_P4",
+		["o"] = "InsertMidiStep_b5",
+		["p"] = "InsertMidiStep_P5",
+
+		["h"] = "InsertMidiStep_M3",
+		["j"] = "InsertMidiStep_M3",
+		["k"] = "InsertMidiStep_P4",
+		["l"] = "InsertMidiStep_b5",
+		[";"] = "InsertMidiStep_P5",
+
+		["n"] = "InsertMidiStep_m6",
+		["m"] = "InsertMidiStep_m6",
+		[","] = "InsertMidiStep_M6",
+		["."] = "InsertMidiStep_m7",
+		["/"] = "InsertMidiStep_M7",
+
+		-- thumbs
 
 		-- ["r"] = "changeDirection",
 		-- ["u"] = "changeDirection",

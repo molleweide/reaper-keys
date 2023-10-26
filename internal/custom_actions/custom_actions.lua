@@ -12,6 +12,8 @@ local io = require("definitions.io")
 
 local utils = require("custom_actions.utils")
 
+local midi = require("library.midi")
+
 --  Motion start/end points can be retrieved with the (temporary selection)
 --    local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 --  being made inside of the
@@ -174,114 +176,11 @@ function custom_actions.sidechainCompTracks(key_track_name)
 	-- from ghost 1/2 into 3/4
 end
 
---
--- TODO: refactor / move to library/midi.lua
---
-
-function custom_actions.insertMidiNoteChunk(meta, opts)
-	opts = opts or {}
-	-- log.user("META:", format.block(meta))
-
-	if opts.move_cursor then
-		reaper.SetEditCurPos(meta.end_pos, false, false)
-	end
-
-	-- TODO: move to definitions/constants.lua
-	local midi_insertion_data_default = {
-		selected = false,
-		muted = false,
-		chan = 0,
-		noSortIn = true,
-	}
-
-	local ret, ME, take = utils.getMidiValidContext()
-	if not ret then
-		return
-	end
-
-	local cursor_pos = reaper.GetCursorPosition()
-	local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
-
-	-- NOTE: when run as an operator + motion, then the LTr is already reset.
-	-- so i have to pass down the start/end positions manually via opts.
-
-	-- local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
-
-	local t_note_pitches = {}
-	local t_midi_notes = {}
-
-	-- duration
-	local sixteen_note_len = 0.25
-	local note_end_gap = 0.005
-	local note_duration = sixteen_note_len - note_end_gap
-
-	-- FIX: handle incoming chord here...
-
-	if opts.chord then
-		for _, chord_rel_pitch in ipairs(opts.chord[2]) do
-			table.insert(t_note_pitches, active_note_row + chord_rel_pitch - 1)
-		end
-	else
-		table.insert(t_note_pitches, active_note_row)
-	end
-
-	--
-	-- NOTE:
-	--
-
-	local function note_start()
-		if meta.action_type == "timeline_operator" then
-			return meta.start_pos
-		elseif meta.action_type:match("command$") then
-			return cursor_pos
-		end
-	end
-
-	local function note_end()
-		log.user("!!", format.block(meta))
-
-		if meta.action_type == "timeline_operator" then
-			return meta.end_pos
-		-- elseif meta.action_type == "command" then
-		elseif meta.action_type:match("command$") then
-			return cursor_pos + note_duration
-		end
-	end
-
-	for i in ipairs(t_note_pitches) do
-		local n = {
-			pitch = t_note_pitches[i],
-			time_pos_start = note_start(),
-			time_pos_end = note_end(),
-		}
-		table.insert(t_midi_notes, n)
-		log.user("N:", format.block(n))
-	end
-
-	-- log.user(format.block(t_midi_notes))
-
-	for _, t_note in ipairs(t_midi_notes) do
-		local ret = reaper.MIDI_InsertNote(
-			take,
-			midi_insertion_data_default.selected,
-			midi_insertion_data_default.muted,
-			reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
-			reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
-			midi_insertion_data_default.chan,
-			t_note.pitch,
-			80,
-			midi_insertion_data_default.noSortIn
-		)
-	end
-
-	reaper.MIDI_Sort(take)
-end
-
 custom_actions.midiChordPicker = function(meta, opts)
 	local pickers = require("pickers.pickers")
 
 	pickers.chord(meta, {
-		next = custom_actions.insertMidiNoteChunk,
+		next = midi.insertMidiNoteChunk,
 		move_cursor = true,
 	})
 end
@@ -357,44 +256,63 @@ custom_actions.jumpToRegionAndLoop = function(opts)
 	})
 end
 
+-- FIX: it is a bit stupid to pass chords here. i should make it possible to
+-- pass single note / relative interval
+
 -- 0 / same
-custom_actions.midiStepRel_P1 = function(meta, opts)
-	custom_actions.insertMidiNoteChunk(meta, opts)
+custom_actions.midiStepRel_P1 = function(meta)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 0 } } })
 end
 
 -- 1 / minor second
 custom_actions.midiStepRel_m2 = function(meta, opts)
-	custom_actions.insertMidiNoteChunk(meta, opts)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 1 } } })
 end
 
 -- 2 / major second
 custom_actions.midiStepRel_M2 = function(meta, opts)
-	custom_actions.insertMidiNoteChunk(meta, opts)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 2 } } })
 end
 
 -- 3 / minor third
-custom_actions.midiStepRel_m3 = function(meta, opts)
-	custom_actions.insertMidiNoteChunk(meta, opts)
+custom_actions.midiStepRel_m3 = function(meta)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 3 } } })
 end
 
 -- 4 / major third
 custom_actions.midiStepRel_M3 = function(meta, opts)
-	custom_actions.insertMidiNoteChunk(meta, opts)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 4 } } })
 end
 
 -- 5 / Perfect Fourth
 custom_actions.midiStepRel_P4 = function(meta, opts)
-	custom_actions.insertMidiNoteChunk(meta, opts)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 5 } } })
 end
 
 -- 6 / Tritone
 custom_actions.midiStepRel_b5 = function(meta, opts)
-	custom_actions.insertMidiNoteChunk(meta, opts)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 6 } } })
 end
 
 -- 7 / Perfect Fifth
 custom_actions.midiStepRel_P5 = function(meta, opts)
-	custom_actions.insertMidiNoteChunk(meta, opts)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 7 } } })
+end
+
+custom_actions.midiStepRel_m6 = function(meta, opts)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 8 } } })
+end
+
+custom_actions.midiStepRel_M6 = function(meta, opts)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 9 } } })
+end
+
+custom_actions.midiStepRel_m7 = function(meta, opts)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 10 } } })
+end
+
+custom_actions.midiStepRel_M7 = function(meta, opts)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 11 } } })
 end
 
 return custom_actions

@@ -354,7 +354,6 @@ midi.reorderNotes = function()
 	-- end
 
 	function ReorderNotes(percent)
-
 		local ME = reaper.MIDIEditor_GetActive()
 		if not ME then
 			return
@@ -381,6 +380,124 @@ midi.reorderNotes = function()
 	Undo_BeginBlock()
 	ReorderNotes()
 	Undo_EndBlock("Reorder notes", 0)
+end
+
+function midi.getMidiValidContext()
+	local ME = reaper.MIDIEditor_GetActive()
+	local take = reaper.MIDIEditor_GetTake(ME)
+	local retval = true
+	if not ME or (not take or not reaper.TakeIsMIDI(take)) then
+		retval = false
+	end
+	return retval, ME, take
+end
+
+--
+-- operator / command
+--
+-- insert chunks of midi notes
+--
+
+function midi.insertMidiNoteChunk(meta, opts)
+	opts = opts or {}
+	-- log.user("META:", format.block(meta))
+
+	-- TODO: move to definitions/constants.lua
+	local midi_insertion_data_default = {
+		selected = false,
+		muted = false,
+		chan = 0,
+		noSortIn = true,
+	}
+
+	local ret, ME, take = midi.getMidiValidContext()
+	if not ret then
+		return
+	end
+
+	local cursor_pos = reaper.GetCursorPosition()
+	local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
+
+	-- NOTE: when run as an operator + motion, then the LTr is already reset.
+	-- so i have to pass down the start/end positions manually via opts.
+
+	-- local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+
+	local t_note_pitches = {}
+	local t_midi_notes = {}
+
+	-- duration
+	local sixteen_note_len = 0.25
+	local step_len = sixteen_note_len
+	local note_end_gap = 0.005
+	local note_duration = sixteen_note_len - note_end_gap
+
+	if opts.move_cursor then
+	  -- FIX: GetCursorPosition should be collected inside ASF??
+		local new_pos = meta.end_pos and meta.endpos or reaper.GetCursorPosition() + step_len
+		reaper.SetEditCurPos(new_pos, false, false)
+	end
+
+	-- FIX: handle incoming chord here...
+
+	if opts.chord then
+		for _, chord_rel_pitch in ipairs(opts.chord[2]) do
+			table.insert(t_note_pitches, active_note_row + chord_rel_pitch - 1)
+		end
+	else
+		table.insert(t_note_pitches, active_note_row)
+	end
+
+	--
+	-- NOTE:
+	--
+
+	local function note_start()
+		if meta.action_type == "timeline_operator" then
+			return meta.start_pos
+		elseif meta.action_type:match("command$") then
+			return cursor_pos
+		end
+	end
+
+	local function note_end()
+		log.user("!!", format.block(meta))
+
+		if meta.action_type == "timeline_operator" then
+			return meta.end_pos
+		-- elseif meta.action_type == "command" then
+		elseif meta.action_type:match("command$") then
+			return cursor_pos + note_duration
+		end
+	end
+
+	for i in ipairs(t_note_pitches) do
+		local n = {
+			pitch = t_note_pitches[i],
+			time_pos_start = note_start(),
+			time_pos_end = note_end(),
+		}
+		table.insert(t_midi_notes, n)
+		log.user("N:", format.block(n))
+	end
+
+	-- log.user(format.block(t_midi_notes))
+
+	for _, t_note in ipairs(t_midi_notes) do
+		local ret = reaper.MIDI_InsertNote(
+			take,
+			midi_insertion_data_default.selected,
+			midi_insertion_data_default.muted,
+			reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
+			reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
+			midi_insertion_data_default.chan,
+			t_note.pitch,
+			80,
+			midi_insertion_data_default.noSortIn
+		)
+	end
+
+	reaper.MIDI_Sort(take)
 end
 
 return midi
