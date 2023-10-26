@@ -4,6 +4,8 @@ local config = require("definitions.config")
 local format = require("utils.format")
 local fx = require("library.fx")
 local io = require("definitions.io")
+local project_state = require("utils.project_state")
+local tu = require("utils.table")
 
 -- FIX: all custom actions should recieve an `opts` table from the
 -- runner function, so that you always know that you have all the info
@@ -259,60 +261,69 @@ end
 -- FIX: it is a bit stupid to pass chords here. i should make it possible to
 -- pass single note / relative interval
 
--- 0 / same
 custom_actions.midiStepRel_P1 = function(meta)
-	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 0 } } })
-end
-
--- 1 / minor second
-custom_actions.midiStepRel_m2 = function(meta, opts)
 	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 1 } } })
 end
 
--- 2 / major second
-custom_actions.midiStepRel_M2 = function(meta, opts)
+custom_actions.midiStepRel_m2 = function(meta, opts)
 	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 2 } } })
 end
 
--- 3 / minor third
-custom_actions.midiStepRel_m3 = function(meta)
+custom_actions.midiStepRel_M2 = function(meta, opts)
 	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 3 } } })
 end
 
--- 4 / major third
-custom_actions.midiStepRel_M3 = function(meta, opts)
+custom_actions.midiStepRel_m3 = function(meta)
 	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 4 } } })
 end
 
--- 5 / Perfect Fourth
-custom_actions.midiStepRel_P4 = function(meta, opts)
+custom_actions.midiStepRel_M3 = function(meta, opts)
 	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 5 } } })
 end
 
--- 6 / Tritone
-custom_actions.midiStepRel_b5 = function(meta, opts)
+custom_actions.midiStepRel_P4 = function(meta, opts)
 	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 6 } } })
 end
 
--- 7 / Perfect Fifth
-custom_actions.midiStepRel_P5 = function(meta, opts)
+custom_actions.midiStepRel_b5 = function(meta, opts)
 	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 7 } } })
 end
 
-custom_actions.midiStepRel_m6 = function(meta, opts)
+custom_actions.midiStepRel_P5 = function(meta, opts)
 	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 8 } } })
 end
 
-custom_actions.midiStepRel_M6 = function(meta, opts)
+custom_actions.midiStepRel_m6 = function(meta, opts)
 	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 9 } } })
 end
 
-custom_actions.midiStepRel_m7 = function(meta, opts)
+custom_actions.midiStepRel_M6 = function(meta, opts)
 	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 10 } } })
 end
 
-custom_actions.midiStepRel_M7 = function(meta, opts)
+custom_actions.midiStepRel_m7 = function(meta, opts)
 	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 11 } } })
+end
+
+custom_actions.midiStepRel_M7 = function(meta, opts)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 12 } } })
+end
+
+custom_actions.midiStepToggleDirection = function(meta, opts)
+	local exists, midi_step_state = project_state.get("mode_state", "midi_step")
+	local new_midi_step_state
+	if not exists then
+	  -- maybe i should craft a default state table for the mode that should be
+	  -- kept under constants in state machine??
+		new_midi_step_state = {
+			direction = false,
+		}
+	else
+		new_midi_step_state = midi_step_state
+		new_midi_step_state.direction = not new_midi_step_state.direction
+	end
+	log.user(exists, midi_step_state, format.block(new_midi_step_state))
+	project_state.overwrite("mode_state", "midi_step", new_midi_step_state)
 end
 
 return custom_actions

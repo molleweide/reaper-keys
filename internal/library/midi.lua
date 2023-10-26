@@ -1,5 +1,6 @@
 local log = require("utils.log")
 local format = require("utils.format")
+local project_state = require('utils.project_state')
 
 -- // MIDI HELPER VARIABLE
 -- WAS_FILTERED = 1024;  // array for storing which notes are filtered
@@ -401,6 +402,10 @@ end
 function midi.insertMidiNoteChunk(meta, opts)
 	opts = opts or {}
 	-- log.user("META:", format.block(meta))
+
+	local exists, midi_step_state = project_state.getAll("midi_step")
+
+	log.user("midi_step_state:", exists, format.block(midi_step_state))
 
 	-- TODO: move to definitions/constants.lua
 	local midi_insertion_data_default = {

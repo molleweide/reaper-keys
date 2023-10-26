@@ -490,6 +490,7 @@ return {
 	SelectPrevNoteSamePitch = { 40427, midiCommand = true },
 	SelectTracks = { setTrackSelection = true },
 	ToggleItemDefaultFadeInAndOut = 41194,
+	ToggleMidiStepDirection = custom.midiStepToggleDirection,
 	SetAutomationModeLatch = 40404,
 	SetAutomationModeLatchAndArm = { "SetAutomationModeLatch", "ArmAllEnvelopes" },
 	SetAutomationModeLatchPreview = 42023,

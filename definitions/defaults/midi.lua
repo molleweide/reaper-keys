@@ -71,13 +71,13 @@ return {
 	},
 	midi_step_command = {
 
-	  --
-	  -- TODO: i need to create custom actions now, each one should
-	  -- call the insertMidiNoteChunk
-	  -- + move insertMidiNoteChunk to library/midi.lua
-	  --
+		--
+		-- TODO: i need to create custom actions now, each one should
+		-- call the insertMidiNoteChunk
+		-- + move insertMidiNoteChunk to library/midi.lua
+		--
 
-	  -- left hand
+		-- left hand
 
 		["q"] = "InsertMidiStep_P1",
 		["w"] = "InsertMidiStep_m2",
@@ -118,6 +118,13 @@ return {
 		["/"] = "InsertMidiStep_M7",
 
 		-- thumbs
+
+		-- TODO: use tab || leader tab
+		-- toggle direction
+		--
+		-- how is marks stored to state?
+
+		["<TAB>"] = "ToggleMidiStepDirection",
 
 		-- ["r"] = "changeDirection",
 		-- ["u"] = "changeDirection",
