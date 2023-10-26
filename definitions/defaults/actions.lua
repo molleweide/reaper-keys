@@ -491,6 +491,7 @@ return {
 	SelectTracks = { setTrackSelection = true },
 	ToggleItemDefaultFadeInAndOut = 41194,
 	ToggleMidiStepDirection = custom.midiStepToggleDirection,
+	ToggleMidiStepSilent =  custom.midiStepToggleSilent,
 	SetAutomationModeLatch = 40404,
 	SetAutomationModeLatchAndArm = { "SetAutomationModeLatch", "ArmAllEnvelopes" },
 	SetAutomationModeLatchPreview = 42023,
