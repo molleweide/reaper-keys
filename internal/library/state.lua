@@ -34,6 +34,11 @@ function state.setModeMidi()
         log.user("mode midi !!!")
 end
 
+function state.setModeMidiStep()
+  state_interface.setMode('midi_step')
+        log.user("mode midi_step !!!")
+end
+
 function state.setModeVirtualKeyboard()
   -- before we enter mode.
   --  first turn of dual-function-keys

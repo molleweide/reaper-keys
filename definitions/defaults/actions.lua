@@ -552,6 +552,7 @@ return {
 	SetMidiGridDivision = custom.setMidiGridDivision,
 	SetModeNormal = lib.state.setModeNormal,
 	SetModeMidi = lib.state.setModeMidi,
+	SetModeMidiStep = lib.state.setModeMidiStep,
 	PasteItemFxChain = { "_S&M_COPYFXCHAIN9", prefixRepetitionCount = true },
 	SetModeVisualTimeline = lib.state.setModeVisualTimeline,
 	ClearSelectedTimeline = custom.clearSelectedTimeline,
