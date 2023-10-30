@@ -7,6 +7,7 @@ local fu = require("utils.fzf")
 local sf = require("utils.j_string_functions")
 local tf = require("utils.j_tables")
 
+local lib_items = require("library.items")
 local marks = require("utils.marks_regions")
 
 local syntax = require("SYNTAX.syntax.syntax")
@@ -576,7 +577,6 @@ pickers.marks = function()
 	-- local ok, old_mark = project_state.get("marks", register)
 	-- mark['index'] = reaper.AddProjectMarker(0, true, mark.left, mark.right, register, -1)
 	local t_regions = marks.get_all(false)
-
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "project marks",
@@ -589,16 +589,7 @@ pickers.marks = function()
 end
 
 pickers.regions = function()
-	-- integer retval, integer num_markers, integer num_regions = reaper.CountProjectMarkers(ReaProject proj)
-	--
-	-- integer retval, boolean isrgn, number pos, number rgnend, string name,
-	-- integer markrgnindexnumber, integer color =
-	-- reaper.EnumProjectMarkers3(ReaProject proj, integer idx)
-	--
-
 	local t_regions = marks.get_all(true)
-	-- pass this to picker
-
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "project regions",
@@ -613,7 +604,6 @@ end
 pickers.midi_patterns = function()
 	-- get patterns from the midi patterns config file
 	-- definitions/midi_patterns.lua
-
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "midi patterns",
@@ -629,7 +619,6 @@ pickers.chord_progression = function()
 	-- start building out basic atomic (very important) progressions
 	-- that can be picked to insert chord data. Should be usable
 	-- with motion so that you can do `apply progression to` motion, eg beats, bar, or region.
-
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "chord progressions",
@@ -642,20 +631,6 @@ pickers.chord_progression = function()
 end
 
 pickers.chord = function(meta, opts)
-	log.user("picker chord:", format.block(opts))
-
-	-- refactor into data
-	local t_chords = {
-		{
-			"major",
-			{ 1, 5, 8 },
-		},
-		{
-			"minor",
-			{ 1, 4, 8 },
-		},
-	}
-
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = string.format("%s: chord", meta.action_type),
@@ -667,9 +642,8 @@ pickers.chord = function(meta, opts)
 				move_cursor = opts.move_cursor,
 			})
 		end,
-		results = t_chords,
+		results = require("definitions.chords"),
 		sort_comp = 1,
-
 		-- RENAME: vstTable...
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -695,47 +669,9 @@ pickers.midi_note_articulation = function()
 end
 
 pickers.all_items = function()
-
 	local t_track_objects = syntax.get_list_of_track_objects()
-
-	local t_all_tracks = {}
-	for i = 0, reaper.CountTracks(0) - 1 do
-		local tr = reaper.GetTrack(0, i)
-		local guid = reaper.GetTrackGUID(tr)
-		local _, track_name_raw = reaper.GetTrackName(tr)
-		table.insert(t_all_tracks, {
-			tr = tr,
-			guid = guid,
-			name = track_name_raw,
-		})
-	end
-
-	--
-	-- TODO: refactor this into utility
-	--
-
-	local t_all_items = {}
-	for _, trk_obj in pairs(t_all_tracks) do
-		num_items = reaper.GetTrackNumMediaItems(trk_obj.tr)
-		if num_items > 0 then
-			-- first_item = reaper.GetTrackMediaItem(track, 0)
-			-- first_item_sel = reaper.IsMediaItemSelected(first_item)
-
-			for i = 0, num_items - 1 do
-				item = reaper.GetTrackMediaItem(trk_obj.tr, i)
-				local item_cur_take = reaper.GetTake(item, 0)
-				local take_name = reaper.GetTakeName(item_cur_take)
-				table.insert(t_all_items, {
-					parent_track_id = guid,
-					item_idx = reaper.GetMediaItemInfo_Value(item, "IP_ITEMNUMBER"),
-					name = take_name,
-				})
-			end
-		end
-	end
-
+  local t_all_items = lib_items.get_items_in_track_objects(t_track_objects)
 	log.user(format.block(t_all_items))
-
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "all items",
@@ -750,8 +686,11 @@ pickers.all_items = function()
 end
 
 pickers.all_visible_items = function()
-	-- NOTE: vtt should return an array of all track objects as well as the tree.
-	-- BOTH data structurs are important.
+
+  -- TODO: 1. use
+	local t_track_objects = syntax.get_list_of_track_objects()
+
+	-- TODO: refactor parts of this into lib/items
 
 	local tracks_cnt = reaper.GetNumTracks()
 	reaper.PreventUIRefresh(1)
