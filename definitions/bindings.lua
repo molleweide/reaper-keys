@@ -16,6 +16,11 @@ return {
 						{
 							["f"] = "PickerAddTrackFx",
 							["w"] = "PickerTest",
+							-- TODO: NOW
+							--
+							-- which one should i start with? tracks are quite easy.
+							-- items are quite easy.
+							--
 							["r"] = "PickerRegions",
 							["q"] = "PickerMarks",
 							["x"] = "PickerTrackFx",
