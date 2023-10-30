@@ -316,7 +316,9 @@ local function gui_default_update(self)
 	if lastSearch ~= textBox.value or UPDATE_RESULTS then
 		-- search changed, update results
 		UPDATE_RESULTS = false
+
 		table.sort(self.t_results_data, self.sort_comp)
+
 		if lastSearch ~= textBox.value then -- only search again when input changes, not on scroll
 			--
 			-- TODO: attach results_filter as a method on GUI inside init()
@@ -402,9 +404,15 @@ local function build_picker(opts, on_enter)
 
 	tResultButtons = {}
 
-	if not opts.sort_comp then
-	  opts.sort_comp = require("pickers.sorters.default")
-	end
+
+
+  -- todo: if sort_comp == string, then
+
+
+	-- if not opts.sort_comp then
+	--   opts.sort_comp = require("pickers.sorters.default")()
+	-- end
+	opts.sort_comp = require("pickers.sorters.default")(opts.sort_comp)
 
 
 	if not opts.entry_maker then

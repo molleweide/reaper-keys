@@ -9,6 +9,8 @@ local tf = require("utils.j_tables")
 
 local marks = require("utils.marks_regions")
 
+local syntax = require("SYNTAX.syntax.syntax")
+
 local data_loaders = require("pickers.data.load_plugins_data")
 
 --
@@ -49,6 +51,9 @@ pickers.add_track_fx = function(meta)
 		return false
 	end
 
+	-- TODO: this should be refactored into a default func where I can pass which
+	-- table keys that I want to use to check for
+	--
 	local function sortByRating(a, b)
 		if a.rating > b.rating then
 			return true
@@ -307,23 +312,62 @@ pickers.test_picker = function()
 	})
 end
 
---
--- picker: list all tracks
---
-
-pickers.tracks = function()
-	-- TODO: get tracks array from vtt.
-
-	-- how do I get all tracks from vtt
-
+pickers.all_tracks = function()
 	fzf.init({
 		env = RK_FZF_ENV,
-		title = "Tracks",
-		on_select_func = onenter,
-		results = {},
+		title = "All Tracks",
+
+		-- TODO: create a good minimal default for on_select_func
+
+		on_select_func = function(self, i)
+			if not self.t_search_results then
+				return false
+			end
+			local selection = self.t_search_results[i]
+			if not selection then
+				return false
+			end
+			log.user("onenter:", i, format.block(selection))
+			return true
+		end,
+		results = syntax.get_list_of_track_objects(),
+		sort_comp = "name",
+
+		-- FIX: is there a good default that could be added here?
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
 			return vstTable
+		end,
+
+		-- TODO: create a good minimal default for entry_maker
+
+		entry_maker = function(tButtons, tResults)
+			for i, cIds in ipairs(tButtons) do
+				local b = cIds[1]
+				local info = cIds[2]
+				local iStart = fu._round(i + SCROLL_RESULTS)
+				local highlights = sf.jStringExplode(textBox.value, " ")
+				local showing
+
+				if iStart <= #tResults then
+					showing = iStart
+				else
+					showing = #tResults
+				end
+
+				LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
+
+				if tResults and iStart <= #tResults then
+					local item = tResults[iStart]
+					b.label = item.name
+					b.visible = true
+					info.visible = true
+					b.highlight = highlights
+				else
+					b.visible = false
+					info.visible = false
+				end
+			end
 		end,
 	})
 end
@@ -364,7 +408,6 @@ pickers.browse_reaper_preferences = function()
 			return vstTable
 		end,
 	})
-
 end
 
 pickers.track_fx = function()
@@ -453,9 +496,6 @@ pickers.track_fx_params = function()
 			return vstTable
 		end,
 	})
-
-
-
 end
 
 pickers.track_channel_mix_params = function()
@@ -482,9 +522,6 @@ pickers.track_channel_mix_params = function()
 			return vstTable
 		end,
 	})
-
-
-
 
 	-- ~ create list of relevant track params
 	-- ~ figure out how i can show them all in one picker.
@@ -515,17 +552,9 @@ pickers.track_attributes = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
 end
 
 pickers.track_routing = function()
-
 	-- revisit my route lib
 	--
 	-- get all routes for track
@@ -542,15 +571,6 @@ pickers.track_routing = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
-
-
 end
 
 pickers.midi_editor_take_screensets = function()
@@ -577,17 +597,6 @@ pickers.projects = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
-
-
-
-
 end
 
 -- 	FIX: make vtt into a class
@@ -603,8 +612,7 @@ pickers.track_syntax = function()
 end
 
 pickers.vtt_zones = function()
-
-  	fzf.init({
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "syntax: zones",
 		on_select_func = onenter,
@@ -614,26 +622,12 @@ pickers.vtt_zones = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
 
 pickers.vtt_groups = function() end
 
 pickers.vtt_mcsab_by_group_name = function()
-
-    	fzf.init({
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "syntax: MSCAB",
 		on_select_func = onenter,
@@ -643,21 +637,6 @@ pickers.vtt_mcsab_by_group_name = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
 
 pickers.vtt_all_fx_tracks = function() end
@@ -665,8 +644,7 @@ pickers.vtt_all_fx_tracks = function() end
 pickers.vtt_utils = function() end
 
 pickers.vtt_drum_kits = function()
-
-    	fzf.init({
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "drum kits",
 		on_select_func = onenter,
@@ -676,23 +654,6 @@ pickers.vtt_drum_kits = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
 
 pickers.marks = function()
@@ -700,8 +661,7 @@ pickers.marks = function()
 	-- mark['index'] = reaper.AddProjectMarker(0, true, mark.left, mark.right, register, -1)
 	local t_regions = marks.get_all(false)
 
-
-    	fzf.init({
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "project marks",
 		on_select_func = onenter,
@@ -711,24 +671,6 @@ pickers.marks = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
 
 pickers.regions = function()
@@ -742,7 +684,7 @@ pickers.regions = function()
 	local t_regions = marks.get_all(true)
 	-- pass this to picker
 
-    	fzf.init({
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "project regions",
 		on_select_func = onenter,
@@ -752,32 +694,13 @@ pickers.regions = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
 
 pickers.midi_patterns = function()
-
 	-- get patterns from the midi patterns config file
 	-- definitions/midi_patterns.lua
 
-    	fzf.init({
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "midi patterns",
 		on_select_func = onenter,
@@ -787,26 +710,6 @@ pickers.midi_patterns = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
 
 pickers.chord_progression = function()
@@ -814,7 +717,7 @@ pickers.chord_progression = function()
 	-- that can be picked to insert chord data. Should be usable
 	-- with motion so that you can do `apply progression to` motion, eg beats, bar, or region.
 
-    	fzf.init({
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "chord progressions",
 		on_select_func = onenter,
@@ -824,28 +727,6 @@ pickers.chord_progression = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
 
 pickers.chord = function(meta, opts)
@@ -875,17 +756,7 @@ pickers.chord = function(meta, opts)
 			})
 		end,
 		results = t_chords,
-		sort_comp = function(a, b)
-			a = a[1]
-			b = b[1]
-			if a > b then
-				return true
-			elseif a == b then
-				return a < b
-			else
-				return false
-			end
-		end,
+		sort_comp = 1,
 
 		-- RENAME: vstTable...
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
@@ -947,20 +818,21 @@ pickers.all_items = function()
 		local guid = reaper.GetTrackGUID(tr)
 		local _, track_name_raw = reaper.GetTrackName(tr)
 		table.insert(t_all_tracks, {
+			tr = tr,
 			guid = guid,
 			name = track_name_raw,
 		})
 	end
 
 	local t_all_items = {}
-	for _, tr in pairs(t_all_tracks) do
-		num_items = reaper.GetTrackNumMediaItems(tr)
+	for _, trk_obj in pairs(t_all_tracks) do
+		num_items = reaper.GetTrackNumMediaItems(trk_obj.tr)
 		if num_items > 0 then
 			-- first_item = reaper.GetTrackMediaItem(track, 0)
 			-- first_item_sel = reaper.IsMediaItemSelected(first_item)
 
 			for i = 0, num_items - 1 do
-				item = reaper.GetTrackMediaItem(track, i)
+				item = reaper.GetTrackMediaItem(trk_obj.tr, i)
 				local item_cur_take = reaper.GetTake(item, 0)
 				local take_name = reaper.GetTakeName(item_cur_take)
 				table.insert(t_all_items, {
@@ -972,41 +844,47 @@ pickers.all_items = function()
 		end
 	end
 
-	-- TODO: pass all items to picker
+	log.user(format.block(t_all_items))
 
-	    	fzf.init({
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "all items",
 		on_select_func = onenter,
-		results = {},
+		results = t_all_items,
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
 			return vstTable
 		end,
+		sort_comp = "name",
+		entry_maker = function(tButtons, tResults)
+			for i, cIds in ipairs(tButtons) do
+				local b = cIds[1]
+				local info = cIds[2]
+				local iStart = fu._round(i + SCROLL_RESULTS)
+				local highlights = sf.jStringExplode(textBox.value, " ")
+				local showing
+
+				if iStart <= #tResults then
+					showing = iStart
+				else
+					showing = #tResults
+				end
+
+				LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
+
+				if tResults and iStart <= #tResults then
+					local item = tResults[iStart]
+					b.label = item.name
+					b.visible = true
+					info.visible = true
+					b.highlight = highlights
+				else
+					b.visible = false
+					info.visible = false
+				end
+			end
+		end,
 	})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
 
 pickers.all_visible_items = function()
@@ -1053,8 +931,7 @@ pickers.all_visible_items = function()
 	reaper.PreventUIRefresh(-1)
 	reaper.UpdateArrange()
 
-
-	    	fzf.init({
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "visible items (lightspeed)",
 		on_select_func = onenter,
@@ -1064,30 +941,6 @@ pickers.all_visible_items = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
 
 pickers.item_parameters = function()
@@ -1129,7 +982,7 @@ pickers.item_parameters = function()
 		-- P_TRACK : MediaTrack * : (read-only)
 	}
 
-	    	fzf.init({
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "item params for: <item>",
 		on_select_func = onenter,
@@ -1139,32 +992,6 @@ pickers.item_parameters = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
 
 pickers.take_parameters = function()
@@ -1189,8 +1016,7 @@ pickers.take_parameters = function()
 		-- P_SOURCE : PCM_source *. Note that if setting this, you should first retrieve the old source, set the new, THEN delete the old.
 	}
 
-
-	    	fzf.init({
+	fzf.init({
 		env = RK_FZF_ENV,
 		title = "take params for: <take>",
 		on_select_func = onenter,
@@ -1200,33 +1026,6 @@ pickers.take_parameters = function()
 			return vstTable
 		end,
 	})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
 
 pickers.load_track_from_presets = function()
