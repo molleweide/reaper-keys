@@ -7,6 +7,7 @@ local fu = require("utils.fzf")
 local sf = require("utils.j_string_functions")
 local tf = require("utils.j_tables")
 
+local fx_util = require("library.fx")
 local lib_items = require("library.items")
 local marks = require("utils.marks_regions")
 
@@ -351,23 +352,15 @@ pickers.browse_reaper_preferences = function()
 end
 
 pickers.track_fx = function()
-	local t_track_fx = {}
-	-- ~ look at my track syntax
-	-- ~ get all track fx in table
-	-- ~ show in picker.
-
-	local make_results = function()
-		local selectedTracks = J_PROJECT_DATA:selectedTracks(0, 0, true)
-		log.user("selectedTracks in browse_fx_list:", selectedTracks)
-	end
-
 	fzf.init({
 		title = "Browse track FX list",
-		results = {},
+		results = fx_util.get_track_fx_chain_info(),
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
 			return vstTable
 		end,
+		sort_comp = "idx",
+		entry_maker = { "idx", "name", "pname" },
 	})
 end
 

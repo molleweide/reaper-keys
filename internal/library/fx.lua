@@ -176,11 +176,11 @@ end
 function fx_util.getSetTrackFxNameByFxChainIndex(guid_tr_or_opts, idx_fx, is_rec_fx, newName)
 	local guid_tr = guid_tr_or_opts
 
-  -- handle opts table
+	-- handle opts table
 	if guid_tr_or_opts == nil then
 		return
 	elseif type(guid_tr_or_opts) == "table" then
-	  local t = guid_tr_or_opts
+		local t = guid_tr_or_opts
 		guid_tr = t.guid_tr
 		idx_fx = t.idx_fx
 		is_rec_fx = t.is_rec_fx
@@ -321,6 +321,24 @@ fx_util.getFxIndexByName = function(guid_tr, search_name)
 	else
 		return false
 	end
+end
+
+-- NOTE: currently only works on selected track single
+fx_util.get_track_fx_chain_info = function()
+	local t_track_fx = {}
+	local tr = reaper.GetSelectedTrack(0, 0)
+	local tc = reaper.TrackFX_GetCount(tr)
+	for i = 0, tc - 1 do
+		local current_name = fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, i, is_rec_fx)
+		local ok, plugin_name = reaper.TrackFX_GetFXName(tr, i)
+		local fx_obj = {
+			idx = i,
+			name = current_name,
+			pname = plugin_name,
+		}
+		table.insert(t_track_fx, fx_obj)
+	end
+	return t_track_fx
 end
 
 return fx_util
