@@ -29,6 +29,12 @@ return {
 		["G"] = "InsertMidiBlockPicker", -- testing
 		["n"] = "AddNextNoteToSelection",
 		["N"] = "AddPrevNoteToSelection",
+
+    -- TODO: ZOOM BETTER SO THAT WE CAN
+	  -- make sure that we are in the world. oooh and also create more advanced
+	  -- zoom settings so that you can do zoom bar, zoom N bars, zoom region,
+	  -- zoom loop, etc.
+
 		["+"] = "MidiZoomInHoriz",
 		["-"] = "MidiZoomOutHoriz",
 		-- ["gg"] = "TopNote",
@@ -70,40 +76,66 @@ return {
 		},
 	},
 	midi_step_command = {
+
+	  -- okay so fixing the direction now is goig to be fuckNg mazing and then
+
+		-- TODO: today
+		-- ~ add octave jump for next step
+		--     double sequence
+		--       fu, fd
+		--
+		--       1. move active note row
+		--       2. add octave to pitched
+		--       3. clean up the `octave_next` key from state.
+		--
+		--
+		-- ~ use [single|chord|pattern]
+		-- ~ restrict pitches to closed set [0, 127]
+
 		-- LEFT HAND
-		["q"] = "InsertMidiStep_P1",
-		["w"] = "InsertMidiStep_m2",
-		["e"] = "InsertMidiStep_M2",
-		["r"] = "InsertMidiStep_m3",
-		["t"] = "InsertMidiStep_m3", --
-		["a"] = "InsertMidiStep_P1",
-		["s"] = "InsertMidiStep_m2",
-		["d"] = "InsertMidiStep_M2",
-		["f"] = "InsertMidiStep_m3",
-		["g"] = "InsertMidiStep_m3", --
-		["z"] = "InsertMidiStep_P1",
-		["x"] = "InsertMidiStep_m2",
-		["c"] = "InsertMidiStep_M2",
-		["v"] = "InsertMidiStep_m3",
-		["b"] = "ToggleMidiStepSilent", -- toggle mute/no-note
+		["q"] = "", -- jump forward by predefined (*) length
+		["w"] = "", -- (*) set predefined length.
+		["e"] = "",
+		["r"] = "",
+		["t"] = "", --
+		["a"] = "SetModeNormal", -- set pause/silent
+		["s"] = "ToggleMidiStepSilent",
+		["d"] = "ToggleMidiStepDirection",
+
+    -- maybe this should be a two step sequence [ f-up, f-down ]
+		["f"] = {
+			"+setNextOctave",
+			{
+				["u"] = "MidiStepSetNextOctaveUp",
+				["d"] = "MidiStepSetNextOctaveDown",
+			},
+		},
+
+		["g"] = "", --
+		["G"] = "JumpToNote", --
+		["z"] = "",
+		["x"] = "",
+		["c"] = "",
+		["v"] = "",
+		["b"] = "",
 		-- RIGHT HAND
-		["n"] = "ToggleMidiStepSilent", -- toggle mute/no-note
-		["m"] = "InsertMidiStep_m6",
-		[","] = "InsertMidiStep_M6",
-		["."] = "InsertMidiStep_m7",
-		["/"] = "InsertMidiStep_M7",
-		["h"] = "InsertMidiStep_M3",
-		["j"] = "InsertMidiStep_M3",
-		["k"] = "InsertMidiStep_P4",
-		["l"] = "InsertMidiStep_b5",
-		[";"] = "InsertMidiStep_P5", --
-		["y"] = "InsertMidiStep_M3",
-		["u"] = "InsertMidiStep_M3",
-		["i"] = "InsertMidiStep_P4",
-		["o"] = "InsertMidiStep_b5",
-		["p"] = "InsertMidiStep_P5", --
+		["n"] = "InsertMidiStep_P1",
+		["m"] = "InsertMidiStep_m2",
+		[","] = "InsertMidiStep_M2",
+		["."] = "InsertMidiStep_m3",
+		["/"] = "InsertMidiStep_M3",
+		["h"] = "",
+		["j"] = "InsertMidiStep_P4",
+		["k"] = "InsertMidiStep_b5",
+		["l"] = "InsertMidiStep_P5",
+		[";"] = "InsertMidiStep_m6",
+		["y"] = "",
+		["u"] = "InsertMidiStep_M6",
+		["i"] = "InsertMidiStep_m7",
+		["o"] = "InsertMidiStep_M7",
+		["p"] = "InsertMidiStep_P8",
 
 		-- THUMBS
-		["<TAB>"] = "ToggleMidiStepDirection",
+		["<TAB>"] = "ToggleMidiStepDirection", -- TODO: integrate, not used atm..
 	},
 }

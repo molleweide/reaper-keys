@@ -9,7 +9,16 @@ return {
     ["?"] = "MatchedTrackBackward",
     ["n"] = "NextTrackMatchForward",
     ["N"] = "NextTrackMatchBackward",
+
+    -- TODO: additional action prefixRepetitionCount mode
+    -- pass number as arg to function.
+    -- I don't want repeat action.
+    -- I want to use the prefix number as an argument to the
+    -- command action.
+    -- >>> Then, : and G would become the same action, and work for both
+    -- main and midi.
     [":"] = "TrackWithNumber",
+
     ["j"] = "NextTrack",
     ["k"] = "PrevTrack",
     -- the num X by which I jump could be stored in a config or ini, and altered with fzf

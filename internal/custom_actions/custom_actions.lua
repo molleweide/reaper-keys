@@ -309,29 +309,65 @@ custom_actions.midiStepRel_M7 = function(meta, opts)
 	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 12 } } })
 end
 
+custom_actions.midiStepRel_P8 = function(meta, opts)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 13 } } })
+end
+
 --
 -- FIX: refactor both these. it should be possible to toggle things easier.
 --      >>> project_state > toggle state value
 --      >>> reaper_state > toggle state value
 --
 
-custom_actions.midiStepToggleDirection = function(meta, opts)
+local function get_midi_step_state()
 	local exists, midi_step_state = project_state.get("mode_state", "midi_step")
-	local new_midi_step_state
 	if not exists then
-		new_midi_step_state = {
+		midi_step_state = {
 			silent = false,
 			direction = true,
 		}
-	else
-		new_midi_step_state = midi_step_state
-		new_midi_step_state.direction = not new_midi_step_state.direction
 	end
-	log.user(exists, midi_step_state, format.block(new_midi_step_state))
-	project_state.overwrite("mode_state", "midi_step", new_midi_step_state)
+	return midi_step_state
+end
+
+custom_actions.midiStepToggleDirection = function(meta, opts)
+	local midi_step_state = get_midi_step_state()
+	midi_step_state.direction = not midi_step_state.direction
+	project_state.overwrite("mode_state", "midi_step", midi_step_state)
 end
 
 custom_actions.midiStepToggleSilent = function(meta, opts)
+	local midi_step_state = get_midi_step_state()
+	midi_step_state.silent = not midi_step_state.silent
+	project_state.overwrite("mode_state", "midi_step", midi_step_state)
+end
+
+custom_actions.midiStepSetOctaveNextUp = function(meta, opts)
+	local midi_step_state = get_midi_step_state()
+	midi_step_state.octave_next = 1
+	project_state.overwrite("mode_state", "midi_step", midi_step_state)
+end
+
+custom_actions.midiStepSetOctaveNextDown = function(meta, opts)
+	local midi_step_state = get_midi_step_state()
+	midi_step_state.octave_next = -1
+	project_state.overwrite("mode_state", "midi_step", midi_step_state)
+end
+
+-- TODO: i can impl this as a toggle first, and then layer on the picker..
+-- then use leader key later for selection durations quickly.
+
+custom_actions.midiStepSelectNoteDuration = function(meta, opts)
+	-- make a picker that allows for selecting between a list of
+	-- durations, eg:
+	-- QN / 1/4
+	-- 1/8
+	-- 1/16
+	-- 2QN / 2/4
+	-- 1/24
+	-- 1/32
+
+	-- save selection to state.
 	local exists, midi_step_state = project_state.get("mode_state", "midi_step")
 	local new_midi_step_state
 	if not exists then
@@ -345,22 +381,6 @@ custom_actions.midiStepToggleSilent = function(meta, opts)
 	end
 	log.user(exists, midi_step_state, format.block(new_midi_step_state))
 	project_state.overwrite("mode_state", "midi_step", new_midi_step_state)
-end
-
--- TODO: i can impl this as a toggle first, and then layer on the picker..
--- then use leader key later for selection durations quickly.
-
-custom_actions.midiStepSelectNoteDuration = function(meta, opts)
-  -- make a picker that allows for selecting between a list of
-  -- durations, eg:
-  -- QN / 1/4
-  -- 1/8
-  -- 1/16
-  -- 2QN / 2/4
-  -- 1/24
-  -- 1/32
-
-  -- save selection to state.
 end
 
 return custom_actions

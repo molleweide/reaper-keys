@@ -1,6 +1,6 @@
 local log = require("utils.log")
 local format = require("utils.format")
-local project_state = require('utils.project_state')
+local project_state = require("utils.project_state")
 
 -- // MIDI HELPER VARIABLE
 -- WAS_FILTERED = 1024;  // array for storing which notes are filtered
@@ -403,7 +403,7 @@ function midi.insertMidiNoteChunk(meta, opts)
 	opts = opts or {}
 	-- log.user("META:", format.block(meta))
 
-	local exists, midi_step_state = project_state.getAll("midi_step")
+	local exists, midi_step_state = project_state.get("mode_state", "midi_step")
 
 	log.user("midi_step_state:", exists, format.block(midi_step_state))
 
@@ -423,38 +423,70 @@ function midi.insertMidiNoteChunk(meta, opts)
 	local cursor_pos = reaper.GetCursorPosition()
 	local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
 
-	-- NOTE: when run as an operator + motion, then the LTr is already reset.
-	-- so i have to pass down the start/end positions manually via opts.
-
 	-- local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 
 	local t_note_pitches = {}
 	local t_midi_notes = {}
 
-	-- duration
 	local sixteen_note_len = 0.25
 	local step_len = sixteen_note_len
 	local note_end_gap = 0.005
 	local note_duration = sixteen_note_len - note_end_gap
 
+	--
+	--
+	--
+
 	if opts.move_cursor then
-	  -- FIX: GetCursorPosition should be collected inside ASF??
 		local new_pos = meta.end_pos and meta.endpos or reaper.GetCursorPosition() + step_len
 		reaper.SetEditCurPos(new_pos, false, false)
 	end
 
-	-- FIX: handle incoming chord here...
+	if midi_step_state.silent then
+		return
+	end
+
+	-- fix: handle incoming chord here...
+	--
+	-- fix: handle single incoming pitches as well??
+	--
+	-- fix: handle direction ->
+	--
+	--
+	-- FIX: If chord, then we don't move the pitch/active or whatever,
+	-- ONLY if single note?
+	-- Or should there be a possible to insert a chord and also move the
+	-- active center pitch all at once?
 
 	if opts.chord then
 		for _, chord_rel_pitch in ipairs(opts.chord[2]) do
-			table.insert(t_note_pitches, active_note_row + chord_rel_pitch - 1)
+			local new_pitch
+
+			-- TODO: ADD OCTAVE
+
+			if midi_step_state.direction then
+				new_pitch = active_note_row + chord_rel_pitch - 1
+			else
+				new_pitch = active_note_row - (chord_rel_pitch - 1)
+			end
+
+			table.insert(t_note_pitches, new_pitch)
 		end
 	else
 		table.insert(t_note_pitches, active_note_row)
 	end
 
+	-- move active note row
+	-- TODO: ADD OCTAVE
+
+	if midi_step_state.direction then
+		reaper.MIDIEditor_SetSetting_int(ME, "active_note_row", active_note_row + opts.chord[2][1] - 1)
+	else
+		reaper.MIDIEditor_SetSetting_int(ME, "active_note_row", active_note_row - (opts.chord[2][1] - 1))
+	end
+
 	--
-	-- NOTE:
+	-- COMPUTE NOTE START/ENDS
 	--
 
 	local function note_start()
@@ -466,8 +498,6 @@ function midi.insertMidiNoteChunk(meta, opts)
 	end
 
 	local function note_end()
-		log.user("!!", format.block(meta))
-
 		if meta.action_type == "timeline_operator" then
 			return meta.end_pos
 		-- elseif meta.action_type == "command" then
@@ -476,17 +506,21 @@ function midi.insertMidiNoteChunk(meta, opts)
 		end
 	end
 
+	--
+	-- BUILD MIDI NOTES
+	--
+
 	for i in ipairs(t_note_pitches) do
-		local n = {
+		table.insert(t_midi_notes, {
 			pitch = t_note_pitches[i],
 			time_pos_start = note_start(),
 			time_pos_end = note_end(),
-		}
-		table.insert(t_midi_notes, n)
-		log.user("N:", format.block(n))
+		})
 	end
 
-	-- log.user(format.block(t_midi_notes))
+	--
+	-- INSERT EVENTS
+	--
 
 	for _, t_note in ipairs(t_midi_notes) do
 		local ret = reaper.MIDI_InsertNote(
@@ -501,7 +535,6 @@ function midi.insertMidiNoteChunk(meta, opts)
 			midi_insertion_data_default.noSortIn
 		)
 	end
-
 	reaper.MIDI_Sort(take)
 end
 
