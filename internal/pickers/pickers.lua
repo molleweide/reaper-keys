@@ -352,47 +352,18 @@ end
 
 pickers.track_fx = function()
 	local t_track_fx = {}
-
 	-- ~ look at my track syntax
-	--
 	-- ~ get all track fx in table
-	--
 	-- ~ show in picker.
-
-	p = JProject:new()
-	reset_variables()
-	-- if not loadSettings() then
-	-- 	msg(
-	-- 		"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
-	-- 			.. SETTINGS_INI_FILE
-	-- 	)
-	-- 	return false
-	-- end
 
 	local make_results = function()
 		local selectedTracks = J_PROJECT_DATA:selectedTracks(0, 0, true)
-
 		log.user("selectedTracks in browse_fx_list:", selectedTracks)
 	end
 
 	fzf.init({
 		title = "Browse track FX list",
-		results = {
-			"this",
-			"is",
-			"a",
-			"picker",
-			"test",
-			"xxxxxx",
-			"aaaaaa",
-			"vvvvvv",
-			"arst",
-			"XXX",
-			"89",
-			"=644ney",
-			"9n$)",
-			"(()())",
-		},
+		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
 			return vstTable
@@ -574,17 +545,17 @@ pickers.vtt_drum_kits = function()
 end
 
 pickers.marks = function()
-	-- local ok, old_mark = project_state.get("marks", register)
-	-- mark['index'] = reaper.AddProjectMarker(0, true, mark.left, mark.right, register, -1)
-	local t_regions = marks.get_all(false)
+	local t_marks = marks.get_all(false)
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "project marks",
-		results = {},
+		results = t_marks,
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
 			return vstTable
 		end,
+		sort_comp = "pos",
+		entry_maker = { "isrgn", "mark_region_idx", "name", "pos" },
 	})
 end
 
@@ -593,11 +564,13 @@ pickers.regions = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "project regions",
-		results = {},
+		results = t_regions,
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
 			return vstTable
 		end,
+		sort_comp = "pos",
+		entry_maker = { "mark_region_idx", "name", "pos" },
 	})
 end
 
@@ -670,7 +643,7 @@ end
 
 pickers.all_items = function()
 	local t_track_objects = syntax.get_list_of_track_objects()
-  local t_all_items = lib_items.get_items_in_track_objects(t_track_objects)
+	local t_all_items = lib_items.get_items_in_track_objects(t_track_objects)
 	log.user(format.block(t_all_items))
 	fzf.init({
 		env = RK_FZF_ENV,
@@ -686,8 +659,7 @@ pickers.all_items = function()
 end
 
 pickers.all_visible_items = function()
-
-  -- TODO: 1. use
+	-- TODO: 1. use
 	local t_track_objects = syntax.get_list_of_track_objects()
 
 	-- TODO: refactor parts of this into lib/items

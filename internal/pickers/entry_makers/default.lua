@@ -44,6 +44,14 @@ return function(em)
 		return make_entries(function(item)
 			return item[em]
 		end)
+	elseif type(em) == "table" then
+		return make_entries(function(item)
+			local res = ""
+			for _, v in ipairs(em) do
+				res = res .. tostring(item[v]) .. "; "
+			end
+			return res
+		end)
 	elseif type(em) == "function" then
 		return em
 	end

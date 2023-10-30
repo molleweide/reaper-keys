@@ -6,7 +6,7 @@ local marks = {}
 -- TODO: "regions" |"marks" |"both"
 --
 
-marks.get_all = function(isrgn)
+marks.get_all = function(user_wants)
 	local t_results = {}
 	local ret, num_markers, num_regions = reaper.CountProjectMarkers(0)
 	local num_total = num_markers + num_regions
@@ -22,10 +22,8 @@ marks.get_all = function(isrgn)
 				mark_region_idx = markrgnindexnumber,
 				color = color,
 			}
-			if isrgn then
-				table.insert(t_results, t_results)
-			else
-				table.insert(t_results, t_results)
+			if user_wants == isrgn then
+				table.insert(t_results, t_prepare)
 			end
 			i = i + 1
 		end
