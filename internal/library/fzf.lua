@@ -399,25 +399,14 @@ local function build_picker(opts, on_enter)
 			opts[k] = v
 			use_default = "y"
 		end
-		log.user(string.format("Option [%s] (%s): %s", k, use_default, opts[k]))
+		-- log.user(string.format("Option [%s] (%s): %s", k, use_default, opts[k]))
 	end
 
 	tResultButtons = {}
 
-
-
-  -- todo: if sort_comp == string, then
-
-
-	-- if not opts.sort_comp then
-	--   opts.sort_comp = require("pickers.sorters.default")()
-	-- end
+	opts.on_select_func = require("pickers.selectors.default")(opts.on_select_func)
 	opts.sort_comp = require("pickers.sorters.default")(opts.sort_comp)
-
-
-	if not opts.entry_maker then
-	  opts.entry_maker = require("pickers.entry_makers.default")
-	end
+	opts.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
 
 	GUI = jGui:new(opts)
 
@@ -459,10 +448,9 @@ local function loop()
 end
 
 fzf.init = function(opts, onenter)
-
-  -- p is currently only accessed in picker definitions in [ internals/pickers ]
-  --
-  -- TODO: rename this variable
+	-- p is currently only accessed in picker definitions in [ internals/pickers ]
+	--
+	-- TODO: rename this variable
 
 	J_PROJECT_DATA = JProject:new()
 	fzf.reset_variables()

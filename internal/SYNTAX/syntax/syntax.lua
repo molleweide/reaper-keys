@@ -106,8 +106,9 @@ end
 -- end
 
 -- mv to virtual_track_table_interface.lua
-function createTrackObj(guid, i, p, o, n) -- index; prefix; options; track name
+function createTrackObj(tr, guid, i, p, o, n) -- index; prefix; options; track name
 	return {
+	  tr = tr,
 		guid = guid,
 		level = class_configs[p].treeProps.level,
 		trackIndex = i, -- can only be used initially if tracks haven't been touched?!
@@ -180,6 +181,10 @@ local function get_info_for_track_at_index(tr_idx)
 	return tr, guid, name
 end
 
+
+-- fix: Track objects should contain the reference to each track so that I
+-- , for now, also don't have to re collect tracks
+
 function syntax.get_list_of_track_objects()
 	local t_track_objects = {}
 	local next_prefix = nil
@@ -190,11 +195,11 @@ function syntax.get_list_of_track_objects()
 	-- log.user('VTT_LEN_PRE: ' .. reaper.CountTracks(0))
 
 	for i = 0, reaper.CountTracks(0) - 1 do
-		local _, guid, track_name_raw = get_info_for_track_at_index(i)
+		local tr, guid, track_name_raw = get_info_for_track_at_index(i)
 		next_prefix, next_options, next_track_name = getNameStringParts(i, track_name_raw)
 
 		if verifyByComparing(i, prev_prefix, next_prefix) and next_prefix ~= false then
-			local next_track_obj = createTrackObj(guid, i, next_prefix, next_options, next_track_name) -- <<<<<<<< TODO
+			local next_track_obj = createTrackObj(tr, guid, i, next_prefix, next_options, next_track_name) -- <<<<<<<< TODO
 			table.insert(t_track_objects, next_track_obj)
 			prev_prefix = next_prefix
 		else

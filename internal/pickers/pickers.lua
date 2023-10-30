@@ -271,24 +271,9 @@ pickers.test_picker = function()
 	-- 	return false
 	-- end
 
-	local function onenter(self, i)
-		if not self.t_search_results then
-			return false
-		end -- results is empty
-		local fx = self.t_search_results[i]
-		if not fx then
-			return false
-		end -- no such result
-
-		log.user("onenter:", i, format.block(fx))
-
-		return true
-	end
-
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Test Picker",
-		on_select_func = onenter,
 		results = {
 			"this",
 			"is",
@@ -316,59 +301,14 @@ pickers.all_tracks = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "All Tracks",
-
-		-- TODO: create a good minimal default for on_select_func
-
-		on_select_func = function(self, i)
-			if not self.t_search_results then
-				return false
-			end
-			local selection = self.t_search_results[i]
-			if not selection then
-				return false
-			end
-			log.user("onenter:", i, format.block(selection))
-			return true
-		end,
 		results = syntax.get_list_of_track_objects(),
 		sort_comp = "name",
-
 		-- FIX: is there a good default that could be added here?
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
 			return vstTable
 		end,
-
-		-- TODO: create a good minimal default for entry_maker
-
-		entry_maker = function(tButtons, tResults)
-			for i, cIds in ipairs(tButtons) do
-				local b = cIds[1]
-				local info = cIds[2]
-				local iStart = fu._round(i + SCROLL_RESULTS)
-				local highlights = sf.jStringExplode(textBox.value, " ")
-				local showing
-
-				if iStart <= #tResults then
-					showing = iStart
-				else
-					showing = #tResults
-				end
-
-				LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
-
-				if tResults and iStart <= #tResults then
-					local item = tResults[iStart]
-					b.label = item.name
-					b.visible = true
-					info.visible = true
-					b.highlight = highlights
-				else
-					b.visible = false
-					info.visible = false
-				end
-			end
-		end,
+		entry_maker = "name",
 	})
 end
 
@@ -401,7 +341,6 @@ pickers.browse_reaper_preferences = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Reaper preferences",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -429,20 +368,6 @@ pickers.track_fx = function()
 	-- 	return false
 	-- end
 
-	local function onenter(self, i)
-		if not self.t_search_results then
-			return false
-		end -- results is empty
-		local fx = self.t_search_results[i]
-		if not fx then
-			return false
-		end -- no such result
-
-		log.user("onenter:", i, format.block(fx))
-
-		return true
-	end
-
 	local make_results = function()
 		local selectedTracks = J_PROJECT_DATA:selectedTracks(0, 0, true)
 
@@ -451,7 +376,6 @@ pickers.track_fx = function()
 
 	fzf.init({
 		title = "Browse track FX list",
-		on_select_func = onenter,
 		results = {
 			"this",
 			"is",
@@ -489,7 +413,6 @@ pickers.track_fx_params = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Fx params for <fx_name> on track <track_name>",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -515,7 +438,6 @@ pickers.track_channel_mix_params = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Track params for track: <trackname>",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -545,7 +467,6 @@ pickers.track_attributes = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Track attributes (tr: <trackname>)",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -564,7 +485,6 @@ pickers.track_routing = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Routing @track: <trackname>",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -590,7 +510,6 @@ pickers.projects = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Projects listing",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -615,7 +534,6 @@ pickers.vtt_zones = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "syntax: zones",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -630,7 +548,6 @@ pickers.vtt_mcsab_by_group_name = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "syntax: MSCAB",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -647,7 +564,6 @@ pickers.vtt_drum_kits = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "drum kits",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -664,7 +580,6 @@ pickers.marks = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "project marks",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -687,7 +602,6 @@ pickers.regions = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "project regions",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -703,7 +617,6 @@ pickers.midi_patterns = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "midi patterns",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -720,7 +633,6 @@ pickers.chord_progression = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "chord progressions",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -763,34 +675,7 @@ pickers.chord = function(meta, opts)
 			-- what todo here ??
 			return vstTable
 		end,
-		entry_maker = function(tButtons, tResults)
-			for i, cIds in ipairs(tButtons) do
-				local b = cIds[1]
-				local info = cIds[2]
-				local iStart = fu._round(i + SCROLL_RESULTS)
-				local highlights = sf.jStringExplode(textBox.value, " ")
-				local showing
-
-				if iStart <= #tResults then
-					showing = iStart
-				else
-					showing = #tResults
-				end
-
-				LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
-
-				if tResults and iStart <= #tResults then
-					local item = tResults[iStart]
-					b.label = item[1]
-					b.visible = true
-					info.visible = true
-					b.highlight = highlights
-				else
-					b.visible = false
-					info.visible = false
-				end
-			end
-		end,
+		entry_maker = 1,
 	})
 end
 
@@ -810,7 +695,8 @@ pickers.midi_note_articulation = function()
 end
 
 pickers.all_items = function()
-	-- TODO: i should use the flat array from vtt here!!
+
+	local t_track_objects = syntax.get_list_of_track_objects()
 
 	local t_all_tracks = {}
 	for i = 0, reaper.CountTracks(0) - 1 do
@@ -823,6 +709,10 @@ pickers.all_items = function()
 			name = track_name_raw,
 		})
 	end
+
+	--
+	-- TODO: refactor this into utility
+	--
 
 	local t_all_items = {}
 	for _, trk_obj in pairs(t_all_tracks) do
@@ -849,41 +739,13 @@ pickers.all_items = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "all items",
-		on_select_func = onenter,
 		results = t_all_items,
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
 			return vstTable
 		end,
 		sort_comp = "name",
-		entry_maker = function(tButtons, tResults)
-			for i, cIds in ipairs(tButtons) do
-				local b = cIds[1]
-				local info = cIds[2]
-				local iStart = fu._round(i + SCROLL_RESULTS)
-				local highlights = sf.jStringExplode(textBox.value, " ")
-				local showing
-
-				if iStart <= #tResults then
-					showing = iStart
-				else
-					showing = #tResults
-				end
-
-				LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
-
-				if tResults and iStart <= #tResults then
-					local item = tResults[iStart]
-					b.label = item.name
-					b.visible = true
-					info.visible = true
-					b.highlight = highlights
-				else
-					b.visible = false
-					info.visible = false
-				end
-			end
-		end,
+		entry_maker = "name",
 	})
 end
 
@@ -934,7 +796,6 @@ pickers.all_visible_items = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "visible items (lightspeed)",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -985,7 +846,6 @@ pickers.item_parameters = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "item params for: <item>",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
@@ -1019,7 +879,6 @@ pickers.take_parameters = function()
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "take params for: <take>",
-		on_select_func = onenter,
 		results = {},
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
