@@ -173,14 +173,15 @@ end
 
 -----------------
 
-local vtt = {}
-local prev_zone = nil
-local prev_group = nil
-local prev_mcab = nil
-local prev_lvl4_obj = nil
-local prev_track_obj = nil
+local function get_info_for_track_at_index(tr_idx)
+	local tr = reaper.GetTrack(0, tr_idx)
+	local guid = reaper.GetTrackGUID(tr)
+	local _, name = reaper.GetTrackName(tr)
+	return tr, guid, name
+end
 
-function syntax.getVerifiedTree()
+function syntax.get_list_of_track_objects()
+	local t_track_objects = {}
 	local next_prefix = nil
 	local next_options = nil
 	local next_track_name = nil
@@ -189,82 +190,87 @@ function syntax.getVerifiedTree()
 	-- log.user('VTT_LEN_PRE: ' .. reaper.CountTracks(0))
 
 	for i = 0, reaper.CountTracks(0) - 1 do
-		local tr = reaper.GetTrack(0, i)
-		local guid = reaper.GetTrackGUID(tr)
-		local _, track_name_raw = reaper.GetTrackName(tr)
-
+		local _, guid, track_name_raw = get_info_for_track_at_index(i)
 		next_prefix, next_options, next_track_name = getNameStringParts(i, track_name_raw)
 
-		-- syntax.verify
 		if verifyByComparing(i, prev_prefix, next_prefix) and next_prefix ~= false then
 			local next_track_obj = createTrackObj(guid, i, next_prefix, next_options, next_track_name) -- <<<<<<<< TODO
-			-- log.user('!!!')
-			vttInsertTrack(next_track_obj)
-
+			table.insert(t_track_objects, next_track_obj)
 			prev_prefix = next_prefix
 		else
 			break
 		end
 	end
 	-- log.user('VTT_LEN_POST: ' .. reaper.CountTracks(0))
-	-- log.user(format.virtualTrackTable(vtt))
-	-- actions.applyMappingsAndOptions(vtt)
+	return t_track_objects
+end
+
+syntax.make_tree = function(t_trk_objs)
+	local vtt = {}
+	local prev_zone = nil
+	local prev_group = nil
+	local prev_mcab = nil
+	local prev_lvl4_obj = nil
+	local prev_track_obj = nil
+
+	for o, trk_obj in pairs(t_trk_objs) do
+		-- create / popelate tree based on syntax.
+		--> todo
+		---------------------------------------------------------
+		--
+		--  This function should be recursive and be merged into.
+		--  I think that should work actually.
+		--
+		---------------------------------------------------------
+
+		-- log.user('@@')
+
+		-- LEVEL 1 | Z ------------------------------------------------------------
+		if trk_obj.level == 1 then -- if level 1
+			if util.strHasOneOfChars(trk_obj.class, "Z") then
+				if prev_zone ~= nil then
+					prev_zone.lastTrackIndex = trk_obj.trackIndex - 1
+				end
+				if prev_group ~= nil then
+					prev_group.lastTrackIndex = trk_obj.trackIndex - 1
+				end
+				vtt[#vtt + 1] = trk_obj
+				prev_zone = trk_obj -- put below and rename > prev_lvl1_obj = trk_obj
+			end
+		end
+		-- LEVEL 2 | G ------------------------------------------------------------
+		if trk_obj.level == 2 then -- if level 2
+			if util.strHasOneOfChars(trk_obj.class, "G") then
+				if prev_group ~= nil and prev_track_obj.class ~= "Z" then
+					prev_group.lastTrackIndex = trk_obj.trackIndex - 1
+				end
+				prev_zone.children[#prev_zone.children + 1] = trk_obj
+				prev_group = trk_obj
+			end
+		end
+		-- LEVEL 3 | MCABT --------------------------------------------------------
+		if trk_obj.level == 3 then
+			if util.strHasOneOfChars(trk_obj.class, "MCABT") then
+				prev_group.children[#prev_group.children + 1] = trk_obj
+				prev_mcab = trk_obj
+			end
+		end
+		-- level 4 | S ------------------------------------------------------------
+		if trk_obj.level == 4 then
+			if util.strHasOneOfChars(trk_obj.class, "S") then
+				prev_mcab.children[#prev_mcab.children + 1] = trk_obj
+			end
+			prev_lvl4_obj = trk_obj
+		end
+		prev_track_obj = trk_obj -- keep ref of prev track obj
+	end
+
 	return vtt
 end
 
--- create / popelate tree based on syntax.
-function vttInsertTrack(trk_obj)
-	--> todo
-	---------------------------------------------------------
-	--
-	--  This function should be recursive and be merged into.
-	--  I think that should work actually.
-	--
-	---------------------------------------------------------
-
-	-- log.user('@@')
-
-	-- LEVEL 1 | Z ------------------------------------------------------------
-	if trk_obj.level == 1 then -- if level 1
-		if util.strHasOneOfChars(trk_obj.class, "Z") then
-			if prev_zone ~= nil then
-				prev_zone.lastTrackIndex = trk_obj.trackIndex - 1
-			end
-			if prev_group ~= nil then
-				prev_group.lastTrackIndex = trk_obj.trackIndex - 1
-			end
-			vtt[#vtt + 1] = trk_obj
-			prev_zone = trk_obj -- put below and rename > prev_lvl1_obj = trk_obj
-		end
-	end
-	-- LEVEL 2 | G ------------------------------------------------------------
-	if trk_obj.level == 2 then -- if level 2
-		if util.strHasOneOfChars(trk_obj.class, "G") then
-			if prev_group ~= nil and prev_track_obj.class ~= "Z" then
-				prev_group.lastTrackIndex = trk_obj.trackIndex - 1
-			end
-			prev_zone.children[#prev_zone.children + 1] = trk_obj
-			prev_group = trk_obj
-		end
-	end
-	-- LEVEL 3 | MCABT --------------------------------------------------------
-	if trk_obj.level == 3 then
-		if util.strHasOneOfChars(trk_obj.class, "MCABT") then
-			prev_group.children[#prev_group.children + 1] = trk_obj
-			prev_mcab = trk_obj
-		end
-	end
-	-- level 4 | S ------------------------------------------------------------
-	if trk_obj.level == 4 then
-		if util.strHasOneOfChars(trk_obj.class, "S") then
-			prev_mcab.children[#prev_mcab.children + 1] = trk_obj
-		end
-		prev_lvl4_obj = trk_obj
-	end
-	prev_track_obj = trk_obj -- keep ref of prev track obj
+syntax.getVerifiedTree = function()
+	local t_trk_objs = syntax.get_list_of_track_objects()
+	return syntax.make_tree(t_trk_objs)
 end
-
------------------
------------------
 
 return syntax
