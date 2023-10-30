@@ -399,21 +399,20 @@ end
 -- insert chunks of midi notes
 --
 
+local midi_insertion_data_default = {
+	-- TODO: move to definitions/constants.lua
+	selected = false,
+	muted = false,
+	chan = 0,
+	noSortIn = true,
+}
+
 function midi.insertMidiNoteChunk(meta, opts)
 	opts = opts or {}
-	-- log.user("META:", format.block(meta))
 
 	local exists, midi_step_state = project_state.get("mode_state", "midi_step")
 
 	log.user("midi_step_state:", exists, format.block(midi_step_state))
-
-	-- TODO: move to definitions/constants.lua
-	local midi_insertion_data_default = {
-		selected = false,
-		muted = false,
-		chan = 0,
-		noSortIn = true,
-	}
 
 	local ret, ME, take = midi.getMidiValidContext()
 	if not ret then
@@ -422,20 +421,14 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	local cursor_pos = reaper.GetCursorPosition()
 	local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
-
-	-- local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
-
 	local t_note_pitches = {}
 	local t_midi_notes = {}
-
 	local sixteen_note_len = 0.25
 	local step_len = sixteen_note_len
 	local note_end_gap = 0.005
 	local note_duration = sixteen_note_len - note_end_gap
-
-	--
-	--
-	--
+	local direction_mult = midi_step_state.direction and 1 or -1
+	local octave_add = midi_step_state.octave_next and (midi_step_state.octave_next * 12) or 0
 
 	if opts.move_cursor then
 		local new_pos = meta.end_pos and meta.endpos or reaper.GetCursorPosition() + step_len
@@ -460,15 +453,8 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	if opts.chord then
 		for _, chord_rel_pitch in ipairs(opts.chord[2]) do
-			local new_pitch
-
 			-- TODO: ADD OCTAVE
-
-			if midi_step_state.direction then
-				new_pitch = active_note_row + chord_rel_pitch - 1
-			else
-				new_pitch = active_note_row - (chord_rel_pitch - 1)
-			end
+			local new_pitch = active_note_row + octave_add + (chord_rel_pitch - 1) * direction_mult
 
 			table.insert(t_note_pitches, new_pitch)
 		end
@@ -477,13 +463,11 @@ function midi.insertMidiNoteChunk(meta, opts)
 	end
 
 	-- move active note row
-	-- TODO: ADD OCTAVE
-
-	if midi_step_state.direction then
-		reaper.MIDIEditor_SetSetting_int(ME, "active_note_row", active_note_row + opts.chord[2][1] - 1)
-	else
-		reaper.MIDIEditor_SetSetting_int(ME, "active_note_row", active_note_row - (opts.chord[2][1] - 1))
-	end
+	reaper.MIDIEditor_SetSetting_int(
+		ME,
+		"active_note_row",
+		active_note_row + octave_add + (opts.chord[2][1] - 1) * direction_mult
+	)
 
 	--
 	-- COMPUTE NOTE START/ENDS
@@ -536,6 +520,22 @@ function midi.insertMidiNoteChunk(meta, opts)
 		)
 	end
 	reaper.MIDI_Sort(take)
+
+	-- reset state
+	local midi_step_state = midi.get_midi_step_state()
+	midi_step_state.octave_next = nil
+	project_state.overwrite("mode_state", "midi_step", midi_step_state)
+end
+
+midi.get_midi_step_state = function()
+	local exists, midi_step_state = project_state.get("mode_state", "midi_step")
+	if not exists then
+		midi_step_state = {
+			silent = false,
+			direction = true,
+		}
+	end
+	return midi_step_state
 end
 
 return midi

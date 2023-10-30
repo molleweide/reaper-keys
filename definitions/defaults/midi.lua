@@ -30,10 +30,10 @@ return {
 		["n"] = "AddNextNoteToSelection",
 		["N"] = "AddPrevNoteToSelection",
 
-    -- TODO: ZOOM BETTER SO THAT WE CAN
-	  -- make sure that we are in the world. oooh and also create more advanced
-	  -- zoom settings so that you can do zoom bar, zoom N bars, zoom region,
-	  -- zoom loop, etc.
+		-- TODO: ZOOM BETTER SO THAT WE CAN
+		-- make sure that we are in the world. oooh and also create more advanced
+		-- zoom settings so that you can do zoom bar, zoom N bars, zoom region,
+		-- zoom loop, etc.
 
 		["+"] = "MidiZoomInHoriz",
 		["-"] = "MidiZoomOutHoriz",
@@ -77,7 +77,7 @@ return {
 	},
 	midi_step_command = {
 
-	  -- okay so fixing the direction now is goig to be fuckNg mazing and then
+		-- okay so fixing the direction now is goig to be fuckNg mazing and then
 
 		-- TODO: today
 		-- ~ add octave jump for next step
@@ -87,6 +87,8 @@ return {
 		--       1. move active note row
 		--       2. add octave to pitched
 		--       3. clean up the `octave_next` key from state.
+		--
+		--
 		--
 		--
 		-- ~ use [single|chord|pattern]
@@ -100,9 +102,18 @@ return {
 		["t"] = "", --
 		["a"] = "SetModeNormal", -- set pause/silent
 		["s"] = "ToggleMidiStepSilent",
-		["d"] = "ToggleMidiStepDirection",
+		["d"] = {
+			"+setNextOctave",
+			{
+				["d"] = "ToggleMidiStepDirection",
+				-- set dir up
+				-- set dir down
+			},
+		},
 
-    -- maybe this should be a two step sequence [ f-up, f-down ]
+		-- FIX: currently, octave and direction are set simultaneously
+		-- which can cause wierd behavior if you set octave down but keep direction
+		-- up. MAYBE the direction should be changed if octae direction is being set?
 		["f"] = {
 			"+setNextOctave",
 			{

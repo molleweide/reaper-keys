@@ -319,37 +319,26 @@ end
 --      >>> reaper_state > toggle state value
 --
 
-local function get_midi_step_state()
-	local exists, midi_step_state = project_state.get("mode_state", "midi_step")
-	if not exists then
-		midi_step_state = {
-			silent = false,
-			direction = true,
-		}
-	end
-	return midi_step_state
-end
-
 custom_actions.midiStepToggleDirection = function(meta, opts)
-	local midi_step_state = get_midi_step_state()
+	local midi_step_state = midi.get_midi_step_state()
 	midi_step_state.direction = not midi_step_state.direction
 	project_state.overwrite("mode_state", "midi_step", midi_step_state)
 end
 
 custom_actions.midiStepToggleSilent = function(meta, opts)
-	local midi_step_state = get_midi_step_state()
+	local midi_step_state = midi.get_midi_step_state()
 	midi_step_state.silent = not midi_step_state.silent
 	project_state.overwrite("mode_state", "midi_step", midi_step_state)
 end
 
 custom_actions.midiStepSetOctaveNextUp = function(meta, opts)
-	local midi_step_state = get_midi_step_state()
+	local midi_step_state = midi.get_midi_step_state()
 	midi_step_state.octave_next = 1
 	project_state.overwrite("mode_state", "midi_step", midi_step_state)
 end
 
 custom_actions.midiStepSetOctaveNextDown = function(meta, opts)
-	local midi_step_state = get_midi_step_state()
+	local midi_step_state = midi.get_midi_step_state()
 	midi_step_state.octave_next = -1
 	project_state.overwrite("mode_state", "midi_step", midi_step_state)
 end
