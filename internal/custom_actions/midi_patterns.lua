@@ -1,9 +1,16 @@
 local utils = require("custom_actions.utils")
+local midi = require("library.midi")
 
 local log = require("utils.log")
 local format = require("utils.format")
 local reaper_state = require("utils.reaper_state")
 local s = require("utils.string")
+
+local NOTE_END_GAP = 0.005
+
+local UNIT_MULTIPLIER = 0.5 -- quarter note
+local UNIT_DIVIDER = 4 -- sixteenth note
+
 
 local SHORTHAND_CASES = require("definitions.pattern_shorthands")
 local PATTERN_PLACEHOLDER = "xx(xxx)"
@@ -126,9 +133,8 @@ midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
   local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
   local t_pattern = {}
   local sixteen_note_len = 0.125
-  local note_end_gap = 0.005
-  local note_duration = sixteen_note_len - note_end_gap
-  local retval, measures, cml, fullbeats, cdenom = reaper.TimeMap2_timeToBeats(0, cursor_pos)
+  local note_duration = sixteen_note_len - NOTE_END_GAP
+  -- local retval, measures, cml, fullbeats, cdenom = reaper.TimeMap2_timeToBeats(0, cursor_pos)
 
   midi.remove_notes(take, t_midi_events, active_note_row)
 
@@ -342,12 +348,26 @@ local state_table_name = "midipatterns"
 -- GetUserInput, since it doesn't seem to be possible to customize the reaper
 -- input that easilly.
 
-local function update_closure_level(char, open, close, level_var)
-  if char == open then
-    level_var = level_var + 1
-  elseif char == close then
-    level_var = level_var - 1
+local function update_closure_level(t_unit, pattern, mult)
+  if t_unit.char == pattern then
+    t_unit.note_step = t_unit.note_step * mult
   end
+end
+
+-- if unit has hard consonant chars, then make a hit (ie. silent = false)
+-- so hard consonants are hits, and smooth vowels are pauses or silen. this
+-- hopefully makes it ergonomic to program hits.
+local function get_note_opts_for_char(char, note_step, note_start)
+  local note_opts = {
+    silent = true,
+    time_pos_start = note_start,
+    time_pos_end = note_start + (note_step - NOTE_END_GAP),
+    note_step_length = note_step
+  }
+  if string.match(char, "[xk]") then
+    note_opts.silent = false
+  end
+  return note_opts
 end
 
 midi_patterns.insertPatternFromString = function()
@@ -386,103 +406,99 @@ midi_patterns.insertPatternFromString = function()
 
   local t_final_midi_notes = {}
 
-  local unit_multiplier = 0.5 -- default time unit, a QN I believe
-  local unit_divider = 4
 
   local found = true
   local note_start = 0
 
   for _, unit in pairs(t_pat_multiplied) do
 
-
-    -- TODO: handle custom unit multipliers and dividers
-    if string.match(unit, "pattern") then
-      unit_multiplier = 99
-    end
-    if string.match(unit, "pattern") then
-      unit_divider = 99
-    end
-    local unit_subtract_len = unit_multiplier
-
-
-    log.user(unit_multiplier, unit_divider, "UNIT: [" .. unit .. "]")
-
-    -- TODO: extract [], (), {}
-
+    local multiplier = UNIT_MULTIPLIER
+    local divider = UNIT_DIVIDER
+    local unit_subtract_len = multiplier
+    local note_step = multiplier / divider
     local par_level = 0
     local cur_level = 0
     local brack_level = 0
 
+    -- todo...
+    if string.match(unit, "pattern_mult") then
+      UNIT_MULTIPLIER = 99
+    end
+    if string.match(unit, "pattern_div") then
+      UNIT_DIVIDER = 99
+    end
 
-    local note_hit_idx = 1
-
-    --
-    -- for each unit, parse xx(x[xx{x{x}}]) into actual timing events
-    --
+    local t_unit = {
+      string = unit,
+      multiplier = UNIT_MULTIPLIER,
+      divider = UNIT_DIVIDER,
+      par_level = 0,
+      cur_level = 0,
+      brack_level = 0,
+      note_step = multiplier / divider,
+      note_hit_idx = 1
+    }
+    -- log.user(format.block(t_unit))
 
     for i = 1, #unit do
-      local char = unit:sub(i, i)
-      update_closure_level(char, "(", ")", par_level)
-      update_closure_level(char, "{", "}", cur_level)
-      update_closure_level(char, "[", "]", brack_level)
+      t_unit.char = unit:sub(i, i)
 
-      log.user(par_level, cur_level, brack_level, "char:", char)
+      update_closure_level(t_unit, "[", 0.5) -- half
+      update_closure_level(t_unit, "(", 2 / 3) -- tripple
+      update_closure_level(t_unit, "{", 1 / 3)
+      update_closure_level(t_unit, "]", 2) -- /2 *2
+      update_closure_level(t_unit, ")", 3 / 2)
+      update_closure_level(t_unit, "}", 3)
 
-      -- NOTE: i believe this just ignores {([])} for now so that I can start
-      -- to work on just basic conversion of xko into time evts
-      if string.match(char, "[{%[%(%)%]}]") then
+      if string.match(t_unit.char, "[{%[%(%)%]}]") then
         goto continue
       end
 
-      -- TODO: update the mult and divider
-      -- AND hit modulators {([])}
+      table.insert(t_final_midi_notes, get_note_opts_for_char(t_unit.char, t_unit.note_step, note_start))
 
-      -- 0.25 by default
-      local note_step = unit_multiplier / unit_divider
-
-      if par_level == 1 then
-        note_step = (note_step * 2) / 3
-      end
-
-
-      local note_end_gap = 0.005
-      local note_duration = note_step - note_end_gap
-
-      -- TODO: handle both `x` and `k` for `hit`, ergonomic with alternating
-      -- fingers in qwerty...
-      if string.match(char, "[xk]") then
-        table.insert(t_final_midi_notes, {
-          char = char,
-          time_pos_start = note_start,
-          time_pos_end = note_start + note_duration,
-        })
-      end
+      log.user(t_unit.char, t_unit.note_step, unit_subtract_len, unit_subtract_len - t_unit.note_step)
 
       -- set vars for next round
-      note_start = note_start + note_step
-      unit_subtract_len = unit_subtract_len - note_step
+      note_start = note_start + t_unit.note_step
+      unit_subtract_len = unit_subtract_len - t_unit.note_step
       ::continue::
     end
 
-    log.user("time even???: ", unit_subtract_len)
+    log.user("??", unit_subtract_len)
+
+    if not (par_level == 0 and cur_level == 0 and brack_level == 0) then
+      -- uneven {([])} throw error
+      log.user("UNEVEN {([])}")
+    end
+
+    log.user(string.format([[
+    AFTER EACH UNIT:
+    unit_subtract_len = %s
+    note_step = %s
+    ]], unit_subtract_len, t_unit.note_step, par_level, cur_level, brack_level))
 
     -- if `o` then ignore and step forward
 
     if unit_subtract_len > 0 then
       -- not enough notes for this unit
       -- fill remaining somehow
+      -- NOTE: but remember, the unit does not have to be completely filled,
+      -- it is up to the user.
       log.user("unit_subtract_len > 0")
     end
 
-    log.user("")
+    -- table.insert(t_final_midi_notes, { "------------" })
   end
-  log.user(format.block(t_final_midi_notes))
+
+  -- log.user(format.block(t_final_midi_notes))
 
   midi.remove_notes(take, t_midi_events, active_note_row)
+
   midi.insert_notes(take, {
     notes = t_final_midi_notes,
     output_note = active_note_row
   })
+
   reaper_state.set(state_table_name, { prev_pattern_string = str_pat_input })
 end
 

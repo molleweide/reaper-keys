@@ -550,18 +550,24 @@ midi.insert_notes = function(take, opts)
 		return
 	end
 
+	log.user(">>>>>",take)
+
 	for _, t_note in ipairs(opts.notes) do
-		local ret = reaper.MIDI_InsertNote(
-			take,
-			midi_insertion_data_default.selected,
-			midi_insertion_data_default.muted,
-			reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
-			reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
-			midi_insertion_data_default.chan,
-			opts.output_note and opts.output_note or t_note.pitch,
-			80,
-			midi_insertion_data_default.noSortIn
-		)
+		if not t_note.silent then
+			local pitch = opts.output_note and opts.output_note or t_note.pitch
+
+			local ret = reaper.MIDI_InsertNote(
+				take,
+				midi_insertion_data_default.selected,
+				midi_insertion_data_default.muted,
+				reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
+				reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
+				midi_insertion_data_default.chan,
+				pitch,
+				80,
+				midi_insertion_data_default.noSortIn
+			)
+		end
 	end
 	if opts.sort ~= false then
 		reaper.MIDI_Sort(take)
@@ -569,13 +575,13 @@ midi.insert_notes = function(take, opts)
 end
 
 midi.remove_notes = function(take, t_midi_events, active_note_row)
-  for i = 1, t_midi_events[2] do
-    local note_idx = i - 1
-    local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
-    if pitch == active_note_row then
-      reaper.MIDI_DeleteNote(take, note_idx)
-    end
-  end
+	for i = 1, t_midi_events[2] do
+		local note_idx = i - 1
+		local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
+		if pitch == active_note_row then
+			reaper.MIDI_DeleteNote(take, note_idx)
+		end
+	end
 end
 
 return midi
