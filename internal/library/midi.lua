@@ -2,6 +2,8 @@ local log = require("utils.log")
 local format = require("utils.format")
 local project_state = require("utils.project_state")
 
+-- TODO: look at chordgun for good midi library functions
+
 -- // MIDI HELPER VARIABLE
 -- WAS_FILTERED = 1024;  // array for storing which notes are filtered
 -- PASS_THRU_CC = 0;
@@ -348,40 +350,40 @@ local easy_read = [[
   returns true if device present
 ]]
 
--- this is a test function i copied from MPLs scripts
-midi.reorderNotes = function()
-	-- for key in pairs(reaper) do
-	-- 	_G[key] = reaper[key]
-	-- end
-
-	function ReorderNotes(percent)
-		local ME = reaper.MIDIEditor_GetActive()
-		if not ME then
-			return
-		end
-		local take = reaper.MIDIEditor_GetTake(ME)
-		if not take or not reaper.TakeIsMIDI(take) then
-			return
-		end
-
-		local last_t
-		for i = 1, ({ reaper.MIDI_CountEvts(take) })[2] do
-			local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = MIDI_GetNote(take, i - 1)
-			if selected and i > 1 then
-				local len = endppqpos - startppqpos
-				startppqpos = last_t.endppqpos + 1
-				endppqpos = startppqpos + len
-				reaper.MIDI_SetNote(take, i - 1, true, muted, startppqpos, endppqpos, chan, pitch, vel, true)
-			end
-			last_t = { startppqpos = startppqpos, endppqpos = endppqpos }
-		end
-		reaper.MIDI_Sort(take)
-	end
-
-	Undo_BeginBlock()
-	ReorderNotes()
-	Undo_EndBlock("Reorder notes", 0)
-end
+-- -- this is a test function i copied from MPLs scripts
+-- midi.reorderNotes = function()
+-- 	-- for key in pairs(reaper) do
+-- 	-- 	_G[key] = reaper[key]
+-- 	-- end
+--
+-- 	function ReorderNotes(percent)
+-- 		local ME = reaper.MIDIEditor_GetActive()
+-- 		if not ME then
+-- 			return
+-- 		end
+-- 		local take = reaper.MIDIEditor_GetTake(ME)
+-- 		if not take or not reaper.TakeIsMIDI(take) then
+-- 			return
+-- 		end
+--
+-- 		local last_t
+-- 		for i = 1, ({ reaper.MIDI_CountEvts(take) })[2] do
+-- 			local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = MIDI_GetNote(take, i - 1)
+-- 			if selected and i > 1 then
+-- 				local len = endppqpos - startppqpos
+-- 				startppqpos = last_t.endppqpos + 1
+-- 				endppqpos = startppqpos + len
+-- 				reaper.MIDI_SetNote(take, i - 1, true, muted, startppqpos, endppqpos, chan, pitch, vel, true)
+-- 			end
+-- 			last_t = { startppqpos = startppqpos, endppqpos = endppqpos }
+-- 		end
+-- 		reaper.MIDI_Sort(take)
+-- 	end
+--
+-- 	Undo_BeginBlock()
+-- 	ReorderNotes()
+-- 	Undo_EndBlock("Reorder notes", 0)
+-- end
 
 function midi.getMidiValidContext()
 	local ME = reaper.MIDIEditor_GetActive()
@@ -407,6 +409,11 @@ local midi_insertion_data_default = {
 	noSortIn = true,
 }
 
+-- TODO: make sure I don't use midi step state when executing as a regular
+-- command. >>> maybe the midi_step_state should be passed down to the
+-- insertMidiNoteChunk func - then i can just chek if meta.mode == midi_step,
+-- and then also only retrieve the state if the correct mode
+--
 function midi.insertMidiNoteChunk(meta, opts)
 	opts = opts or {}
 
@@ -536,6 +543,39 @@ midi.get_midi_step_state = function()
 		}
 	end
 	return midi_step_state
+end
+
+midi.insert_notes = function(take, opts)
+	if not opts.notes then
+		return
+	end
+
+	for _, t_note in ipairs(opts.notes) do
+		local ret = reaper.MIDI_InsertNote(
+			take,
+			midi_insertion_data_default.selected,
+			midi_insertion_data_default.muted,
+			reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
+			reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
+			midi_insertion_data_default.chan,
+			opts.output_note and opts.output_note or t_note.pitch,
+			80,
+			midi_insertion_data_default.noSortIn
+		)
+	end
+	if opts.sort ~= false then
+		reaper.MIDI_Sort(take)
+	end
+end
+
+midi.remove_notes = function(take, t_midi_events, active_note_row)
+  for i = 1, t_midi_events[2] do
+    local note_idx = i - 1
+    local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
+    if pitch == active_note_row then
+      reaper.MIDI_DeleteNote(take, note_idx)
+    end
+  end
 end
 
 return midi

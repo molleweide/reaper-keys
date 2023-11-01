@@ -36,15 +36,20 @@ local function randomBool()
   return math.floor(math.random() + 0.5) == 1
 end
 
-local function remove_note_row(take, t_midi_events, active_note_row)
-  for i = 1, t_midi_events[2] do
-    local note_idx = i - 1
-    local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
-    if pitch == active_note_row then
-      reaper.MIDI_DeleteNote(take, note_idx)
-    end
-  end
-end
+-- TODO: move to midi library and rename to midi.remove_notes({opts})
+-- improve by adding a range from [60, 64]
+-- range opt
+-- note filter opt, eg notes outside of scale or predicate.
+
+-- local function remove_note_row(take, t_midi_events, active_note_row)
+--   for i = 1, t_midi_events[2] do
+--     local note_idx = i - 1
+--     local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
+--     if pitch == active_note_row then
+--       reaper.MIDI_DeleteNote(take, note_idx)
+--     end
+--   end
+-- end
 
 local function handle_multipliers(t_pattern_strings)
   local t_pat_multiplied = {}
@@ -111,7 +116,7 @@ end
 --
 
 midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
-  local ret, ME, take = utils.getMidiValidContext()
+  local ret, ME, take = midi.getMidiValidContext()
   if not ret then
     return
   end
@@ -125,7 +130,7 @@ midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
   local note_duration = sixteen_note_len - note_end_gap
   local retval, measures, cml, fullbeats, cdenom = reaper.TimeMap2_timeToBeats(0, cursor_pos)
 
-  remove_note_row(take, t_midi_events, active_note_row)
+  midi.remove_notes(take, t_midi_events, active_note_row)
 
   -- log.user(">>>", cursor_pos, retval, measures, cml, fullbeats, cdenom)
 
@@ -333,12 +338,25 @@ local state_table_name = "midipatterns"
 --
 -- TODO: replace all selected notes with pattern??
 --
-midi_patterns.insertPatternFromString = function()
+-- TODO: use custom jGui input here instead, rather than the reaper
+-- GetUserInput, since it doesn't seem to be possible to customize the reaper
+-- input that easilly.
 
-  local ret, ME, take = utils.getMidiValidContext()
+local function update_closure_level(char, open, close, level_var)
+  if char == open then
+    level_var = level_var + 1
+  elseif char == close then
+    level_var = level_var - 1
+  end
+end
+
+midi_patterns.insertPatternFromString = function()
+  local ret, ME, take = midi.getMidiValidContext()
   if not ret then
     return
   end
+  local t_midi_events = { reaper.MIDI_CountEvts(take) }
+  local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
 
   -- local midi_patterns_state = reaper_state.get(state_table_name)
   -- -- log.user("PREV PATTERN:", format.block(midi_patterns_state))
@@ -355,10 +373,6 @@ midi_patterns.insertPatternFromString = function()
   local retvals_csv = ""
   local pattern_sep = " " -- whitespace
 
-  -- TODO: use custom jGui input here instead, rather than the reaper
-  -- GetUserInput, since it doesn't seem to be possible to customize the reaper
-  -- input that easilly.
-
   local _, str_pat_input = reaper.GetUserInputs("pattern:", 1, input_placeholder, caption_csv, retvals_csv)
 
   local t_pattern_strings = s.split(str_pat_input, pattern_sep)
@@ -372,14 +386,16 @@ midi_patterns.insertPatternFromString = function()
 
   local t_final_midi_notes = {}
 
-  local unit_multiplier = 0.5
+  local unit_multiplier = 0.5 -- default time unit, a QN I believe
   local unit_divider = 4
 
   local found = true
-
   local note_start = 0
 
   for _, unit in pairs(t_pat_multiplied) do
+
+
+    -- TODO: handle custom unit multipliers and dividers
     if string.match(unit, "pattern") then
       unit_multiplier = 99
     end
@@ -400,29 +416,20 @@ midi_patterns.insertPatternFromString = function()
 
     local note_hit_idx = 1
 
+    --
+    -- for each unit, parse xx(x[xx{x{x}}]) into actual timing events
+    --
+
     for i = 1, #unit do
       local char = unit:sub(i, i)
-
-      if char == "(" then
-        par_level = par_level + 1
-      elseif char == ")" then
-        par_level = par_level - 1
-      end
-
-      if char == "{" then
-        cur_level = cur_level + 1
-      elseif char == "}" then
-        cur_level = cur_level - 1
-      end
-
-      if char == "[" then
-        brack_level = brack_level + 1
-      elseif char == "]" then
-        brack_level = brack_level - 1
-      end
+      update_closure_level(char, "(", ")", par_level)
+      update_closure_level(char, "{", "}", cur_level)
+      update_closure_level(char, "[", "]", brack_level)
 
       log.user(par_level, cur_level, brack_level, "char:", char)
 
+      -- NOTE: i believe this just ignores {([])} for now so that I can start
+      -- to work on just basic conversion of xko into time evts
       if string.match(char, "[{%[%(%)%]}]") then
         goto continue
       end
@@ -457,7 +464,7 @@ midi_patterns.insertPatternFromString = function()
       ::continue::
     end
 
-    log.user("time even: ", unit_subtract_len)
+    log.user("time even???: ", unit_subtract_len)
 
     -- if `o` then ignore and step forward
 
@@ -469,33 +476,13 @@ midi_patterns.insertPatternFromString = function()
 
     log.user("")
   end
-
   log.user(format.block(t_final_midi_notes))
 
-  --
-  -- 4. insert notes
-  --
-
-  local t_midi_events = { reaper.MIDI_CountEvts(take) }
-  local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
-
-  remove_note_row(take, t_midi_events, active_note_row)
-
-  for _, t_note in ipairs(t_final_midi_notes) do
-    local ret = reaper.MIDI_InsertNote(
-      take,
-      midi_insertion_data_default.selected,
-      midi_insertion_data_default.muted,
-      reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
-      reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
-      midi_insertion_data_default.chan,
-      active_note_row,
-      80,
-      midi_insertion_data_default.noSortIn
-    )
-  end
-  reaper.MIDI_Sort(take)
-
+  midi.remove_notes(take, t_midi_events, active_note_row)
+  midi.insert_notes(take, {
+    notes = t_final_midi_notes,
+    output_note = active_note_row
+  })
   reaper_state.set(state_table_name, { prev_pattern_string = str_pat_input })
 end
 
