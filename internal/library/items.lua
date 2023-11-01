@@ -1,6 +1,5 @@
 local lib_items = {}
 
-
 --
 -- NOTE: this will serve a basis for doing more complex operations to handle
 -- media items.

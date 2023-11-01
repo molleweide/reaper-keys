@@ -270,15 +270,4 @@ function utils.unselectTracks()
   end
 end
 
-function utils.getMidiValidContext()
-  local ME = reaper.MIDIEditor_GetActive()
-  local take = reaper.MIDIEditor_GetTake(ME)
-
-  local retval = true
-  if not ME or (not take or not reaper.TakeIsMIDI(take)) then
-    retval = false
-  end
-  return retval, ME, take
-end
-
 return utils

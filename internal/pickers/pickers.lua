@@ -260,38 +260,11 @@ pickers.add_track_fx = function(meta)
 	})
 end
 
---
---
---
-
 pickers.test_picker = function()
-	-- if not loadSettings() then
-	-- 	msg(
-	-- 		"Something went wrong with loading of settings, aborting. Please check your settings file: \n"
-	-- 			.. SETTINGS_INI_FILE
-	-- 	)
-	-- 	return false
-	-- end
-
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Test Picker",
-		results = {
-			"this",
-			"is",
-			"a",
-			"picker",
-			"test",
-			"xxxxxx",
-			"aaaaaa",
-			"vvvvvv",
-			"arst",
-			"XXX",
-			"89",
-			"=644ney",
-			"9n$)",
-			"(()())",
-		},
+		results = { "this", "is", "a" },
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
 			return vstTable
@@ -313,15 +286,6 @@ pickers.all_tracks = function()
 		entry_maker = "name",
 	})
 end
-
--- * WHAT THINGS CAN BE CONTROLLED VIA FZF:
---
--- ** REAPERS PREFERENCES
---
---   This will allow me to automate and control anything in the preferences
---   through the fzf interface.
---
--- *** Any text based configs etc. (.ini)
 
 pickers.browse_reaper_preferences = function()
 	-- todo: read the plugins data and
@@ -365,16 +329,7 @@ pickers.track_fx = function()
 end
 
 pickers.track_fx_params = function()
-	-- local the_fx = ??
-
 	local t_fx_params
-
-	-- connect this to track_fx with next = this
-	--
-	-- ~ for selected fx
-	--
-	-- ~ make list of fx params
-
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Fx params for <fx_name> on track <track_name>",
@@ -386,6 +341,8 @@ pickers.track_fx_params = function()
 	})
 end
 
+-- ~ create list of relevant track params
+-- ~ figure out how i can show them all in one picker.
 pickers.track_channel_mix_params = function()
 	local t_track_params = {
 		-- volume =
@@ -399,7 +356,6 @@ pickers.track_channel_mix_params = function()
 		-- fx = next > fx menu
 		-- routing
 	}
-
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Track params for track: <trackname>",
@@ -409,9 +365,6 @@ pickers.track_channel_mix_params = function()
 			return vstTable
 		end,
 	})
-
-	-- ~ create list of relevant track params
-	-- ~ figure out how i can show them all in one picker.
 end
 
 pickers.track_attributes = function()
@@ -440,13 +393,10 @@ pickers.track_attributes = function()
 	})
 end
 
+-- revisit my route lib
+-- get all routes for track
+-- reuse my track logging function but here instead.
 pickers.track_routing = function()
-	-- revisit my route lib
-	--
-	-- get all routes for track
-	--
-	-- reuse my track logging function but here instead.
-
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Routing @track: <trackname>",
@@ -459,7 +409,6 @@ pickers.track_routing = function()
 end
 
 pickers.midi_editor_take_screensets = function()
-
 	--
 end
 
@@ -567,9 +516,9 @@ pickers.regions = function()
 	})
 end
 
+-- get patterns from the midi patterns config file
+-- definitions/midi_patterns.lua
 pickers.midi_patterns = function()
-	-- get patterns from the midi patterns config file
-	-- definitions/midi_patterns.lua
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "midi patterns",
@@ -581,10 +530,10 @@ pickers.midi_patterns = function()
 	})
 end
 
+-- start building out basic atomic (very important) progressions
+-- that can be picked to insert chord data. Should be usable
+-- with motion so that you can do `apply progression to` motion, eg beats, bar, or region.
 pickers.chord_progression = function()
-	-- start building out basic atomic (very important) progressions
-	-- that can be picked to insert chord data. Should be usable
-	-- with motion so that you can do `apply progression to` motion, eg beats, bar, or region.
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "chord progressions",
@@ -602,7 +551,6 @@ pickers.chord = function(meta, opts)
 		title = string.format("%s: chord", meta.action_type),
 		on_select_func = function(self, i)
 			local chord = self.t_search_results[i]
-			-- log.user("selected chord:", format.block(chord))
 			opts.next(meta, {
 				chord = chord,
 				move_cursor = opts.move_cursor,

@@ -80,17 +80,6 @@ return {
 		-- okay so fixing the direction now is goig to be fuckNg mazing and then
 
 		-- TODO: today
-		-- ~ add octave jump for next step
-		--     double sequence
-		--       fu, fd
-		--
-		--       1. move active note row
-		--       2. add octave to pitched
-		--       3. clean up the `octave_next` key from state.
-		--
-		--
-		--
-		--
 		-- ~ use [single|chord|pattern]
 		-- ~ restrict pitches to closed set [0, 127]
 
