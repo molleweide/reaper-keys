@@ -406,6 +406,7 @@ local midi_insertion_data_default = {
 	selected = false,
 	muted = false,
 	chan = 0,
+	velocity = 80,
 	noSortIn = true,
 }
 
@@ -545,16 +546,15 @@ midi.get_midi_step_state = function()
 	return midi_step_state
 end
 
-midi.insert_notes = function(take, opts)
+midi.insert_notes = function(opts)
 	if not opts.notes then
 		return
 	end
 
-	log.user(">>>>>",take)
+	local take = opts.take
 
 	for _, t_note in ipairs(opts.notes) do
 		if not t_note.silent then
-			local pitch = opts.output_note and opts.output_note or t_note.pitch
 
 			local ret = reaper.MIDI_InsertNote(
 				take,
@@ -563,8 +563,8 @@ midi.insert_notes = function(take, opts)
 				reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
 				reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
 				midi_insertion_data_default.chan,
-				pitch,
-				80,
+				t_note.pitch,
+				midi_insertion_data_default.velocity,
 				midi_insertion_data_default.noSortIn
 			)
 		end

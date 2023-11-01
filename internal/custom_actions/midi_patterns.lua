@@ -11,7 +11,6 @@ local NOTE_END_GAP = 0.005
 local UNIT_MULTIPLIER = 0.5 -- quarter note
 local UNIT_DIVIDER = 4 -- sixteenth note
 
-
 local SHORTHAND_CASES = require("definitions.pattern_shorthands")
 local PATTERN_PLACEHOLDER = "xx(xxx)"
 local midi_insertion_data_default = {
@@ -357,18 +356,21 @@ end
 -- if unit has hard consonant chars, then make a hit (ie. silent = false)
 -- so hard consonants are hits, and smooth vowels are pauses or silen. this
 -- hopefully makes it ergonomic to program hits.
-local function get_note_opts_for_char(char, note_step, note_start)
+local function get_note_opts_for_char(t_unit, pitch, note_start)
   local note_opts = {
     silent = true,
     time_pos_start = note_start,
-    time_pos_end = note_start + (note_step - NOTE_END_GAP),
-    note_step_length = note_step
+    time_pos_end = note_start + (t_unit.note_step - NOTE_END_GAP),
+    note_step_length = t_unit.note_step,
+    pitch = pitch,
   }
-  if string.match(char, "[xk]") then
+  if string.match(t_unit.char, "[xk]") then
     note_opts.silent = false
   end
   return note_opts
 end
+
+-- TODO: use cursor position or start from current measure
 
 midi_patterns.insertPatternFromString = function()
   local ret, ME, take = midi.getMidiValidContext()
@@ -378,14 +380,10 @@ midi_patterns.insertPatternFromString = function()
   local t_midi_events = { reaper.MIDI_CountEvts(take) }
   local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
 
+  local note_start = reaper.GetCursorPosition()
+
   -- local midi_patterns_state = reaper_state.get(state_table_name)
   -- -- log.user("PREV PATTERN:", format.block(midi_patterns_state))
-
-  -- TODO: send http request to nvim and prompt nvim for string input,
-  --       and send the string back to reaper via OSC
-  -- 1. play around with neovim http server
-  -- 2. prompt for nui.input on event.
-  -- 3. send data back to reaper over OSC
 
   local input_placeholder = PATTERN_PLACEHOLDER
   local input_field_width = "extrawidth=350"
@@ -397,28 +395,14 @@ midi_patterns.insertPatternFromString = function()
 
   local t_pattern_strings = s.split(str_pat_input, pattern_sep)
   local t_pat_multiplied = handle_multipliers(t_pattern_strings)
-
   apply_shorthands(t_pat_multiplied, SHORTHAND_CASES)
-
-  --
-  -- 3. render the final table of midi notes
-  --
 
   local t_final_midi_notes = {}
 
-
-  local found = true
-  local note_start = 0
-
   for _, unit in pairs(t_pat_multiplied) do
-
     local multiplier = UNIT_MULTIPLIER
     local divider = UNIT_DIVIDER
     local unit_subtract_len = multiplier
-    local note_step = multiplier / divider
-    local par_level = 0
-    local cur_level = 0
-    local brack_level = 0
 
     -- todo...
     if string.match(unit, "pattern_mult") then
@@ -427,76 +411,38 @@ midi_patterns.insertPatternFromString = function()
     if string.match(unit, "pattern_div") then
       UNIT_DIVIDER = 99
     end
-
     local t_unit = {
       string = unit,
       multiplier = UNIT_MULTIPLIER,
       divider = UNIT_DIVIDER,
-      par_level = 0,
-      cur_level = 0,
-      brack_level = 0,
       note_step = multiplier / divider,
-      note_hit_idx = 1
+      note_hit_idx = 1,
     }
-    -- log.user(format.block(t_unit))
-
     for i = 1, #unit do
       t_unit.char = unit:sub(i, i)
-
-      update_closure_level(t_unit, "[", 0.5) -- half
-      update_closure_level(t_unit, "(", 2 / 3) -- tripple
-      update_closure_level(t_unit, "{", 1 / 3)
-      update_closure_level(t_unit, "]", 2) -- /2 *2
-      update_closure_level(t_unit, ")", 3 / 2)
-      update_closure_level(t_unit, "}", 3)
-
       if string.match(t_unit.char, "[{%[%(%)%]}]") then
-        goto continue
+        update_closure_level(t_unit, "[", 0.5) -- half
+        update_closure_level(t_unit, "(", 2 / 3) -- tripple
+        update_closure_level(t_unit, "{", 1 / 3)
+        update_closure_level(t_unit, "]", 2) -- /2 *2
+        update_closure_level(t_unit, ")", 3 / 2)
+        update_closure_level(t_unit, "}", 3)
+      else
+        table.insert(t_final_midi_notes, get_note_opts_for_char(t_unit, active_note_row, note_start))
+        -- log.user(t_unit.char, t_unit.note_step, unit_subtract_len, unit_subtract_len - t_unit.note_step)
+        note_start = note_start + t_unit.note_step
+        unit_subtract_len = unit_subtract_len - t_unit.note_step
       end
-
-      table.insert(t_final_midi_notes, get_note_opts_for_char(t_unit.char, t_unit.note_step, note_start))
-
-      log.user(t_unit.char, t_unit.note_step, unit_subtract_len, unit_subtract_len - t_unit.note_step)
-
-      -- set vars for next round
-      note_start = note_start + t_unit.note_step
-      unit_subtract_len = unit_subtract_len - t_unit.note_step
-      ::continue::
     end
-
-    log.user("??", unit_subtract_len)
-
-    if not (par_level == 0 and cur_level == 0 and brack_level == 0) then
-      -- uneven {([])} throw error
-      log.user("UNEVEN {([])}")
-    end
-
-    log.user(string.format([[
-    AFTER EACH UNIT:
-    unit_subtract_len = %s
-    note_step = %s
-    ]], unit_subtract_len, t_unit.note_step, par_level, cur_level, brack_level))
-
-    -- if `o` then ignore and step forward
-
     if unit_subtract_len > 0 then
-      -- not enough notes for this unit
-      -- fill remaining somehow
-      -- NOTE: but remember, the unit does not have to be completely filled,
-      -- it is up to the user.
-      log.user("unit_subtract_len > 0")
+      log.debug("unit_subtract_len > 0")
     end
-
-    -- table.insert(t_final_midi_notes, { "------------" })
   end
 
-  -- log.user(format.block(t_final_midi_notes))
-
   midi.remove_notes(take, t_midi_events, active_note_row)
-
-  midi.insert_notes(take, {
+  midi.insert_notes({
+    take = take,
     notes = t_final_midi_notes,
-    output_note = active_note_row
   })
 
   reaper_state.set(state_table_name, { prev_pattern_string = str_pat_input })
