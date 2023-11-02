@@ -1,3 +1,16 @@
+-- TODOS:
+--
+--  ~ fix: move active note row with w/b
+--  ~ new: set active note row to current selection
+--  ~
+
+-- TEST/IMPROVEMENTS:
+-- preferences -> midi editor -> `selection is linked to editability` ??
+-- preferences -> midi editor -> `close editor when all active items have been deleted` ??
+-- preferences -> midi editor -> uncheck `avoid setting items from other track editable` ??
+-- set opacity for secondary items
+-- set custom color palette
+
 return {
   timeline_selector = {
     ["s"] = "SelectedNotes", -- ??
@@ -65,7 +78,7 @@ return {
     -- ["G"] = "BottomNote",
     ["<C-+>"] = "MidiZoomInVert",
     ["<C-->"] = "MidiZoomOutVert",
-    ["Z"] = "CloseWindow",
+    ["Z"] = "CloseWindow", -- todo: rename to something more descriptive.
     ["p"] = "MidiPaste",
     ["P"] = "NoteRowPattern",
     ["S"] = "UnselectAllEvents",
