@@ -401,15 +401,6 @@ end
 -- insert chunks of midi notes
 --
 
-local midi_insertion_data_default = {
-	-- TODO: move to definitions/constants.lua
-	selected = false,
-	muted = false,
-	chan = 0,
-	velocity = 80,
-	noSortIn = true,
-}
-
 -- TODO: make sure I don't use midi step state when executing as a regular
 -- command. >>> maybe the midi_step_state should be passed down to the
 -- insertMidiNoteChunk func - then i can just chek if meta.mode == midi_step,
@@ -427,8 +418,13 @@ function midi.insertMidiNoteChunk(meta, opts)
 		return
 	end
 
+	-- TODO: move to
+	-- lib/cursor.get()
+	-- lib/midi.get_active_note_row()
+	-- lib/midi.get_important_contexts() -- merge getMidiValidContext with these and return table.
 	local cursor_pos = reaper.GetCursorPosition()
 	local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
+
 	local t_note_pitches = {}
 	local t_midi_notes = {}
 	local sixteen_note_len = 0.25
@@ -481,53 +477,44 @@ function midi.insertMidiNoteChunk(meta, opts)
 	-- COMPUTE NOTE START/ENDS
 	--
 
-	local function note_start()
-		if meta.action_type == "timeline_operator" then
-			return meta.start_pos
-		elseif meta.action_type:match("command$") then
-			return cursor_pos
-		end
-	end
-
-	local function note_end()
-		if meta.action_type == "timeline_operator" then
-			return meta.end_pos
-		-- elseif meta.action_type == "command" then
-		elseif meta.action_type:match("command$") then
-			return cursor_pos + note_duration
-		end
-	end
-
-	--
-	-- BUILD MIDI NOTES
-	--
+	-- local function note_start()
+	-- 	if meta.action_type == "timeline_operator" then
+	-- 		return meta.start_pos
+	-- 	elseif meta.action_type:match("command$") then
+	-- 		return cursor_pos
+	-- 	end
+	-- end
+	-- local function note_end()
+	-- 	if meta.action_type == "timeline_operator" then
+	-- 		return meta.end_pos
+	-- 	-- elseif meta.action_type == "command" then
+	-- 	elseif meta.action_type:match("command$") then
+	-- 		return cursor_pos + note_duration
+	-- 	end
+	-- end
 
 	for i in ipairs(t_note_pitches) do
-		table.insert(t_midi_notes, {
-			pitch = t_note_pitches[i],
-			time_pos_start = note_start(),
-			time_pos_end = note_end(),
-		})
+		local t_new_note = {}
+		t_new_note.pitch = t_note_pitches[i]
+		if meta.action_type == "timeline_operator" then
+			t_new_note.time_pos_start = meta.start_pos
+			t_new_note.time_pos_end = meta.start_end
+		elseif meta.action_type:match("command$") then
+			t_new_note.time_pos_start = cursor_pos
+			t_new_note.time_pos_end = cursor_pos + note_duration
+		end
+		table.insert(t_midi_notes, t_new_note)
+		-- table.insert(t_midi_notes, {
+		-- 	pitch = t_note_pitches[i],
+		-- 	time_pos_start = note_start(),
+		-- 	time_pos_end = note_end(),
+		-- })
 	end
 
-	--
-	-- INSERT EVENTS
-	--
-
-	for _, t_note in ipairs(t_midi_notes) do
-		local ret = reaper.MIDI_InsertNote(
-			take,
-			midi_insertion_data_default.selected,
-			midi_insertion_data_default.muted,
-			reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
-			reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
-			midi_insertion_data_default.chan,
-			t_note.pitch,
-			80,
-			midi_insertion_data_default.noSortIn
-		)
-	end
-	reaper.MIDI_Sort(take)
+	midi.insert_notes({
+		take = take,
+		notes = t_midi_notes,
+	})
 
 	-- reset state
 	local midi_step_state = midi.get_midi_step_state()
@@ -550,22 +537,21 @@ midi.insert_notes = function(opts)
 	if not opts.notes then
 		return
 	end
-
+	local note_defaults = require("constants.constants").midi_note_defaults
 	local take = opts.take
 
 	for _, t_note in ipairs(opts.notes) do
 		if not t_note.silent then
-
 			local ret = reaper.MIDI_InsertNote(
 				take,
-				midi_insertion_data_default.selected,
-				midi_insertion_data_default.muted,
+				note_defaults.selected,
+				note_defaults.muted,
 				reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
 				reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
-				midi_insertion_data_default.chan,
+				note_defaults.chan,
 				t_note.pitch,
-				midi_insertion_data_default.velocity,
-				midi_insertion_data_default.noSortIn
+				note_defaults.velocity,
+				note_defaults.noSortIn
 			)
 		end
 	end
