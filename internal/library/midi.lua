@@ -473,26 +473,7 @@ function midi.insertMidiNoteChunk(meta, opts)
 		active_note_row + octave_add + (opts.chord[2][1] - 1) * direction_mult
 	)
 
-	--
-	-- COMPUTE NOTE START/ENDS
-	--
-
-	-- local function note_start()
-	-- 	if meta.action_type == "timeline_operator" then
-	-- 		return meta.start_pos
-	-- 	elseif meta.action_type:match("command$") then
-	-- 		return cursor_pos
-	-- 	end
-	-- end
-	-- local function note_end()
-	-- 	if meta.action_type == "timeline_operator" then
-	-- 		return meta.end_pos
-	-- 	-- elseif meta.action_type == "command" then
-	-- 	elseif meta.action_type:match("command$") then
-	-- 		return cursor_pos + note_duration
-	-- 	end
-	-- end
-
+  -- build t_notes
 	for i in ipairs(t_note_pitches) do
 		local t_new_note = {}
 		t_new_note.pitch = t_note_pitches[i]
@@ -504,11 +485,6 @@ function midi.insertMidiNoteChunk(meta, opts)
 			t_new_note.time_pos_end = cursor_pos + note_duration
 		end
 		table.insert(t_midi_notes, t_new_note)
-		-- table.insert(t_midi_notes, {
-		-- 	pitch = t_note_pitches[i],
-		-- 	time_pos_start = note_start(),
-		-- 	time_pos_end = note_end(),
-		-- })
 	end
 
 	midi.insert_notes({
@@ -568,6 +544,14 @@ midi.remove_notes = function(take, t_midi_events, active_note_row)
 			reaper.MIDI_DeleteNote(take, note_idx)
 		end
 	end
+end
+
+--
+-- midi selection
+--
+
+-- make it easier to select midi chunks close in time proximity
+midi.select_notes = function()
 end
 
 return midi

@@ -100,6 +100,7 @@ return {
 	timeline_selector = {
 		["s"] = "SelectedItems",
 	},
+
 	timeline_motion = {
 		["<CM-l>"] = "NextTransientInItem",
 		["<CM-h>"] = "PrevTransientInItem",
@@ -113,7 +114,8 @@ return {
 		["e"] = "NextItemEnd",
 		["w"] = "NextItemStart",
 		["<M-w>"] = "NextEnvelopePoint",
-		["$"] = "LastItemEnd",
+		["$"] = "LastItemEnd", -- rename: LastItemOfCurrentTrackEnd
+		-- ["$t"] = "LastItemOfProject"
 		["("] = "TimeSelectionStart",
 		[")"] = "TimeSelectionEnd",
 	},

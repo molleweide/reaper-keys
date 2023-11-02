@@ -1,4 +1,10 @@
 local vkb_mode_layout = require('definitions.defaults.virtual_keyboard')
+
+-- todos
+--
+--  ~ go to last item in project
+
+
 return {
   timeline_motion = {
     ["0"] = "ProjectStart",
