@@ -392,7 +392,19 @@ function midi.getMidiValidContext()
 	if not ME or (not take or not reaper.TakeIsMIDI(take)) then
 		retval = false
 	end
-	return retval, ME, take
+
+	return retval,
+		ME,
+		take,
+		-- i use all of these data very often, so it makes sense to always make
+		-- these available. i can refactor this later into something smarter..
+		{
+			editor = ME,
+			take = take,
+			events = { reaper.MIDI_CountEvts(take) },
+			note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row"),
+			cursor_pos = reaper.GetCursorPosition(),
+		}
 end
 
 --

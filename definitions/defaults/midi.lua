@@ -52,6 +52,15 @@ return {
 				["i"] = "InsertNoteBlockCommand", -- FIX: doesn't work... bc the func is using meta or opts now..
 				["I"] = "InsertMidiBlockPicker",
 				["W"] = "NoteRowPattern",
+
+				-- TODO: insert pattern from string
+				-- 1. use fzf
+				-- 2. results list should represent patterns from state history
+				-- 3. so that I can easilly search and select already created patterns.
+				-- 4. <CR> -> use selected pattern
+				-- 5. <C-r> -> set text input element to selection for further editing.
+				-- 6. allow for further editing
+				-- 7. or just
 				["E"] = "MidiPatternInsertFromString",
 				["J"] = "PickerTracksWithMidiItemsAtSameTime", -- switch midi item to another track in the same time/region/position.
 				["M"] = "PickerExistingMidiItemsAtSameTime",
