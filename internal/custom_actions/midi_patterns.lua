@@ -8,11 +8,21 @@ local s = require("utils.string")
 
 local NOTE_END_GAP = 0.005
 
-local UNIT_MULTIPLIER = 0.5 -- quarter note
-local UNIT_DIVIDER = 4 -- sixteenth note
-
 local SHORTHAND_CASES = require("definitions.pattern_shorthands")
 local PATTERN_PLACEHOLDER = "xx(xxx)"
+
+local PATTERN_SPEC = {
+	UNIT_MULTIPLIER = 0.5, -- quarter note
+	UNIT_DIVIDER = 4, -- sixteenth note
+	special_symbols = {
+		["["] = { mult = 0.5 }, -- half
+		["]"] = { mult = 2 }, -- /2 *2
+		["("] = { mult = 2 / 3 }, -- tripple
+		[")"] = { mult = 3 / 2 },
+		["{"] = { mult = 1 / 3 },
+		["}"] = { mult = 3 },
+	},
+}
 
 -- local UNITS = {
 --   ["16th"] = 0.125,
@@ -321,10 +331,24 @@ local function update_closure_level(t_unit, pattern, mult)
 	end
 end
 
+local function apply_multipliers_according_to_spec(t_unit, char)
+	for pattern_symbol, symbol_params in pairs(PATTERN_SPEC.special_symbols) do
+		if char == pattern_symbol then
+			t_unit.note_step = t_unit.note_step * symbol_params.mult
+		end
+	end
+end
+
 -- if unit has hard consonant chars, then make a hit (ie. silent = false)
 -- so hard consonants are hits, and smooth vowels are pauses or silen. this
 -- hopefully makes it ergonomic to program hits.
-local function get_note_opts_for_char(t_unit, pitch, note_start)
+--
+-- TODO: how can user specify how long notes should be?
+-- Eg. for drum lanes, then the duration of each midi event can be
+-- very short
+-- BUT with synths, then I might want more control over note lengths
+--
+local function get_note_opts_for_char(t_unit, char, pitch, note_start)
 	local note_opts = {
 		silent = true,
 		time_pos_start = note_start,
@@ -332,10 +356,16 @@ local function get_note_opts_for_char(t_unit, pitch, note_start)
 		note_step_length = t_unit.note_step,
 		pitch = pitch,
 	}
-	if string.match(t_unit.char, "[xk]") then
+	if string.match(char, "[xk]") then
 		note_opts.silent = false
 	end
 	return note_opts
+end
+
+local function get_unit_multipliers(unit)
+	local capture_mul = unit:match("(N),M$")
+	local capture_div = unit:match("N,(M)$")
+	return capture_mul or PATTERN_SPEC.UNIT_MULTIPLIER, capture_div or PATTERN_SPEC.UNIT_DIVIDER
 end
 
 -- TODO: use cursor position or start from current measure
@@ -368,40 +398,31 @@ midi_patterns.insertPatternFromString = function()
 	local t_final_midi_notes = {}
 
 	for _, unit in pairs(t_pat_multiplied) do
-		local multiplier = UNIT_MULTIPLIER
-		local divider = UNIT_DIVIDER
+
+		local multiplier, divider = get_unit_multipliers(unit)
 		local unit_subtract_len = multiplier
 
-		-- todo...
-		if string.match(unit, "pattern_mult") then
-			UNIT_MULTIPLIER = 99
-		end
-		if string.match(unit, "pattern_div") then
-			UNIT_DIVIDER = 99
-		end
-		local t_unit = {
-			string = unit,
-			multiplier = UNIT_MULTIPLIER,
-			divider = UNIT_DIVIDER,
+		local t_current_unit_params = {
 			note_step = multiplier / divider,
-			note_hit_idx = 1,
+			-- note_hit_idx = 1, -- unused...
 		}
-		for i = 1, #unit do
-			t_unit.char = unit:sub(i, i)
-			if string.match(t_unit.char, "[{%[%(%)%]}]") then
-				update_closure_level(t_unit, "[", 0.5) -- half
-				update_closure_level(t_unit, "(", 2 / 3) -- tripple
-				update_closure_level(t_unit, "{", 1 / 3)
-				update_closure_level(t_unit, "]", 2) -- /2 *2
-				update_closure_level(t_unit, ")", 3 / 2)
-				update_closure_level(t_unit, "}", 3)
+
+		for char in unit:gmatch(".") do
+			if string.match(char, "[{%[%(%)%]}]") then
+				apply_multipliers_according_to_spec(t_current_unit_params, char)
 			else
-				table.insert(t_final_midi_notes, get_note_opts_for_char(t_unit, active_note_row, note_start))
-				-- log.user(t_unit.char, t_unit.note_step, unit_subtract_len, unit_subtract_len - t_unit.note_step)
-				note_start = note_start + t_unit.note_step
-				unit_subtract_len = unit_subtract_len - t_unit.note_step
+				table.insert(
+					t_final_midi_notes,
+					get_note_opts_for_char(t_current_unit_params, char, active_note_row, note_start)
+				)
+
+				-- log.user(t_current_unit_params.char, t_current_unit_params.note_step, unit_subtract_len, unit_subtract_len - t_current_unit_params.note_step)
+
+				note_start = note_start + t_current_unit_params.note_step
+				unit_subtract_len = unit_subtract_len - t_current_unit_params.note_step
 			end
 		end
+
 		if unit_subtract_len > 0 then
 			log.debug("unit_subtract_len > 0")
 		end

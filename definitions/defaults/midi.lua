@@ -3,14 +3,7 @@
 --  ~ fix: move active note row with w/b
 --  ~ new: set active note row to current selection
 --  ~
---
--- i am going to play around with this more now in the future and see what
--- happens when we do this so well, and now it is just am atter of building out
--- as much as possible over time and you have. he goes into a mosque and kills
--- a huge amount of muslim fuckers and the jordan/palistinian from the selection
--- and he was one of those on the israeli/jewish side. rabbiata idioter amongst
--- jewish extremists. fuzzy jumping between tracks would be quite fucking amazing.
---
+
 
 -- now these files are pretty much fucked.
 

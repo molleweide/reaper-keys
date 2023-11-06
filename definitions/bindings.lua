@@ -16,21 +16,15 @@ return {
 						{
 							["f"] = "PickerAddTrackFx",
 							["w"] = "PickerTest",
+
+							-- TODO: modify `tracks` picker so that I can jump from inside
+							-- midi editor and change focus to the selected track, and if
+							-- there is any midi item in the same position, otherwise create
+							-- one.
 							["t"] = "PickerAllTracks",
-							-- TODO: NOW
 							--
-							-- which one should i start with? tracks are quite easy.
-							-- items are quite easy.
-							-- now i can get track lists super easilly. now i need to
-							-- test showing all of the data. which would be quite fucking
-							-- cool. i should also get the tree and try looping over
-							-- zones by name and see what that would do with the picker.
-							-- eg only show zones, or groups and see what I can do visually.
-							-- and then refactor some stuff and see what whould happen.
-							-- this is quite an insane system and so that is the reason why
-							-- they would never fukcing see this shit.
-							--
-							--
+							-- FIX: below later...
+							-- ...
 							["r"] = "PickerRegions",
 							["q"] = "PickerMarks",
 							["x"] = "PickerTrackFx",
