@@ -9,9 +9,16 @@ local s = require("utils.string")
 local NOTE_END_GAP = 0.005
 
 local SHORTHAND_CASES = require("definitions.pattern_shorthands")
-local PATTERN_PLACEHOLDER = "xx(xxx)"
 
 local PATTERN_SPEC = {
+	user_input = {
+		title = "pattern:",
+		num_inputs = 1,
+		placeholder = "xx(xxx)",
+		input_field_width = "extrawidth=350",
+		retvals_csv = "",
+	},
+	pattern_sep = " ", -- whitespace
 	UNIT_MULTIPLIER = 0.5, -- quarter note
 	UNIT_DIVIDER = 4, -- sixteenth note
 	special_symbols = {
@@ -23,6 +30,8 @@ local PATTERN_SPEC = {
 		["}"] = { mult = 3 },
 	},
 }
+PATTERN_SPEC.user_input.caption_csv =
+	string.format("%s,%s", PATTERN_SPEC.user_input.placeholder, PATTERN_SPEC.user_input.input_field_width)
 
 -- local UNITS = {
 --   ["16th"] = 0.125,
@@ -46,22 +55,10 @@ local function randomBool()
 	return math.floor(math.random() + 0.5) == 1
 end
 
--- TODO: move to midi library and rename to midi.remove_notes({opts})
--- improve by adding a range from [60, 64]
--- range opt
--- note filter opt, eg notes outside of scale or predicate.
+-- insert duplicates into `input_units` for each unit user wants repeated
+local function apple_repeats(t_ps)
+	local t_pattern_strings = t_ps.input_units
 
--- local function remove_note_row(take, t_midi_events, active_note_row)
---   for i = 1, t_midi_events[2] do
---     local note_idx = i - 1
---     local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
---     if pitch == active_note_row then
---       reaper.MIDI_DeleteNote(take, note_idx)
---     end
---   end
--- end
-
-local function handle_multipliers(t_pattern_strings)
 	local t_pat_multiplied = {}
 	local idx_mult_start = 1
 	local idx_at_mult = 1
@@ -100,14 +97,16 @@ local function handle_multipliers(t_pattern_strings)
 	if idx_mult_start ~= idx_at_mult or idx_at_mult == 1 then
 		insert_once(true)
 	end
+
+	t_ps.input_units = t_pat_multiplied
 	return t_pat_multiplied
 end
 
-local function case_apply(cases, i, str, t_target)
+local function case_apply(cases, i, s_unit, t_target)
 	for pattern, value in pairs(cases) do
-		if string.match(str, pattern) then
+		if string.match(s_unit, pattern) then
 			if type(value) == "function" then
-				value(t_target, i, str)
+				value(t_target, i, s_unit)
 			else
 				t_target[i] = value
 			end
@@ -115,9 +114,10 @@ local function case_apply(cases, i, str, t_target)
 	end
 end
 
-local function apply_shorthands(t_patterns, cases)
-	for i, str in ipairs(t_patterns) do
-		case_apply(cases, i, str, t_patterns)
+-- replace `input_units` with their respective shorthand mapping
+local function apply_shorthands(t_ps, cases)
+	for i, s_unit in ipairs(t_ps.input_units) do
+		case_apply(cases, i, s_unit, t_patterns)
 	end
 end
 
@@ -372,9 +372,11 @@ end
 
 midi_patterns.insertPatternFromString = function()
 	local ret, ME, take = midi.getMidiValidContext()
+
 	if not ret then
 		return
 	end
+
 	local t_midi_events = { reaper.MIDI_CountEvts(take) }
 	local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
 
@@ -383,22 +385,19 @@ midi_patterns.insertPatternFromString = function()
 	-- local midi_patterns_state = reaper_state.get(state_table_name)
 	-- -- log.user("PREV PATTERN:", format.block(midi_patterns_state))
 
-	local input_placeholder = PATTERN_PLACEHOLDER
-	local input_field_width = "extrawidth=350"
-	local caption_csv = string.format("%s,%s", input_placeholder, input_field_width)
-	local retvals_csv = ""
-	local pattern_sep = " " -- whitespace
+	local _, str_pat_input = reaper.GetUserInputs(PATTERN_SPEC.user_input)
 
-	local _, str_pat_input = reaper.GetUserInputs("pattern:", 1, input_placeholder, caption_csv, retvals_csv)
+	local t_patterns_state = {
+		input_raw = str_pat_input,
+		input_units = s.split(str_pat_input, PATTERN_SPEC.pattern_sep),
+	} -- pattern state
 
-	local t_pattern_strings = s.split(str_pat_input, pattern_sep)
-	local t_pat_multiplied = handle_multipliers(t_pattern_strings)
-	apply_shorthands(t_pat_multiplied, SHORTHAND_CASES)
+	apple_repeats(t_patterns_state)
+	apply_shorthands(t_patterns_state, SHORTHAND_CASES)
 
-	local t_final_midi_notes = {}
+	local t_midi_notes = {}
 
-	for _, unit in pairs(t_pat_multiplied) do
-
+	for _, unit in pairs(t_patterns_state.input_units) do
 		local multiplier, divider = get_unit_multipliers(unit)
 		local unit_subtract_len = multiplier
 
@@ -412,7 +411,7 @@ midi_patterns.insertPatternFromString = function()
 				apply_multipliers_according_to_spec(t_current_unit_params, char)
 			else
 				table.insert(
-					t_final_midi_notes,
+					t_midi_notes,
 					get_note_opts_for_char(t_current_unit_params, char, active_note_row, note_start)
 				)
 
@@ -431,7 +430,7 @@ midi_patterns.insertPatternFromString = function()
 	midi.remove_notes(take, t_midi_events, active_note_row)
 	midi.insert_notes({
 		take = take,
-		notes = t_final_midi_notes,
+		notes = t_midi_notes,
 	})
 
 	reaper_state.set(state_table_name, { prev_pattern_string = str_pat_input })

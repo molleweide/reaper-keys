@@ -473,7 +473,6 @@ function midi.insertMidiNoteChunk(meta, opts)
 		active_note_row + octave_add + (opts.chord[2][1] - 1) * direction_mult
 	)
 
-  -- build t_notes
 	for i in ipairs(t_note_pitches) do
 		local t_new_note = {}
 		t_new_note.pitch = t_note_pitches[i]
@@ -536,6 +535,11 @@ midi.insert_notes = function(opts)
 	end
 end
 
+-- TODO: move to midi library and rename to midi.remove_notes({opts})
+-- improve by adding a range from [60, 64]
+-- range opt
+-- note filter opt, eg notes outside of scale or predicate.
+
 midi.remove_notes = function(take, t_midi_events, active_note_row)
 	for i = 1, t_midi_events[2] do
 		local note_idx = i - 1
@@ -552,6 +556,12 @@ end
 
 -- make it easier to select midi chunks close in time proximity
 midi.select_notes = function()
+
+	-- vertical | chords
+	-- similar onset time or playing simultaneously
+
+	-- horizontal | scales / patterns
+	--
 end
 
 return midi
