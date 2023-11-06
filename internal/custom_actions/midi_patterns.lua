@@ -330,17 +330,25 @@ local state_table_name = "midipatterns"
 -- input that easilly.
 
 local function update_closure_level(t_unit, pattern, mult)
-	if t_unit.char == pattern then
-		t_unit.note_step = t_unit.note_step * mult
+	if t_unit.current_unit.char == pattern then
+		t_unit.current_unit.note_step = t_unit.current_unit.note_step * mult
 	end
 end
 
-local function apply_multipliers_according_to_spec(t_unit, char)
-	for pattern_symbol, symbol_params in pairs(PATTERN_SPEC.special_symbols) do
-		if char == pattern_symbol then
-			t_unit.note_step = t_unit.note_step * symbol_params.mult
+local function handle_if_special_char(t_ps)
+	if string.match(t_ps.char, "[{%[%(%)%]}]") then
+		for pattern_symbol, symbol_params in pairs(PATTERN_SPEC.special_symbols) do
+			if t_ps.char == pattern_symbol then
+				t_ps.current_unit.note_step = t_ps.current_unit.note_step * symbol_params.mult
+			end
 		end
+		return true
 	end
+	return false
+end
+
+local function make_midi_event_from_hit(t_midi_notes, t_midi_context, t_patterns_state)
+	table.insert(t_midi_notes, get_note_opts_for_char(t_midi_context.note_row, t_patterns_state))
 end
 
 -- if unit has hard consonant chars, then make a hit (ie. silent = false)
@@ -352,15 +360,15 @@ end
 -- very short
 -- BUT with synths, then I might want more control over note lengths
 --
-local function get_note_opts_for_char(t_unit, char, pitch, note_start)
+local function get_note_opts_for_char(pitch, t_ps)
 	local note_opts = {
 		silent = true,
-		time_pos_start = note_start,
-		time_pos_end = note_start + (t_unit.note_step - NOTE_END_GAP),
-		note_step_length = t_unit.note_step,
+		time_pos_start = t_ps.note_start,
+		time_pos_end = t_ps.note_start + (t_ps.current_unit.note_step - NOTE_END_GAP),
+		note_step_length = t_ps.current_unit.note_step,
 		pitch = pitch,
 	}
-	if string.match(char, "[xk]") then
+	if string.match(t_ps.char, "[xk]") then
 		note_opts.silent = false
 	end
 	return note_opts
@@ -383,9 +391,9 @@ local function get_prepare_unit_params(unit)
 	}
 end
 
-local function increment(t_ps, t_u)
-	t_ps.note_start = t_ps.note_start + t_u.note_step
-	t_u.unit_subtract_len = t_u.unit_subtract_len - t_u.note_step
+local function increment(t_ps)
+	t_ps.note_start = t_ps.note_start + t_ps.current_unit.note_step
+	t_ps.current_unit.unit_subtract_len = t_ps.current_unit.unit_subtract_len - t_ps.current_unit.note_step
 end
 
 -- TODO: use cursor position or start from current measure
@@ -403,6 +411,8 @@ midi_patterns.insertPatternFromString = function()
 
 	local _, str_pat_input = reaper.GetUserInputs(PATTERN_SPEC.user_input)
 
+	-- maybe rename it to command state as a more general term so that this pattern
+	-- could be reused in other of my custom action commands.
 	local t_patterns_state = {
 		input_units = s.split(str_pat_input, PATTERN_SPEC.pattern_sep),
 		note_start = t_midi_context.cursor_pos,
@@ -412,24 +422,24 @@ midi_patterns.insertPatternFromString = function()
 	apply_shorthands(t_patterns_state, SHORTHAND_CASES)
 
 	for _, unit in pairs(t_patterns_state.input_units) do
+		t_patterns_state.current_unit = get_prepare_unit_params(unit)
 
-		local t_unit_parms = get_prepare_unit_params(unit)
+		-- todo: i need to filter out escape stuff, eg. \n, and \t...
 
 		for char in unit:gmatch(".") do
-			if string.match(char, "[{%[%(%)%]}]") then
-				apply_multipliers_according_to_spec(t_unit_parms, char)
-			else
-				table.insert(
-					t_midi_notes,
-					get_note_opts_for_char(t_unit_parms, char, t_midi_context.note_row, t_pattern_state.note_start)
-				)
-
-				increment(t_patterns_state, t_unit_parms)
+			t_patterns_state.current_char = char
+			if not handle_if_special_char(t_patterns_state) then
+				make_midi_event_from_hit(t_midi_notes, t_midi_context, t_patterns_state)
+				increment(t_patterns_state)
 			end
 		end
 
-		if t_unit_parms.unit_subtract_len > 0 then
-			log.debug("unit_subtract_len > 0")
+		if t_patterns_state.current_unit.unit_subtract_len > 0 then
+			log.debug([[
+			unit_subtract_len > 0
+			-> User input unit did not make even time according to multiplier,
+			but this is fine, just know that you did not...
+			]])
 		end
 	end
 

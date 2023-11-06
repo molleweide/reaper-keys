@@ -49,7 +49,7 @@ return {
 		["Q"] = {
 			"+pattern/pickers",
 			{
-				["i"] = "InsertNoteBlockCommand", -- FIX: doesn't work... bc the func is using meta or opts now..
+				["i"] = "InsertNoteBlockCommand", -- FIX: doesn't work...... bc the func is using meta or opts now..
 				["I"] = "InsertMidiBlockPicker",
 				["W"] = "NoteRowPattern",
 
@@ -60,8 +60,10 @@ return {
 				-- 4. <CR> -> use selected pattern
 				-- 5. <C-r> -> set text input element to selection for further editing.
 				-- 6. allow for further editing
-				-- 7. or just
-				["E"] = "MidiPatternInsertFromString",
+				-- 7. ...
+				["E"] = "MidiPattern_InsertFromString_at_cursor",
+				["e"] = "MidiPattern_InsertFromString_at_current_measure",
+
 				["J"] = "PickerTracksWithMidiItemsAtSameTime", -- switch midi item to another track in the same time/region/position.
 				["M"] = "PickerExistingMidiItemsAtSameTime",
 				-- TODO: midi pattern string
