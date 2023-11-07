@@ -4,6 +4,9 @@ local media_explorer = require("library.media_explorer")
 local midi2vox = require("library.vox_to_midi")
 local dev = require("utils.dev")
 
+-- this one should be included in the `custom_actions` namespace
+local midi_patterns = require("library.midi_patterns")
+
 -- NOTE: Some actions can take parameters, eg. @ cursor, @ beginning of measure,
 -- etc. Therefor, would it make sense to add the ability to pass a table of
 -- parameters, here, in the actions table, so that I can configure all actions
@@ -33,9 +36,6 @@ local dev = require("utils.dev")
 --
 -- FIX: allow for passing `opts` tables for args to custom actions here from
 -- this file!!!
-
--- this one should be included in the `custom_actions` namespace
-local midi_patterns = require("custom_actions.midi_patterns")
 
 return {
 	ActivateNextMidiItem = { 40833, midiCommand = true },
@@ -190,6 +190,10 @@ return {
 	InsertNoteBlockCommand = custom.insertMidiNoteChunk,
 	InsertMidiBlockPicker = custom.midiChordPicker,
 	InsertMidiBlockPickerOperator = custom.midiChordPicker,
+
+	-- if I could pass opts table then all of these insertion actions below could
+	-- be configured right here in the actions table instead of having to be
+	-- a custom function for each, which is hellannoying
 
 	InsertMidiStep_P1 = custom.midiStepRel_P1,
 	InsertMidiStep_m2 = custom.midiStepRel_m2,
@@ -806,14 +810,13 @@ return {
 	NoteRowPattern = { midi_patterns.insertPatternForCurrentBarAndNoteRow, midiCommand = true },
 
 	MidiPattern_InsertFromString_at_cursor = midi_patterns.insertPatternFromString,
-	MidiPattern_InsertFromString_at_current_measure = custom_actions.midi_patterns_insert_at_measure,
+	MidiPattern_InsertFromString_at_current_measure = custom.midi_patterns_insert_at_measure,
 
-
-  -- TODO: i need to make sure that I don't mess up anything in the internals
-  -- call chain when i pass the `opts` table here.
+	-- TODO: i need to make sure that I don't mess up anything in the internals
+	-- call chain when i pass the `opts` table here.
 
 	MidiPattern_InsertRandom16thNotes_fill_bar = {
-		custom_actions.midi_patterns_insert_at_measure,
+		midi_patterns.insertPatternFromString,
 		opts = {
 			pattern = "**** **** **** ****",
 			from_current_bar = true,

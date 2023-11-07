@@ -4,7 +4,6 @@
 --  ~ new: set active note row to current selection
 --  ~
 
-
 -- now these files are pretty much fucked.
 
 -- TEST/IMPROVEMENTS:
@@ -63,6 +62,7 @@ return {
 				-- 7. ...
 				["E"] = "MidiPattern_InsertFromString_at_cursor",
 				["e"] = "MidiPattern_InsertFromString_at_current_measure",
+				["R"] = "MidiPattern_InsertRandom16thNotes_fill_bar",
 
 				["J"] = "PickerTracksWithMidiItemsAtSameTime", -- switch midi item to another track in the same time/region/position.
 				["M"] = "PickerExistingMidiItemsAtSameTime",

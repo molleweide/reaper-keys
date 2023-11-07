@@ -40,8 +40,8 @@ local midi_patterns = {}
 
 -- TODO: move to utils `time/transport/timeline`
 local function get_beginning_of_measure()
-	local _, msr = r.TimeMap2_timeToBeats(0, r.GetCursorPosition())
-	local msr_start = r.TimeMap_GetMeasureInfo(0, msr)
+	local _, msr = reaper.TimeMap2_timeToBeats(0, reaper.GetCursorPosition())
+	local msr_start = reaper.TimeMap_GetMeasureInfo(0, msr)
 	-- r.SetEditCurPos2(0, msr_start, 0, 0)
 	return msr_start
 end
@@ -117,9 +117,9 @@ local function apply_shorthands(t_ps, cases)
 end
 
 local function handle_if_special_char(t_ps)
-	if string.match(t_ps.char, "[{%[%(%)%]}]") then
+	if string.match(t_ps.current_char, "[{%[%(%)%]}]") then
 		for pattern_symbol, symbol_params in pairs(PATTERN_SPEC.special_symbols) do
-			if t_ps.char == pattern_symbol then
+			if t_ps.current_char == pattern_symbol then
 				t_ps.current_unit.note_step = t_ps.current_unit.note_step * symbol_params.mult
 			end
 		end
@@ -137,10 +137,10 @@ local function get_note_opts_for_char(pitch, t_ps)
 		note_step_length = t_ps.current_unit.note_step,
 		pitch = pitch,
 	}
-	if string.match(t_ps.char, "[xk]") then
+	if string.match(t_ps.current_char, "[xk]") then
 		note_opts.silent = false
 	end
-	if t_ps.char == "*" then
+	if t_ps.current_char == "*" then
 		note_opts.silent = randomBool()
 	end
 	return note_opts
@@ -180,38 +180,32 @@ end
 -- an opts table to the actions in `defaults/actions`.
 -- I could use `*` char to symbolize random hit or pause
 
-midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
-	local ret, _, _, midi_ctx = midi.getMidiValidContext()
-	if not ret then
-		return
-	end
-
-	local t_pattern = {}
-	local sixteen_note_len = 0.125
-	local note_duration = sixteen_note_len - NOTE_END_GAP
-	-- local retval, measures, cml, fullbeats, cdenom = reaper.TimeMap2_timeToBeats(0, cursor_pos)
-
-	midi.remove_notes(midi_ctx.take, midi_ctx.events, midi_ctx.note_row)
-
-	-- log.user(">>>", cursor_pos, retval, measures, cml, fullbeats, cdenom)
-	local beginning_msr = get_beginning_of_measure()
-
-	for i = 0, 15 do
-		local note_start = beginning_msr + i * sixteen_note_len
-		table.insert(t_pattern, {
-			flag = randomBool(),
-			time_pos_start = note_start,
-			time_pos_end = note_start + note_duration,
-		})
-	end
-
-	log.user(format.block(t_pattern))
-
-	midi.insert_notes({
-		take = midi_ctx.take,
-		notes = t_pattern,
-	})
-end
+-- midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
+-- 	local ret, _, _, midi_ctx = midi.getMidiValidContext()
+-- 	if not ret then
+-- 		return
+-- 	end
+-- 	local t_pattern = {}
+-- 	local sixteen_note_len = 0.125
+-- 	local note_duration = sixteen_note_len - NOTE_END_GAP
+-- 	-- local retval, measures, cml, fullbeats, cdenom = reaper.TimeMap2_timeToBeats(0, cursor_pos)
+-- 	midi.remove_notes(midi_ctx.take, midi_ctx.events, midi_ctx.note_row)
+-- 	-- log.user(">>>", cursor_pos, retval, measures, cml, fullbeats, cdenom)
+-- 	local beginning_msr = get_beginning_of_measure()
+-- 	for i = 0, 15 do
+-- 		local note_start = beginning_msr + i * sixteen_note_len
+-- 		table.insert(t_pattern, {
+-- 			flag = randomBool(),
+-- 			time_pos_start = note_start,
+-- 			time_pos_end = note_start + note_duration,
+-- 		})
+-- 	end
+-- 	log.user(format.block(t_pattern))
+-- 	midi.insert_notes({
+-- 		take = midi_ctx.take,
+-- 		notes = t_pattern,
+-- 	})
+-- end
 
 -- TODO: use cursor position or start from current measure
 -- FIX: rename to `createNewPatternAndInsert`
@@ -248,7 +242,7 @@ midi_patterns.insertPatternFromString = function(meta, opts)
 	-- could be reused in other of my custom action commands.
 	local t_patterns_state = {
 		input_units = s.split(str_pat_input, PATTERN_SPEC.pattern_sep),
-		note_start = opts.start_at_measure and get_beginning_of_measure() or t_midi_context.cursor_pos,
+		note_start = opts.from_current_bar and get_beginning_of_measure() or t_midi_context.cursor_pos,
 	}
 
 	apply_repeats(t_patterns_state)

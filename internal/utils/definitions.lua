@@ -5,6 +5,10 @@ local user_definitions = require('definitions.bindings')
 
 local definitions = {}
 
+-- TODO: table concat funcs should prolly go into `utils/tables.lua` since those
+-- are generalized functions that could be reused in other instances.
+-- Maybe even migrated into their own packages.
+
 --- Recursively merge the bindings entries giving precedence to t2.
 ---@param t1 table
 ---@param t2 table

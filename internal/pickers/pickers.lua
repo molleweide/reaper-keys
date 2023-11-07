@@ -13,6 +13,10 @@ local marks = require("utils.marks_regions")
 
 local syntax = require("SYNTAX.syntax.syntax")
 
+-- FIX: because pickers operate outside of the vim loop, I need
+-- to explicitly set undo points again here to make sure that each
+-- picker operation is properly captured and can be undone easilly.
+
 local data_loaders = require("pickers.data.load_plugins_data")
 
 --

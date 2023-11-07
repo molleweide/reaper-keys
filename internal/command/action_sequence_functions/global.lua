@@ -17,6 +17,7 @@ return {
     {
       { "command" },
       function(action)
+        log.user("ASF:", format.block(action))
         runner.runAction(action)
       end,
     },
@@ -37,6 +38,7 @@ return {
     {
       { "timeline_operator", "timeline_motion" },
       function(timeline_operator, timeline_motion)
+
         log.user("ASF:", format.block(timeline_operator), format.block(timeline_motion))
 
         local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)

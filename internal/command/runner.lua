@@ -12,9 +12,9 @@ local state_interface = require('state_machine.state_interface')
 
 local runner = {}
 
-function runActionPart(id, is_reaper_midi_command, meta)
+function runActionPart(id, is_reaper_midi_command, meta, opts)
   if type(id) == "function" then
-    id(meta)
+    id(meta, opts)
     return
   end
 
@@ -85,7 +85,7 @@ function runner.runAction(action)
       if type(sub_action) == 'table' then
         runner.runAction(sub_action)
       else
-        runActionPart(sub_action, is_reaper_midi_command, action.meta)
+        runActionPart(sub_action, is_reaper_midi_command, action.meta, action.opts)
       end
     end
   end
