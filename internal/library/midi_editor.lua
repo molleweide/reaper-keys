@@ -1,6 +1,8 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
+-- TODO: delete this file... unused...
+
 local midi_editor = {}
 
 -- Get settings from a MIDI editor. setting_desc can be:

@@ -7,7 +7,7 @@ local s = require("utils.string")
 
 local midi_step = {}
 
--- TODO: WHAT WOULD BE THE FIRST STEPS TO DO IN ORDER TO REALIZE THIS?
+-- TODO: delete this file... not used...
 --
 
 midi_step.repeatPrevPatternFromCursor = function()
