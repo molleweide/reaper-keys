@@ -140,6 +140,9 @@ local function get_note_opts_for_char(pitch, t_ps)
 	if string.match(t_ps.char, "[xk]") then
 		note_opts.silent = false
 	end
+	if t_ps.char == "*" then
+		note_opts.silent = randomBool()
+	end
 	return note_opts
 end
 
@@ -173,17 +176,9 @@ end
 -- MAIN FUNCTION
 --
 
--- todo: should i redo this action by reusing `midi_patterns.insertPatternFromString`
--- this could be done by just passing a string to the string patterns func.
---
--- move all these functions to custom actions.
-
-midi_patterns.insertPatternForCurrentBarAndNoteRow_2 = function()
-	midi_patterns.insertPatternFromString(meta, {
-		pattern = "xxxx $4", -- get number of beats and dynamically create the string.
-		randomize_hits = true,
-	})
-end
+-- FIX: this `insertPatternForCurrentBarAndNoteRow` can be made by just passing
+-- an opts table to the actions in `defaults/actions`.
+-- I could use `*` char to symbolize random hit or pause
 
 midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
 	local ret, _, _, midi_ctx = midi.getMidiValidContext()
