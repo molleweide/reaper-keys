@@ -7,8 +7,33 @@ local dev = require("utils.dev")
 local midi_patterns = require("library.midi_patterns")
 local pickers = require("pickers.pickers")
 
--- NOTE: The `opts` table is passed to all sub-actions, keep this in mind for
--- now when designing functions.
+-- NOTE: Action key/value pairs
+--  key = the name of the action
+--  val = command/function corresponding to this action.
+--
+-- NOTE: An action can be one of:
+--    ~ int     representing a Reaper builtin command
+--    ~ string  which refers to a named commands, eg. _SWS, or another action
+--    ~ func    internal RK function
+--    ~ table   a composition of the preceding alternatives.
+--
+-- NOTE: action tables
+--    ~ indexed entries represent distinct actions to be run.
+--    ~ named keys represent additional config or meta params, eg.:
+--      * midiCommand = bool
+--      * register = bool
+--      * repetitions = int (if the action should be run multiple times)
+--      * opts = table
+--          the opts table is "the arguments" that you want to call the
+--          function with when the action command is being run.
+--
+-- TEST: action = table of multiple sub actions -> can I pass unique `opts` to
+-- each sub function by wrapping each function in a sub-table themselves and
+-- passing an opts table to each? Like so:
+-- { { action1, opts = { }}, { action2, opts = {}}, ..}
+
+-- WARN: The `opts` table is passed to all sub-functions of an action, ie. it
+-- acts as an action global opts table.
 
 return {
 	ActivateNextMidiItem = { 40833, midiCommand = true },
