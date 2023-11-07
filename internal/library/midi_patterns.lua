@@ -176,51 +176,17 @@ end
 -- MAIN FUNCTION
 --
 
--- FIX: this `insertPatternForCurrentBarAndNoteRow` can be made by just passing
--- an opts table to the actions in `defaults/actions`.
--- I could use `*` char to symbolize random hit or pause
+-- special chars:
+--    *   = random hit or silent
+--    N   =
+--    M   =
+--    ()  =
+--    {}  =
+--    []  =
 
--- midi_patterns.insertPatternForCurrentBarAndNoteRow = function()
--- 	local ret, _, _, midi_ctx = midi.getMidiValidContext()
--- 	if not ret then
--- 		return
--- 	end
--- 	local t_pattern = {}
--- 	local sixteen_note_len = 0.125
--- 	local note_duration = sixteen_note_len - NOTE_END_GAP
--- 	-- local retval, measures, cml, fullbeats, cdenom = reaper.TimeMap2_timeToBeats(0, cursor_pos)
--- 	midi.remove_notes(midi_ctx.take, midi_ctx.events, midi_ctx.note_row)
--- 	-- log.user(">>>", cursor_pos, retval, measures, cml, fullbeats, cdenom)
--- 	local beginning_msr = get_beginning_of_measure()
--- 	for i = 0, 15 do
--- 		local note_start = beginning_msr + i * sixteen_note_len
--- 		table.insert(t_pattern, {
--- 			flag = randomBool(),
--- 			time_pos_start = note_start,
--- 			time_pos_end = note_start + note_duration,
--- 		})
--- 	end
--- 	log.user(format.block(t_pattern))
--- 	midi.insert_notes({
--- 		take = midi_ctx.take,
--- 		notes = t_pattern,
--- 	})
--- end
-
--- TODO: use cursor position or start from current measure
--- FIX: rename to `createNewPatternAndInsert`
---       or someting better more generalized
--- TODO:
--- ~ somehow randomize hits x/o
---
--- -- if unit has hard consonant chars, then make a hit (ie. silent = false)
--- so hard consonants are hits, and smooth vowels are pauses or silen. this
--- hopefully makes it ergonomic to program hits.
---
--- TODO: how can user specify how long notes should be?
--- Eg. for drum lanes, then the duration of each midi event can be
--- very short
--- BUT with synths, then I might want more control over note lengths
+-- TODO: use fzf picker and store pattern history
+-- only store patterns when the function is called from a picker/user_input.
+-- Note when I call this function in other actions that also pass pattern strings.
 
 midi_patterns.insertPatternFromString = function(meta, opts)
 	local ret, _, _, t_midi_context = midi.getMidiValidContext()

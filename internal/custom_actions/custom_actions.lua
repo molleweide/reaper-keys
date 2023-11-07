@@ -260,6 +260,8 @@ end
 
 -- FIX: it is a bit stupid to pass chords here. i should make it possible to
 -- pass single note / relative interval
+--
+-- TODO: all of these should be configured under `/actions`
 
 custom_actions.midiStepRel_P1 = function(meta)
   midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 1 } } })
@@ -318,6 +320,8 @@ end
 --      >>> project_state > toggle state value
 --      >>> reaper_state > toggle state value
 --
+-- refactor all these functions into module so that I can configure these inside
+-- actions instead
 
 custom_actions.midiStepToggleDirection = function(meta, opts)
   local midi_step_state = midi.get_midi_step_state()

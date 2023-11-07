@@ -276,7 +276,14 @@ pickers.test_picker = function()
 	})
 end
 
-pickers.all_tracks = function()
+-- TODO:
+-- 1. make this picker so that I can pass opts to it so that i jump to selected
+-- track in main.
+-- 2. only list relevant tracks when it pertains to midi, ie. pass an option to filter
+-- by track object classes. >>> syntax > get track objects list > filter classes, eg. MCAB > jump to tracks.
+--
+
+pickers.all_tracks = function(meta, opts)
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "All Tracks",

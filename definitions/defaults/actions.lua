@@ -3,39 +3,12 @@ local custom = require("custom_actions")
 local media_explorer = require("library.media_explorer")
 local midi2vox = require("library.vox_to_midi")
 local dev = require("utils.dev")
-
 -- this one should be included in the `custom_actions` namespace
 local midi_patterns = require("library.midi_patterns")
+local pickers = require("pickers.pickers")
 
--- NOTE: Some actions can take parameters, eg. @ cursor, @ beginning of measure,
--- etc. Therefor, would it make sense to add the ability to pass a table of
--- parameters, here, in the actions table, so that I can configure all actions
--- in one location, rather than having to make an additional func for every
--- action under custom_actions with configurations.
--- example
--- actionName = { actionFunction, args = { ... } }
---
---
--- NOTE: HOW CUSTOM ACTIONS CAN BE CONFIGURED
---     1. simple | pass a table with opts here in this file `defaults/actions`
---         actionName = { actionFunction, args = { ... } }
---     -
---     2. configure the action in a custom function, eg. under `custom_actions/*`
---         actionName = actionFunction
---         ->>> module.actionFunction = function
---         ... make configurations
---         end
---     -
---   (2) requires a lot of custom functions, which can feel a bit redundant
---   when I only want to set some options for the main library api call. Therefore,
---   configuring actions is nicer to do here. The configurations have to occur
---   regardless, so doing it here would make the process of seting up binds simpler.
---   (2) makes more sense when it comes to tiny operations such as motions etc.
---   Where you need to play with loops and conditionals to setup the action.
---   if only an options table i necessary then it can be passed here.
---
--- FIX: allow for passing `opts` tables for args to custom actions here from
--- this file!!!
+-- NOTE: The `opts` table is passed to all sub-actions, keep this in mind for
+-- now when designing functions.
 
 return {
 	ActivateNextMidiItem = { 40833, midiCommand = true },
@@ -812,14 +785,22 @@ return {
 	MidiPattern_InsertFromString_at_cursor = midi_patterns.insertPatternFromString,
 	MidiPattern_InsertFromString_at_current_measure = custom.midi_patterns_insert_at_measure,
 
-	-- TODO: i need to make sure that I don't mess up anything in the internals
-	-- call chain when i pass the `opts` table here.
-
 	MidiPattern_InsertRandom16thNotes_fill_bar = {
 		midi_patterns.insertPatternFromString,
 		opts = {
 			pattern = "**** **** **** ****",
 			from_current_bar = true,
+		},
+	},
+
+	Midi_ChangeActiveSelection = {
+		pickers.all_tracks,
+		opts = {
+			-- filter
+			--    ~ G drumkit master tracks,
+			--    ~ regular M drum tracks,
+			--    ~ music MCS
+			-- next func
 		},
 	},
 

@@ -8,6 +8,13 @@ return {
 		timeline_selector = {},
 		visual_timeline_command = {},
 		command = {
+
+      -- TODO: add binds for resetting eg. routes
+      -- >> remove all routes for all
+      -- tracks, to sort of reset the project if I am unsure that I have
+      -- cluttered shit up or something.
+      -- >> remove all plugins on all tracks.
+
 			["<SPC>"] = {
 				"+leader commands",
 				{
