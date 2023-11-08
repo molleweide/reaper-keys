@@ -4,6 +4,7 @@ local log = require("utils.log")
 local format = require("utils.format")
 local reaper_state = require("utils.reaper_state")
 local s = require("utils.string")
+local tl = require("library.timeline")
 
 -- TODO: move this to `library/midi_patterns.lua`
 
@@ -208,7 +209,7 @@ midi_patterns.insertPatternFromString = function(meta, opts)
 	-- could be reused in other of my custom action commands.
 	local t_patterns_state = {
 		input_units = s.split(str_pat_input, PATTERN_SPEC.pattern_sep),
-		note_start = opts.from_current_bar and get_beginning_of_measure() or t_midi_context.cursor_pos,
+		note_start = opts.from_current_bar and (tl.get_cursor_info()).msr.start or t_midi_context.cursor_pos,
 	}
 
 	apply_repeats(t_patterns_state)

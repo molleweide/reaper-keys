@@ -288,6 +288,22 @@ pickers.all_tracks = function(meta, opts)
 		env = RK_FZF_ENV,
 		title = "All Tracks",
 		results = syntax.get_list_of_track_objects(),
+
+
+		-- TODO: could passing a calback to next be moved into the default
+		-- selector function?
+
+		on_select_func = function(self, i)
+			local selection = self.t_search_results[i]
+
+			if opts.next then
+				opts.next(meta, {
+					selection = selection
+				})
+			end
+		end,
+
+
 		sort_comp = "name",
 		-- FIX: is there a good default that could be added here?
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
@@ -562,10 +578,13 @@ pickers.chord = function(meta, opts)
 		title = string.format("%s: chord", meta.action_type),
 		on_select_func = function(self, i)
 			local chord = self.t_search_results[i]
-			opts.next(meta, {
-				chord = chord,
-				move_cursor = opts.move_cursor,
-			})
+
+			if opts.next then
+				opts.next(meta, {
+					chord = chord,
+					move_cursor = opts.move_cursor,
+				})
+			end
 		end,
 		results = require("definitions.chords"),
 		sort_comp = 1,
