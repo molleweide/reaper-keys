@@ -235,7 +235,7 @@ local function moveToSelectObjectAndDo(config)
   end
 end
 
---
+-- these should also be configured in `actions`
 
 custom_actions.jumpToItemInMain = function()
   moveToSelectObjectAndDo({

@@ -20,7 +20,7 @@ local feedback = require("gui.feedback.controller")
 ---@param state table
 ---@param key_press table
 ---@return table|nil, string|nil
-local function updateWithKeyPress(state, key_press)
+local function updateStateWithKeyPress(state, key_press)
   local new_state = state
 
   if state["key_sequence"] == "" then
@@ -49,7 +49,7 @@ end
 local function step(state, key_press)
   local message = ""
 
-  local new_state, err = updateWithKeyPress(state, key_press)
+  local new_state, err = updateStateWithKeyPress(state, key_press)
   if err ~= nil then
     new_state = state
     new_state["key_sequence"] = ""

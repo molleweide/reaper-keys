@@ -8,6 +8,7 @@ local definitions = {}
 -- TODO: table concat funcs should prolly go into `utils/tables.lua` since those
 -- are generalized functions that could be reused in other instances.
 -- Maybe even migrated into their own packages.
+-- ----------------------------------------------------------------------------
 
 --- Recursively merge the bindings entries giving precedence to t2.
 ---@param t1 table
@@ -65,6 +66,8 @@ local function concatEntryTables(t1,t2)
 
   return merged_tables
 end
+
+-- ----------------------------------------------------------------------------
 
 -- global = {
 --   timeline_motion = {

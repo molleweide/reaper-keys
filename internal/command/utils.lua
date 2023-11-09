@@ -190,6 +190,7 @@ function table.shallow_copy(t)
   return t2
 end
 
+-- Retrieves the value of requested action from `definitions/**/actions.lua`.
 function utils.getActionValue(action_key, action_type)
   if type(action_key) ~= "table" then
     action_key = { action_key }

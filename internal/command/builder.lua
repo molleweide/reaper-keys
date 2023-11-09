@@ -66,11 +66,6 @@ local function stripNextActionKeyInKeySequence(key_sequence, action_type_entries
   return nil, nil, false
 end
 
----
----@param key_sequence string|nil
----@param action_sequence table AS: { "command" }
----@param entries table {...}
----@return table|nil command
 local function buildCommandWithSequence(key_sequence, action_sequence, entries)
   local command = {
     action_sequence = {},
