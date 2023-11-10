@@ -818,12 +818,13 @@ return {
 		},
 	},
 
-  -----------------------------------------------------------------------------
-  -- FIX: i need to fix the sorter so that I can actually search for tracks.
-  -- >> revise how sorting is done with FX plugins.
+	-----------------------------------------------------------------------------
+	-- FIX: i need to fix the sorter so that I can actually search for tracks.
+	-- >> revise how sorting is done with FX plugins.
 	Midi_ChangeActiveSelection = {
 		pickers.all_tracks,
 		opts = {
+			title = "jump to track midi",
 			-- filter
 			--    ~ G drumkit master tracks,
 			--    ~ regular M drum tracks,
@@ -833,6 +834,7 @@ return {
 				local format = require("utils.format")
 				local tl = require("library.timeline")
 				local items = require("library.items")
+				local me = require("library.midi_editor")
 
 				-- todo: if not ME / no item selected -> open midi editor for new item.
 				-- ie. make the jump-to-edit-midi-item usable from anywhere.
@@ -850,32 +852,44 @@ return {
 
 				log.user(format.block(data.selection))
 
-
 				local cursor_info = tl.get_cursor_info()
 				-- TODO: use `MIDIEditor_EnumTakes` instead:
 				--      list the takes that are currently being edited in this MIDI editor, starting with the active take. See MIDIEditor_GetTake
 				--      local take = reaper.MIDIEditor_EnumTakes( midieditor, takeindex, editable_only )
 
 				local items_found =
-					items.get_items_in_range(data.selection.tr, cursor_info.msr.start, cursor_info.msr._end)
+					items.get_track_items_in_range_time(data.selection.tr, cursor_info.msr.start, cursor_info.msr._end)
 
 				items.unselect_items()
 
 				if items_found then
-					reaper.SetMediaItemSelected(items_found[1].ref, true)
-					reaper.UpdateArrange()
+					-- test 1: set
+					-- reaper.SetMediaItemSelected(items_found[1].ref, true)
+					-- reaper.UpdateArrange()
+
+					log.user("ITEMS FOUND")
+
+					-- test 2: see if the new midi editor funcs work for setting a new
+					-- active midi item.
+					--   - does it work at all?
+					--   - do I need to install additional packages?
+					--   - how fast is it?
+					--      >> can I make it faster somehow.
+					me.setActiveItem(nil, items_found[1].ref)
 
 				-- i. add items to selection
 				-- ii. run Open in built-in MIDI editor
 				-- >>>>>>>> which item will be the active one??
 				-- reaper.Main_OnCommand(40153, 0) --Item: Open in built-in MIDI editor (set default behavior in preferences)
 				else
+				  					log.user("ITEMS NOT FOUND!!")
+
 					-- TODO: insert new item in same measure for selected track
 				end
 			end,
 		},
 	},
-  -----------------------------------------------------------------------------
+	-----------------------------------------------------------------------------
 
 	n71 = lib.midi.sendMidiNote_61,
 	n70 = lib.midi.sendMidiNote_70,

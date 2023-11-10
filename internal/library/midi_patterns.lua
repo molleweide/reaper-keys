@@ -1,5 +1,6 @@
 -- local utils = require("custom_actions.utils")
 local midi = require("library.midi")
+local midi_editor = require("library.midi_editor")
 local log = require("utils.log")
 local format = require("utils.format")
 local reaper_state = require("utils.reaper_state")
@@ -190,7 +191,7 @@ end
 -- Note when I call this function in other actions that also pass pattern strings.
 
 midi_patterns.insertPatternFromString = function(meta, opts)
-	local ret, t_midi_context = midi.getMidiValidContext()
+	local ret, t_midi_context = midi_editor.getMidiValidContext()
 	if not ret then
 		return
 	end

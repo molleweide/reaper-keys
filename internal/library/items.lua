@@ -1,3 +1,6 @@
+local log = require("utils.log")
+local format = require("utils.format")
+
 local lib_items = {}
 
 --
@@ -130,7 +133,7 @@ lib_items.get_item_info = function(tr, i)
 	}
 end
 
-lib_items.get_items_in_range = function(track, range_start, range_end)
+lib_items.get_track_items_in_range_time = function(track, range_start, range_end)
 	local item_cnt = reaper.GetTrackNumMediaItems(track)
 	local items_found = {}
 	for i = 0, item_cnt - 1 do
@@ -147,6 +150,8 @@ lib_items.unselect_items = function(t_indices)
 		local csi = reaper.CountSelectedMediaItems(0)
 		if csi > 0 then
 			for i = 0, csi - 1 do
+				local item = reaper.GetSelectedMediaItem(0, i)
+				log.user(">>>>>>>>", type(item), item)
 				reaper.SetMediaItemSelected(reaper.GetSelectedMediaItem(0, i), false)
 			end
 		end
@@ -361,6 +366,8 @@ lib_items.getItemSelection = function()
 	return items
 end
 
+-- unselect_items() is better because it allows you to also pass a list if
+-- indices which can be used to fine tune affected items.
 lib_items.unselectAllMediaItems = function()
 	-- reaper.SelectAllMediaItems(0, false) -- NOTE: why not just use this?!
 	for i = reaper.CountSelectedMediaItems(0) - 1, 0, -1 do
@@ -384,13 +391,9 @@ lib_items.setSelectionStateOfItems = function(items, state)
 	for _, item in ipairs(items) do
 		reaper.SetMediaItemSelected(item, state)
 	end
-
 end
 
-lib_items.addItemsToSelection = function(items)
-end
-
-
+lib_items.addItemsToSelection = function(items) end
 
 lib_items.getTakeChunk = function(take)
 	local item = reaper.GetMediaItemTake_Item(take)
@@ -407,7 +410,7 @@ lib_items.getTakeChunk = function(take)
 	return chunk:sub(take_start_ptr, take_end_ptr)
 end
 
-lib_items.GetTakeChunkHZoom = function(chunk)
+lib_items.getTakeChunkHZoom = function(chunk)
 	local pattern = "CFGEDITVIEW (.-) (.-) "
 	return chunk:match(pattern)
 end
@@ -417,7 +420,7 @@ lib_items.getTakeChunkTimeBase = function(chunk)
 	return tonumber(chunk:match(pattern))
 end
 
-lib_items.IsValidMIDIItem = function(item)
+lib_items.isValidMIDIItem = function(item)
 	if reaper.ValidatePtr(item, "MediaItem*") then
 		local active_take = reaper.GetActiveTake(item)
 		return reaper.TakeIsMIDI(active_take)

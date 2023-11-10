@@ -286,7 +286,7 @@ end
 pickers.all_tracks = function(meta, opts)
 	fzf.init({
 		env = RK_FZF_ENV,
-		title = "All Tracks",
+		title = opts.title or "All Tracks (Default)",
 		results = syntax.get_list_of_track_objects(),
 
 

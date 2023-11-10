@@ -296,8 +296,8 @@ midi_editor.getMIDIEditorView = function(hwnd)
 		-- To determine the length of the editor we scroll right once.
 		-- The updated ppq position in the take chunk gives us the ppq position
 		-- at the right edge (end) of the MIDI editor window.
-		chunk = containers.GetTakeChunk(ME.take)
-		end_ppq = containers.GetTakeChunkHZoom(chunk)
+		chunk = containers.getTakeChunk(ME.take)
+		end_ppq = containers.getTakeChunkHZoom(chunk)
 
 		-- Cmd: Scroll view left
 		reaper.MIDIEditor_OnCommand(hwnd, 40140)
@@ -325,6 +325,7 @@ midi_editor.getEditorHorizontalZoomState = function(hwnd)
 	local start_pos, end_pos = midi_editor.getMIDIEditorView(hwnd)
 	-- A factor is necessary to convert to the size of the selection used for the action
 	-- "Zoom to project loop selection" which is smaller than the actual visible length
+	-- This might need to be tweaked and put in the user config table.
 	local factor = 0.943396226415
 	local length = end_pos - start_pos
 	local center = start_pos + length / 2
@@ -344,7 +345,7 @@ midi_editor.getItemsByState = function(hwnd, is_edit_state)
 		-- Return selected MIDI items when selection is already linked
 		local midi_items = {}
 		for _, item in ipairs(saved_item_selection) do
-			if containers.IsValidMIDIItem(item) then
+			if containers.isValidMIDIItem(item) then
 				midi_items[#midi_items + 1] = item
 			end
 		end
@@ -363,11 +364,11 @@ midi_editor.getItemsByState = function(hwnd, is_edit_state)
 	midi_editor.openFromMain()
 
 	-- Selected items are visible/editable items
-	local ret_items = containers.GetItemSelection()
+	local ret_items = containers.getItemSelection()
 
 	midi_editor.setConfig(t_old_config.raw)
 
-	containers.SetItemSelection(saved_item_selection)
+	containers.setItemSelection(saved_item_selection)
 	midi_editor.restoreHorizontalZoomState(ME.editor, hzoom_state)
 
 	reaper.PreventUIRefresh(-1)
@@ -411,7 +412,7 @@ midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
 
 	-- Restore
 	midi_editor.setConfig(t_old_config.raw)
-	containers.SetItemSelection(saved_item_selection)
+	containers.setItemSelection(saved_item_selection)
 	midi_editor.restoreHorizontalZoomState(ME.editor, hzoom_state)
 
 	reaper.PreventUIRefresh(-1)
@@ -452,7 +453,7 @@ end
 midi_editor.setItemsVisible = function(hwnd, items, is_visible)
 	if items then
 		for _, item in ipairs(items) do
-			if not containers.IsValidMIDIItem(item) then
+			if not containers.isValidMIDIItem(item) then
 				return
 			end
 		end
@@ -463,7 +464,7 @@ end
 midi_editor.setItemsEditable = function(hwnd, items, is_editable)
 	if items then
 		for _, item in ipairs(items) do
-			if not containers.IsValidMIDIItem(item) then
+			if not containers.isValidMIDIItem(item) then
 				return
 			end
 		end
@@ -472,20 +473,20 @@ midi_editor.setItemsEditable = function(hwnd, items, is_editable)
 end
 
 midi_editor.setItemVisible = function(hwnd, item, is_visible)
-	if containers.IsValidMIDIItem(item) then
+	if containers.isValidMIDIItem(item) then
 		midi_editor.setItemsState(hwnd, false, { item }, is_visible)
 	end
 end
 
 midi_editor.setItemEditable = function(hwnd, item, is_editable)
-	if containers.IsValidMIDIItem(item) then
+	if containers.isValidMIDIItem(item) then
 		midi_editor.setItemsState(hwnd, true, { item }, is_editable)
 	end
 end
 
 --- Makes select item the active item in HWND midi editor. This means that you
 --- can eg. insert notes into the item.
----@param hwnd userdata
+---@param hwnd userdata | nil
 --
 --- I believe that the `item_make_active` should be `item_make_active`
 ---@param item_make_active userdata
@@ -496,7 +497,7 @@ midi_editor.setActiveItem = function(hwnd, item_make_active)
 	end
 
 	-- check if item is already active (prevent zoom)
-	if not ok or ME.item == item_make_active or not containers.IsValidMIDIItem(item_make_active) then
+	if not ok or ME.item == item_make_active or not containers.isValidMIDIItem(item_make_active) then
 		return
 	end
 	reaper.PreventUIRefresh(1)
@@ -504,8 +505,8 @@ midi_editor.setActiveItem = function(hwnd, item_make_active)
 	-- Save current state (visibility, editability, itemsel, hzoom, config)
 	local visible_items = midi_editor.getAllVisibleItems(ME.editor)
 	local editable_items = midi_editor.getAllEditableItems(ME.editor)
-	local sel_items = containers.GetItemSelection()
-	local hzoom_state = midi_editor.GetEditorHorizontalZoomState(ME.editor)
+	local sel_items = containers.getItemSelection()
+	local hzoom_state = midi_editor.getEditorHorizontalZoomState(ME.editor)
 
 	local t_old_config = midi_editor.getConfigTable()
 
