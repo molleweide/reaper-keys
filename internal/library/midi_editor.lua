@@ -9,6 +9,9 @@ local tl = require("library.timeline")
 -- I.e. library functions that take a midi editor (HWND) as first argument.
 -- Returns some data/info about given midi editor window/view.
 
+-- TODO: which functions could be simplified with new reaper mide editor apis,
+-- eg. enum_takes
+
 local midi_editor = {}
 
 midi_editor.setConfig = function(new_config)

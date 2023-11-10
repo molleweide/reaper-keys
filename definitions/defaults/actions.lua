@@ -859,32 +859,14 @@ return {
 
 				local items_found =
 					items.get_track_items_in_range_time(data.selection.tr, cursor_info.msr.start, cursor_info.msr._end)
-
 				items.unselect_items()
 
 				if items_found then
-					-- test 1: set
-					-- reaper.SetMediaItemSelected(items_found[1].ref, true)
-					-- reaper.UpdateArrange()
-
-					log.user("ITEMS FOUND")
-
-					-- test 2: see if the new midi editor funcs work for setting a new
-					-- active midi item.
-					--   - does it work at all?
-					--   - do I need to install additional packages?
-					--   - how fast is it?
-					--      >> can I make it faster somehow.
 					me.setActiveItem(nil, items_found[1].ref)
-
-				-- i. add items to selection
-				-- ii. run Open in built-in MIDI editor
-				-- >>>>>>>> which item will be the active one??
-				-- reaper.Main_OnCommand(40153, 0) --Item: Open in built-in MIDI editor (set default behavior in preferences)
 				else
-				  					log.user("ITEMS NOT FOUND!!")
-
-					-- TODO: insert new item in same measure for selected track
+					local new_item =
+						items.create_new_item(true, data.selection.tr, cursor_info.msr.start, cursor_info.msr._end)
+					me.setActiveItem(nil, new_item)
 				end
 			end,
 		},
