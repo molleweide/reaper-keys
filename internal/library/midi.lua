@@ -389,28 +389,6 @@ local easy_read = [[
 -- 	Undo_EndBlock("Reorder notes", 0)
 -- end
 
-function midi.getMidiValidContext()
-	local ME = reaper.MIDIEditor_GetActive()
-	local take = reaper.MIDIEditor_GetTake(ME)
-	local retval = true
-	if not ME or (not take or not reaper.TakeIsMIDI(take)) then
-		retval = false
-	end
-
-	return retval,
-		ME,
-		take,
-		-- i use all of these data very often, so it makes sense to always make
-		-- these available. i can refactor this later into something smarter..
-		{
-			editor = ME,
-			take = take,
-			events = { reaper.MIDI_CountEvts(take) },
-			note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row"),
-			cursor_pos = reaper.GetCursorPosition(),
-		}
-end
-
 --
 -- operator / command
 --
@@ -425,11 +403,11 @@ end
 function midi.insertMidiNoteChunk(meta, opts)
 	opts = opts or {}
 
-	local exists, midi_step_state = project_state.get("mode_state", "midi_step")
+	local exists, midi_step_state = midi.get_midi_step_state()
 
 	log.user("midi_step_state:", exists, format.block(midi_step_state))
 
-	local ret, ME, take = midi.getMidiValidContext()
+	local ret, ctxm = midi.getMidiValidContext()
 	if not ret then
 		return
 	end
@@ -439,7 +417,7 @@ function midi.insertMidiNoteChunk(meta, opts)
 	-- lib/midi.get_active_note_row()
 	-- lib/midi.get_important_contexts() -- merge getMidiValidContext with these and return table.
 	local cursor_pos = reaper.GetCursorPosition()
-	local active_note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row")
+	local active_note_row = reaper.MIDIEditor_GetSetting_int(ctxm.editor, "active_note_row")
 
 	local t_note_pitches = {}
 	local t_midi_notes = {}
@@ -484,7 +462,7 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	-- move active note row
 	reaper.MIDIEditor_SetSetting_int(
-		ME,
+		ctxm.editor,
 		"active_note_row",
 		active_note_row + octave_add + (opts.chord[2][1] - 1) * direction_mult
 	)
@@ -503,25 +481,24 @@ function midi.insertMidiNoteChunk(meta, opts)
 	end
 
 	midi.insert_notes({
-		take = take,
+		take = ctxm.take,
 		notes = t_midi_notes,
 	})
 
 	-- reset state
-	local midi_step_state = midi.get_midi_step_state()
 	midi_step_state.octave_next = nil
 	project_state.overwrite("mode_state", "midi_step", midi_step_state)
 end
 
 midi.get_midi_step_state = function()
-	local exists, midi_step_state = project_state.get("mode_state", "midi_step")
+	local did_exist, midi_step_state = project_state.get("mode_state", "midi_step")
 	if not exists then
 		midi_step_state = {
 			silent = false,
 			direction = true,
 		}
 	end
-	return midi_step_state
+	return did_exist, midi_step_state
 end
 
 midi.insert_notes = function(opts)
@@ -579,12 +556,5 @@ midi.select_notes = function()
 	-- horizontal | scales / patterns
 	--
 end
-
-
-
-
-
-
-
 
 return midi

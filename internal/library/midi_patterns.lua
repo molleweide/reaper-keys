@@ -190,7 +190,7 @@ end
 -- Note when I call this function in other actions that also pass pattern strings.
 
 midi_patterns.insertPatternFromString = function(meta, opts)
-	local ret, _, _, t_midi_context = midi.getMidiValidContext()
+	local ret, t_midi_context = midi.getMidiValidContext()
 	if not ret then
 		return
 	end

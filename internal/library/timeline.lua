@@ -1,6 +1,5 @@
 local tl = {}
 
-
 -- default to cursor, but I can also pass a numb
 
 tl.get_cursor_info = function(time)
@@ -28,6 +27,16 @@ tl.get_cursor_info = function(time)
 			timesig_denom = timesig_denom,
 		},
 	}
+end
+
+tl.getTimeSelection = function()
+	local GetSetLoopTimeRange = reaper.GetSet_LoopTimeRange
+	local start_pos, end_pos = GetSetLoopTimeRange(false, true, 0, 0, false)
+	return start_pos, end_pos
+end
+
+tl.setTimeSelection = function(start_pos, end_pos)
+	reaper.GetSet_LoopTimeRange(true, true, start_pos, end_pos, false)
 end
 
 return tl

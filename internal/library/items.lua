@@ -1,15 +1,15 @@
 local lib_items = {}
 
 --
--- ITEMS / TAKES
+-- ITEMS / TAKES -> RENAMETO: containers?
 --
 
 local test_new_struct = {
-  items = {},
-  takes = {},
-  -- functions take midi editor HWND as first arg and return something pertaining
-  -- to items/takes within the passed midi editor.
-  midi_editor = {}
+	items = {},
+	takes = {},
+	-- functions take midi editor HWND as first arg and return something pertaining
+	-- to items/takes within the passed midi editor.
+	midi_editor = {},
 }
 
 --
@@ -353,7 +353,7 @@ end
 --
 --- FTC item/midi helpers
 
-function GetItemSelection()
+lib_items.getItemSelection = function()
 	local items = {}
 	for i = 0, reaper.CountSelectedMediaItems(0) - 1 do
 		items[#items + 1] = reaper.GetSelectedMediaItem(0, i)
@@ -361,31 +361,34 @@ function GetItemSelection()
 	return items
 end
 
-function UnselectAllMediaItems()
+lib_items.unselectAllMediaItems = function()
+	-- reaper.SelectAllMediaItems(0, false) -- NOTE: why not just use this?!
 	for i = reaper.CountSelectedMediaItems(0) - 1, 0, -1 do
 		local item = reaper.GetSelectedMediaItem(0, i)
 		reaper.SetMediaItemSelected(item, false)
 	end
 end
 
-function SetItemSelection(items)
-	UnselectAllMediaItems()
-	for _, item in ipairs(items) do
-		reaper.SetMediaItemSelected(item, true)
+lib_items.setItemSelection = function(items)
+	lib_items.unselectAllMediaItems()
+	if type(items) == "userdata" then
+		reaper.SetMediaItemSelected(items, true)
+	elseif type(items) == "table" then
+		for _, item in ipairs(items) do
+			reaper.SetMediaItemSelected(item, true)
+		end
 	end
 end
 
-function GetTimeSelection()
-	local GetSetLoopTimeRange = reaper.GetSet_LoopTimeRange
-	local start_pos, end_pos = GetSetLoopTimeRange(false, true, 0, 0, false)
-	return start_pos, end_pos
+lib_items.removeItemsFromSelection = function(items)
 end
 
-function SetTimeSelection(start_pos, end_pos)
-	reaper.GetSet_LoopTimeRange(true, true, start_pos, end_pos, false)
+lib_items.addItemsToSelection = function(items)
 end
 
-function GetTakeChunk(take)
+
+
+lib_items.getTakeChunk = function(take)
 	local item = reaper.GetMediaItemTake_Item(take)
 	local _, chunk = reaper.GetItemStateChunk(item, "", false)
 	local tk = reaper.GetMediaItemTakeInfo_Value(take, "IP_TAKENUMBER")
@@ -400,14 +403,21 @@ function GetTakeChunk(take)
 	return chunk:sub(take_start_ptr, take_end_ptr)
 end
 
-function GetTakeChunkHZoom(chunk)
+lib_items.GetTakeChunkHZoom = function(chunk)
 	local pattern = "CFGEDITVIEW (.-) (.-) "
 	return chunk:match(pattern)
 end
 
-function GetTakeChunkTimeBase(chunk)
+lib_items.getTakeChunkTimeBase = function(chunk)
 	local pattern = "CFGEDIT " .. (".- "):rep(18) .. "(.-) "
 	return tonumber(chunk:match(pattern))
+end
+
+lib_items.IsValidMIDIItem = function(item)
+	if reaper.ValidatePtr(item, "MediaItem*") then
+		local active_take = reaper.GetActiveTake(item)
+		return reaper.TakeIsMIDI(active_take)
+	end
 end
 
 -- function GetMIDIEditorView(hwnd)
@@ -669,14 +679,6 @@ end
 --
 -- 	reaper.PreventUIRefresh(-1)
 -- end
-
--- keep this one here since it is more general about items
-IsValidMIDIItem = function(item)
-	if reaper.ValidatePtr(item, "MediaItem*") then
-		local active_take = reaper.GetActiveTake(item)
-		return reaper.TakeIsMIDI(active_take)
-	end
-end
 
 -- local MIDIEditor_GetAllVisibleItems = function(hwnd)
 -- 	local visible_items = MIDIEditor_GetItemsByState(hwnd, false)
