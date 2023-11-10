@@ -2,6 +2,10 @@ local log = require("utils.log")
 local format = require("utils.format")
 local project_state = require("utils.project_state")
 
+--
+-- UTILITY FOR DEALING WITH MIDI DATA
+--
+
 -- TODO: look at chordgun for good midi library functions
 
 -- // MIDI HELPER VARIABLE
@@ -575,5 +579,12 @@ midi.select_notes = function()
 	-- horizontal | scales / patterns
 	--
 end
+
+
+
+
+
+
+
 
 return midi

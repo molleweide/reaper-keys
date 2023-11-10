@@ -818,6 +818,9 @@ return {
 		},
 	},
 
+  -----------------------------------------------------------------------------
+  -- FIX: i need to fix the sorter so that I can actually search for tracks.
+  -- >> revise how sorting is done with FX plugins.
 	Midi_ChangeActiveSelection = {
 		pickers.all_tracks,
 		opts = {
@@ -829,39 +832,50 @@ return {
 				local log = require("utils.log")
 				local format = require("utils.format")
 				local tl = require("library.timeline")
-				local it = require("library.items")
+				local items = require("library.items")
 
-				-- TEST: what happens now in the midi editor
+				-- todo: if not ME / no item selected -> open midi editor for new item.
+				-- ie. make the jump-to-edit-midi-item usable from anywhere.
+
+				-- test: what happens now in the midi editor
 				-- 1. prefs > ME > `Selection is linked to editability` works for switching
 				-- active midi item.
-				--
-				-- NOTE: need to do more testing to see what quirks exists.
-				--
-				-- FIX: new midi item is selected, but I need to `move cursor/noterow`
-				-- for the midi editor to update
-				-- >>> maybe there is some ME pref that can be set to have this auto
-				-- update.
-				--
+
 				-- NOTE: read these posts on ME
 				-- >> https://forum.cockos.com/showthread.php?t=168563
 				-- >> https://forum.cockos.com/showthread.php?t=241258
+				-- >> https://forums.cockos.com/showthread.php?t=232491
+				-- >> THIS THREAD SEEMS TO DEAL WITH EXACTLY MY ISSUE HERE:
+				-- >> https://forum.cockos.com/showthread.php?t=193104
 
 				log.user(format.block(data.selection))
 
+
 				local cursor_info = tl.get_cursor_info()
+				-- TODO: use `MIDIEditor_EnumTakes` instead:
+				--      list the takes that are currently being edited in this MIDI editor, starting with the active take. See MIDIEditor_GetTake
+				--      local take = reaper.MIDIEditor_EnumTakes( midieditor, takeindex, editable_only )
+
 				local items_found =
-					it.get_items_in_range(data.selection.tr, cursor_info.msr.start, cursor_info.msr._end)
-				it.unselect_items()
+					items.get_items_in_range(data.selection.tr, cursor_info.msr.start, cursor_info.msr._end)
+
+				items.unselect_items()
 
 				if items_found then
 					reaper.SetMediaItemSelected(items_found[1].ref, true)
 					reaper.UpdateArrange()
+
+				-- i. add items to selection
+				-- ii. run Open in built-in MIDI editor
+				-- >>>>>>>> which item will be the active one??
+				-- reaper.Main_OnCommand(40153, 0) --Item: Open in built-in MIDI editor (set default behavior in preferences)
 				else
 					-- TODO: insert new item in same measure for selected track
 				end
 			end,
 		},
 	},
+  -----------------------------------------------------------------------------
 
 	n71 = lib.midi.sendMidiNote_61,
 	n70 = lib.midi.sendMidiNote_70,
