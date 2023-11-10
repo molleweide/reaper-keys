@@ -380,7 +380,11 @@ lib_items.setItemSelection = function(items)
 	end
 end
 
-lib_items.removeItemsFromSelection = function(items)
+lib_items.setSelectionStateOfItems = function(items, state)
+	for _, item in ipairs(items) do
+		reaper.SetMediaItemSelected(item, state)
+	end
+
 end
 
 lib_items.addItemsToSelection = function(items)
