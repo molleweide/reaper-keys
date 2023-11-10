@@ -359,7 +359,6 @@ end
 --- FTC item/midi helpers
 
 lib_items.create_new_item = function(is_midi, tr, start, _end, new_name)
-	new_name = new_name or "xyxyxy"
 	local new_item
 	if is_midi then
 		new_item = reaper.CreateNewMIDIItemInProj(tr, start, _end, false)
@@ -369,11 +368,14 @@ lib_items.create_new_item = function(is_midi, tr, start, _end, new_name)
 		reaper.SetMediaItemInfo_Value(new_item, "D_POSITION", start)
 		reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", length)
 	end
+	lib_items.rename_item(new_item, new_name)
+	return new_item
+end
 
+lib_items.rename_item = function (new_item, new_name)
+  	new_name = new_name or "[no name]"
 	local take = reaper.GetActiveTake(new_item)
 	reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", new_name, true)
-
-	return new_item
 end
 
 lib_items.getItemSelection = function()

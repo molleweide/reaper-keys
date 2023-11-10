@@ -829,6 +829,10 @@ return {
 			--    ~ G drumkit master tracks,
 			--    ~ regular M drum tracks,
 			--    ~ music MCS
+
+			-- TODO: move this to `editMidiAtPositionForTrack`
+			--    >> which file?
+			--
 			next = function(meta, data)
 				local log = require("utils.log")
 				local format = require("utils.format")
@@ -836,27 +840,7 @@ return {
 				local items = require("library.items")
 				local me = require("library.midi_editor")
 
-				-- todo: if not ME / no item selected -> open midi editor for new item.
-				-- ie. make the jump-to-edit-midi-item usable from anywhere.
-
-				-- test: what happens now in the midi editor
-				-- 1. prefs > ME > `Selection is linked to editability` works for switching
-				-- active midi item.
-
-				-- NOTE: read these posts on ME
-				-- >> https://forum.cockos.com/showthread.php?t=168563
-				-- >> https://forum.cockos.com/showthread.php?t=241258
-				-- >> https://forums.cockos.com/showthread.php?t=232491
-				-- >> THIS THREAD SEEMS TO DEAL WITH EXACTLY MY ISSUE HERE:
-				-- >> https://forum.cockos.com/showthread.php?t=193104
-
-				log.user(format.block(data.selection))
-
 				local cursor_info = tl.get_cursor_info()
-				-- TODO: use `MIDIEditor_EnumTakes` instead:
-				--      list the takes that are currently being edited in this MIDI editor, starting with the active take. See MIDIEditor_GetTake
-				--      local take = reaper.MIDIEditor_EnumTakes( midieditor, takeindex, editable_only )
-
 				local items_found =
 					items.get_track_items_in_range_time(data.selection.tr, cursor_info.msr.start, cursor_info.msr._end)
 				items.unselect_items()

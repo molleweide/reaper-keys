@@ -19,6 +19,8 @@ local syntax = require("SYNTAX.syntax.syntax")
 
 local data_loaders = require("pickers.data.load_plugins_data")
 
+-- FIX: mouse scroll makes indices get whacky when selecting stuff.
+
 --
 -- NOTE: Shouldn't pickers, which are obviously `custom actions`, be moved
 -- to unders `internal/custom_actions/pickers` ??
