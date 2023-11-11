@@ -8,7 +8,7 @@ return function(filter)
 			local t_ret = {}
 			local iCount = 0
 			for i, t in ipairs(t_results_data) do
-				if t.name:find(sPattern) then
+				if t.name:lower():find(sPattern) then
 					iCount = iCount + 1
 					t.id = i -- keep track of position in main table
 					t_ret[#t_ret + 1] = t
@@ -29,7 +29,7 @@ return function(filter)
 			local t_ret = {}
 			local iCount = 0
 			for i, t in ipairs(t_results_data) do
-				if t[filter]:find(sPattern) then
+				if t[filter]:lower():find(sPattern) then
 					iCount = iCount + 1
 					t.id = i -- keep track of position in main table
 					t_ret[#t_ret + 1] = t

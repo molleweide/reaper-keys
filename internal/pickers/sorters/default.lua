@@ -1,3 +1,11 @@
+
+-- i need to handle the case of `==` smarter,
+-- maybe by passing a fallback key in table
+-- {
+--  "main",
+--  "fallback"
+-- }
+
 return function(sorter)
 	if not sorter then
 		return function(a, b)
