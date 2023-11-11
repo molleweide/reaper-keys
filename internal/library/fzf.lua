@@ -368,6 +368,22 @@ local function gui_default_on_exit(self)
 	end
 end
 
+local function get_xy_intersection()
+	local function get_active_window() end
+
+	local active_window_type = get_active_window()
+
+	if active_window_type == "midi" then
+	-- note_row
+	-- cursor
+	elseif active_window_type == "main" then
+		-- track
+		-- cursor
+	end
+
+  return x, y
+end
+
 --
 -- NOTE: init picker funcs below
 --
@@ -381,13 +397,17 @@ end
 --
 
 local function build_picker(opts, on_enter)
+
+  -- FIX: use these for x and y coordinates instead..
+  local x, y = get_xy_intersection()
+
 	-- reaper.ClearConsole()
 	local DEFAULT_OPTS = {
 		max_results = 50,
 		width = 500,
 		height = 250,
-		x = 100,
-		y = 100,
+		x = 400,
+		y = 1400,
 		window_save_state = true,
 		window_dock_state = 0,
 		gui_size = 20,

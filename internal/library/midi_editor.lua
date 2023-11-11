@@ -9,6 +9,8 @@ local tl = require("library.timeline")
 -- I.e. library functions that take a midi editor (HWND) as first argument.
 -- Returns some data/info about given midi editor window/view.
 
+-- TODO: there is a lot of redundancy in this file that can be refactored
+
 -- TODO: which functions could be simplified with new reaper mide editor apis,
 -- eg. enum_takes
 
@@ -59,7 +61,7 @@ local function changeConfigForSelectionExploit(t_config, get_editable)
 	return new_config
 end
 
-function checkConfigForActiveLink(t_config, is_edit_state)
+local function checkConfigForActiveLink(t_config, is_edit_state)
 	-- local editor_type = config % 4
 	local mask = is_edit_state and 512 or 1024
 	-- Check if selection is already linked to visibility/editability
@@ -408,6 +410,7 @@ midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
 	-- Set current editor item to be the only selected item
 	containers.setItemSelection(ME.item)
 	midi_editor.openFromMain()
+
 	containers.setSelectionStateOfItems(items, state)
 	-- We toggle this setting so that arrange selection is mirrored in MIDI editor
 	midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
