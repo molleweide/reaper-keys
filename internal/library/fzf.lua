@@ -428,7 +428,9 @@ local function build_picker(opts, on_enter)
 
 	tResultButtons = {}
 
+	-- get default functions if necessary
 	opts.on_select_func = require("pickers.selectors.default")(opts.on_select_func)
+	opts.results_filter = require("pickers.results_filter.default")(opts.results_filter)
 	opts.sort_comp = require("pickers.sorters.default")(opts.sort_comp)
 	opts.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
 
