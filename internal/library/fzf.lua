@@ -155,41 +155,38 @@ end
 -- `tResultButtons` table with them.
 --
 
-local function createResultButtons(gui, tControls, n, y_start)
+local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 	local height = gui.gui_size
 	local x_start = 10
 	local y_space = 0
 	local n_to_remove = 0
 
-	for i = 1, math.max(#tControls, n) do
-		if i > #tControls and i <= n then
-			local c = jGuiHighlightControl:new()
-			c.height = height
-			c.label_fontsize = height - 2
-			c.label_align = "l"
-			c.label_font = "Calibri"
-			c.border = false
-			c.focus_index = i + 1 --gui:getFocusIndex()
-			c.border_focus = true
+	for i = 1, math.max(#tControls, iResultsPerPage) do
+		if i > #tControls and i <= iResultsPerPage then
+			local ResultsEntryControl = jGuiHighlightControl:new({
+				height = height,
+				label_fontsize = height - 2,
+				label_align = "l",
+				label_font = "Calibri",
+				border = false,
+				focus_index = i + 1, --gui:getFocusIndex()
+				border_focus = true,
+				x = x_start,
+				y = y_start + (i - 1) * (height + y_space),
+			})
 
-			c.x = x_start
-			c.y = y_start + (i - 1) * (c.height + y_space)
+			local ResultsEntryInfo = jGuiText:new({
+				width = 40,
+				height = height,
+				label_fontsize = math.tointeger((height - 2) / 2 + 3),
+				label_align = "r",
+				label_valign = "m",
+				border = false,
+				y = ResultsEntryControl.y,
+			})
 
-			local info = jGuiText:new()
-			info.width = 40
-			info.height = height
-			info.label_fontsize = math.tointeger((height - 2) / 2 + 3)
-			c.label_font = "Calibri"
-			info.label_align = "r"
-			info.label_valign = "m"
-			info.border = false
-			info.y = c.y
-
-			function c:onMouseClick()
+			function ResultsEntryControl:onMouseClick()
 				gui.on_select_func(gui, i + SCROLL_RESULTS)
-
-				-- selectFx(i + SCROLL_RESULTS)
-
 				gui:setFocus(textBox)
 				UPDATE_RESULTS = true
 				if not gui.kb.shift() then
@@ -197,19 +194,19 @@ local function createResultButtons(gui, tControls, n, y_start)
 				end
 			end
 
-			function c:onMouseWheel(mw) -- it looks like SCROLL_RESULTS can be a value between 0 and 1, should be a whole number?
+			function ResultsEntryControl:onMouseWheel(mw) -- it looks like SCROLL_RESULTS can be a value between 0 and 1, should be a whole number?
 				_jScroll(mw / 120 * -1)
 			end
 
-			function c:onArrowDown()
-				return c:onTab()
+			function ResultsEntryControl:onArrowDown()
+				return ResultsEntryControl:onTab()
 			end
 
-			function c:onArrowUp()
-				return c:onShiftTab()
+			function ResultsEntryControl:onArrowUp()
+				return ResultsEntryControl:onShiftTab()
 			end
 
-			function c:onShiftTab()
+			function ResultsEntryControl:onShiftTab()
 				if i == 1 and SCROLL_RESULTS ~= 0 then
 					_jScroll(-1)
 					return false
@@ -217,7 +214,7 @@ local function createResultButtons(gui, tControls, n, y_start)
 				return true -- else
 			end
 
-			function c:onTab()
+			function ResultsEntryControl:onTab()
 				if i == #tControls then
 					_jScroll(1)
 					return false
@@ -225,23 +222,25 @@ local function createResultButtons(gui, tControls, n, y_start)
 				return true -- else
 			end
 
-			gui:controlAdd(c)
-			gui:controlAdd(info)
-			tControls[i] = { c, info }
-		elseif i > n then
+			gui:controlAdd(ResultsEntryControl)
+			gui:controlAdd(ResultsEntryInfo)
+			tControls[i] = { ResultsEntryControl, ResultsEntryInfo }
+
+		-- ENDS: if i > #tControls and i <= iResultsPerPage then
+		elseif i > iResultsPerPage then
 			local b = tControls[i][1]
-			local info = tControls[i][2]
+			local ResultsEntryInfo = tControls[i][2]
 			gui:controlDelete(b)
-			gui:controlDelete(info)
+			gui:controlDelete(ResultsEntryInfo)
 			n_to_remove = n_to_remove + 1
 		end
 
-		if i <= #tControls and i <= n then
+		if i <= #tControls and i <= iResultsPerPage then
 			local b = tControls[i][1]
-			local info = tControls[i][2]
+			local ResultsEntryInfo = tControls[i][2]
 
 			b.width = gui.width - 20
-			info.x = 10 + b.width - info.width
+			ResultsEntryInfo.x = 10 + b.width - ResultsEntryInfo.width
 		end
 	end
 
@@ -251,16 +250,17 @@ local function createResultButtons(gui, tControls, n, y_start)
 end
 
 local function gui_create_main_text_box(gui, on_enter)
-	local text_input = jGuiTextInput:new()
-	text_input.x = 10
-	text_input.y = 10
-	text_input.width = 480
-	text_input.height = math.tointeger(gui.gui_size * 1.5)
-	text_input.label_fontsize = math.tointeger(gui.gui_size * 1.5)
-	text_input.label_align = "l"
-	text_input.label_font = "Calibri"
-	text_input.focus_index = gui:getFocusIndex()
-	text_input.label_padding = 3
+	local text_input = jGuiTextInput:new({
+		x = 10,
+		y = 10,
+		width = 480,
+		height = math.tointeger(gui.gui_size * 1.5),
+		label_fontsize = math.tointeger(gui.gui_size * 1.5),
+		label_align = "l",
+		label_font = "Calibri",
+		focus_index = gui:getFocusIndex(),
+		label_padding = 3,
+	})
 
 	function text_input:onEnter()
 		-- NOTE: this is where an FX is selected and applied to a track
@@ -276,13 +276,14 @@ local function gui_create_main_text_box(gui, on_enter)
 end
 
 local function create_control_label_stats(gui)
-	local ls = jGuiControl:new()
-	ls.width = 50
-	ls.x = gui.width - ls.width - 12
-	ls.y = 10
-	ls.label_fontsize = math.tointeger(gui.gui_size * 0.75)
-	ls.label_align = "r"
-	ls.border = false
+	local ls = jGuiControl:new({
+		width = 50,
+		x = gui.width - 11, --ls.width - 12,
+		y = 10,
+		label_fontsize = math.tointeger(gui.gui_size * 0.75),
+		label_align = "r",
+		border = false,
+	})
 	LABEL_STATS = ls
 	return LABEL_STATS
 end
@@ -325,7 +326,9 @@ local function gui_default_update(self)
 			-- so that I can call GUI.make_filter_results()
 			--
 
-			self.t_search_results = self.results_filter(self.t_results_data, textBox.value, false, self.max_results)
+			self.t_search_results = self.results_filter(self.t_results_data, textBox.value, self.max_results, false)
+
+			log.user("#", #self.t_search_results)
 
 			lastSearch = textBox.value
 		end
@@ -381,7 +384,7 @@ local function get_xy_intersection()
 		-- cursor
 	end
 
-  return x, y
+	return x, y
 end
 
 --
@@ -397,9 +400,8 @@ end
 --
 
 local function build_picker(opts, on_enter)
-
-  -- FIX: use these for x and y coordinates instead..
-  local x, y = get_xy_intersection()
+	-- FIX: use these for x and y coordinates instead..
+	local x, y = get_xy_intersection()
 
 	-- reaper.ClearConsole()
 	local DEFAULT_OPTS = {

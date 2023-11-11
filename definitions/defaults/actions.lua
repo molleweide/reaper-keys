@@ -818,7 +818,12 @@ return {
 		},
 	},
 
-  -- TODO: prefix actions with MidiEditor_
+	Main_JumpToRegionAndTrack = {
+	  -- eg. if you are in ME and want to go to MAIN
+		"TODO: region/marks picker -> tracks picker -> jump-to-position-in-main",
+	},
+
+	-- TODO: prefix actions with MidiEditor_
 	Midi_ChangeActiveSelection = {
 		pickers.all_tracks,
 		opts = {
@@ -841,21 +846,21 @@ return {
 				if items_found then
 					me.setActiveItem(nil, items_found[1].ref)
 				else
-
-				  -- TODO: drum track AND group is drum-lane -> set master as active,
-				  -- AND goto corresponding note_row
-				  -- >>> later, this can be done with midi items on each track instead
-				  -- of working with the master midi track.
-
+					-- TODO: drum track AND group is drum-lane -> set master as active,
+					-- AND goto corresponding note_row
+					-- >>> later, this can be done with midi items on each track instead
+					-- of working with the master midi track.
 					local new_item =
 						items.create_new_item(true, data.selection.tr, cursor_info.msr.start, cursor_info.msr._end)
 					me.setActiveItem(nil, new_item)
-
 				end
 			end,
 		},
 	},
-	Midi_JumpBackToPrevActiveMidiItem = "TODO",
+	Midi_EditRegionForZoneAndSelActiveTrack = {
+		"TODO: reg/mrk picker -> track picker MSC -> edit selected track in region",
+	},
+	Midi_JumpBackToPrevActiveMidiItem = { "TODO: keep history of last N jumps" },
 
 	n71 = lib.midi.sendMidiNote_61,
 	n70 = lib.midi.sendMidiNote_70,

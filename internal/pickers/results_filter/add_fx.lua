@@ -1,4 +1,4 @@
-local function findVst(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+local function findVst(vstTable, sPattern, iMaxResults, iInstance, find_plain)
 	iInstance = iInstance or false
 	find_plain = find_plain or true
 	iMaxResults = iMaxResults or false
@@ -11,6 +11,9 @@ local function findVst(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 		return false
 	end
 
+	-- NOTE; this for loop basically first makes a comparison with the plugin
+	-- string names, and then it does some
+
 	for i, t in ipairs(vstTable) do
 		local bMatch = true
 		-- Look for every word in the string
@@ -18,7 +21,9 @@ local function findVst(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- local name = t.name
 			-- local name = _makeFxNameSearchable(t.name)
 			local name = t.desc -- no longer search in name but in description
+
 			token = token:lower()
+
 			if token == "@fx" or token == "@vst" then
 				if not t.dll and not t.vst and not t.vst3 then
 					bMatch = false
@@ -74,7 +79,7 @@ local function findVst(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 				t.id = i -- keep track of position in main table
 				tResult[#tResult + 1] = t
 				if iMaxResults ~= false then
-					if #tResult >= iMaxResults then -- check if we already heave enough results
+					if #tResult >= iMaxResults then -- check if we already have enough results
 						return tResult
 					end
 				end

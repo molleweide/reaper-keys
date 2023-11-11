@@ -273,7 +273,7 @@ pickers.test_picker = function()
 		env = RK_FZF_ENV,
 		title = "Test Picker",
 		results = { "this", "is", "a" },
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -291,12 +291,14 @@ pickers.all_tracks = function(meta, opts)
 	local t_track_objects = syntax.get_list_of_track_objects()
 
 	if opts.filter then
-	  -- TODO: 1. move track objects filter to syntax utils `track_objs_filter_by_class(t_trk_objs, opts.filter)`
-	  -- 2. move put the specific filter back into ChangeActiveSelection
+		-- TODO: 1. move track objects filter to syntax utils `track_objs_filter_by_class(t_trk_objs, opts.filter)`
+		-- 2. move put the specific filter back into ChangeActiveSelection
 		t_track_objects = tbl.filter(t_track_objects, function(o)
 			return str.strHasOneOfChars(o.class, opts.filter)
 		end)
 	end
+
+	log.user(format.block(t_track_objects))
 
 	fzf.init({
 		title = opts.title or "All Tracks (Default)",
@@ -315,9 +317,27 @@ pickers.all_tracks = function(meta, opts)
 		end,
 
 		sort_comp = "name",
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
-			-- what todo here ??
-			return vstTable
+
+		-- TODO: move to default results_filter
+		--
+		results_filter = function(t_results_data, sPattern, iMaxResults)
+			local t_ret = {}
+			local iCount = 0
+			for i, t in ipairs(t_results_data) do
+				if t.name:find(sPattern) then
+					iCount = iCount + 1
+					t.id = i -- keep track of position in main table
+					t_ret[#t_ret + 1] = t
+					if iMaxResults ~= false then
+						if #t_ret >= iMaxResults then -- check if we already have enough results
+							log.user(format.block(t_ret))
+							return t_ret
+						end
+					end
+				end
+			end
+
+			return t_ret
 		end,
 		entry_maker = "name",
 	})
@@ -344,7 +364,7 @@ pickers.browse_reaper_preferences = function()
 		env = RK_FZF_ENV,
 		title = "Reaper preferences",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -355,7 +375,7 @@ pickers.track_fx = function()
 	fzf.init({
 		title = "Browse track FX list",
 		results = fx_util.get_track_fx_chain_info(),
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -370,7 +390,7 @@ pickers.track_fx_params = function()
 		env = RK_FZF_ENV,
 		title = "Fx params for <fx_name> on track <track_name>",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -396,7 +416,7 @@ pickers.track_channel_mix_params = function()
 		env = RK_FZF_ENV,
 		title = "Track params for track: <trackname>",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -422,7 +442,7 @@ pickers.track_attributes = function()
 		env = RK_FZF_ENV,
 		title = "Track attributes (tr: <trackname>)",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -437,7 +457,7 @@ pickers.track_routing = function()
 		env = RK_FZF_ENV,
 		title = "Routing @track: <trackname>",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -461,7 +481,7 @@ pickers.projects = function()
 		env = RK_FZF_ENV,
 		title = "Projects listing",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -485,7 +505,7 @@ pickers.vtt_zones = function()
 		env = RK_FZF_ENV,
 		title = "syntax: zones",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -499,7 +519,7 @@ pickers.vtt_mcsab_by_group_name = function()
 		env = RK_FZF_ENV,
 		title = "syntax: MSCAB",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -515,7 +535,7 @@ pickers.vtt_drum_kits = function()
 		env = RK_FZF_ENV,
 		title = "drum kits",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -528,7 +548,7 @@ pickers.marks = function()
 		env = RK_FZF_ENV,
 		title = "project marks",
 		results = t_marks,
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -543,7 +563,7 @@ pickers.regions = function()
 		env = RK_FZF_ENV,
 		title = "project regions",
 		results = t_regions,
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -559,7 +579,7 @@ pickers.midi_patterns = function()
 		env = RK_FZF_ENV,
 		title = "midi patterns",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -574,7 +594,7 @@ pickers.chord_progression = function()
 		env = RK_FZF_ENV,
 		title = "chord progressions",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -598,7 +618,7 @@ pickers.chord = function(meta, opts)
 		results = require("definitions.chords"),
 		sort_comp = 1,
 		-- RENAME: vstTable...
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -629,7 +649,7 @@ pickers.all_items = function()
 		env = RK_FZF_ENV,
 		title = "all items",
 		results = t_all_items,
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -688,7 +708,7 @@ pickers.all_visible_items = function()
 		env = RK_FZF_ENV,
 		title = "visible items (lightspeed)",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -738,7 +758,7 @@ pickers.item_parameters = function()
 		env = RK_FZF_ENV,
 		title = "item params for: <item>",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
@@ -771,7 +791,7 @@ pickers.take_parameters = function()
 		env = RK_FZF_ENV,
 		title = "take params for: <take>",
 		results = {},
-		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
+		results_filter = function(vstTable, sPattern)
 			-- what todo here ??
 			return vstTable
 		end,
