@@ -1,3 +1,6 @@
+local log = require("utils.log")
+local format = require("utils.format")
+
 local tbl = {}
 
 function tbl.tableConcat(t1, t2)
@@ -16,6 +19,19 @@ function tbl.shallow_copy(t)
 		t2[k] = v
 	end
 	return t2
+end
+
+tbl.filter = function(t, condition, debug)
+	local result = {}
+	for _, item in ipairs(t) do
+		if condition(item) then
+		  if debug then
+		    log.user(format.block(item))
+		  end
+			table.insert(result, item)
+		end
+	end
+	return result
 end
 
 return tbl

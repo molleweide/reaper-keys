@@ -6,6 +6,8 @@ local fzf = require("library.fzf")
 local fu = require("utils.fzf")
 local sf = require("utils.j_string_functions")
 local tf = require("utils.j_tables")
+local tbl = require("utils.table")
+local str = require("utils.string")
 
 local fx_util = require("library.fx")
 local lib_items = require("library.items")
@@ -286,28 +288,33 @@ end
 --
 
 pickers.all_tracks = function(meta, opts)
-	fzf.init({
-		env = RK_FZF_ENV,
-		title = opts.title or "All Tracks (Default)",
-		results = syntax.get_list_of_track_objects(),
+	local t_track_objects = syntax.get_list_of_track_objects()
 
+	if opts.filter then
+	  -- TODO: 1. move track objects filter to syntax utils `track_objs_filter_by_class(t_trk_objs, opts.filter)`
+	  -- 2. move put the specific filter back into ChangeActiveSelection
+		t_track_objects = tbl.filter(t_track_objects, function(o)
+			return str.strHasOneOfChars(o.class, opts.filter)
+		end)
+	end
+
+	fzf.init({
+		title = opts.title or "All Tracks (Default)",
+		results = t_track_objects,
 
 		-- TODO: could passing a calback to next be moved into the default
 		-- selector function?
 
 		on_select_func = function(self, i)
 			local selection = self.t_search_results[i]
-
 			if opts.next then
 				opts.next(meta, {
-					selection = selection
+					selection = selection,
 				})
 			end
 		end,
 
-
 		sort_comp = "name",
-		-- FIX: is there a good default that could be added here?
 		results_filter = function(vstTable, sPattern, iInstance, iMaxResults, find_plain)
 			-- what todo here ??
 			return vstTable

@@ -356,13 +356,15 @@ local function gui_default_on_exit(self)
 		--
 		-- maybe i should have custom save state for each picker by name/key?
 
-		settings.jSettingsWriteToFileMultiple(self.env.SETTINGS_INI_FILE, {
-			{ "gui", "window_x", math.tointeger(wx) },
-			{ "gui", "window_y", math.tointeger(wy) },
-			{ "gui", "window_width", math.tointeger(ww) },
-			{ "gui", "window_height", math.tointeger(wh) },
-			{ "gui", "window_dock_state", dockstr },
-		}, true)
+		if self.env then
+			settings.jSettingsWriteToFileMultiple(self.env.SETTINGS_INI_FILE, {
+				{ "gui", "window_x", math.tointeger(wx) },
+				{ "gui", "window_y", math.tointeger(wy) },
+				{ "gui", "window_width", math.tointeger(ww) },
+				{ "gui", "window_height", math.tointeger(wh) },
+				{ "gui", "window_dock_state", dockstr },
+			}, true)
+		end
 	end
 end
 
