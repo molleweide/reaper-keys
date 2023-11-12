@@ -104,7 +104,7 @@ pickers.all_tracks = function(meta, opts)
 		end)
 	end
 
-	log.user(format.block(t_track_objects))
+	-- log.user(format.block(t_track_objects))
 
 	fzf.init({
 		title = opts.title or "All Tracks (Default)",

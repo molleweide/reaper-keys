@@ -328,7 +328,7 @@ local function gui_default_update(self)
 
 			self.t_search_results = self.results_filter(self.t_results_data, textBox.value, self.max_results, false)
 
-			log.user("#", #self.t_search_results)
+			-- log.user("#", #self.t_search_results)
 
 			lastSearch = textBox.value
 		end
