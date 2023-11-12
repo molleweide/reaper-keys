@@ -21,10 +21,6 @@ local data_loaders = require("pickers.data.load_plugins_data")
 
 -- FIX: mouse scroll makes indices get whacky when selecting stuff.
 
---
--- NOTE: Shouldn't pickers, which are obviously `custom actions`, be moved
--- to unders `internal/custom_actions/pickers` ??
-
 -- does some nested requires that requires fzf to be loaded first, (for now...)
 require("gui2.JProjectClass")
 
@@ -383,14 +379,16 @@ pickers.all_items = function()
 end
 
 pickers.all_visible_items = function()
-	-- TODO: 1. use
+	local windows = require("library.windows")
+	local mtracks = require("library.tracks")
+
 	local t_track_objects = syntax.get_list_of_track_objects()
 
-	-- TODO: refactor parts of this into lib/items
-
 	local tracks_cnt = reaper.GetNumTracks()
+
 	reaper.PreventUIRefresh(1)
-	local _, _, tcp_height = reaper.JS_Window_GetClientSize(reaper.JS_Window_FindChildByID(reaper.GetMainHwnd(), 0x3E8))
+
+	local _, _, tcp_height = windows.get_main_tcp_size()
 
 	local start_time, end_time = reaper.GetSet_ArrangeView2(0, false, 0, 0)
 
@@ -398,19 +396,19 @@ pickers.all_visible_items = function()
 
 	for tr = 0, tracks_cnt - 1 do
 		local track = reaper.GetTrack(0, tr)
-		local track_pos = reaper.GetMediaTrackInfo_Value(track, "I_TCPY")
-		local track_h = track_pos + reaper.GetMediaTrackInfo_Value(track, "I_TCPH")
 
-		if reaper.IsTrackVisible(track, false) and track_pos >= 0 and track_h <= tcp_height then
+		local t_tr_dim = mtracks.get_dimensions_for(track)
+
+		if reaper.IsTrackVisible(track, false) and t_tr_dim.tcp_win_y >= 0 and t_tr_dim.tcp_win_yh <= tcp_height then
 			prev_tr_visible = true
 			local item_cnt = reaper.GetTrackNumMediaItems(track)
 			local prev_visible = false
 
 			for i = 0, item_cnt - 1 do
 				local item = reaper.GetTrackMediaItem(track, i)
-				local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-				local item_end = item_start + reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-				if item_start >= start_time and item_end <= end_time then
+				local t_item_dims = lib_items.get_dimensions(item)
+
+				if t_item_dims.start >= start_time and t_item_dims._end <= end_time then
 					reaper.SetMediaItemSelected(item, true)
 					prev_visible = true
 				else

@@ -12,7 +12,7 @@ return function(filter)
 					iCount = iCount + 1
 					t.id = i -- keep track of position in main table
 					t_ret[#t_ret + 1] = t
-					if iMaxResults ~= false then
+					if iMaxResults then
 						if #t_ret >= iMaxResults then -- check if we already have enough results
 							log.user(format.block(t_ret))
 							return t_ret
@@ -33,7 +33,7 @@ return function(filter)
 					iCount = iCount + 1
 					t.id = i -- keep track of position in main table
 					t_ret[#t_ret + 1] = t
-					if iMaxResults ~= false then
+					if iMaxResults then
 						if #t_ret >= iMaxResults then -- check if we already have enough results
 							log.user(format.block(t_ret))
 							return t_ret

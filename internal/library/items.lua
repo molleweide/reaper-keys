@@ -372,8 +372,8 @@ lib_items.create_new_item = function(is_midi, tr, start, _end, new_name)
 	return new_item
 end
 
-lib_items.rename_item = function (new_item, new_name)
-  	new_name = new_name or "[no name]"
+lib_items.rename_item = function(new_item, new_name)
+	new_name = new_name or "[no name]"
 	local take = reaper.GetActiveTake(new_item)
 	reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", new_name, true)
 end
@@ -445,6 +445,18 @@ lib_items.isValidMIDIItem = function(item)
 		local active_take = reaper.GetActiveTake(item)
 		return reaper.TakeIsMIDI(active_take)
 	end
+end
+
+lib_items.get_dimensions = function(itm)
+	local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+	local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+	local item_end = item_start + item_length
+
+	return {
+		start = item_start,
+		_end = item_end,
+		length = item_length,
+	}
 end
 
 -- function GetMIDIEditorView(hwnd)

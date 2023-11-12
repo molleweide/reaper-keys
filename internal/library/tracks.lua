@@ -6,16 +6,15 @@ local tracks = {}
 --- Return table of track GUIDs matching string
 ---@return table
 tracks.getTrackGuidsByName = function()
+	-- TODO: this should already be implemented in the routing UI
+	-- refactor and move that function to here.
 
-  -- TODO: this should already be implemented in the routing UI
-  -- refactor and move that function to here.
+	local t = {}
 
-  local t = {}
-
-  -- get all tracks
-  -- for each find pattern
-  -- return set
-  return t
+	-- get all tracks
+	-- for each find pattern
+	-- return set
+	return t
 end
 
 -- function JProject.prototype:getTracksByName(sPattern, iInstance, find_init, find_plain)
@@ -67,5 +66,34 @@ end
 -- 	local iInstance = iInstance or 1
 -- 	return self:getTracksByName(sPattern, iInstance, find_init, find_plain)
 -- end
+
+tracks.get_dimensions_for = function(tr)
+	-- I_TCPH : int * : current TCP window height in pixels not including envelopes (read-only)
+	local i_tcph = reaper.GetMediaTrackInfo_Value(track, "I_TCPH")
+
+	-- I_TCPY : int * : current TCP window Y-position in pixels relative to top of arrange view (read-only)
+	local i_tcpy = reaper.GetMediaTrackInfo_Value(track, "I_TCPY")
+
+	-- I_WNDH : int * : current TCP window height in pixels including envelopes (read-only)
+	local i_wndh = reaper.GetMediaTrackInfo_Value(track, "I_WNDH")
+
+	-- I_MCPX : int * : current MCP X-position in pixels relative to mixer container (read-only)
+	local i_mcpx = reaper.GetMediaTrackInfo_Value(track, "I_MCPX")
+
+	-- I_MCPY : int * : current MCP Y-position in pixels relative to mixer container (read-only)
+	local i_mcpy = reaper.GetMediaTrackInfo_Value(track, "I_MCPY")
+
+	-- I_MCPW : int * : current MCP width in pixels (read-only)
+	local i_mcpw = reaper.GetMediaTrackInfo_Value(track, "I_MCPW")
+
+	-- I_MCPH : int * : current MCP height in pixels (read-only)
+	local i_mcph = reaper.GetMediaTrackInfo_Value(track, "I_MCPH")
+
+	return {
+		tcp_win_height = i_tcph,
+		tcp_win_y = i_tcpy,
+		tcp_win_yh = i_tcpy + i_tcph,
+	}
+end
 
 return tracks

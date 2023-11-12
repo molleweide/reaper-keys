@@ -371,8 +371,32 @@ local function gui_default_on_exit(self)
 	end
 end
 
+
+-- RESOURCES:
+--     reateam > amagalma_Toggle show editing guide line on item under mouse cursor in Main Window or in MIDI Editor.lua
+--
 local function get_xy_intersection()
-	local function get_active_window() end
+	local windows = require("library.windows")
+	local mtracks = require("library.tracks")
+	local tl = require("library.timeline")
+
+	local cursor_info = tl.get_cursor_info()
+
+	local function get_active_window()
+		reaper.JS_Window_GetFocus()
+
+
+  -- MidiWindow = reaper.MIDIEditor_GetActive()
+  -- midiview = MidiWindow and reaper.JS_Window_FindChildByID(MidiWindow, 0x3E9)
+    -- 		reaper.JS_Window_GetClientSize(reaper.JS_Window_FindChildByID(reaper.GetMainHwnd(), 0x3E8))
+
+--     local cur_view = set_window == 0 and midiview or trackview
+-- local _, scrollposv = reaper.JS_Window_GetScrollInfo( cur_view, "v" )
+-- local _, scrollposh = reaper.JS_Window_GetScrollInfo( cur_view, "h" )
+
+
+
+	end
 
 	local active_window_type = get_active_window()
 
@@ -381,6 +405,8 @@ local function get_xy_intersection()
 	-- cursor
 	elseif active_window_type == "main" then
 		-- track
+		local t_tr_dim = mtracks.get_dimensions_for(track)
+
 		-- cursor
 	end
 
@@ -405,7 +431,7 @@ local function build_picker(opts, on_enter)
 
 	-- reaper.ClearConsole()
 	local DEFAULT_OPTS = {
-		max_results = 50,
+		-- max_results = 50,
 		width = 500,
 		height = 250,
 		x = 400,
