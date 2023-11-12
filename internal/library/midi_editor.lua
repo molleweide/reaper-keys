@@ -104,7 +104,8 @@ end
 midi_editor.getMidiValidContext = function(hwnd)
   local ME = hwnd or reaper.MIDIEditor_GetActive()
   local take = reaper.MIDIEditor_GetTake(ME)
-  local editor_item = reaper.GetMediaItemTake_Item(take)
+  local editor_item = take and reaper.GetMediaItemTake_Item(take) or nil
+
   local retval = true
   if not ME or (not take or not reaper.TakeIsMIDI(take)) or not reaper.ValidatePtr(take, "MediaItem_Take*") then
     retval = false
@@ -114,7 +115,7 @@ midi_editor.getMidiValidContext = function(hwnd)
         editor = ME,
         take = take,
         item = editor_item,
-        events = { reaper.MIDI_CountEvts(take) },
+        events = take and { reaper.MIDI_CountEvts(take) or nil },
         note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row"),
         cursor_pos = reaper.GetCursorPosition(),
       }
@@ -158,8 +159,8 @@ end
 -- end
 
 midi_editor.getVisibleTakes = function(hwnd)
-  local ok, ME = midi_editor.getMidiValidContext(hwnd)
-  if not ok then
+  local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+  if not ME_EXISTS then
     return
   end
   -- Cycle through visible MIDI items until the first one is reached
@@ -180,8 +181,8 @@ end
 -- one line. refactor...
 --
 midi_editor.getVisibleItems = function(hwnd)
-  local ok, ME = midi_editor.getMidiValidContext(hwnd)
-  if not ok then
+  local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+  if not ME_EXISTS then
     return
   end
 
@@ -217,8 +218,8 @@ midi_editor.getVisibleItems = function(hwnd)
 end
 
 midi_editor.getEditableItems = function(hwnd)
-  local ok, ME = midi_editor.getMidiValidContext(hwnd)
-  if not ok then
+  local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+  if not ME_EXISTS then
     return
   end
 
@@ -258,8 +259,8 @@ end
 ---@param hwnd userdata
 ---@return number start_pos, number end_pos, number hzoom_lvl
 midi_editor.getMIDIEditorView = function(hwnd)
-  local ok, ME = midi_editor.getMidiValidContext(hwnd)
-  if not ok then
+  local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+  if not ME_EXISTS then
     return
   end
 
@@ -338,8 +339,8 @@ midi_editor.getEditorHorizontalZoomState = function(hwnd)
 end
 
 midi_editor.getItemsByState = function(hwnd, is_edit_state)
-  local ok, ME = midi_editor.getMidiValidContext(hwnd)
-  if not ok then
+  local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+  if not ME_EXISTS then
     return
   end
 
@@ -382,8 +383,8 @@ end
 
 -- TODO: pass table instead with opts instead
 midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
-  local ok, ME = midi_editor.getMidiValidContext(hwnd)
-  if not ok then
+  local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+  if not ME_EXISTS then
     return
   end
 
@@ -497,52 +498,61 @@ end
 --- I believe that the `item_make_active` should be `item_make_active`
 ---@param item_make_active userdata
 midi_editor.setActiveItem = function(hwnd, item_make_active, note_row)
-  local ok, ME = midi_editor.getMidiValidContext(hwnd)
-  if not ok then
-    return
+  local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+  if not containers.isValidMIDIItem(item_make_active) then
+    return false
   end
 
-  -- check if item is already active (prevent zoom)
-  if not ok or not containers.isValidMIDIItem(item_make_active) then
-    return
-  end
+  if not ME_EXISTS then
+    reaper.PreventUIRefresh(1)
+    containers.setItemSelection(item_make_active) -- make the only selected item
+    midi_editor.openFromMain() -- trigger midi editor refresh
+    if note_row then
+      local ME_EXISTS_2, ME_2 = midi_editor.getMidiValidContext(hwnd)
+      if ME_EXISTS_2 then
+        reaper.MIDIEditor_SetSetting_int(ME_2.editor, "active_note_row", note_row)
+      end
+    end
+    reaper.PreventUIRefresh(-1)
+    return true
+  else
+    if ME.item == item_make_active then
+      if note_row then
+        reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", note_row)
+      else
+        return
+      end
+    end
 
-  if ME.item == item_make_active then
+    reaper.PreventUIRefresh(1)
+
+    -- Save current state (visibility, editability, itemsel, hzoom, config)
+    local visible_items = midi_editor.getAllVisibleItems(ME.editor)
+    local editable_items = midi_editor.getAllEditableItems(ME.editor)
+    local sel_items = containers.getItemSelection()
+    local hzoom_state = midi_editor.getEditorHorizontalZoomState(ME.editor)
+
+    local t_old_config = midi_editor.getConfigTable()
+
+    local new_config = changeConfigForSelectionExploit(t_old_config) -- second arg was set to `is_edit_state` which was undefined..g
+    midi_editor.setConfig(new_config)
+
+    containers.setItemSelection(item_make_active) -- make the only selected item
+    midi_editor.openFromMain() -- trigger midi editor refresh
+
     if note_row then
       reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", note_row)
-    else
-      return
     end
+
+    -- Restore saved state
+    midi_editor.setConfig(t_old_config.raw)
+    containers.setItemSelection(sel_items)
+    midi_editor.restoreHorizontalZoomState(ME.editor, hzoom_state)
+    midi_editor.setItemsVisible(ME.editor, visible_items, true)
+    midi_editor.setItemsEditable(ME.editor, editable_items, true)
+
+    reaper.PreventUIRefresh(-1)
   end
-
-  reaper.PreventUIRefresh(1)
-
-  -- Save current state (visibility, editability, itemsel, hzoom, config)
-  local visible_items = midi_editor.getAllVisibleItems(ME.editor)
-  local editable_items = midi_editor.getAllEditableItems(ME.editor)
-  local sel_items = containers.getItemSelection()
-  local hzoom_state = midi_editor.getEditorHorizontalZoomState(ME.editor)
-
-  local t_old_config = midi_editor.getConfigTable()
-
-  local new_config = changeConfigForSelectionExploit(t_old_config) -- second arg was set to `is_edit_state` which was undefined..g
-  midi_editor.setConfig(new_config)
-
-  containers.setItemSelection(item_make_active) -- make the only selected item
-  midi_editor.openFromMain() -- trigger midi editor refresh
-
-  if note_row then
-    reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", note_row)
-  end
-
-  -- Restore saved state
-  midi_editor.setConfig(t_old_config.raw)
-  containers.setItemSelection(sel_items)
-  midi_editor.restoreHorizontalZoomState(ME.editor, hzoom_state)
-  midi_editor.setItemsVisible(ME.editor, visible_items, true)
-  midi_editor.setItemsEditable(ME.editor, editable_items, true)
-
-  reaper.PreventUIRefresh(-1)
 end
 
 return midi_editor
