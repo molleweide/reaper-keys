@@ -31,12 +31,14 @@ return {
 	PickerMarks = pickers.marks,
 
 	PickerTrackFx = pickers.track_fx,
+	PickerTrackFxParams = pickers.xx,
+
+
 	PickerTrackAttr = pickers.track_attributes,
 	PickerTrackRoutes = pickers.track_routing,
 	PickerReaperProjects = pickers.projects,
 	-- PickerDrums = pickers.xx,
 	-- PickerMusic = pickers.xx,
-	-- PickerFX = pickers.xx,
 	PickerAllItems = pickers.all_items,
 	PickerAllItemsVisible = pickers.all_visible_items,
 	PickerSamples = pickers.samples_explorer,

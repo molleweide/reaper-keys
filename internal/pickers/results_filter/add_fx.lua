@@ -1,3 +1,6 @@
+-- local log = require("utils.log")
+-- local format = require("utils.format")
+
 local function findVst(vstTable, sPattern, iMaxResults, iInstance, find_plain)
 	iInstance = iInstance or false
 	find_plain = find_plain or true

@@ -86,9 +86,6 @@ function util.getParentGroupByTrIdx(vtt, child_idx)
   -- local guid = reaper.GetTrackGUID(tr)
   -- reaper_utils.getTrackByGUID(giv_guid)
 
-  -- TODO: assign surrounding context info to trk_objs.
-  -- Eg. assign Z and G to each MCABS.
-
   for i, LVL1_obj in pairs(vtt) do
     last_g = false -- reset
     if i == #vtt then last_z = true end

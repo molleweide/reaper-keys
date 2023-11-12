@@ -407,7 +407,7 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	log.user("midi_step_state:", exists, format.block(midi_step_state))
 
-	local ret, ctxm = midi.getMidiValidContext()
+	local ret, ctxm = require("library.midi_editor").getMidiValidContext()
 	if not ret then
 		return
 	end
@@ -421,7 +421,7 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	local t_note_pitches = {}
 	local t_midi_notes = {}
-	local sixteen_note_len = 0.25
+	local sixteen_note_len = 0.25 / 2
 	local step_len = sixteen_note_len
 	local note_end_gap = 0.005
 	local note_duration = sixteen_note_len - note_end_gap
@@ -470,15 +470,19 @@ function midi.insertMidiNoteChunk(meta, opts)
 	for i in ipairs(t_note_pitches) do
 		local t_new_note = {}
 		t_new_note.pitch = t_note_pitches[i]
+
 		if meta.action_type == "timeline_operator" then
 			t_new_note.time_pos_start = meta.start_pos
-			t_new_note.time_pos_end = meta.start_end
+			t_new_note.time_pos_end = meta.end_pos
+
 		elseif meta.action_type:match("command$") then
 			t_new_note.time_pos_start = cursor_pos
 			t_new_note.time_pos_end = cursor_pos + note_duration
 		end
 		table.insert(t_midi_notes, t_new_note)
 	end
+
+	log.user("###",format.block(t_midi_notes))
 
 	midi.insert_notes({
 		take = ctxm.take,
@@ -492,7 +496,7 @@ end
 
 midi.get_midi_step_state = function()
 	local did_exist, midi_step_state = project_state.get("mode_state", "midi_step")
-	if not exists then
+	if not did_exist then
 		midi_step_state = {
 			silent = false,
 			direction = true,

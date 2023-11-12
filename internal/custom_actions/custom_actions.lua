@@ -324,13 +324,13 @@ end
 -- actions instead
 
 custom_actions.midiStepToggleDirection = function(meta, opts)
-  local midi_step_state = midi.get_midi_step_state()
+  local _, midi_step_state = midi.get_midi_step_state()
   midi_step_state.direction = not midi_step_state.direction
   project_state.overwrite("mode_state", "midi_step", midi_step_state)
 end
 
 custom_actions.midiStepToggleSilent = function(meta, opts)
-  local midi_step_state = midi.get_midi_step_state()
+  local _, midi_step_state = midi.get_midi_step_state()
   midi_step_state.silent = not midi_step_state.silent
   project_state.overwrite("mode_state", "midi_step", midi_step_state)
 end
@@ -377,7 +377,8 @@ custom_actions.midiStepSelectNoteDuration = function(meta, opts)
 end
 
 custom_actions.midi_patterns_insert_at_measure = function(meta, opts)
-  midi_patterns.insertPatternFromString(meta, {
+
+  require("library.midi_patterns").insertPatternFromString(meta, {
     start_at_measure = true
   })
 end

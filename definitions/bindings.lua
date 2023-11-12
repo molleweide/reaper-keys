@@ -34,13 +34,16 @@ return {
 							-- ...
 							["r"] = "PickerRegions",
 							["q"] = "PickerMarks",
+
 							["x"] = "PickerTrackFx",
+							["i"] = "PickerTrackFxParams", -- todo!!
+
 							["I"] = "PickerTrackAttr",
-							["a"] = "PickerTrackRoutes",
+
+							["a"] = "PickerTrackRoutes", -- todos!!
 							["p"] = "PickerReaperProjects",
 							["d"] = "PickerDrums",
 							["m"] = "PickerMusic",
-							["i"] = "PickerFX",
 							["A"] = "PickerAllItems",
 							["v"] = "PickerAllItemsVisible",
 							["s"] = "PickerSamples",

@@ -328,9 +328,15 @@ fx_util.get_track_fx_chain_info = function()
 	local t_track_fx = {}
 	local tr = reaper.GetSelectedTrack(0, 0)
 	local tc = reaper.TrackFX_GetCount(tr)
+
+    local GUID = reaper.GetTrackGUID(tr)
+
 	for i = 0, tc - 1 do
-		local current_name = fx_util.getSetTrackFxNameByFxChainIndex(guid_tr, i, is_rec_fx)
+
+		local current_name = fx_util.getSetTrackFxNameByFxChainIndex(GUID, i, false)
+
 		local ok, plugin_name = reaper.TrackFX_GetFXName(tr, i)
+
 		local fx_obj = {
 			idx = i,
 			name = current_name,

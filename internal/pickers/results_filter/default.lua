@@ -7,6 +7,9 @@ return function(filter)
 		return function(t_results_data, sPattern, iMaxResults)
 			local t_ret = {}
 			local iCount = 0
+
+      log.user(format.block(t_results_data))
+
 			for i, t in ipairs(t_results_data) do
 				if t.name:lower():find(sPattern) then
 					iCount = iCount + 1

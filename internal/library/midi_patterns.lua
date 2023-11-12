@@ -191,6 +191,7 @@ end
 -- Note when I call this function in other actions that also pass pattern strings.
 
 midi_patterns.insertPatternFromString = function(meta, opts)
+	opts = opts or {}
 	local ret, t_midi_context = midi_editor.getMidiValidContext()
 	if not ret then
 		return
@@ -203,14 +204,19 @@ midi_patterns.insertPatternFromString = function(meta, opts)
 	local str_pat_input = opts.pattern or nil
 
 	if not str_pat_input then
-		_, str_pat_input = reaper.GetUserInputs(PATTERN_SPEC.user_input)
+		_, str_pat_input = reaper.GetUserInputs(
+			PATTERN_SPEC.user_input.title,
+			PATTERN_SPEC.user_input.num_inputs,
+			PATTERN_SPEC.user_input.caption_csv,
+			PATTERN_SPEC.user_input.retvals_csv
+		)
 	end
 
 	-- maybe rename it to command state as a more general term so that this pattern
 	-- could be reused in other of my custom action commands.
 	local t_patterns_state = {
 		input_units = s.split(str_pat_input, PATTERN_SPEC.pattern_sep),
-		note_start = opts.from_current_bar and (tl.get_cursor_info()).msr.start or t_midi_context.cursor_pos,
+		note_start = opts.start_at_measure and (tl.get_cursor_info()).msr.start or t_midi_context.cursor_pos,
 	}
 
 	apply_repeats(t_patterns_state)

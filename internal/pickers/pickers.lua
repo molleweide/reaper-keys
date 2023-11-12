@@ -53,10 +53,10 @@ pickers.add_track_fx = function(meta)
 		title = "Fast FX Finder",
 		width = 1000,
 		height = 700,
-		x = 100,
-		y = 100,
+		x = 400,
+		y = 1100,
 		on_select_func = require("pickers.selectors.add_fx"),
-		results = require("library.fx_plugins"),
+		results = require("library.fx_plugins").get_all_plugins_data(),
 		entry_maker = require("pickers.entry_makers.add_fx"),
 		sort_comp = function(a, b)
 			if a.rating > b.rating then
@@ -152,9 +152,14 @@ pickers.browse_reaper_preferences = function()
 end
 
 pickers.track_fx = function()
+
+		local fx_results = fx_util.get_track_fx_chain_info()
+
+  log.user(format.block(fx_results))
+
 	fzf.init({
 		title = "Browse track FX list",
-		results = fx_util.get_track_fx_chain_info(),
+		results = fx_results,
 		sort_comp = "idx",
 		entry_maker = { "idx", "name", "pname" },
 	})
@@ -344,6 +349,7 @@ pickers.chord = function(meta, opts)
 			end
 		end,
 		results = require("definitions.chords"),
+		results_filter = 1,
 		sort_comp = 1,
 		-- RENAME: vstTable...
 		entry_maker = 1,
