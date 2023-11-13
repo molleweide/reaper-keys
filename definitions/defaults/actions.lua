@@ -121,6 +121,7 @@ return {
   DeleteEnvelope = 40333,
   DeleteItem = 40006,
   DeleteMark = { lib.marks.delete, registerAction = true },
+  DeleteAllMarks = lib.marks.deleteAll,
   DeleteNote = { 40002, midiCommand = true },
   DeleteTimeline = 40201,
   devLogAllParamsOfLastTouchedFx = dev.logLastTouchedFxParams,
@@ -866,6 +867,18 @@ return {
       end,
     },
   },
+
+  Midi_EditMidiForRegionsMarksAndSelectTrack = {
+    pickers.marks_and_regions,
+    -- opts = {
+    --   next = function(meta, data)
+    --     -- pickers.all_tracks
+    --     --     >>> next = reuse next from above
+    --     --        >>>> first - move it into library.
+    --   end,
+    -- },
+  },
+
   Midi_EditRegionForZoneAndSelActiveTrack = {
     "TODO: reg/mrk picker -> track picker MSC -> edit selected track in region",
   },

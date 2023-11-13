@@ -171,6 +171,11 @@ return {
 		["c"] = "",
 		["v"] = "",
 		["b"] = "",
+
+    -- NOTE: use
+    -- A. small leters for ascending intervals
+    -- B. shifted letters for descending intervals.
+
 		-- RIGHT HAND
 		["n"] = "InsertMidiStep_P1",
 		["m"] = "InsertMidiStep_m2",
