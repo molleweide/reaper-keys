@@ -65,7 +65,7 @@ return {
     ["."] = "RepeatLastCommand",
     ["@"] = "PlayMacro",
     ["q"] = "RecordMacro",
-    ["m"] = "Mark",
+    ["m"] = "Mark", -- m<char> creates mark at editcursor (region if visual mode)
     ["~"] = "MarkedRegion",
     ["<C-'>"] = "DeleteMark",
     ["<S-right>"] = "NextRegion",

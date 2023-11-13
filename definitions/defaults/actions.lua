@@ -840,6 +840,9 @@ return {
         local sx_utils = require("SYNTAX.lib.util")
         local g_obj, g_tr, _ = sx_utils.getParentGroupByTrIdx(sx.getVerifiedTree(), data.selection.trackIndex)
 
+        -- TODO: if track is midi split child -> then enter parent track
+        -- and set midi channel for insertion
+
         local target_tr, items_found, note_row
         if sx_utils.trackObjHasOption(g_obj, "m") then
           target_tr = g_tr
