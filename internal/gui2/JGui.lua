@@ -56,6 +56,8 @@ jGui = {
 	imageId = 0,
 
 	lastChar = false, -- this is where reapers gfx.getChar() is stored
+
+	next_is_picker = false,
 }
 
 function jGui:new(o)
@@ -98,10 +100,9 @@ function jGui:processKeyboard()
 	-- this function handles the keyboard presses
 	self.lastChar = gfx.getchar()
 	if self.lastChar > 0 then
-
-    --
-    -- TODO: reuse my case switch logic here?
-    --
+		--
+		-- TODO: reuse my case switch logic here?
+		--
 
 		-- Process special keys
 		-- TODO process ESC here too!

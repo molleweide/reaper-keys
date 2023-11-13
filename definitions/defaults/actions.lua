@@ -830,53 +830,37 @@ return {
     opts = {
       title = "jump to track midi",
       filter = "MCS", -- filter track_obj.class = [MCS]
-      -- TODO: move this to `custom_actions/editMidiAtPositionForTrack(trk_obj)`
       next = function(meta, data)
-        -- local log = require("utils.log")
-        -- local format = require("utils.format")
-        local items = require("library.items")
-        local me = require("library.midi_editor")
-        local cursor_info = require("library.timeline").get_cursor_info()
-        local sx = require("SYNTAX.syntax.syntax")
-        local sx_utils = require("SYNTAX.lib.util")
-        local g_obj, g_tr, _ = sx_utils.getParentGroupByTrIdx(sx.getVerifiedTree(), data.selection.trackIndex)
-
-        -- TODO: if track is midi split child -> then enter parent track
-        -- and set midi channel for insertion
-
-        local target_tr, items_found, note_row
-        if sx_utils.trackObjHasOption(g_obj, "m") then
-          target_tr = g_tr
-          items_found = items.get_track_items_in_range_time(g_tr, cursor_info.msr.start, cursor_info.msr._end)
-          note_row = sx_utils.get_drum_lane_start_idx_from_child_track(g_obj, data.selection)
-        else
-          target_tr = data.selection.tr
-          items_found = items.get_track_items_in_range_time(
-            data.selection.tr,
-            cursor_info.msr.start,
-            cursor_info.msr._end
-          )
-        end
-        items.unselect_items()
-        if items_found then
-          me.setActiveItem(nil, items_found[1].ref, note_row)
-        else
-          local new_item = items.create_new_item(true, target_tr, cursor_info.msr.start, cursor_info.msr._end)
-          me.setActiveItem(nil, new_item, note_row)
-        end
+        require("library.midi_editor").createEditMidiItemAtPositionForTrack(_, data.selection)
       end,
     },
   },
 
   Midi_EditMidiForRegionsMarksAndSelectTrack = {
     pickers.marks_and_regions,
-    -- opts = {
-    --   next = function(meta, data)
-    --     -- pickers.all_tracks
-    --     --     >>> next = reuse next from above
-    --     --        >>>> first - move it into library.
-    --   end,
-    -- },
+    opts = {
+      filter = "MCS",
+      next_is_picker = true,
+      next = function(meta, data)
+        local log = require("utils.log")
+        local format = require("utils.format")
+        -- log.user("selection data", format.block(data))
+
+        pickers.all_tracks(meta, {
+          title = "Choose track for editing @ region = " .. data.selection.name,
+          filter = "MCS",
+          next_is_picker = false,
+          next = function(meta2, data2)
+            -- TODO: set active item for edit
+            log.user("selection data2", format.block(data2))
+          end,
+        })
+
+        -- pickers.all_tracks
+        --     >>> next = reuse next from above
+        --        >>>> first - move it into library.
+      end,
+    },
   },
 
   Midi_EditRegionForZoneAndSelActiveTrack = {

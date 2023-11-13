@@ -96,9 +96,10 @@ end
 pickers.all_tracks = function(meta, opts)
   local t_track_objects = syntax.get_list_of_track_objects()
 
+  log.user("<PICKER: ALL TRACKS>")
+
   if opts.filter then
-    -- TODO: 1. move track objects filter to syntax utils `track_objs_filter_by_class(t_trk_objs, opts.filter)`
-    -- 2. move put the specific filter back into ChangeActiveSelection
+    -- TODO: should the filter be passed as a param to syntax.get_list_of_track_objects(filter)
     t_track_objects = tbl.filter(t_track_objects, function(o)
       return str.strHasOneOfChars(o.class, opts.filter)
     end)
@@ -110,9 +111,7 @@ pickers.all_tracks = function(meta, opts)
     title = opts.title or "All Tracks (Default)",
     results = t_track_objects,
 
-    -- TODO: could passing a calback to next be moved into the default
-    -- selector function?
-
+    -- move into module
     on_select_func = function(self, i)
       local selection = self.t_search_results[i]
       if opts.next then
@@ -339,6 +338,7 @@ pickers.marks_and_regions = function(meta, opts)
       end
       return true
     end,
+    next_is_picker = opts.next_is_picker or false,
 
     results = marks_final,
     results_filter = "name",

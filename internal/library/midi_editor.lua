@@ -555,4 +555,32 @@ midi_editor.setActiveItem = function(hwnd, item_make_active, note_row)
   end
 end
 
+midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj)
+  local sx = require("SYNTAX.syntax.syntax")
+  local sx_utils = require("SYNTAX.lib.util")
+  local cursor_info = tl.get_cursor_info()
+  local g_obj, g_tr, _ = sx_utils.getParentGroupByTrIdx(sx.getVerifiedTree(), track_obj.trackIndex)
+
+  -- TODO: if track is midi split child -> then enter parent track
+  -- and set midi channel for insertion
+
+  local target_tr, items_found, note_row
+  if sx_utils.trackObjHasOption(g_obj, "m") then
+    target_tr = g_tr
+    items_found = containers.get_track_items_in_range_time(g_tr, cursor_info.msr.start, cursor_info.msr._end)
+    note_row = sx_utils.get_drum_lane_start_idx_from_child_track(g_obj, track_obj)
+  else
+    target_tr = track_obj.tr
+    items_found =
+    containers.get_track_items_in_range_time(track_obj.tr, cursor_info.msr.start, cursor_info.msr._end)
+  end
+  containers.unselect_items()
+  if items_found then
+    midi_editor.setActiveItem(nil, items_found[1].ref, note_row)
+  else
+    local new_item = containers.create_new_item(true, target_tr, cursor_info.msr.start, cursor_info.msr._end)
+    midi_editor.setActiveItem(nil, new_item, note_row)
+  end
+end
+
 return midi_editor
