@@ -111,10 +111,9 @@ midi_editor.getMidiValidContext = function(hwnd)
     retval = false
   end
 
-  local retval, notecnt, ccevtcnt, textsysevtcnt
+  local mretval, notecnt, ccevtcnt, textsysevtcnt
   if take then
-    log.user("TAKE!!!")
-    retval, notecnt, ccevtcnt, textsysevtcnt = reaper.MIDI_CountEvts(take)
+    mretval, notecnt, ccevtcnt, textsysevtcnt = reaper.MIDI_CountEvts(take)
   end
 
   return retval,
@@ -122,7 +121,7 @@ midi_editor.getMidiValidContext = function(hwnd)
         editor = ME,
         take = take,
         item = editor_item,
-        events = take and { retval, notecnt, ccevtcnt, textsysevtcnt } or nil,
+        events = take and { mretval, notecnt, ccevtcnt, textsysevtcnt } or nil,
         note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row"),
         cursor_pos = reaper.GetCursorPosition(),
       }
@@ -562,7 +561,10 @@ midi_editor.setActiveItem = function(hwnd, item_make_active, note_row)
   end
 end
 
-midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj)
+-- TODO: create new item for selected mark/region
+--
+--
+midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new_item_start, new_item_end)
   local sx = require("SYNTAX.syntax.syntax")
   local sx_utils = require("SYNTAX.lib.util")
   local cursor_info = tl.get_cursor_info()
@@ -572,22 +574,39 @@ midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj)
   -- and set midi channel for insertion
 
   local target_tr, items_found, note_row
-  if sx_utils.trackObjHasOption(g_obj, "m") then
+
+  local check_start_pos = new_item_start or cursor_info.msr.start
+  local check_end_pos =  new_item_end or cursor_info.msr._end
+
+  if sx_utils.trackObjHasOption(g_obj, "m") then -- drum lanes
     target_tr = g_tr
-    items_found = containers.get_track_items_in_range_time(g_tr, cursor_info.msr.start, cursor_info.msr._end)
+    items_found = containers.get_track_items_in_range_time(g_tr, check_start_pos, check_end_pos)
     note_row = sx_utils.get_drum_lane_start_idx_from_child_track(g_obj, track_obj)
-  else
+
+    -- TODO: midi channelsplitters -> set channel splitter master and set active midi channel in ME
+    --
+    -- elseif track_obj.level == 4 then -- channelsplit child
+    --   target_tr = "track obj channel split parrent"
+    --   items_found = containers.get_track_items_in_range_time(
+    --     "track obj channel split parrent",
+    --     check_start_pos,
+    --     check_end_pos
+    --   )
+  else -- regular
     target_tr = track_obj.tr
     items_found =
-    containers.get_track_items_in_range_time(track_obj.tr, cursor_info.msr.start, cursor_info.msr._end)
+    containers.get_track_items_in_range_time(track_obj.tr, check_start_pos, check_end_pos)
   end
+
   containers.unselect_items()
+
   if items_found then
     midi_editor.setActiveItem(nil, items_found[1].ref, note_row)
   else
-    local new_item = containers.create_new_item(true, target_tr, cursor_info.msr.start, cursor_info.msr._end)
+    local new_item = containers.create_new_item(true, target_tr, check_start_pos, check_end_pos)
     midi_editor.setActiveItem(nil, new_item, note_row)
   end
+
 end
 
 return midi_editor
