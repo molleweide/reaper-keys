@@ -153,15 +153,38 @@ local function make_midi_event_from_hit(t_midi_notes, t_midi_context, t_patterns
 end
 
 local function get_unit_multipliers(unit)
-	local capture_mul = unit:match("(N),M$")
-	local capture_div = unit:match("N,(M)$")
-	return capture_mul or PATTERN_SPEC.UNIT_MULTIPLIER, capture_div or PATTERN_SPEC.UNIT_DIVIDER
+	local n, m = unit:match("^.-(%d+),(%d+)$")
+	-- log.user("BOTH:", n, m)
+	if not (n and m) then
+		local _, _, n_cap1, n_cap2 = unit:find("([^,]-)(%d+)$")
+		local _, _, m_cap1 = unit:find(".-,(%d+)$")
+		-- log.user("N:", n_cap2)
+		-- log.user("M:", m_cap1)
+		n = n_cap2
+		m = m_cap1
+	end
+
+	local mul = n and tonumber(n) / 2
+	local div = m and tonumber(m)
+	-- log.user("BOTH // mul =", mul, "div =", div, ">>", (mul and div) and mul / div)
+	return mul or PATTERN_SPEC.UNIT_MULTIPLIER, div or PATTERN_SPEC.UNIT_DIVIDER
 end
 
 local function get_prepare_unit_params(unit)
 	local multiplier, divider = get_unit_multipliers(unit)
+	local note_step = multiplier / divider
+	log.user(string.format(
+		[[
+	mul = %s
+	div = %s
+	note_step = %s
+	]],
+		multiplier,
+		divider,
+		note_step
+	))
 	return {
-		note_step = multiplier / divider,
+		note_step = note_step,
 		multiplier = multiplier,
 		divider = divider,
 		note_hit_idx = 1, -- unused...
