@@ -244,6 +244,7 @@ midi_patterns.insertPatternFromString = function(meta, opts)
 	end
 
 	midi.remove_notes(t_midi_context.take, t_midi_context.events, t_midi_context.note_row)
+
 	midi.insert_notes({
 		take = t_midi_context.take,
 		notes = t_midi_notes,

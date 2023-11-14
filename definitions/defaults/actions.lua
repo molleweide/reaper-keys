@@ -815,7 +815,7 @@ return {
     midi_patterns.insertPatternFromString,
     opts = {
       pattern = "**** **** **** ****",
-      from_current_bar = true,
+      start_at_measure = true,
     },
   },
 

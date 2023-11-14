@@ -110,12 +110,19 @@ midi_editor.getMidiValidContext = function(hwnd)
   if not ME or (not take or not reaper.TakeIsMIDI(take)) or not reaper.ValidatePtr(take, "MediaItem_Take*") then
     retval = false
   end
+
+  local retval, notecnt, ccevtcnt, textsysevtcnt
+  if take then
+    log.user("TAKE!!!")
+    retval, notecnt, ccevtcnt, textsysevtcnt = reaper.MIDI_CountEvts(take)
+  end
+
   return retval,
       {
         editor = ME,
         take = take,
         item = editor_item,
-        events = take and { reaper.MIDI_CountEvts(take) or nil },
+        events = take and { retval, notecnt, ccevtcnt, textsysevtcnt } or nil,
         note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row"),
         cursor_pos = reaper.GetCursorPosition(),
       }

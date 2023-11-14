@@ -537,7 +537,13 @@ end
 -- range opt
 -- note filter opt, eg notes outside of scale or predicate.
 
-midi.remove_notes = function(take, t_midi_events, active_note_row)
+midi.remove_notes = function(take, t_midi_events, active_note_row, filter_indices)
+  if not t_midi_events then
+    return
+  end
+
+  -- log.user("tme",format.block(t_midi_events))
+
 	for i = 1, t_midi_events[2] do
 		local note_idx = i - 1
 		local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
