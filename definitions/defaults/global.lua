@@ -233,7 +233,10 @@ return {
           },
         },
         ["S"] = { "+segments", {
-          ["d"] = "RepeatInsertTimeSelection",
+          ["T"] = "RepeatInsertTimeSelection",
+          ["R"] = "Items_DuplicateCountTimes",
+          ["r"] = "Items_DuplicateCountTimesAndGlue",
+          ["l"] = "Items_LoopCountTimes",
         } },
         ["s"] = {
           "+selected items",

@@ -870,4 +870,25 @@ end
 -- 	end
 -- end
 
+-- TODO: repeat/loop items
+--  1. repeat items COUNT times
+--  2. repeat items COUNT times and glue
+--  3. loop item count times
+--  4. add N count item aliases after target item
+--  #
+--  default should be:
+--  2x if no count is provided, ie. repeat/loop once.
+
+lib_items.repeat_items = function()
+
+  -- TODO: options
+  --    - active in ME
+  --    - selected items in arrange
+  --    - glue items together
+  --    - use [duplicating|looping|aliasing]
+
+end
+
+
+
 return lib_items
