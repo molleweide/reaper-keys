@@ -1,5 +1,10 @@
 local log = require("utils.log")
 
+-- TODO: move all these funcs to their appropriate lib/<file>
+--
+-- There are too many functions like these, so I have to move them to
+-- under /library.
+
 local utils = {}
 
 function mergeItemPositionsLists(item_positions_list)
