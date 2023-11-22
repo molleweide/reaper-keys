@@ -108,6 +108,8 @@ local function rsfxUdateFxName(opts_g, opts_rs)
   end
 end
 
+-- 1. first we handle standard FX parameters
+-- 2. update named config paramteres, if any.
 local function rsfxUdateFxParams(i1, opts_g, opts_rs)
   -- first handle regular fx params
 
@@ -124,7 +126,8 @@ local function rsfxUdateFxParams(i1, opts_g, opts_rs)
     )
   end
 
-  -- named config params
+  -- NAMED CONFIG PARAMS
+  -- eg. this is where samples are being assigned to RS5Ks
   if type(opts_rs.t_rsfx.named_config_params) == "function" then
     opts_rs.t_rsfx.named_config_params(opts_g, opts_rs.t_rsfx)
   end
@@ -180,6 +183,7 @@ function fx.applyConfFxToChildObj(child_obj, proll_start_idx, opt_type) -- chang
     return
   end
 
+  -- NOTE: I put together a table of all
   local opts_global = {
     tr = tr,
     tr_range = RS_TrObj.trackHasOption(child_obj, "nr") and child_obj.options.nr or 1,

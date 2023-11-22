@@ -1,8 +1,9 @@
 local string_util = {}
 
--- FIX: what the fuck is this func doing?
+-- return string split by pattern
+-- returns full string if not pattern found
 function string_util.getStringSplitPattern(pString, pPattern)
-	local Table = {} -- NOTE: use {n = 0} in Lua-5.0
+	local Table = {}
 	local fpat = "(.-)" .. pPattern
 	local last_end = 1
 	local s, e, cap = pString:find(fpat, 1)

@@ -42,4 +42,8 @@ constants.t_chords = {
 	},
 }
 
+constants.patterns = {
+ extension_wav = "%.[wW][aA][vV]$"
+}
+
 return constants
