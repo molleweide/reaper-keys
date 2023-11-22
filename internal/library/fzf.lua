@@ -250,6 +250,8 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
   for i = 1, n_to_remove do
     table.remove(tControls, #tControls)
   end
+
+  -- log.user("# tControls after creation:", #tControls)
 end
 
 local function gui_create_main_text_box(gui, on_enter)
@@ -266,14 +268,25 @@ local function gui_create_main_text_box(gui, on_enter)
   })
 
   function text_input:onEnter()
-    -- NOTE: this is where an FX is selected and applied to a track
+
+    -- test: trying to remove  prev pickers controls here, wo/sucess
+    if gui.next_is_picker then
+        log.user("# tResultButtons", #tResultButtons)
+      for i = 1, #tResultButtons do
+        table.remove(tResultButtons, #tResultButtons)
+      end
+      gui:controlDeleteAll()
+    end
 
     if gui.on_select_func(gui, 1) then
       -- this allows the picker to keep running for the next picker.
       if not gui.next_is_picker then
         gui:exit()
+      else
+        -- log.user("controlDeleteAll")
       end
     end
+
     textBox.value = ""
   end
 
@@ -334,7 +347,7 @@ local function gui_default_update(self)
 
       self.t_search_results = self.results_filter(self.t_results_data, textBox.value, self.max_results, false)
 
-      -- log.user("#", #self.t_search_results)
+      log.user("#search_results", #self.t_search_results)
 
       lastSearch = textBox.value
     end
@@ -465,11 +478,11 @@ local function build_picker(opts, on_enter)
 
   GUI = jGui:new(opts)
 
-  log.user("GUI next picker:", GUI.next_is_picker) -- opts.next_is_picker,
-
   -- needs to be attached to GUI somehow, so that I can access them inside
   -- of eg. on_select_func
   GUI.t_results_data = opts.results
+
+  log.user("Pickers [" .. opts.title .. "]", #GUI.t_results_data) -- opts.next_is_picker,
 
   -- todo: if sort_comp = false, then don't sort, ie. don't use default sort comparator
   table.sort(GUI.t_results_data, GUI.sort_comp)
@@ -497,21 +510,12 @@ end
 --         created with gfx??
 
 local function loop()
-  -- NOTE: on_select_func returns true which calls GUI:exit() which flips the
-  -- GUI.doExit flag, which will make the gui close here since loop allways
-  -- returns the `not doExit` flag.
-  -- >>>
-  -- If I check for GUI.stay_alive_for_new_picker here, then i should be able
-  -- to keep the previous picker alive.
-
-  -- log.user("GUI next picker:", GUI.next_is_picker)
-
   if GUI:loop() then
     reaper.defer(loop)
   else
-    -- if not GUI.next_is_picker then
     gfx.quit()
-    -- end
+    -- log.user("title after gfx quit():", GUI.title)
+    -- GUI.on_select_func(GUI, 1)
   end
 end
 

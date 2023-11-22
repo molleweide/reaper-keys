@@ -400,6 +400,8 @@ local easy_read = [[
 -- insertMidiNoteChunk func - then i can just chek if meta.mode == midi_step,
 -- and then also only retrieve the state if the correct mode
 --
+-- rename: buildNoteChunkForInsertion()
+--
 function midi.insertMidiNoteChunk(meta, opts)
 	opts = opts or {}
 
@@ -493,6 +495,8 @@ function midi.insertMidiNoteChunk(meta, opts)
 	midi_step_state.octave_next = nil
 	project_state.overwrite("mode_state", "midi_step", midi_step_state)
 end
+
+-- todo: move to state.
 
 midi.get_midi_step_state = function()
 	local did_exist, midi_step_state = project_state.get("mode_state", "midi_step")

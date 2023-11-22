@@ -41,13 +41,15 @@ return function(filter)
 						t_ret[#t_ret + 1] = t
 						if iMaxResults then
 							if #t_ret >= iMaxResults then -- check if we already have enough results
-								log.user(format.block(t_ret))
+								log.user(">>>>>>>", format.block(t_ret))
 								return t_ret
 							end
 						end
 					end
 				end
 			end
+			log.user(">>>>>>>", format.block(t_ret))
+
 			return t_ret
 		end
 

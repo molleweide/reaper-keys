@@ -887,6 +887,9 @@ lib_items.repeat_items = function()
   --    - glue items together
   --    - use [duplicating|looping|aliasing]
 
+  -- NOTE: I will need to look into `lib/segments` to see how things are
+  -- duplicated easilly
+
 end
 
 

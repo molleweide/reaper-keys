@@ -137,6 +137,24 @@ return {
 		-- TODO: today
 		-- ~ use [single|chord|pattern]
 		-- ~ restrict pitches to closed set [0, 127]
+		-- ~ use eg. shift keys for ascending/descending notes, so that I don't have
+		--     to hit a char to toggle direction everytime. this might be slow over time.
+		-- ~ keys to incr/decr step size.
+		-- ~ fuzzy finder -> select current step_size.
+		-- ~ put the most regularly used step_sizes/note lengths as single key switches.
+		-- ~ Maybe -> use left hand for notes, and right hand for changing step_size,
+		--     and shift modifier keys to switch direction.
+		-- ~ use ALT key for: ???
+		--     move previous inserted note(s) up down chromatically, so that I can error correct.
+		--       >>> Always make the last inserted note "selected" so that it becomes easy
+		--           to just shift selection up/down.
+		-- ~ ALT-(interval key/pitch key) >> throw up chord picker for each note.
+		--        Eg. `alt-(minor3rd)` -> opens a picker and inserts chord at minor
+		--        third up/down from prev position
+		-- ~ use modifier keys + key to select specific length for "pause and move"
+		-- ~ octave-operator: key preceding intreval/pitch hits that makes next insertion
+		--        insert at ( interval + octave )
+		--
 
 		-- LEFT HAND
 		["q"] = "", -- jump forward by predefined (*) length

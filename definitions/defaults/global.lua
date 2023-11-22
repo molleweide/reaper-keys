@@ -67,7 +67,7 @@ return {
     ["q"] = "RecordMacro",
     ["m"] = "Mark", -- m<char> creates mark at editcursor (region if visual mode)
     ["~"] = "MarkedRegion",
-    ["<C-\">"] = "DeleteMark",
+    ['<C-">'] = "DeleteMark",
     ["<C-'>"] = "DeleteAllMarks",
     ["<S-right>"] = "NextRegion",
     ["<S-left>"] = "PrevRegion",
@@ -232,12 +232,18 @@ return {
             ["w"] = "SetAutomationModeWrite",
           },
         },
-        ["S"] = { "+segments", {
-          ["T"] = "RepeatInsertTimeSelection",
-          ["R"] = "Items_DuplicateCountTimes",
-          ["r"] = "Items_DuplicateCountTimesAndGlue",
-          ["l"] = "Items_LoopCountTimes",
-        } },
+        ["S"] = {
+          "+segments",
+          {
+            ["T"] = "RepeatInsertTimeSelection",
+
+            -- TODO: these three
+            ["R"] = "Items_DuplicateCountTimes",
+            ["r"] = "Items_DuplicateCountTimesAndGlue",
+            ["l"] = "Items_LoopCountTimes",
+            ---------------------------------
+          },
+        },
         ["s"] = {
           "+selected items",
           {

@@ -35,6 +35,11 @@ local pickers = require("pickers.pickers")
 -- WARN: The `opts` table is passed to all sub-functions of an action, ie. it
 -- acts as an action global opts table.
 
+-- TODO: should I move all funcs that are configured to opts into custom_actions/
+-- files?? Hmmm, but that is annoying because it is nicer to keep things here.
+-- But on the other hand, I could just keep things here until they have settled
+-- and then I can move them into custom actions...
+
 return {
 	ActivateNextMidiItem = { 40833, midiCommand = true },
 	ActivatePrevMidiItem = { 40834, midiCommand = true },
@@ -811,7 +816,7 @@ return {
 	MidiPattern_InsertFromString_at_cursor = midi_patterns.insertPatternFromString,
 	MidiPattern_InsertFromString_at_current_measure = custom.midi_patterns_insert_at_measure,
 
-  -- FIX: action deletes all midi notes including outside of target measure.
+	-- FIX: action deletes all midi notes including outside of target measure.
 	MidiPattern_InsertRandom16thNotes_fill_bar = {
 		midi_patterns.insertPatternFromString,
 		opts = {
@@ -896,6 +901,22 @@ return {
 		"TODO: reg/mrk picker -> track picker MSC -> edit selected track in region",
 	},
 	Midi_JumpBackToPrevActiveMidiItem = { "TODO: keep history of last N jumps" },
+
+	Items_DuplicateCountTimes = {
+		require("library.items").repeat_items,
+		opts = {},
+	},
+	Items_DuplicateCountTimesAndGlue = {
+		require("library.items").repeat_items,
+		opts = {},
+	},
+	Items_LoopCountTimes = {
+		require("library.items").repeat_items,
+		opts = {},
+	},
+
+
+	-- TODO: refactor this into configurable funcs...
 
 	n71 = lib.midi.sendMidiNote_61,
 	n70 = lib.midi.sendMidiNote_70,

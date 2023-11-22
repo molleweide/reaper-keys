@@ -578,6 +578,10 @@ midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new
   local check_start_pos = new_item_start or cursor_info.msr.start
   local check_end_pos =  new_item_end or cursor_info.msr._end
 
+  -- FIX: if there is an item that spans wider than both start/end, then
+  -- this item also needs to be found, ie. DONT create a new item if there
+  -- already exists one if it is very large
+
   if sx_utils.trackObjHasOption(g_obj, "m") then -- drum lanes
     target_tr = g_tr
     items_found = containers.get_track_items_in_range_time(g_tr, check_start_pos, check_end_pos)
