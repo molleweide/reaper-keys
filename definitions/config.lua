@@ -32,7 +32,6 @@ return {
 		normal = MACOS_PATH_KARABINER_CLI .. " --select-profile 'Molleweide'",
 		vkb = MACOS_PATH_KARABINER_CLI .. " --select-profile 'Moll_NDK'",
 	},
-
 	path_presets = {
 		massive = "~/reaper/presets/massive",
 	},

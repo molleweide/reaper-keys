@@ -446,6 +446,8 @@ return {
                 ["8"] = "ToggleShowFx8",
               },
             },
+            ["w"] = "RandomizeSampleSelectionForSelectTracks",
+            ["W"] = "PickerSelectSampleForSamplerOnSelectOrFocusedTrack"
           },
         },
         ["T"] = {
