@@ -568,7 +568,9 @@ pickers.samples_explorer = function()
   -- 3. on select -> preview sample AND close
 end
 
-pickers.sample_selector = function() end
+pickers.sample_selector_from_track_name = function() end
+
+
 pickers.file_browser = function() end
 
 return pickers

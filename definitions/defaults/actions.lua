@@ -918,7 +918,57 @@ return {
   -- TODO: refactor this into configurable funcs...
 
   RandomizeSampleSelectionForSelectDrumLanes = require("library.fx_plugins").randomize_rs5k_sample,
-  PickerSelectSampleForSamplerOnSelectOrFocusedTrack = {},
+  PickerSelectSampleForSamplerOnSelectOrFocusedTrack = {
+
+    function()
+      local lib_tr = require("library.tracks")
+      local utils_io = require("utils.fs")
+      local str_util = require("utils.string")
+
+      local target_trk_objects, track_objects_list = lib_tr.get_focused_track_objects(trk_obj)
+      local focus_track = target_trk_objects[1]
+
+      -- if sx_utils.trackObjHasOption(g_obj, "m") and #t_fx_by_name > 0 then
+      --   -- if i want to only allow on drum lanes?
+      --   -- NOTE: but this should be a more general funcion so that it becomes
+      --   -- easy and flexible to update any track with a sampler.
+      -- end
+
+      -- check track RS5K
+      local rs5k_instance_idx = lib_fx.getFxIndexByName(tobj.guid_tr, "ReaSamplomatic")
+
+      if rs5k_instance_idx then
+        local t_track_name_parts = str_util.getStringSplitPattern(tobj.name, "%.")
+        local t_matched_wav_files = utils_io.findWavFilesWithNameX(t_track_name_parts[1])
+
+        -- TODO: build picker.
+        -- ~ pass wav files to picker
+        fzf.init({
+          title = string.format("Change rs5k sample for track (%s)", focus_track.name),
+          results = t_matched_wav_files,
+
+          -- move into module
+          on_select_func = function(self, i)
+            local selection = self.t_search_results[i]
+
+            rs5k.updateSample(focus_track, rs5k_instance_idx, selection)
+
+            -- if opts.next then
+            --   opts.next(meta, {
+            --     selection = selection,
+            --   })
+            -- end
+            return true
+          end,
+          sort_comp = "name",
+          entry_maker = "name",
+        })
+
+        -- ~ on select -> rs5k.setSample()
+        -- (~). on up/down or change -> previow results[1] or scroll_selection.
+      end
+    end,
+  },
 
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,

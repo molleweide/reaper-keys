@@ -1,20 +1,25 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
+local sx = require("SYNTAX.syntax.syntax")
+local midi_editor = require("library.midi_editor")
+
+local cust_util = require("custom_actions.utils")
+
 local tracks = {}
 
 --- Return table of track GUIDs matching string
 ---@return table
 tracks.getTrackGuidsByName = function()
-	-- TODO: this should already be implemented in the routing UI
-	-- refactor and move that function to here.
+  -- TODO: this should already be implemented in the routing UI
+  -- refactor and move that function to here.
 
-	local t = {}
+  local t = {}
 
-	-- get all tracks
-	-- for each find pattern
-	-- return set
-	return t
+  -- get all tracks
+  -- for each find pattern
+  -- return set
+  return t
 end
 
 -- function JProject.prototype:getTracksByName(sPattern, iInstance, find_init, find_plain)
@@ -68,32 +73,54 @@ end
 -- end
 
 tracks.get_dimensions_for = function(tr)
-	-- I_TCPH : int * : current TCP window height in pixels not including envelopes (read-only)
-	local i_tcph = reaper.GetMediaTrackInfo_Value(track, "I_TCPH")
+  -- I_TCPH : int * : current TCP window height in pixels not including envelopes (read-only)
+  local i_tcph = reaper.GetMediaTrackInfo_Value(track, "I_TCPH")
 
-	-- I_TCPY : int * : current TCP window Y-position in pixels relative to top of arrange view (read-only)
-	local i_tcpy = reaper.GetMediaTrackInfo_Value(track, "I_TCPY")
+  -- I_TCPY : int * : current TCP window Y-position in pixels relative to top of arrange view (read-only)
+  local i_tcpy = reaper.GetMediaTrackInfo_Value(track, "I_TCPY")
 
-	-- I_WNDH : int * : current TCP window height in pixels including envelopes (read-only)
-	local i_wndh = reaper.GetMediaTrackInfo_Value(track, "I_WNDH")
+  -- I_WNDH : int * : current TCP window height in pixels including envelopes (read-only)
+  local i_wndh = reaper.GetMediaTrackInfo_Value(track, "I_WNDH")
 
-	-- I_MCPX : int * : current MCP X-position in pixels relative to mixer container (read-only)
-	local i_mcpx = reaper.GetMediaTrackInfo_Value(track, "I_MCPX")
+  -- I_MCPX : int * : current MCP X-position in pixels relative to mixer container (read-only)
+  local i_mcpx = reaper.GetMediaTrackInfo_Value(track, "I_MCPX")
 
-	-- I_MCPY : int * : current MCP Y-position in pixels relative to mixer container (read-only)
-	local i_mcpy = reaper.GetMediaTrackInfo_Value(track, "I_MCPY")
+  -- I_MCPY : int * : current MCP Y-position in pixels relative to mixer container (read-only)
+  local i_mcpy = reaper.GetMediaTrackInfo_Value(track, "I_MCPY")
 
-	-- I_MCPW : int * : current MCP width in pixels (read-only)
-	local i_mcpw = reaper.GetMediaTrackInfo_Value(track, "I_MCPW")
+  -- I_MCPW : int * : current MCP width in pixels (read-only)
+  local i_mcpw = reaper.GetMediaTrackInfo_Value(track, "I_MCPW")
 
-	-- I_MCPH : int * : current MCP height in pixels (read-only)
-	local i_mcph = reaper.GetMediaTrackInfo_Value(track, "I_MCPH")
+  -- I_MCPH : int * : current MCP height in pixels (read-only)
+  local i_mcph = reaper.GetMediaTrackInfo_Value(track, "I_MCPH")
 
-	return {
-		tcp_win_height = i_tcph,
-		tcp_win_y = i_tcpy,
-		tcp_win_yh = i_tcpy + i_tcph,
-	}
+  return {
+    tcp_win_height = i_tcph,
+    tcp_win_y = i_tcpy,
+    tcp_win_yh = i_tcpy + i_tcph,
+  }
+end
+
+tracks.get_focused_track_objects = function(tobj)
+  local track_objects_list = sx.get_list_of_track_objects()
+  local focused_track_objects = {}
+  if tobj then
+    table.insert(focused_track_objects, tobj)
+  else
+    local ME_ACTIVE, ME = midi_editor.getMidiValidContext(hwnd)
+    if ME_ACTIVE then
+
+      -- find track corresponding to actively editing midi item.
+      -- >> randomize
+    else
+      local t_sel_trk_indices = cust_util.getSelectedTrackIndices()
+      for _, tidx in ipairs(t_sel_trk_indices) do
+        -- these should map 1:1 with track_objects_list
+        table.insert(focused_track_objects, track_objects_list[tidx])
+      end
+    end
+  end
+  return focused_track_objects, track_objects_list
 end
 
 return tracks

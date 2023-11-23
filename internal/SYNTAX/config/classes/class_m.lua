@@ -77,9 +77,10 @@ return {
           }, -- note range end
         },
         named_config_params = function(opts_g, t_rsfx)
-          local str_util = require("utils.string")
           local rk_config = require("definitions.config")
           local constants = require("constants.constants")
+          local plugins = require("library.fx_plugins")
+          local rs5k = require("library.plugins.rs5k")
 
           -- log.user(
           -- 	opts_g.trk_obj.trackIndex
@@ -93,42 +94,18 @@ return {
           -- 	-- .. file
           -- )
 
-          local _, buf = reaper.TrackFX_GetNamedConfigParm(opts_g.tr, opts_g.new_fx_chain_idx, "FILE0")
+          -- reaper.TrackFX_GetNamedConfigParm(opts_g.tr, opts_g.new_fx_chain_idx, "FILE0")
+          local _, buf = rs5k.hasSampleLoaded(opts_g.trk_obj, opts_g.new_fx_chain_idx)
+
           -- log.user(opts_g.trk_obj.name .. ":", retval, buf, type(buf), buf == "", buf:find(wav_ext_pattern))
 
-          if (
-              not rk_config.syntax.samplers.load_random_sample_if_empty
-                  and buf:find(constants.patterns) ~= nil
-              ) or not rk_config.syntax.samplers.always_reload_random_sample
+          if (rk_config.syntax.samplers.load_random_sample_if_empty and buf:find(constants.patterns) == nil)
+              or rk_config.syntax.samplers.always_reload_random_sample
           then
+            plugins.randomize_rs5k_sample(opts_g.trk_obj, opts_g.new_fx_chain_idx)
+          else
             return
           end
-
-          -- log.user(opts_g.trk_obj.name .. " does not have samples. Fixing..")
-
-          local utils_io = require("utils.fs")
-          local numbers = require("utils.numbers")
-          local t_track_name_parts = str_util.getStringSplitPattern(opts_g.trk_obj, "%.")
-          local t_matched_wav_files = utils_io.findWavFilesWithNameX(t_track_name_parts[1])
-
-          if #t_matched_wav_files > 0 then
-            reaper.TrackFX_SetNamedConfigParm(
-              opts_g.tr,
-              opts_g.new_fx_chain_idx,
-              "FILE0",
-              t_matched_wav_files[numbers.getRandomIndexInRange(1, #t_matched_wav_files)]
-            )
-            reaper.TrackFX_SetNamedConfigParm(opts_g.tr, opts_g.new_fx_chain_idx, "DONE", "")
-          else
-            log.debug(string.format(
-              [[
-            [Class_m]:No WAV samples where found for track (%s) with search string (%s)
-            ]] ,
-              opts_g.trk_obj.name,
-              t_track_name_parts[1]
-            ))
-          end
-          -- end
         end,
       },
     }, -- m
