@@ -1,7 +1,7 @@
 -- dofile(reaper.GetResourcePath().."/UserPlugins/ultraschall_api.lua")
 local log = require("utils.log")
 local format = require("utils.format")
-local RS_TrObj = require("SYNTAX.lib.track_obj")
+local sx_lib_tobj = require("SYNTAX.lib.track_obj")
 local class_conf = require("SYNTAX.config.config").classes
 
 local reaper_utils = require("custom_actions.utils")
@@ -10,9 +10,25 @@ local util = require("SYNTAX.lib.util") -- rename to sxutil
 local fx_util = require("library.fx")
 
 -- module variables
-local div = "_"
+local div = "_" -- move to constants, or syntax config?
 
 local fx = {}
+
+-- local function compute_syntax_name_string_length(child_obj, T_TRACK_CLASS_FX_SX)
+--   local fx_tot = 0
+--   local tr_range = 1
+--   for i = 0, #T_TRACK_CLASS_FX_SX do
+--     if T_TRACK_CLASS_FX_SX[i].spawnByRange and sx_lib_tobj.trackHasOption(child_obj, "nr") then
+--       tr_range = child_obj.options.nr
+--       for _ = 0, tr_range - 1 do
+--         fx_tot = fx_tot + 1
+--       end
+--     else
+--       fx_tot = fx_tot + 1
+--     end
+--   end
+--   return fx_tot
+-- end
 
 local function checkOldFxHasDiv(old_fx_name)
   -- local old_has_div = false
@@ -68,100 +84,77 @@ end
 -- 	return tr_name_match, rsfx_str_match
 -- end
 
-local function rsfxHandleCode(opts_g, opts_rs)
-  if opts_rs.t_rsfx.code ~= nil then
-    if opts_rs.old_has_div then
+-- handle_UI_name_prefix??
+local function handle_ui_name_code(state, sx_fx_opts, sx_fx_state)
+  if sx_fx_opts.t_sx_current_fx.code ~= nil then
+    if sx_fx_state.old_has_div then
       -- check if there is a match is rsfx string
 
-      if not opts_rs.rsfx_str_match then -- missmatch
-        fx_util.replaceFxAtIndex(opts_g.trk_obj.guid, opts_rs.t_rsfx.search_str, opts_g.new_fx_chain_idx) -- after existing
+      if not sx_fx_state.rsfx_str_match then -- missmatch
+        fx_util.replaceFxAtIndex(
+          state.trk_obj.guid,
+          sx_fx_state.t_sx_current_fx.search_str,
+          state.new_fx_chain_idx
+        ) -- after existing
       end
     else -- prev not pre, but still pre syntax > insert at end of pre ( ?????? )
       log.user(
         "INSERT FX @ "
-        .. opts_g.trk_obj.guid
+        .. state.trk_obj.guid
         .. " > "
-        .. opts_rs.t_rsfx.search_str
+        .. sx_fx_opts.t_sx_current_fx.search_str
         .. " #"
-        .. opts_g.new_fx_chain_idx
+        .. state.new_fx_chain_idx
       )
-      fx_util.insertFxAtIndex(opts_g.trk_obj.guid, opts_rs.t_rsfx.search_str, opts_g.new_fx_chain_idx) -- after existing
+      fx_util.insertFxAtIndex(state.trk_obj.guid, sx_fx_opts.t_sx_current_fx.search_str, state.new_fx_chain_idx) -- after existing
     end
 
     -- NOTE: what is this used for???
-    rs_fx_pre_count = opts_g.new_fx_chain_idx + 1
+    rs_fx_pre_count = state.new_fx_chain_idx + 1
   else
-    if opts_rs.old_has_div then
-      fx_util.removeFxAtIndex(opts_g.trk_obj.guid, opts_g.new_fx_chain_idx)
+    if sx_fx_state.old_has_div then
+      fx_util.removeFxAtIndex(state.trk_obj.guid, state.new_fx_chain_idx)
     end
   end -- A, then B,C
 end
 
-local function rsfxUdateFxName(opts_g, opts_rs)
-  if not opts_rs.tr_name_match or not opts_rs.rsfx_str_match then -- update name
+local function update_ui_fx_name(state, sx_fx_state)
+  if not sx_fx_state.tr_name_match or not sx_fx_state.rsfx_str_match then -- update name
     fx_util.getSetTrackFxNameByFxChainIndex(
-      opts_g.trk_obj.guid,
-      opts_g.new_fx_chain_idx,
+      state.trk_obj.guid,
+      state.new_fx_chain_idx,
       false,
-      opts_rs.new_fx_name
+      sx_fx_state.new_fx_name
     ) -- update fxc name
   end
 end
 
 -- 1. first we handle standard FX parameters
 -- 2. update named config paramteres, if any.
-local function rsfxUdateFxParams(i1, opts_g, opts_rs)
-  -- first handle regular fx params
-
-  -- TODO: nil check
-
-  for k, rsfx_parm in pairs(opts_rs.t_rsfx.fx_params) do
-    -- TODO: create guid api for this
-    reaper.TrackFX_SetParam(
-      opts_g.tr,
-      opts_g.new_fx_chain_idx,
-      k,
-      -- compute/call get param value
-      rsfx_parm.val(opts_g.proll_start_idx, opts_g.tr_range, i1)
-    )
+local function handle_fx_params(spawn_idx, state, sx_fx_opts)
+  if #sx_fx_opts.t_sx_current_fx.fx_params > 0 then
+    for pidx, parameter_func in pairs(sx_fx_opts.t_sx_current_fx.fx_params) do
+      reaper.TrackFX_SetParam(
+        state.trk_obj.tr,
+        state.new_fx_chain_idx,
+        pidx,
+        parameter_func(state.proll_start_idx, state.tr_range, spawn_idx)
+      )
+    end
   end
-
-  -- NAMED CONFIG PARAMS
-  -- eg. this is where samples are being assigned to RS5Ks
-  if type(opts_rs.t_rsfx.named_config_params) == "function" then
-    opts_rs.t_rsfx.named_config_params(opts_g, opts_rs.t_rsfx)
+  if type(sx_fx_opts.t_sx_current_fx.named_config_params) == "function" then
+    sx_fx_opts.t_sx_current_fx.named_config_params(state, sx_fx_opts.t_sx_current_fx)
   end
 end
 
--- Concatenate the full name string to be used in fx chain
---
---
-local function getSingleRSFXName(child_obj, new_fx_chain_idx, RSFX_IDX, ridx, rsfx)
-  local name_str = rsfx.code .. div .. new_fx_chain_idx .. div .. rsfx.rsfx_name .. div .. ridx
-  name_str = child_obj.name .. div .. name_str
-
+local function concat_full_UI_fx_name_string(state, ridx, rsfx)
+  local name_str = rsfx.code .. div .. state.new_fx_chain_idx .. div .. rsfx.rsfx_name .. div .. ridx
+  name_str = state.trk_obj.name .. div .. name_str
   local new_rsfx_str = name_str:sub(name_str:find(div), -1)
-
   return name_str, new_rsfx_str
 end
 
-local function computeSyntaxLength(child_obj, RSFX_LIST)
-  local fx_tot = 0
-  local tr_range = 1
-  for i = 0, #RSFX_LIST do
-    if RSFX_LIST[i].spawnByRange and RS_TrObj.trackHasOption(child_obj, "nr") then
-      tr_range = child_obj.options.nr
-      for r = 0, tr_range - 1 do
-        fx_tot = fx_tot + 1
-      end
-    else
-      fx_tot = fx_tot + 1
-    end
-  end
-  return fx_tot
-end
-
-local function handleFXChainSyntaxPostFx(opts_global)
+local function handle_syntax_fx_chain_post_fx(opts_global)
   if 0 < opts_global.old_fx_chain_count - opts_global.new_fx_chain_idx then
     for _ = opts_global.new_fx_chain_idx, opts_global.old_fx_chain_count - 1 do
       local ofxn =
@@ -177,86 +170,65 @@ local function handleFXChainSyntaxPostFx(opts_global)
   end
 end
 
+local function sx_get_prepare_single_fx_state(state, spawn_idx, sxfx_opts)
+  local old_has_div, old_tr_name, old_rsfx_str = getPrevDataForFx(state)
+  local new_fx_name, new_rsfx_str = concat_full_UI_fx_name_string(state, spawn_idx, sxfx_opts.t_sx_current_fx)
+  return {
+    old_has_div = old_has_div,
+    new_fx_name = new_fx_name,
+    tr_name_match = old_tr_name == state.trk_obj.name and true or false,
+    rsfx_str_match = old_rsfx_str == new_rsfx_str and true or false,
+  }
+end
+
+local function apply_single_effect(state, sxfx_opts)
+  for spawn_idx = 0, sxfx_opts.spawn_num - 1 do -- syntax spawn num =============================
+    local sx_fx_state = sx_get_prepare_single_fx_state()
+    handle_ui_name_code(state, sxfx_opts, sx_fx_state)
+    update_ui_fx_name(state, sx_fx_state)
+    handle_fx_params(spawn_idx, state, sxfx_opts)
+    state.new_fx_chain_idx = state.new_fx_chain_idx + 1
+  end
+end
+
 -- apply fx syntax to track
-function fx.applyConfFxToChildObj(child_obj, proll_start_idx, opt_type) -- change to drum_map_note_start
+function fx.track_apply_fx_configs(child_obj, proll_start_idx, opt_type) -- change to drum_map_note_start
   local tr, _ = reaper_utils.getTrackByGUID(child_obj.guid)
   if tr == nil or child_obj == nil then
     return
   end
 
+  child_obj.tr = tr
+
+  -- TODO: reattach track to child object and only use the track_obj moving forward
+
+  -- TODO: refactor the attachement of range to track object into the initial
+  -- parsing of the syntax track list.
+
   -- NOTE: I put together a table of all
-  local opts_global = {
-    tr = tr,
-    tr_range = RS_TrObj.trackHasOption(child_obj, "nr") and child_obj.options.nr or 1,
+  local state = {
+    tr = tr, -- move into trk_obj
+    tr_range = sx_lib_tobj.trackHasOption(child_obj, "nr") and child_obj.options.nr or 1, -- move into trk_obj
     trk_obj = child_obj,
     proll_start_idx = proll_start_idx,
-    opt_type = opt_type,
+    opt_type = opt_type, -- move into trk_obj
     new_fx_chain_idx = 0,
     old_fx_chain_count = reaper.TrackFX_GetCount(tr),
   }
 
-  local RSFX_LIST = class_conf[child_obj.class].fx_syntax[opt_type]
-
-  -- each syntax table component
-  for RSFX_IDX = 0, #RSFX_LIST do
-    -- TODO: attach this table as sub table of opts_g
-    local opts_rsfx_idx = {
-      spawn_num = (RS_TrObj.trackHasOption(child_obj, "nr") and RSFX_LIST[RSFX_IDX].spawnByRange)
+  local T_TRACK_CLASS_FX_SX = class_conf[child_obj.class].fx_syntax[opt_type]
+  for sxfx_idx = 0, #T_TRACK_CLASS_FX_SX do
+    apply_single_effect(state, {
+      spawn_num = (sx_lib_tobj.trackHasOption(child_obj, "nr") and T_TRACK_CLASS_FX_SX[sxfx_idx].spawnByRange)
           and child_obj.options.nr
           or 1,
-      t_rsfx = RSFX_LIST[RSFX_IDX],
-    }
+      t_sx_current_fx = T_TRACK_CLASS_FX_SX[sxfx_idx],
+    })
+  end -- T_TRACK_CLASS_FX_SX
 
-    for i1 = 0, opts_rsfx_idx.spawn_num - 1 do -- syntax spawn num =============================
-      -- TODO: put this into opts_rsfx_idx.old_data
-      local old_has_div, old_tr_name, old_rsfx_str = getPrevDataForFx(opts_global)
+  handle_syntax_fx_chain_post_fx(state)
 
-      -- TODO: reduce paramaters to opts table
-      local new_fx_name, new_rsfx_str =
-      getSingleRSFXName(child_obj, opts_global.new_fx_chain_idx, RSFX_IDX, i1, RSFX_LIST[RSFX_IDX])
-
-      opts_rsfx_idx.old_has_div = old_has_div
-      opts_rsfx_idx.new_fx_name = new_fx_name
-      opts_rsfx_idx.tr_name_match = old_tr_name == child_obj.name and true or false
-      opts_rsfx_idx.rsfx_str_match = old_rsfx_str == new_rsfx_str and true or false
-
-      -- log.user(
-      --   "\n\n - fx info -----------------------------\n"
-      --   .. "opts_global.tr_range: "
-      --   .. opts_global.tr_range
-      --   .. "\n"
-      --   .. "old has div"
-      --   .. tostring(old_has_div)
-      --   .. "\n"
-      --   .. "old/new tr name: \t"
-      --   .. old_tr_name
-      --   .. " => "
-      --   .. child_obj.name
-      --   .. "\n"
-      --   -- 'new_pre_fx_count' .. new_pre_fx_count .. '\n' ..
-      --   .. "rsfx_str old/new: \t"
-      --   .. tostring(old_rsfx_str)
-      --   .. " => "
-      --   .. new_rsfx_str
-      --   .. "\n"
-      --   .. "match name/rsfx: \t"
-      --   .. tostring(opts_rsfx_idx.tr_name_match)
-      --   .. " | "
-      --   .. tostring(opts_rsfx_idx.rsfx_str_match)
-      --   .. "\n"
-      -- )
-
-      rsfxHandleCode(opts_global, opts_rsfx_idx)
-      rsfxUdateFxName(opts_global, opts_rsfx_idx)
-      rsfxUdateFxParams(i1, opts_global, opts_rsfx_idx)
-
-      opts_global.new_fx_chain_idx = opts_global.new_fx_chain_idx + 1
-    end -- FX
-  end -- RSFX_LIST
-
-  handleFXChainSyntaxPostFx(opts_global)
-
-  -- log.user('new fx chain count: ' .. opts_global.new_fx_chain_idx .. '\n\n\n')
+  -- log.user('new fx chain count: ' .. state.new_fx_chain_idx .. '\n\n\n')
 
   return true
 end

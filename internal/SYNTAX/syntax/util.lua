@@ -70,7 +70,7 @@ function mod.applyMappedOptMChildren(parent_obj, opt_m_children, count_w_range)
 
     trr.updateState('#{0|0}', parent_obj.guid, trk_obj.guid)
 
-    fx.applyConfFxToChildObj(trk_obj, count_w_range, 'm')
+    fx.track_apply_fx_configs(trk_obj, count_w_range, 'm')
 
     count_w_range = midi.updatePianoRoll(parent_obj, trk_obj, count_w_range)
 

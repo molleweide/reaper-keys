@@ -44,6 +44,7 @@ rs5k.hasSampleLoaded = function(tobj, fx_idx)
     local ret, buf = reaper.TrackFX_GetNamedConfigParm(tobj.tr, fx_idx, "FILE0")
     return ret, buf
   else
+    log.debug(string.format([[xxxxxxxxx]], plugin_name))
   end
 end
 

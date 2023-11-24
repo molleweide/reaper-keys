@@ -32,16 +32,12 @@ return {
         rsfx_name = "NoteFlt", -- rename >
         search_str = "midi_note_filter",
         fx_params = {
-          [0] = {
-            val = function(note_start_index, range)
-              return note_start_index
-            end,
-          }, -- now thresh
-          [1] = {
-            val = function(note_start_index, range)
-              return note_start_index + range - 1
-            end,
-          }, -- high thresh
+          [0] = function(note_start_index, range)
+            return note_start_index
+          end, -- now thresh
+          [1] = function(note_start_index, range)
+            return note_start_index + range - 1
+          end, -- high thresh
         },
       },
       -- NOTE: what does `code` mean here?
@@ -51,11 +47,9 @@ return {
         rsfx_name = "NoteTrans",
         search_str = "midi_transpose",
         fx_params = {
-          [0] = {
-            val = function(note_start_index, range)
-              return samplerNoteBass - note_start_index
-            end,
-          }, -- note shift // transpore note
+          [0] = function(note_start_index, range)
+            return samplerNoteBass - note_start_index
+          end, -- note shift // transpore note
         },
       },
       [2] = {
@@ -64,46 +58,38 @@ return {
         spawnByRange = true, -- M has option 'nr'
         rsfx_name = "RS5K",
         search_str = "ReaSamplOmatic5000",
+
+        -- NOTE: each param is applied by a param_apply_func.
         fx_params = {
-          [3] = {
-            val = function(note_start_index, range, r)
-              return midiNumToNormalized(samplerNoteBass + r)
-            end,
-          }, -- note range start
-          [4] = {
-            val = function(note_start_index, range, r)
-              return midiNumToNormalized(samplerNoteBass + r)
-            end,
-          }, -- note range end
+          [3] = function(note_start_index, range, r)
+            return midiNumToNormalized(samplerNoteBass + r)
+          end, -- note range start
+          [4] = function(note_start_index, range, r)
+            return midiNumToNormalized(samplerNoteBass + r)
+          end, -- note range end
         },
-        named_config_params = function(opts_g, t_rsfx)
+        named_config_params = function(state, t_rsfx)
           local cfg = require("definitions.config")
           local constants = require("constants.constants")
-          local rs5k = require("library.plugins.rs5k")
+          local rs5k = require("plugins.rs5k")
+          log.debug(
+            string.format(
+              [[CLASS_M [named_config_params] # %s > %s / %s (%s)]],
+              state.trk_obj.trackIndex,
+              state.trk_obj.name,
+              state.new_fx_chain_idx,
+              t_rsfx.rsfx_name
+            )
+          )
 
-          -- log.user(
-          -- 	opts_g.trk_obj.trackIndex
-          -- 		.. " > "
-          -- 		.. opts_g.trk_obj.name
-          -- 		.. " / "
-          -- 		.. opts_g.new_fx_chain_idx
-          -- 		.. "("
-          -- 		.. t_rsfx.rsfx_name
-          -- 		.. ") : "
-          -- 	-- .. file
-          -- )
-
-          -- reaper.TrackFX_GetNamedConfigParm(opts_g.tr, opts_g.new_fx_chain_idx, "FILE0")
-          local _, buf = rs5k.hasSampleLoaded(opts_g.trk_obj, opts_g.new_fx_chain_idx)
-
-          -- log.user(opts_g.trk_obj.name .. ":", retval, buf, type(buf), buf == "", buf:find(wav_ext_pattern))
-
+          local _, buf = rs5k.hasSampleLoaded(state.trk_obj, state.new_fx_chain_idx)
+          -- log.user(state.trk_obj.name .. ":", retval, buf, type(buf), buf == "", buf:find(wav_ext_pattern))
           if (
               cfg.syntax.samplers.load_random_sample_if_empty
                   and buf:find(constants.patterns.extension_wav) == nil
               ) or cfg.syntax.samplers.always_reload_random_sample
           then
-            rs5k.randomize_sample(opts_g.trk_obj, opts_g.new_fx_chain_idx)
+            rs5k.randomize_sample(state.trk_obj, state.new_fx_chain_idx)
           else
             return
           end
