@@ -77,9 +77,8 @@ return {
           }, -- note range end
         },
         named_config_params = function(opts_g, t_rsfx)
-          local rk_config = require("definitions.config")
+          local cfg = require("definitions.config")
           local constants = require("constants.constants")
-          local plugins = require("library.fx_plugins")
           local rs5k = require("library.plugins.rs5k")
 
           -- log.user(
@@ -99,10 +98,12 @@ return {
 
           -- log.user(opts_g.trk_obj.name .. ":", retval, buf, type(buf), buf == "", buf:find(wav_ext_pattern))
 
-          if (rk_config.syntax.samplers.load_random_sample_if_empty and buf:find(constants.patterns) == nil)
-              or rk_config.syntax.samplers.always_reload_random_sample
+          if (
+              cfg.syntax.samplers.load_random_sample_if_empty
+                  and buf:find(constants.patterns.extension_wav) == nil
+              ) or cfg.syntax.samplers.always_reload_random_sample
           then
-            plugins.randomize_rs5k_sample(opts_g.trk_obj, opts_g.new_fx_chain_idx)
+            rs5k.randomize_sample(opts_g.trk_obj, opts_g.new_fx_chain_idx)
           else
             return
           end

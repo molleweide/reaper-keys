@@ -177,6 +177,7 @@ local function handleFXChainSyntaxPostFx(opts_global)
   end
 end
 
+-- apply fx syntax to track
 function fx.applyConfFxToChildObj(child_obj, proll_start_idx, opt_type) -- change to drum_map_note_start
   local tr, _ = reaper_utils.getTrackByGUID(child_obj.guid)
   if tr == nil or child_obj == nil then

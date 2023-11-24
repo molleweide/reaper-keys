@@ -153,7 +153,7 @@ return {
         ["X"] = "PickerAllStandaloneActions",
         ["w"] = "SetModeVKB", -- FIX: delete this...
         ["d"] = {
-          "+dev",
+          "+development",
           {
             ["l"] = "devLogAllParamsOfLastTouchedFx",
             ["L"] = "devLogLastTouchedFxParamDetailed",
@@ -446,7 +446,7 @@ return {
                 ["8"] = "ToggleShowFx8",
               },
             },
-            ["w"] = "RandomizeSampleSelectionForSelectTracks",
+            ["w"] = "RandomizeSampleSelectionForSelectDrumLanes",
             ["W"] = "PickerSelectSampleForSamplerOnSelectOrFocusedTrack"
           },
         },

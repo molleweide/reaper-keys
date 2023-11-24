@@ -12,6 +12,10 @@ local lib_tr = require("library.tracks")
 
 local plugins = {}
 
+-- fix: remove this file since lib/fx already exists.
+
+-- TODO: move this into `library/fx`
+
 plugins.get_all_plugins_data = function()
   local results = {}
   local tRatingData = fu.jReadVstData(pluginsData.DATA_INI_FILE)
@@ -34,6 +38,8 @@ plugins.get_all_plugins_data = function()
   -- table.sort(results, sortByRating)
   return results
 end
+
+-- TODO: move this into `plugins/rs5k`
 
 plugins.randomize_rs5k_sample = function(trk_obj, target_fx_idx)
   local utils_io = require("utils.fs")

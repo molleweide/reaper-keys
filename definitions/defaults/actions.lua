@@ -924,9 +924,11 @@ return {
       local lib_tr = require("library.tracks")
       local utils_io = require("utils.fs")
       local str_util = require("utils.string")
+      local rs5k = require("plugins.rs5k")
+      local lib_fx = require("library.fx_plugins")
 
-      local target_trk_objects, track_objects_list = lib_tr.get_focused_track_objects(trk_obj)
-      local focus_track = target_trk_objects[1]
+      local focused_track_objects, track_objects_list = lib_tr.get_focused_track_objects()
+      local focus_track_obj = focused_track_objects[1]
 
       -- if sx_utils.trackObjHasOption(g_obj, "m") and #t_fx_by_name > 0 then
       --   -- if i want to only allow on drum lanes?
@@ -935,23 +937,23 @@ return {
       -- end
 
       -- check track RS5K
-      local rs5k_instance_idx = lib_fx.getFxIndexByName(tobj.guid_tr, "ReaSamplomatic")
+      local rs5k_instance_idx = lib_fx.getFxIndexByName(focus_track_obj.guid_tr, "ReaSamplomatic")
 
       if rs5k_instance_idx then
-        local t_track_name_parts = str_util.getStringSplitPattern(tobj.name, "%.")
+        local t_track_name_parts = str_util.getStringSplitPattern(focus_track_obj.name, "%.")
         local t_matched_wav_files = utils_io.findWavFilesWithNameX(t_track_name_parts[1])
 
         -- TODO: build picker.
         -- ~ pass wav files to picker
         fzf.init({
-          title = string.format("Change rs5k sample for track (%s)", focus_track.name),
+          title = string.format("Change rs5k sample for track (%s)", focus_track_obj.name),
           results = t_matched_wav_files,
 
           -- move into module
           on_select_func = function(self, i)
             local selection = self.t_search_results[i]
 
-            rs5k.updateSample(focus_track, rs5k_instance_idx, selection)
+            rs5k.updateSample(focus_track_obj, rs5k_instance_idx, selection)
 
             -- if opts.next then
             --   opts.next(meta, {
