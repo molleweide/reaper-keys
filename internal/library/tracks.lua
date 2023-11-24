@@ -101,23 +101,19 @@ tracks.get_dimensions_for = function(tr)
   }
 end
 
-tracks.get_focused_track_objects = function(tobj)
+tracks.get_focused_track_objects = function()
   local track_objects_list = sx.get_list_of_track_objects()
   local focused_track_objects = {}
-  if tobj then
-    table.insert(focused_track_objects, tobj)
-  else
-    local ME_ACTIVE, ME = midi_editor.getMidiValidContext(hwnd)
-    if ME_ACTIVE then
+  local ME_ACTIVE, ME = midi_editor.getMidiValidContext(hwnd)
+  if ME_ACTIVE then
 
-      -- find track corresponding to actively editing midi item.
-      -- >> randomize
-    else
-      local t_sel_trk_indices = cust_util.getSelectedTrackIndices()
-      for _, tidx in ipairs(t_sel_trk_indices) do
-        -- these should map 1:1 with track_objects_list
-        table.insert(focused_track_objects, track_objects_list[tidx])
-      end
+    -- find track corresponding to actively editing midi item.
+    -- >> randomize
+  else
+    local t_sel_trk_indices = cust_util.getSelectedTrackIndices()
+    for _, tidx in ipairs(t_sel_trk_indices) do
+      -- these should map 1:1 with track_objects_list
+      table.insert(focused_track_objects, track_objects_list[tidx])
     end
   end
   return focused_track_objects, track_objects_list

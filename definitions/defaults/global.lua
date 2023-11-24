@@ -155,6 +155,7 @@ return {
         ["d"] = {
           "+development",
           {
+            ["t"] = "devLogVtt",
             ["l"] = "devLogAllParamsOfLastTouchedFx",
             ["L"] = "devLogLastTouchedFxParamDetailed",
             ["p"] = "devLogPaths",
@@ -446,7 +447,7 @@ return {
                 ["8"] = "ToggleShowFx8",
               },
             },
-            ["w"] = "RandomizeSampleSelectionForSelectDrumLanes",
+            ["w"] = "RandomizeRs5kSampleForFocusedTracks",
             ["W"] = "PickerSelectSampleForSamplerOnSelectOrFocusedTrack"
           },
         },

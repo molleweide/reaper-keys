@@ -31,7 +31,10 @@ local function createOptionsTable(trk_idx, options_str)
   return OPTIONS
 end
 
--- refactor
+---
+---@param tr_idx number
+---@param trk_name string
+---@return
 local function getNameStringParts(tr_idx, trk_name)
   local dividers = {}
   local div_char = ":"
@@ -107,15 +110,16 @@ end
 -- end
 
 -- mv to virtual_track_table_interface.lua
-local function createTrackObj(tr, guid, i, p, o, n) -- index; prefix; options; track name
+local function createTrackObj(tr, guid, tr_idx, prefix, options, track_name) -- index; prefix; options; track name
   return {
     tr = tr,
     guid = guid,
-    level = class_configs[p].treeProps.level,
-    trackIndex = i, -- can only be used initially if tracks haven't been touched?!
-    class = p,
-    options = o, -- sub table
-    name = n, -- the real tr name
+    level = class_configs[prefix].treeProps.level,
+    trackIndex = tr_idx, -- can only be used initially if tracks haven't been touched?!
+    class = prefix,
+    options = options, -- sub table
+    name = track_name, -- the real tr name
+    name_components = str_util.getStringSplitPattern(track_name, "%."),
     children = {},
   }
 end
@@ -209,7 +213,15 @@ end
 -- >> This function should be recursive and be merged into.
 --    I think that should work actually.
 syntax.make_tree = function(t_trk_objs)
-  local vtt = {}
+  local vtt = {
+    groups = {},
+    -- midi_tracks = {}
+    -- audio_tracks = {},
+    -- buss_tracks = {},
+    -- text_tracks = {},
+    channel_splitters = {},
+    -- splitt
+  }
   local prev_zone = nil
   local prev_group = nil
   local prev_mcab = nil
@@ -224,9 +236,11 @@ syntax.make_tree = function(t_trk_objs)
   -- TODO: assign surrounding context info to trk_objs.
   -- Eg. assign Z and G to each MCABS.
 
-  for _, trk_obj in ipairs(t_trk_objs) do
+  for i, trk_obj in ipairs(t_trk_objs) do
     -- LEVEL 1 | Z ------------------------------------------------------------
     if trk_obj.level == 1 then
+      -- log.user(i)
+
       if str_util.strHasOneOfChars(trk_obj.class, "Z") then
         if prev_zone ~= nil then
           prev_zone.lastTrackIndex = trk_obj.trackIndex - 1
@@ -247,6 +261,8 @@ syntax.make_tree = function(t_trk_objs)
         end
         prev_zone.children[#prev_zone.children + 1] = trk_obj
         prev_group = trk_obj
+        trk_obj.zone = prev_zone
+        table.insert(vtt.groups, trk_obj)
       end
     end
 
@@ -254,13 +270,21 @@ syntax.make_tree = function(t_trk_objs)
     if trk_obj.level == 3 then
       if str_util.strHasOneOfChars(trk_obj.class, "MCABT") then
         prev_group.children[#prev_group.children + 1] = trk_obj
+        trk_obj.zone = prev_zone
+        trk_obj.group = prev_group
         prev_mcab = trk_obj
+        if trk_obj.class == "C" then
+          table.insert(vtt.channel_splitters, trk_obj)
+        end
       end
     end
 
     -- level 4 | S ------------------------------------------------------------
     if trk_obj.level == 4 then
       if str_util.strHasOneOfChars(trk_obj.class, "S") then
+        trk_obj.zone = prev_zone
+        trk_obj.group = prev_group
+        trk_obj.channel_splitter = prev_mcab
         prev_mcab.children[#prev_mcab.children + 1] = trk_obj
       end
       prev_lvl4_obj = trk_obj

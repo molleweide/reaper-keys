@@ -79,7 +79,7 @@ end
 -- TODO: return table ...
 --
 
-function sx_lib_util.getParentGroupByTrIdx(vtt, child_idx)
+function sx_lib_util.get_track_object_group(vtt, tobj)
   local tr_count = reaper.CountTracks(0)
   local prevGroup = nil
   local parent_found = false
@@ -109,11 +109,11 @@ function sx_lib_util.getParentGroupByTrIdx(vtt, child_idx)
         last_g = true
       end
 
-      -- log.user(LVL2_obj.children[j+1] == nil, i,#LVL1_obj.children, '||',child_idx,LVL2_tr_idx, last_z, last_g,LVL2_obj.name)
+      -- log.user(LVL2_obj.children[j+1] == nil, i,#LVL1_obj.children, '||',tobj,LVL2_tr_idx, last_z, last_g,LVL2_obj.name)
       -- this will always return the wrong group
       --
 
-      if child_idx < LVL2_tr_idx then
+      if tobj.trackIndex < LVL2_tr_idx then
         -- log.user('<')
         parent_found = true
 
@@ -138,8 +138,8 @@ function sx_lib_util.getParentGroupByTrIdx(vtt, child_idx)
     end
   end
 
-  log.user("getParentGroupByTrIdx | should never reach here...")
-  return parent_group_obj, parent_group_tr, parent_group_idx
+  log.user("get_track_object_group | should never reach here...")
+  return parent_group_obj
 end
 
 sx_lib_util.get_drum_lane_start_idx_from_child_track = function(parent_group_obj, child_track_obj)

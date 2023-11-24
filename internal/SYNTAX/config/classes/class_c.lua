@@ -22,6 +22,13 @@ return {
     trackHeight = { attrString = "I_HEIGHTOVERRIDE", attrVal = 30 },
     trackColor = { attrString = "I_CUSTOMCOLOR", val = 122 },
   },
+  default_routing = function(trk_obj)
+    local trr = require("library.routing")
+    trr.updateState("-#", trk_obj.guid)
+    for _, split_obj in pairs(trk_obj.children) do
+      trr.updateState(string.format("{0|%s}", trk_obj.guid, split_obj.guid))
+    end
+  end,
   fx_syntax = { -- class M syntax
     default = {},
     m = {

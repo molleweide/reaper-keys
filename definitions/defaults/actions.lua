@@ -133,6 +133,7 @@ return {
   devLogLastTouchedFxParamDetailed = dev.logLastTouchedFxParamDetails,
   devlogLastTouchedFxNamedConfigParams = dev.logLastTouchedFxNamedConfigParams,
   devLogPaths = dev.logPaths,
+  devLogVtt = require("SYNTAX.actions").log_vtt,
   InsertTrackFromTemplate = 46000,
   EnterTrackAbove = { "InsertTrackAbove", "ColorTrackWithTrackBelow", "RenameTrack" },
   EnterTrackBelow = { "InsertTrackBelow", "ColorTrackWithTrackAbove", "RenameTrack" },
@@ -917,15 +918,22 @@ return {
 
   -- TODO: refactor this into configurable funcs...
 
-  RandomizeSampleSelectionForSelectDrumLanes = require("library.fx_plugins").randomize_rs5k_sample,
+  RandomizeRs5kSampleForFocusedTracks = {
+    require("library.fx").focus_tracks_fx_do,
+    opts = {
+      "RS5K",
+      "updateSample",
+    },
+  },
   PickerSelectSampleForSamplerOnSelectOrFocusedTrack = {
 
     function()
       local lib_tr = require("library.tracks")
       local utils_io = require("utils.fs")
-      local str_util = require("utils.string")
       local rs5k = require("plugins.rs5k")
       local lib_fx = require("library.fx_plugins")
+
+      -- TODO: on up/down or change -> previow results[1] or scroll_selection.
 
       local focused_track_objects, track_objects_list = lib_tr.get_focused_track_objects()
       local focus_track_obj = focused_track_objects[1]
@@ -936,38 +944,28 @@ return {
       --   -- easy and flexible to update any track with a sampler.
       -- end
 
-      -- check track RS5K
-      local rs5k_instance_idx = lib_fx.getFxIndexByName(focus_track_obj.guid_tr, "ReaSamplomatic")
+      if focus_track_obj then
+        local first_rs5k_fx_obj = lib_fx.get_fx_objs_by_name_string(focus_track_obj.guid_tr, "ReaSamplomatic")
+        if first_rs5k_fx_obj then
+          require("library.fzf").init({
+            title = string.format("Change rs5k sample for track (%s)", focus_track_obj.name),
+            results = utils_io.findWavFilesWithNameX(focus_track_obj.name_components[1]),
+            on_select_func = function(self, i)
+              local selection = self.t_search_results[i]
 
-      if rs5k_instance_idx then
-        local t_track_name_parts = str_util.getStringSplitPattern(focus_track_obj.name, "%.")
-        local t_matched_wav_files = utils_io.findWavFilesWithNameX(t_track_name_parts[1])
+              rs5k.updateSample(focus_track_obj, first_rs5k_fx_obj.idx, selection)
 
-        -- TODO: build picker.
-        -- ~ pass wav files to picker
-        fzf.init({
-          title = string.format("Change rs5k sample for track (%s)", focus_track_obj.name),
-          results = t_matched_wav_files,
-
-          -- move into module
-          on_select_func = function(self, i)
-            local selection = self.t_search_results[i]
-
-            rs5k.updateSample(focus_track_obj, rs5k_instance_idx, selection)
-
-            -- if opts.next then
-            --   opts.next(meta, {
-            --     selection = selection,
-            --   })
-            -- end
-            return true
-          end,
-          sort_comp = "name",
-          entry_maker = "name",
-        })
-
-        -- ~ on select -> rs5k.setSample()
-        -- (~). on up/down or change -> previow results[1] or scroll_selection.
+              -- if opts.next then
+              --   opts.next(meta, {
+              --     selection = selection,
+              --   })
+              -- end
+              return true
+            end,
+            sort_comp = "name",
+            entry_maker = "name",
+          })
+        end
       end
     end,
   },

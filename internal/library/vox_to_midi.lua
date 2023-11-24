@@ -17,7 +17,7 @@ vox2midi.setDrumTrigMIDIOutFromCurrentNote = function()
 	local active_row = reaper.MIDIEditor_GetSetting_int(me, "active_note_row")
 	local match_vox_src = tr.getMatchedTrackGUIDs("vox2DrumsTrigSrc")
 	if match_vox_src then
-		local fx_by_name = fx.getFxIndexByName(match_vox_src[1].guid, "JS: Audio To MIDI Drum Trigger")
+		local fx_by_name = fx.get_fx_objs_by_name_string(match_vox_src[1].guid, "JS: Audio To MIDI Drum Trigger")
 		if fx_by_name then
 			fx.setParamForFxAtIndex(match_vox_src[1].guid, fx_by_name[1].idx, 5, active_row, false)
 		end

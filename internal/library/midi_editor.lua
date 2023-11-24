@@ -568,7 +568,7 @@ midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new
   local sx = require("SYNTAX.syntax.syntax")
   local sx_utils = require("SYNTAX.lib.util")
   local cursor_info = tl.get_cursor_info()
-  local g_obj, g_tr, _ = sx_utils.getParentGroupByTrIdx(sx.getVerifiedTree(), track_obj.trackIndex)
+  local g_obj, _, _ = sx_utils.get_track_object_group(sx.getVerifiedTree(), track_obj.trackIndex)
 
   -- TODO: if track is midi split child -> then enter parent track
   -- and set midi channel for insertion
@@ -583,8 +583,8 @@ midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new
   -- already exists one if it is very large
 
   if sx_utils.trackObjHasOption(g_obj, "m") then -- drum lanes
-    target_tr = g_tr
-    items_found = containers.get_track_items_in_range_time(g_tr, check_start_pos, check_end_pos)
+    target_tr = g_obj.tr
+    items_found = containers.get_track_items_in_range_time(g_obj.tr, check_start_pos, check_end_pos)
     note_row = sx_utils.get_drum_lane_start_idx_from_child_track(g_obj, track_obj)
 
     -- TODO: midi channelsplitters -> set channel splitter master and set active midi channel in ME
