@@ -11,7 +11,7 @@ local fx_util = require("library.fx")
 local lib_items = require("library.items")
 local marks = require("utils.marks_regions")
 
-local syntax = require("sx.tracks")
+local syntax = require("syntax.tracks")
 
 -- FIX: because pickers operate outside of the vim loop, I need
 -- to explicitly set undo points again here to make sure that each
@@ -262,7 +262,7 @@ end
 pickers.vtt_zones = function()
   fzf.init({
     env = RK_FZF_ENV,
-    title = "sx: zones",
+    title = "syntax. zones",
     results = {},
   })
 end
@@ -272,7 +272,7 @@ pickers.vtt_groups = function() end
 pickers.vtt_mcsab_by_group_name = function()
   fzf.init({
     env = RK_FZF_ENV,
-    title = "sx: MSCAB",
+    title = "syntax. MSCAB",
     results = {},
   })
 end

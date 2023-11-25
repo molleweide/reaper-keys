@@ -3,7 +3,7 @@ local format = require("utils.format")
 local str_util = require("utils.string")
 
 local class_configs = require("definitions.syntax.config").classes
-local util = require("sx.utils")
+local util = require("syntax.utils")
 
 local sx_tracks = {}
 

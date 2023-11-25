@@ -28,7 +28,7 @@ else
   package.path = package.path .. ";" .. internal_root_path .. "vendor/share/lua/5.3/?.lua"
   package.path = package.path .. ";" .. internal_root_path .. "vendor/share/lua/5.3/?/init.lua"
   package.path = package.path .. ";" .. internal_root_path .. "vendor/scythe/?.lua"
-  -- package.path = package.path .. ";" .. internal_root_path .. "sx.tracks_actions.lua"
+  -- package.path = package.path .. ";" .. internal_root_path .. "syntax.tracks_actions.lua"
 end
 
 local input = require('state_machine')
