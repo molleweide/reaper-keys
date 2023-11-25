@@ -1,8 +1,7 @@
 -- refactor into general fx / util settings file??
 local samplerNoteBass = 48
 
----- mv >>> util file
-function midiNumToNormalized(num)
+local function midiNumToNormalized(num)
   -- normalized values are used in, eg. RS5K for setting note values...
   return num * 1 / 128
 end
