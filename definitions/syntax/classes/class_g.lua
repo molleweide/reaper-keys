@@ -13,8 +13,8 @@ return {
     m = function(gobj, rk_config)
       rk_config = rk_config or require("definitions.config")
       local log = require("utils.log")
-      local sxu = require("SYNTAX.utils")
-      local sx_tracks = require("SYNTAX.tracks")
+      local sxu = require("sx.utils")
+      local sx_tracks = require("sx.tracks")
       local trr = require("library.routing")
 
       log.user("!!!!")
@@ -35,7 +35,7 @@ return {
 
         trr.updateState("#{0|0}", gobj.guid, child_obj.guid)
 
-        require("SYNTAX.fx").track_apply_fx_configs(child_obj, lane_idx, "m")
+        require("sx.fx").track_apply_fx_configs(child_obj, lane_idx, "m")
 
         -- set piano roll
         if lane_idx > 127 then

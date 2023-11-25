@@ -133,7 +133,7 @@ return {
   devLogLastTouchedFxParamDetailed = dev.logLastTouchedFxParamDetails,
   devlogLastTouchedFxNamedConfigParams = dev.logLastTouchedFxNamedConfigParams,
   devLogPaths = dev.logPaths,
-  devLogVtt = require("SYNTAX.actions").log_vtt,
+  devLogVtt = require("sx.actions").log_vtt,
   InsertTrackFromTemplate = 46000,
   EnterTrackAbove = { "InsertTrackAbove", "ColorTrackWithTrackBelow", "RenameTrack" },
   EnterTrackBelow = { "InsertTrackBelow", "ColorTrackWithTrackAbove", "RenameTrack" },

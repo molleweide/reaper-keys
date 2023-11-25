@@ -10,7 +10,7 @@ local custom = require("custom_actions")
 -- provides custom functions which make use of the reaper api
 -- search for 'custom' in the default actions file to see examples
 
-local syntax = require("SYNTAX.actions")
+local syntax = require("sx.actions")
 
 local pickers = require("pickers.pickers")
 

@@ -6,7 +6,7 @@ local class_conf = require("definitions.syntax.config").classes
 local reaper_utils = require("custom_actions.utils")
 local fx_util = require("library.fx")
 
-local sx_tracks = require("SYNTAX.tracks")
+local sx_tracks = require("sx.tracks")
 
 -- module variables
 local div = "_" -- move to constants, or syntax config?
