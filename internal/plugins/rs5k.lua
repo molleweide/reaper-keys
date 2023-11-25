@@ -52,12 +52,15 @@ end
 -- based on its track name
 rs5k.updateSample = function(tobj, fx_idx, wav_file_path)
   if is_the_plugin(tobj.tr, fx_idx) then
+
+
     if not wav_file_path then
       local utils_io = require("utils.fs")
-      local numbers = require("utils.numbers")
+      local numbers = require("utils.math")
       local t_matched_wav_files = utils_io.findWavFilesWithNameX(tobj.name_components[1])
 
       if #t_matched_wav_files > 0 then
+        -- log.user("??")
         wav_file_path = t_matched_wav_files[numbers.getRandomIndexInRange(1, #t_matched_wav_files)]
       else
         -- todo: refactor this into a nice plugins util debug message func
@@ -69,8 +72,11 @@ rs5k.updateSample = function(tobj, fx_idx, wav_file_path)
           tobj.name,
           tobj.name_components[1]
         ))
+        return
       end
     end
+
+    -- log.user(tobj.name, tobj.name_components[1], ">>> wav:", wav_file_path )
 
     reaper.TrackFX_SetNamedConfigParm(tobj.tr, fx_idx, "FILE0", wav_file_path)
     reaper.TrackFX_SetNamedConfigParm(tobj.tr, fx_idx, "DONE", "")

@@ -11,11 +11,14 @@ return {
   routing = {
 
     m = function(gobj, rk_config)
+      rk_config = rk_config or require("definitions.config")
+      local log = require("utils.log")
       local sxu = require("SYNTAX.lib.util")
+      local sx_trk_util = require("SYNTAX.lib.track_obj")
       local trr = require("library.routing")
-      local apply_funcs = require("SYNTAX.syntax.util")
 
-      local count_w_range = require("definitions.config").drum_lanes_low_note_start
+      log.user("!!!!")
+
       local opt_m_children = {}
       for _, mcab_obj in pairs(gobj.children) do
         if sxu.strHasOneOfChars(mcab_obj.class, "MC") and sxu.trackObjHasOption(gobj, "m") then
@@ -24,15 +27,47 @@ return {
         end
       end
 
+      local lane_idx = rk_config.drum_lanes_low_note_start
+
       for k = 1, #opt_m_children do
         local rev_idx = #opt_m_children + 1 - k -- reverse idx !!!
-        local group_child_obj = opt_m_children[rev_idx]
+        local child_obj = opt_m_children[rev_idx]
 
-        trr.updateState("#{0|0}", gobj.guid, group_child_obj.guid)
+        trr.updateState("#{0|0}", gobj.guid, child_obj.guid)
 
-        require("SYNTAX.lib.fx").track_apply_fx_configs(group_child_obj, count_w_range, "m")
+        require("SYNTAX.lib.fx").track_apply_fx_configs(child_obj, lane_idx, "m")
 
-        count_w_range = require("SYNTAX.lib.midi").updatePianoRoll(gobj, group_child_obj, count_w_range)
+        -- set piano roll
+        if lane_idx > 127 then
+          log.user(
+            string.format(
+              "TrackOptionError: %s : Note range for group (%s) exceedes 127.",
+              child_obj.trackIndex,
+              gobj.name
+            )
+          )
+          return false
+        end
+        for i = 0, 127 do
+          reaper.SetTrackMIDINoteNameEx(0, gobj.tr, lane_idx + i, 0, "")
+        end
+
+        local has_opt_nr = sx_trk_util.trackHasOption(child_obj, "nr")
+
+        if has_opt_nr then
+          for i = 0, child_obj.options.nr - 1 do
+            reaper.SetTrackMIDINoteNameEx(
+              0,
+              gobj.tr,
+              lane_idx + i,
+              0,
+              i == 0 and child_obj.name or rk_config.symbPianoRollRange
+            )
+          end
+        else
+          reaper.SetTrackMIDINoteNameEx(0, gobj.tr, lane_idx, 0, child_obj.name)
+        end
+        lane_idx = has_opt_nr and (lane_idx + child_obj.options.nr) or (lane_idx + 1)
       end
     end,
   },

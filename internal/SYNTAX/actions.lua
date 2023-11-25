@@ -24,13 +24,19 @@ function actions.applyConfigs()
 		syntax_utils.setClassTrackInfo(config.classes, sx_obj)
 
     -- apply routing
-		local routing = config.classes[sx_obj.class].default_routing -- (sx_obj)
+		local routing = config.classes[sx_obj.class].routing -- (sx_obj)
+
+    log.user(sx_obj.name, type(routing), routing)
+
+
 		if routing then
 			if type(routing) == "function" then
 				routing(sx_obj)
 			elseif type(routing) == "table" then
 				for routing_opt_key, routing_func in pairs(routing) do
+				  log.user(routing_opt_key, routing_func)
 					if syntax_utils.trackObjHasOption(sx_obj, routing_opt_key) then
+					  log.user("apply lanes for:", sx_obj.name)
 						routing_func(sx_obj)
 					end
 				end

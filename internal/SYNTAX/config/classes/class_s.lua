@@ -11,6 +11,7 @@ return {
   },
   default_routing = function(trk_obj)
     local trr = require("library.routing")
+    local rc = require("definitions.routing")
     local has_sends = trr.trackHasSends(trk_obj.guid, rc.flags.CAT_SEND)
     if not has_sends then
       if trk_obj.zone.name == "DRUMS_ZONE" then

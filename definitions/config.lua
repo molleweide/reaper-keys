@@ -14,7 +14,7 @@ return {
 	-- allow timeline movement when in visual track mode?
 	allow_visual_track_timeline_movement = true,
 	-- options in decreasing verbosity: [trace debug info warn user error fatal]
-	log_level = "info",
+	log_level = "debug",
 	repeatable_commands_action_type_match = {
 		"command",
 		"operator",
@@ -35,12 +35,14 @@ return {
 	path_presets = {
 		massive = "~/reaper/presets/massive",
 	},
+
+	symbPianoRollRange = "#",
+
 	drum_lanes_low_note_start = 24,
 	syntax = {
-	  samplers = {
-	    load_random_sample_if_empy  = true,
-	    always_reload_random_sample = false,
-
-	  }
-	}
+		samplers = {
+			load_random_sample_if_empy = true,
+			always_reload_random_sample = false,
+		},
+	},
 }

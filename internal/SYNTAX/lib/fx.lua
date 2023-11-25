@@ -54,16 +54,16 @@ local function getRSFXStrAndTrackName(old_has_div, old_fx_name)
   return old_tr_name, old_rsfx_str
 end
 
-local function getPrevDataForFx(opts_global)
-  -- log.user("guid tr", type(opts_global.trk_obj.guid), format.block(opts_global.trk_obj.guid))
+local function getPrevDataForFx(state)
+  -- log.user("guid tr", type(state.trk_obj.guid), format.block(state.trk_obj.guid))
 
   local old_fx_name = fx_util.getSetTrackFxNameByFxChainIndex({
-    guid_tr = opts_global.trk_obj.guid,
-    idx_fx = opts_global.new_fx_chain_idx,
+    guid_tr = state.trk_obj.guid,
+    idx_fx = state.new_fx_chain_idx,
     is_rec_fx = false,
   })
 
-  -- log.user("##chob/old_fx_name: " .. opts_global.trk_obj.name .. " | " .. tostring(old_fx_name))
+  -- log.user("##chob/old_fx_name: " .. state.trk_obj.name .. " | " .. tostring(old_fx_name))
   local old_has_div = checkOldFxHasDiv(old_fx_name)
   local old_tr_name, old_rsfx_str = getRSFXStrAndTrackName(old_has_div, old_fx_name)
   return old_has_div, old_tr_name, old_rsfx_str
@@ -152,17 +152,17 @@ local function concat_full_UI_fx_name_string(state, ridx, rsfx)
   return name_str, new_rsfx_str
 end
 
-local function handle_syntax_fx_chain_post_fx(opts_global)
-  if 0 < opts_global.old_fx_chain_count - opts_global.new_fx_chain_idx then
-    for _ = opts_global.new_fx_chain_idx, opts_global.old_fx_chain_count - 1 do
+local function handle_syntax_fx_chain_post_fx(state)
+  if 0 < state.old_fx_chain_count - state.new_fx_chain_idx then
+    for _ = state.new_fx_chain_idx, state.old_fx_chain_count - 1 do
       local ofxn =
-      fx_util.getSetTrackFxNameByFxChainIndex(opts_global.trk_obj.guid, opts_global.new_fx_chain_idx, false)
+      fx_util.getSetTrackFxNameByFxChainIndex(state.trk_obj.guid, state.new_fx_chain_idx, false)
       local old_has_div = checkOldFxHasDiv(ofxn)
       if old_has_div then
-        fx_util.removeFxAtIndex(opts_global.trk_obj.guid, opts_global.new_fx_chain_idx) -- don't increment index if we remove
+        fx_util.removeFxAtIndex(state.trk_obj.guid, state.new_fx_chain_idx) -- don't increment index if we remove
         -- log.user('rm excess pre')
       else
-        opts_global.new_fx_chain_idx = opts_global.new_fx_chain_idx + 1
+        state.new_fx_chain_idx = state.new_fx_chain_idx + 1
       end
     end
   end
@@ -181,7 +181,7 @@ end
 
 local function apply_single_effect(state, sxfx_opts)
   for spawn_idx = 0, sxfx_opts.spawn_num - 1 do -- syntax spawn num =============================
-    local sx_fx_state = sx_get_prepare_single_fx_state()
+    local sx_fx_state = sx_get_prepare_single_fx_state(state, spawn_idx, sxfx_opts)
     handle_ui_name_code(state, sxfx_opts, sx_fx_state)
     update_ui_fx_name(state, sx_fx_state)
     handle_fx_params(spawn_idx, state, sxfx_opts)
