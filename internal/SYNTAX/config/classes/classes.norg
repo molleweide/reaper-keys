@@ -1,0 +1,28 @@
+@document.meta
+title: classes
+description:
+authors: hjalmarjakobsson
+categories:
+created: 2023-11-25T08:39:52-0500
+updated: 2023-11-25T08:44:58-0500
+version: 1.1.1
+@end
+
+
+i want to keep all default setup inside of each class config,
+so that I don't have to mess around with and move shit around.
+
+maybe i could even move the drum lane mapping inside of the classes
+themselves.
+
+
+
+whenever one of:
+
+But i need to change the naming a bit of each of these so that the names
+are "kinda unique", eg. "midi" or "channel" are much too ambiguous.
+
+
+zone|group|audio|midi|buss|channel|text|split
+
+it should be assumed to be a track object of the corresponding class.

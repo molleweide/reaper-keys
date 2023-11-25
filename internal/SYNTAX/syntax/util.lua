@@ -29,28 +29,22 @@ function mod.applyChannelSplitRouting(trk_obj)
 end
 
 -- move this into class themselves
-function mod.applyZoneDefaultRoutes(trk_obj)
+function mod.applyZoneDefaultRoutes(trk_obj, zone_name)
   if syntax_utils.strHasOneOfChars(trk_obj.class, "MAS") then
     -- should include 'A' as well!!!
     local has_sends = trr.trackHasSends(trk_obj.guid, rc.flags.CAT_SEND)
     if not has_sends then
-      if trk_obj.zone.name == "DRUMS_ZONE" then
+      if zone_name == "DRUMS_ZONE" then
         trr.updateState("(SUM_DRUMS)#[0|0]", trk_obj.guid)
-      elseif trk_obj.zone.name == "MUSIC_ZONE" then
+      elseif zone_name == "MUSIC_ZONE" then
         trr.updateState("(SUM_MUSIC)#[0|0]", trk_obj.guid)
-      elseif trk_obj.zone.name == "FX_ZONE" then
+      elseif zone_name == "FX_ZONE" then
         trr.updateState("(SUM_FX)#[0|0]", trk_obj.guid)
-      elseif trk_obj.zone.name == "VOCALS_ZONE" then
+      elseif zone_name == "VOCALS_ZONE" then
         -- trr.updateState('{0|'..s..'}', LVL2_obj.guid, split_obj.guid)
         --
       else
         trr.updateState("(MIX_BUSS)#[0|0]", trk_obj.guid)
-      end
-    elseif trk_obj.class == "C" then
-      trr.updateState("-#", trk_obj.guid)
-      for s, split_obj in pairs(trk_obj.children) do
-        -- TODO: use string.format() as with doom here..
-        trr.updateState("{0|" .. s .. "}", trk_obj.guid, split_obj.guid)
       end
     end
 
@@ -58,6 +52,12 @@ function mod.applyZoneDefaultRoutes(trk_obj)
     -- if trk_obj.name:match('^kick') then
     --   trr.updateState('(ghostkick)#[0|0]', trk_obj.guid)
     -- end
+  elseif trk_obj.class == "C" then
+    trr.updateState("-#", trk_obj.guid)
+    for s, split_obj in pairs(trk_obj.children) do
+      -- TODO: use string.format() as with doom here..
+      trr.updateState("{0|" .. s .. "}", trk_obj.guid, split_obj.guid)
+    end
   end
 end
 

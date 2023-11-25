@@ -11,6 +11,8 @@ function sx_lib_util.gt(child_obj)
   return tr
 end
 
+-- NOTE: should this be moved into each class module?
+--
 function sx_lib_util.setClassTrackInfo(class_conf, trk_obj)
   -- local trk = reaper.GetTrack(0,trk_obj.trackIndex)
   local trk, i = reaper_utils.getTrackByGUID(trk_obj.guid)

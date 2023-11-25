@@ -22,6 +22,8 @@ return {
     trackHeight = { attrString = "I_HEIGHTOVERRIDE", attrVal = 30 },
     trackColor = { attrString = "I_CUSTOMCOLOR", val = 122 },
   },
+  default_track_props = function(trk_obj)
+  end,
   default_routing = function(trk_obj)
     local trr = require("library.routing")
     trr.updateState("-#", trk_obj.guid)

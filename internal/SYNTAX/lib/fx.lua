@@ -5,8 +5,6 @@ local sx_lib_tobj = require("SYNTAX.lib.track_obj")
 local class_conf = require("SYNTAX.config.config").classes
 
 local reaper_utils = require("custom_actions.utils")
-local util = require("SYNTAX.lib.util") -- rename to sxutil
--- local fx_util = require('SYNTAX.lib.fx_util')
 local fx_util = require("library.fx")
 
 -- module variables
