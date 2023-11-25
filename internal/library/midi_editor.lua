@@ -565,8 +565,8 @@ end
 --
 --
 midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new_item_start, new_item_end)
-  local sx = require("SYNTAX.syntax.syntax")
-  local sx_utils = require("SYNTAX.lib.util")
+  local sx = require("SYNTAX.tracks")
+  local sx_utils = require("SYNTAX.utils")
   local cursor_info = tl.get_cursor_info()
   local g_obj, _, _ = sx_utils.get_track_object_group(sx.getVerifiedTree(), track_obj)
 

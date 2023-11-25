@@ -4,7 +4,7 @@
 --
 --  CONFIG.lua
 --    GENERAL.lua
---    CLASS 
+--    CLASS
 --
 --      TRACK_INFO
 --      FX_CHAIN
@@ -12,14 +12,14 @@
 --
 return {
    classes = {
-     Z = require('SYNTAX.config.classes.class_z'),
-     G = require('SYNTAX.config.classes.class_g'),
-     M = require('SYNTAX.config.classes.class_m'),
-     C = require('SYNTAX.config.classes.class_c'),
-     A = require('SYNTAX.config.classes.class_a'),
-     B = require('SYNTAX.config.classes.class_b'),
-     S = require('SYNTAX.config.classes.class_s'),
-     T = require('SYNTAX.config.classes.class_t')
+     Z = require('definitions.syntax.classes.class_z'),
+     G = require('definitions.syntax.classes.class_g'),
+     M = require('definitions.syntax.classes.class_m'),
+     C = require('definitions.syntax.classes.class_c'),
+     A = require('definitions.syntax.classes.class_a'),
+     B = require('definitions.syntax.classes.class_b'),
+     S = require('definitions.syntax.classes.class_s'),
+     T = require('definitions.syntax.classes.class_t')
    }
 }
 --

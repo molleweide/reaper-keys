@@ -13,8 +13,8 @@ return {
     m = function(gobj, rk_config)
       rk_config = rk_config or require("definitions.config")
       local log = require("utils.log")
-      local sxu = require("SYNTAX.lib.util")
-      local sx_trk_util = require("SYNTAX.lib.track_obj")
+      local sxu = require("SYNTAX.utils")
+      local sx_tracks = require("SYNTAX.tracks")
       local trr = require("library.routing")
 
       log.user("!!!!")
@@ -35,7 +35,7 @@ return {
 
         trr.updateState("#{0|0}", gobj.guid, child_obj.guid)
 
-        require("SYNTAX.lib.fx").track_apply_fx_configs(child_obj, lane_idx, "m")
+        require("SYNTAX.fx").track_apply_fx_configs(child_obj, lane_idx, "m")
 
         -- set piano roll
         if lane_idx > 127 then
@@ -52,7 +52,7 @@ return {
           reaper.SetTrackMIDINoteNameEx(0, gobj.tr, lane_idx + i, 0, "")
         end
 
-        local has_opt_nr = sx_trk_util.trackHasOption(child_obj, "nr")
+        local has_opt_nr = sx_tracks.trackHasOption(child_obj, "nr")
 
         if has_opt_nr then
           for i = 0, child_obj.options.nr - 1 do

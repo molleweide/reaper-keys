@@ -2,10 +2,10 @@ local log = require("utils.log")
 local format = require("utils.format")
 local str_util = require("utils.string")
 
-local class_configs = require("SYNTAX.config.config").classes
-local util = require("SYNTAX.lib.util")
+local class_configs = require("definitions.syntax.config").classes
+local util = require("SYNTAX.utils")
 
-local syntax = {}
+local sx_tracks = {}
 
 -- TODO: better error handling in general -> now there is some type mismatch
 -- because I sometimes return bools/nil when funcs expect strings in the normal
@@ -186,7 +186,7 @@ local function get_info_for_track_at_index(tr_idx)
   return tr, guid, name
 end
 
-function syntax.get_list_of_track_objects()
+function sx_tracks.get_list_of_track_objects()
   local t_track_objects = {}
   local next_prefix = nil
   local next_options = nil
@@ -212,7 +212,7 @@ end
 -- create / popelate tree based on syntax.
 -- >> This function should be recursive and be merged into.
 --    I think that should work actually.
-syntax.make_tree = function(t_trk_objs)
+sx_tracks.make_tree = function(t_trk_objs)
   local vtt = {
     groups = {},
     -- midi_tracks = {}
@@ -301,7 +301,7 @@ end
 -- The `make_tree` func assigns a lot of useful metadata to each track object.
 -- Therefore, it can be useful to get a flattened list again of all track objs
 -- for use in eg. picker results, so that I can filter by class etc. ZGMCABS.
-syntax.tree_make_flat = function(t_trk_objs)
+sx_tracks.tree_make_flat = function(t_trk_objs)
   local flat_list = {}
 
   local function make_flat(t)
@@ -316,8 +316,22 @@ syntax.tree_make_flat = function(t_trk_objs)
   make_flat(t_trk_objs)
 end
 
-syntax.getVerifiedTree = function(sx_list)
-  return sx_list and syntax.make_tree(sx_list) or syntax.make_tree(syntax.get_list_of_track_objects())
+sx_tracks.getVerifiedTree = function(sx_list)
+  return sx_list and sx_tracks.make_tree(sx_list) or sx_tracks.make_tree(sx_tracks.get_list_of_track_objects())
 end
 
-return syntax
+sx_tracks.trackHasOption = function(trk_obj, opt)
+  if trk_obj.options ~= nil then
+    if trk_obj.options[opt] ~= nil then
+      return true
+    else
+      log.user("TrackOptionError: " .. trk_obj.trackIndex .. " : Track does not have option: `" .. opt .. "`.") -- add group name to this err msg
+      return false
+    end
+  else
+    -- log.user("TrackOptionError: "..trk_obj.trackIndex.." : Track does not have any options.") -- add group name to this err msg
+    return false
+  end
+end
+
+return sx_tracks

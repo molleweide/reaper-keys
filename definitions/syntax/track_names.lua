@@ -1,3 +1,8 @@
+
+-- NOTE: default project track setup
+--
+-- NOTE: unused file!
+
 return {
   drums = {
     'kick',

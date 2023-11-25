@@ -1,11 +1,11 @@
 local reaper_state = require('utils.reaper_state')
 local format = require('utils.format')
 local log = require('utils.log')
-local syntax = require('SYNTAX.syntax.syntax')
+local syntax = require('SYNTAX.tracks')
 -- local midi = require('SYNTAX.lib.midi')
 local utils = require('custom_actions.utils')
-local syntax_utils = require('SYNTAX.lib.util')
--- local config = require('SYNTAX.config.config')
+local syntax_utils = require('SYNTAX.utils')
+-- local config = require('definitions.syntax.config')
 
 local ypc = {}
 

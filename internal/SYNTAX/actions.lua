@@ -2,29 +2,31 @@ local ru = require("custom_actions.utils")
 local fx_util = require("library.fx")
 local format = require("utils.format")
 local log = require("utils.log")
-local syntax = require("SYNTAX.syntax.syntax")
-local ypc = require("SYNTAX.lib.ypc")
-local syntax_utils = require("SYNTAX.lib.util")
-local apply_funcs = require("SYNTAX.syntax.util")
-local config = require("SYNTAX.config.config")
+local sx_tracks = require("SYNTAX.tracks")
+-- local ypc = require("SYNTAX.lib.ypc")
+local syntax_utils = require("SYNTAX.utils")
+local sx_configs = require("definitions.syntax.config")
 local rk_config = require("definitions.config")
+
+local trr = require("library.routing")
+
 
 local actions = {}
 
 function actions.applyConfigs()
 	log.clear()
 
-	local tracks_list = syntax.get_list_of_track_objects()
-	local vtt = syntax.getVerifiedTree(tracks_list)
+	local tracks_list = sx_tracks.get_list_of_track_objects()
+	local vtt = sx_tracks.getVerifiedTree(tracks_list)
 
 	-- apply basic defaults
 	for _, sx_obj in pairs(tracks_list) do
 
 	  -- apply track ui props
-		syntax_utils.setClassTrackInfo(config.classes, sx_obj)
+		syntax_utils.setClassTrackInfo(sx_configs.classes, sx_obj)
 
     -- apply routing
-		local routing = config.classes[sx_obj.class].routing -- (sx_obj)
+		local routing = sx_configs.classes[sx_obj.class].routing -- (sx_obj)
 
     log.user(sx_obj.name, type(routing), routing)
 
@@ -69,9 +71,27 @@ function actions.gput()
 	actions.applyConfigs()
 end
 
+
+
+-- move to other file?
+local function applyKeydFxToSelTrks(fn_filt, fx_gui_name, fx_search_str, fx_params, route_str)
+  local t_sel = ru.getSelectedTracksGUIDs()
+  for i, t_tr in pairs(t_sel) do
+    local passed_filter = false
+    if fn_filt or fn_filt() then
+      passed_filter = true
+    end
+    if passed_filter and not fx_util.trackHasFxChainString(t_tr.guid, fx_gui_name, false) then
+      local fx_idx = fx_util.insertFxToLastIdxAndGuiRename(t_tr.guid, fx_search_str, fx_gui_name)
+      fx_util.setFxParamsFromTable(t_tr.guid, fx_idx, fx_params)
+    end
+  end
+  trr.updateState(route_str)
+end
+
 function actions.sidechainToGhostKick()
 	log.clear()
-	apply_funcs.applyKeydFxToSelTrks(
+	applyKeydFxToSelTrks(
 		true, -- tr_filt_hook
 		"SC_GHOST_KICK", -- fx_gui_name
 		"ReaComp (Cockos)", -- fx_search_str
@@ -85,8 +105,8 @@ function actions.sidechainToGhostKick()
 end
 
 function actions.log_vtt()
-	local tracks_list = syntax.get_list_of_track_objects()
-	local vtt = syntax.getVerifiedTree(tracks_list)
+	local tracks_list = sx_tracks.get_list_of_track_objects()
+	local vtt = sx_tracks.getVerifiedTree(tracks_list)
 
 	for _, sx_obj in pairs(vtt.groups) do
 		log.user(sx_obj.trackIndex, sx_obj.name, sx_obj.zone.name, #sx_obj.children)
@@ -99,7 +119,7 @@ function actions.log_vtt()
 	--   end
 	-- end
 
-	-- -- log.user(format.block(syntax.getVerifiedTree()))
+	-- -- log.user(format.block(sx_tracks.getVerifiedTree()))
 	-- for i, LVL1_obj in pairs(vtt) do ------------------------------ lvl 1 ------------
 	--   for j, LVL2_obj in pairs(LVL1_obj.children) do ------------- lvl 2 ------------
 	--     for k, LVL3_obj in pairs(LVL2_obj.children) do ----------- lvl 3 ------------

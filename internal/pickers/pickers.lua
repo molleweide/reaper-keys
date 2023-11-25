@@ -11,7 +11,7 @@ local fx_util = require("library.fx")
 local lib_items = require("library.items")
 local marks = require("utils.marks_regions")
 
-local syntax = require("SYNTAX.syntax.syntax")
+local syntax = require("SYNTAX.tracks")
 
 -- FIX: because pickers operate outside of the vim loop, I need
 -- to explicitly set undo points again here to make sure that each

@@ -1,11 +1,12 @@
 -- dofile(reaper.GetResourcePath().."/UserPlugins/ultraschall_api.lua")
 local log = require("utils.log")
 local format = require("utils.format")
-local sx_lib_tobj = require("SYNTAX.lib.track_obj")
-local class_conf = require("SYNTAX.config.config").classes
+local class_conf = require("definitions.syntax.config").classes
 
 local reaper_utils = require("custom_actions.utils")
 local fx_util = require("library.fx")
+
+local sx_tracks = require("SYNTAX.tracks")
 
 -- module variables
 local div = "_" -- move to constants, or syntax config?
@@ -16,7 +17,7 @@ local fx = {}
 --   local fx_tot = 0
 --   local tr_range = 1
 --   for i = 0, #T_TRACK_CLASS_FX_SX do
---     if T_TRACK_CLASS_FX_SX[i].spawnByRange and sx_lib_tobj.trackHasOption(child_obj, "nr") then
+--     if T_TRACK_CLASS_FX_SX[i].spawnByRange and sx_tracks.trackHasOption(child_obj, "nr") then
 --       tr_range = child_obj.options.nr
 --       for _ = 0, tr_range - 1 do
 --         fx_tot = fx_tot + 1
@@ -206,7 +207,7 @@ function fx.track_apply_fx_configs(child_obj, proll_start_idx, opt_type) -- chan
   -- NOTE: I put together a table of all
   local state = {
     tr = tr, -- move into trk_obj
-    tr_range = sx_lib_tobj.trackHasOption(child_obj, "nr") and child_obj.options.nr or 1, -- move into trk_obj
+    tr_range = sx_tracks.trackHasOption(child_obj, "nr") and child_obj.options.nr or 1, -- move into trk_obj
     trk_obj = child_obj,
     proll_start_idx = proll_start_idx,
     opt_type = opt_type, -- move into trk_obj
@@ -217,7 +218,7 @@ function fx.track_apply_fx_configs(child_obj, proll_start_idx, opt_type) -- chan
   local T_TRACK_CLASS_FX_SX = class_conf[child_obj.class].fx_syntax[opt_type]
   for sxfx_idx = 0, #T_TRACK_CLASS_FX_SX do
     apply_single_effect(state, {
-      spawn_num = (sx_lib_tobj.trackHasOption(child_obj, "nr") and T_TRACK_CLASS_FX_SX[sxfx_idx].spawnByRange)
+      spawn_num = (sx_tracks.trackHasOption(child_obj, "nr") and T_TRACK_CLASS_FX_SX[sxfx_idx].spawnByRange)
           and child_obj.options.nr
           or 1,
       t_sx_current_fx = T_TRACK_CLASS_FX_SX[sxfx_idx],

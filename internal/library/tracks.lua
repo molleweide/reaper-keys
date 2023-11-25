@@ -1,7 +1,7 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
-local sx = require("SYNTAX.syntax.syntax")
+local sx = require("SYNTAX.tracks")
 local midi_editor = require("library.midi_editor")
 
 local cust_util = require("custom_actions.utils")
