@@ -76,7 +76,7 @@ rs5k.updateSample = function(tobj, fx_idx, wav_file_path)
       end
     end
 
-    -- log.user(tobj.name, tobj.name_components[1], ">>> wav:", wav_file_path )
+    log.user(tobj.name, tobj.name_components[1], ">>> wav:", wav_file_path )
 
     reaper.TrackFX_SetNamedConfigParm(tobj.tr, fx_idx, "FILE0", wav_file_path)
     reaper.TrackFX_SetNamedConfigParm(tobj.tr, fx_idx, "DONE", "")

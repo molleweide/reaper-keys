@@ -568,7 +568,7 @@ midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new
   local sx = require("SYNTAX.syntax.syntax")
   local sx_utils = require("SYNTAX.lib.util")
   local cursor_info = tl.get_cursor_info()
-  local g_obj, _, _ = sx_utils.get_track_object_group(sx.getVerifiedTree(), track_obj.trackIndex)
+  local g_obj, _, _ = sx_utils.get_track_object_group(sx.getVerifiedTree(), track_obj)
 
   -- TODO: if track is midi split child -> then enter parent track
   -- and set midi channel for insertion

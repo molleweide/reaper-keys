@@ -113,7 +113,7 @@ tracks.get_focused_track_objects = function()
     local t_sel_trk_indices = cust_util.getSelectedTrackIndices()
     for _, tidx in ipairs(t_sel_trk_indices) do
       -- these should map 1:1 with track_objects_list
-      table.insert(focused_track_objects, track_objects_list[tidx])
+      table.insert(focused_track_objects, track_objects_list[tidx + 1])
     end
   end
   return focused_track_objects, track_objects_list

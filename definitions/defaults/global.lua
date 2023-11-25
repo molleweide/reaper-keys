@@ -181,7 +181,7 @@ return {
         ["m"] = {
           "+midi",
           {
-            ["f"] = "Midi_ChangeActiveSelection",
+            ["F"] = "Midi_ChangeActiveSelection",
             ["r"] = "Midi_EditMidiForRegionsMarksAndSelectTrack",
 
             ["g"] = "SetMidiGridDivision",
