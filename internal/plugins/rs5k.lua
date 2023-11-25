@@ -23,7 +23,6 @@ local rs5k = {}
 --         >>>>>> only do this with plugins that exist inside a project,
 --         so that I dont create too many unused modules...
 
-local PLUGIN_NAME = "RS5K" -- "ReaSamplOmatic5000"
 
 -- TODO: move the main part to `plugins/utils.lua` so that we can build out a
 -- more detailed debug message and other utils involed in manipulating plugin
@@ -31,20 +30,22 @@ local PLUGIN_NAME = "RS5K" -- "ReaSamplOmatic5000"
 local function is_the_plugin(track, fx_idx)
   -- utils.check_if_plugin_exists(track,fx)
   local _, name = reaper.TrackFX_GetFXName(track, fx_idx)
-  if name:find(PLUGIN_NAME) then
+  if name:find(rs5k.PLUGIN_NAME) then
     return true
   else
-    log.debug(string.format([[Track does not have plugin: %s]], PLUGIN_NAME))
+    log.debug(string.format([[Track does not have plugin: %s]], rs5k.PLUGIN_NAME))
     return false
   end
 end
+
+rs5k.PLUGIN_NAME = "RS5K" -- "ReaSamplOmatic5000"
 
 rs5k.hasSampleLoaded = function(tobj, fx_idx)
   if is_the_plugin(tobj.tr, fx_idx) then
     local ret, buf = reaper.TrackFX_GetNamedConfigParm(tobj.tr, fx_idx, "FILE0")
     return ret, buf
   else
-    log.debug(string.format([[xxxxxxxxx]], PLUGIN_NAME))
+    log.debug(string.format([[xxxxxxxxx]], rs5k.PLUGIN_NAME))
   end
 end
 
