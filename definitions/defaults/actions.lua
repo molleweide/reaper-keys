@@ -925,6 +925,20 @@ return {
       "updateSample",
     },
   },
+
+  -- TODO: generalize this to PickerSoundSourceByTrackTypeAndName
+  --  ~ check if track is
+  --       sampler | vst | ??
+  --  ~ can this be facilitated via fx syntax string?
+  --  ~ create plugin module for massive
+  --  ~ save some synth patches manually
+  --     >>> in a smart manner/dir/file structure
+  --  ~
+  --
+  --  see where this ends up. potentially this will become a good
+  --  system for easilly switching sounds
+  --
+
   PickerSelectSampleForSamplerOnSelectOrFocusedTrack = {
     function()
       local lib_tr = require("library.tracks")
@@ -982,12 +996,41 @@ return {
               return true
             end,
             sort_comp = "name",
-            entry_maker = "name"
+            entry_maker = "name",
           })
         end
       end
     end,
   },
+
+  -- TRACK EDITING YPC
+
+  CmdCustomYankTrack = function(meta, opts)
+    -- get selected track
+    -- copy all midi item information
+    -- store in state `track_ypc`
+    --
+    -- if group has drum lanes
+    --      copy master item info
+  end,
+  CmdCustomCutTrack = function(meta, opts)
+    -- a. perform yank
+    -- b. remove track
+    -- c. if drum lanes shift midi accordingly.
+    -- d. ui update
+  end,
+  CmdCustomPutTrack = function(meta, opts)
+    -- a. insert track
+    -- b. if drum lanes shift midi accordingly
+    -- c. insert new midi
+    -- d. update ui
+  end,
+  CmdCustomInsertTrackAbove = function(meta, opts)
+    -- a.
+  end,
+  CmdCustomInsertTrackBelow = function(meta, opts)
+    -- a.
+  end,
 
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,
