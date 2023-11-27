@@ -4,25 +4,37 @@ local log = require('utils.log')
 local syntax = require('SYNTAX.tracks')
 -- local midi = require('SYNTAX.lib.midi')
 local utils = require('custom_actions.utils')
-local syntax_utils = require('SYNTAX.utils')
+local syntax_utils = require('syntax.utils')
 -- local config = require('definitions.syntax.config')
+--
+
+-- NOTE: func names in this file are stupid as fuck
 
 local ypc = {}
 
 function ypc.customGroupYpc(ypc_type)
   local vtt = syntax.getVerifiedTree()
+
   local tr_idx_first, tr_idx_last = syntax_utils.getTrackIndicesOfTrackSel()
   local LVL2_parent_obj, _, _ = syntax_utils.get_track_object_group(vtt, tr_idx_first)
+
   local T_YPC = { ypc_type = ypc_type }
+
   -- log.user('\n\n >>> YPC: ' .. ypc_type .. ' --------------------\n\n')
+
   if not syntax_utils.trackObjHasOption(LVL2_parent_obj, 'm') then
     log.user('YpcError; requires opt \'m\'')
     return
   end
+
   T_YPC["t_ypc_segments"] = ypcMidiSegments(LVL2_parent_obj, tr_idx_first, tr_idx_last, MIDI_LOW_btm)
+
   ypcReaperMainCommands(ypc_type) -- where can I run this best??
-  --log.user('T_YPC: ' .. format.block(T_YPC))
+
+  -- THIS IS WHERE INFO IS BEING COPIED
   T_YPC["parent_items"] = ypcHandleParentItems(LVL2_parent_obj.tr, T_YPC)
+
+
   ypcInsertMidiFromExtState(LVL2_parent_obj.tr, LVL2_parent_obj, T_YPC)
 
   if ypc_type == "yank" or ypc_type == "cut" then

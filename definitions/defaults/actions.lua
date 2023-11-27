@@ -1003,15 +1003,17 @@ return {
     end,
   },
 
-  -- TRACK EDITING YPC
+  -- TRACK EDITING YPC | only applies to MCABS tracks??
+  --
+  -- ypc functions only work on a single track for the moment.
 
   CmdCustomYankTrack = function(meta, opts)
-    -- get selected track
-    -- copy all midi item information
-    -- store in state `track_ypc`
-    --
-    -- if group has drum lanes
-    --      copy master item info
+    local sx_tracks = require("syntax.tracks")
+    local libtr = require("library.tracks")
+
+    local t_foc_tr, t_obj_list = libtr.get_focused_track_objects()
+    sx_tracks.getVerifiedTree(t_obj_list) -- make this an opt param in get_focused_track_objects
+    require("utils.project_state").overwrite("ypc", "tracks", libtr.get_single_track_data_for_yanking(t_foc_tr[1]))
   end,
   CmdCustomCutTrack = function(meta, opts)
     -- a. perform yank

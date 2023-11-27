@@ -109,21 +109,6 @@ end
 --   return Table
 -- end
 
--- mv to virtual_track_table_interface.lua
-local function createTrackObj(tr, guid, tr_idx, prefix, options, track_name) -- index; prefix; options; track name
-  return {
-    tr = tr,
-    guid = guid,
-    level = class_configs[prefix].treeProps.level,
-    trackIndex = tr_idx, -- can only be used initially if tracks haven't been touched?!
-    class = prefix,
-    options = options, -- sub table
-    name = track_name, -- the real tr name
-    name_components = str_util.getStringSplitPattern(track_name, "%."),
-    children = {},
-  }
-end
-
 ---@param next_prefix string
 ---@param next_char_set string
 ---@param err_trk_idx number
@@ -142,7 +127,7 @@ end
 ---
 ---@param tr_idx number
 ---@param prev_prefix string
----@param next_prefix string
+---@param next_prefix boolean | string | nil
 ---@return boolean
 local function verifyByComparing(tr_idx, prev_prefix, next_prefix) -- prev / next entry
   -- if str_type == 'allowed' and validNext(next_prefix, 'ZGMCABS', 'character not allowed') then return true end
@@ -176,31 +161,37 @@ end
 --   if s == 1 then return true end
 -- end
 
------------------
-
--- TODO: move to `lib/trks`
-local function get_info_for_track_at_index(tr_idx)
-  local tr = reaper.GetTrack(0, tr_idx)
-  local guid = reaper.GetTrackGUID(tr)
-  local _, name = reaper.GetTrackName(tr)
-  return tr, guid, name
+sx_tracks.get_track_obj_for_idx = function(trIdx)
+  local next_tr = reaper.GetTrack(0, trIdx)
+  local guid = reaper.GetTrackGUID(next_tr)
+  local _, track_name_raw = reaper.GetTrackName(next_tr)
+  local next_prefix, next_options, next_track_name = getNameStringParts(trIdx, track_name_raw)
+  return {
+    tr = next_tr,
+    guid = guid,
+    level = class_configs[next_prefix].treeProps.level, -- revise later
+    trackIndex = trIdx,
+    class = next_prefix,
+    options = next_options, -- sub table
+    name = next_track_name, -- the real next_tr name
+    name_components = str_util.getStringSplitPattern(next_track_name, "%."),
+    name_raw = track_name_raw,
+    children = {},
+  }
 end
+
+-----------------
 
 function sx_tracks.get_list_of_track_objects()
   local t_track_objects = {}
-  local next_prefix = nil
-  local next_options = nil
-  local next_track_name = nil
-  local prev_prefix = nil
+  local prev_prefix = nil -- prev class
 
-  for i = 0, reaper.CountTracks(0) - 1 do
-    local tr, guid, track_name_raw = get_info_for_track_at_index(i)
-    next_prefix, next_options, next_track_name = getNameStringParts(i, track_name_raw)
+  for trIdx = 0, reaper.CountTracks(0) - 1 do
+    local next_track_obj = sx_tracks.get_track_obj_for_idx(trIdx)
 
-    if verifyByComparing(i, prev_prefix, next_prefix) and next_prefix ~= false then
-      local next_track_obj = createTrackObj(tr, guid, i, next_prefix, next_options, next_track_name) -- <<<<<<<< TODO
+    if verifyByComparing(trIdx, prev_prefix, next_track_obj.class) and next_track_obj.class ~= false then
       table.insert(t_track_objects, next_track_obj)
-      prev_prefix = next_prefix
+      prev_prefix = next_track_obj.class
     else
       break
     end

@@ -34,4 +34,13 @@ tbl.filter = function(t, condition, debug)
 	return result
 end
 
+tbl.findKey = function(t, key, search_value)
+	for _, item in ipairs(t) do
+		if item[key] == search_value then
+		  return item
+		end
+	end
+	return false
+end
+
 return tbl

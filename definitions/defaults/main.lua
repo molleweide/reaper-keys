@@ -3,8 +3,8 @@ return {
     ["G"] = "LastTrack",
     ["gg"] = "FirstTrack",
     -- i don't use folders so I could replace these.
-    ["J"] = "NextFolderNear",
-    ["K"] = "PrevFolderNear",
+    -- ["J"] = "NextFolderNear",
+    -- ["K"] = "PrevFolderNear",
     ["/"] = "MatchedTrackForward",
     ["?"] = "MatchedTrackBackward",
     ["n"] = "NextTrackMatchForward",
@@ -163,7 +163,10 @@ return {
     -- ["yy"] = "CopyTrack",
     ["y"] = {
       "+yank",
-      { ["y"] = "CopyTrack", ["c"] = "CmdCustomYankTrack" },
+      {
+        ["y"] = "CopyTrack",
+        ["C"] = "CmdCustomYankTrack",
+      },
     },
     ["zz"] = "ScrollToSelectedTracks",
     ["|"] = "SplitItemsAtEditCursor",
