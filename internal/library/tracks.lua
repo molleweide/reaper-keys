@@ -1,6 +1,8 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
+local tbl = require("utils.table")
+
 local sx = require("syntax.tracks")
 local midi_editor = require("library.midi_editor")
 
@@ -247,30 +249,42 @@ end
 -- refactor into which module
 --
 -- defaults to return everything
-local function get_correct_item_data_for_yanking(tobj)
+local function prepare_item_data_objs_for_yanking(tobj)
 	local sxu = require("syntax.utils")
 	local libit = require("library.items")
 
-	local t_items_data
+	local t_item_data_objs_for_yanking
 	if sxu.trackObjHasOption(tobj.group, "m") then
-		-- TODO: pass note range for lanes as pitch filter
-
-		local row_start, row_end = sxu.get_drum_lane_indices_from_child_track_obj(tobj.group, tobj)
-
-		t_items_data = libit.get_items_data_from_track_obj(tobj.group, {
+		-- filter out correct midi lane range data from lane master
+		log.user("prep item objs for yank: opt M")
+		t_item_data_objs_for_yanking = libit.get_item_objs_from_single_track(tobj.group, {
 			filter = {
-				-- info_params = {},
-				data = { midi = { notes = { pitch = { 24, 60 } } } },
+				-- info = {},
+				data = {
+					midi = { notes = { pitch = { sxu.get_drum_lane_indices_from_child_track_obj(tobj.group, tobj) } } },
+				},
 			},
 		})
 	elseif tobj.class == "S" then
-		t_items_data = libit.get_items_data_from_track_obj(tobj.channel_splitter, {
-			midi_channel = require("utils.table").findKey(tobj.channel_splitter.children, "guid", tobj.guid),
+		-- filter out correct midi chan data on split master
+		log.user("prep item objs for yank: S")
+		t_item_data_objs_for_yanking = libit.get_item_objs_from_single_track(tobj.channel_splitter, {
+			data = {
+				midi = {
+					notes = {
+						chan = function(note)
+							return note.ch == tbl.findIndexOf(tobj.channel_splitter.children, tobj.guid, "guid")
+						end,
+					},
+				},
+			},
 		})
 	else -- MC
-		t_items_data = libit.get_items_data_from_track_obj(tobj, {})
+		log.user("prep item objs for yank: standard MC")
+		t_item_data_objs_for_yanking =
+			libit.get_item_objs_from_single_track(tobj, { filter = { data = { midi = {}} } })
 	end
-	return t_items_data
+	return t_item_data_objs_for_yanking
 end
 
 -- todo: handle routes
@@ -299,7 +313,7 @@ tracks.get_single_track_data_for_yanking = function(tobj)
 		track_options = tobj.options,
 		prev_idx = tobj.trackIndex,
 		track_info = tracks.get_all_track_info(tobj.tr),
-		item_data = get_correct_item_data_for_yanking(tobj),
+		item_objs = prepare_item_data_objs_for_yanking(tobj),
 		routes = {},
 	}
 	return track_data

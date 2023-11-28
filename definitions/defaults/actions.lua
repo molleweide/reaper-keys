@@ -1024,9 +1024,11 @@ return {
 
     -- TODO: later account for multiple tracks
 
-		for k, v in pairs(t_single_track_data) do
-			log.user("yank", k)
-		end
+			log.user(format.block(t_single_track_data.item_objs))
+
+		-- for k, v in pairs(t_single_track_data) do
+		-- 	log.user("yank", k, format.block(v))
+		-- end
 
 		-- require("utils.project_state").overwrite("ypc", "tracks", t_single_track_data)
 	end,

@@ -25,19 +25,25 @@ tbl.filter = function(t, condition, debug)
 	local result = {}
 	for _, item in ipairs(t) do
 		if condition(item) then
-		  if debug then
-		    log.user(format.block(item))
-		  end
+			if debug then
+				log.user(format.block(item))
+			end
 			table.insert(result, item)
 		end
 	end
 	return result
 end
 
-tbl.findKey = function(t, key, search_value)
-	for _, item in ipairs(t) do
-		if item[key] == search_value then
-		  return item
+tbl.findIndexOf = function(t, search_value, compare_key)
+	for i, val in ipairs(t) do
+		if compare_key then
+			if val[compare_key] == search_value then
+				return i, val
+			end
+		else
+		  if val == search_value then
+		    return i, val
+		  end
 		end
 	end
 	return false

@@ -173,6 +173,12 @@ sx_lib_util.get_drum_lane_indices_from_child_track_obj = function(parent_group_o
 	return note_row_start, note_row_start + found_range
 end
 
+-- expects split track obj
+sx_lib_util.get_channel_for_split_track = function(sobj)
+	for i = #sobj.channel_splitter.children, 1, -1 do
+	end
+end
+
 -- input name
 -- return 'drums', 'music', 'fx', 'vocals'
 function sx_lib_util.trackNameMatchCategory(name)

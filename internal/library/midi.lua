@@ -582,9 +582,9 @@ end
 -- ~ vel
 -- ~ ppq_s
 -- ~ ppq_e
-midi.get_midi_events_from_take = function(take, opts)
+midi.get_midi_data_from_take = function(take, opts)
 	if not take then
-		log.debug("No take was supplied to midi.get_midi_events_from_take")
+		log.debug("No take was supplied to midi.get_midi_data_from_take")
 		return
 	end
 

@@ -3,6 +3,9 @@ local format = require("utils.format")
 
 local lib_items = {}
 
+-- NOTE: that I don't support using takes currently. only items as a singular
+-- unit.
+
 --
 -- ITEMS / TAKES -> RENAMETO: containers?
 --
@@ -69,27 +72,29 @@ local function get_item_info(item)
 	}
 end
 
--- TODO: move all below to a lib function `get_single_item_data({
--- type = "midi|audio|both|???"
--- })`
-lib_items.get_single_item_data = function(item, opts)
-	opts = opts or {}
-	if not item then
-		log.debug("No item was supplied to get_single_item_data")
-		return
-	end
-	local take = reaper.GetMediaItemTake(item, 0) -- active take?
-	local t_item_data = get_item_info(item)
-
-	if reaper.TakeIsMIDI(take) then
-		t_item_data.midi_events = require("library.midi").get_midi_events_from_take(take, {
-			filter = { notes = { pitch = { 24, 60 } } },
-		})
-	else
-		-- handle audio data
-	end
-	return t_item_data
-end
+-- REMOVE THIS!!!!!
+--
+-- -- : move all below to a lib function `get_single_item_data({
+-- -- type = "midi|audio|both|???"
+-- -- })`
+-- lib_items.get_single_item_data = function(item, opts)
+-- 	opts = opts or {}
+-- 	if not item then
+-- 		log.debug("No item was supplied to get_single_item_data")
+-- 		return
+-- 	end
+-- 	local take = reaper.GetMediaItemTake(item, 0) -- active take?
+-- 	local t_item_data = get_item_info(item)
+--
+-- 	if reaper.TakeIsMIDI(take) then
+-- 		t_item_data.midi_events = require("library.midi").get_midi_data_from_take(take, {
+-- 			filter = { notes = { pitch = { 24, 60 } } },
+-- 		})
+-- 	else
+-- 		-- handle audio data
+-- 	end
+-- 	return t_item_data
+-- end
 
 -- TODO: supply filter params, eg
 -- ~ note range
@@ -101,7 +106,7 @@ end
 -- TODO: again implement filters similar to what I do with midi data.
 -- so that I can easilly specify what I want from a track
 --
-lib_items.get_items_data_from_track_obj = function(tobj, opts)
+lib_items.get_item_objs_from_single_track = function(tobj, opts)
 	opts = opts or {}
 
 	if not tobj then
@@ -109,22 +114,59 @@ lib_items.get_items_data_from_track_obj = function(tobj, opts)
 		return
 	end
 
-	local t_res_items = {}
+	local filter = opts.filter or {}
+	local info_filter = filter.info
+	local data_filter = filter.data
+	local no_filters = not info_filter and not data_filter
+	local midi_and_audio
+	if data_filter then
+		midi_and_audio = data_filter.midi == nil and data_filter.audio == nil
+	end
+	-- log.user(string.format([[filter=%s, noflt=%s, m_and_a_=%s ]], filter, no_filters, midi_and_audio))
+
+	local t_return_all_item_objs = {}
 
 	local tr = require("custom_actions.utils").getTrackByGUID(tobj.guid)
 	local item_count = reaper.CountTrackMediaItems(tr)
-
 	for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
+		-- don't support takes - only get take 0
 		local item = reaper.GetTrackMediaItem(tr, i)
+		local take = reaper.GetMediaItemTake(item, 0) -- active take?
+		local take_is_midi = reaper.TakeIsMIDI(take)
 
-		local t_item_data = lib_items.get_single_item_data(item, {})
+		local t_item_data_obj = {}
 
-		if t_item_data then
-			table.insert(t_res_items, t_item_data)
+		-- COLLECT ITEM INFO
+
+		if no_filters or info_filter then
+			log.user("GETTING: item info data")
+			-- t_item_data_obj.midi_data = require("library.midi").get_midi_data_from_take(take, {
+			-- 	filter = data_filter and data_filter.midi,
+			-- })
 		end
+
+		-- COLLECT ITEM DATA
+
+		if no_filters or midi_and_audio or data_filter.midi and take_is_midi then
+			log.user("GETTING item midi data")
+			-- get_midi_data_from_take should be moved into items since it is dealing
+			-- with items/takes first hand, and not midi. >>> it is an item_util!!
+			t_item_data_obj.midi_data = require("library.midi").get_midi_data_from_take(take, {
+				filter = data_filter and data_filter.midi,
+			})
+		end
+
+		if no_filters or midi_and_audio or data_filter.audio and not take_is_midi then
+			log.user("GETTING item audio data")
+			-- t_item_data_obj.audio_data = require("library.items").get_audio_data_from_take(take, {
+			-- 	filter = data_filter and data_filter.audio,
+			-- })
+		end
+
+		table.insert(t_return_all_item_objs, t_item_data_obj)
 	end
 
-	return t_res_items
+	return t_return_all_item_objs
 end
 
 -- NOTE: reaper.GetMediaItemInfo_Value( item, parmname )
