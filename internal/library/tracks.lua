@@ -245,26 +245,30 @@ tracks.get_all_track_info = function(track)
 end
 
 -- refactor into which module
+--
+-- defaults to return everything
 local function get_correct_item_data_for_yanking(tobj)
 	local sxu = require("syntax.utils")
 	local libit = require("library.items")
 
-	local t_items_data = {}
+	local t_items_data
 	if sxu.trackObjHasOption(tobj.group, "m") then
+		-- TODO: pass note range for lanes as pitch filter
 
-    -- TODO: pass note range for lanes as pitch filter
+		local row_start, row_end = sxu.get_drum_lane_indices_from_child_track_obj(tobj.group, tobj)
 
-		local row_start, row_end = sxu.get_drum_lane_start_idx_from_child_track(g_obj, track_obj)
-
-		t_items_data = libit.get_all_items_data(tobj.group.guid)
-
+		t_items_data = libit.get_items_data_from_track_obj(tobj.group, {
+			filter = {
+				-- info_params = {},
+				data = { midi = { notes = { pitch = { 24, 60 } } } },
+			},
+		})
 	elseif tobj.class == "S" then
-		t_items_data = libit.get_all_items_data({
-			tobj_src = tobj.channel_splitter,
+		t_items_data = libit.get_items_data_from_track_obj(tobj.channel_splitter, {
 			midi_channel = require("utils.table").findKey(tobj.channel_splitter.children, "guid", tobj.guid),
 		})
 	else -- MC
-		t_items_data = libit.get_all_items_data(tobj.guid)
+		t_items_data = libit.get_items_data_from_track_obj(tobj, {})
 	end
 	return t_items_data
 end
@@ -277,6 +281,12 @@ end
 --       ~ item data
 --       ~ routes
 -- })`
+--
+--
+-- This functions get all info pertaining to a track that should be yanked.
+-- Since data and track is separated with drum lanes this requires a custom
+-- function that collects track info and then takes the data from the correct
+-- source track container.
 
 tracks.get_single_track_data_for_yanking = function(tobj)
 	log.user(string.format("yank foc tr: %s (t), %s (g)", tobj.name, tobj.group and tobj.group.name or "!g"))
@@ -292,7 +302,7 @@ tracks.get_single_track_data_for_yanking = function(tobj)
 		item_data = get_correct_item_data_for_yanking(tobj),
 		routes = {},
 	}
-	return tracks
+	return track_data
 end
 
 return tracks

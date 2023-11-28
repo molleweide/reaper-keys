@@ -1,3 +1,11 @@
+-- NOTE: option: m
+-- makes all contained drum tracks midi data reside in the master item.
+--
+-- NOTE: option: d
+-- makes each drum lane host their midi data in the computed proll range
+
+
+
 return {
   prefix = "G",
   treeProps = { level = 2, nxt = "MCABT", rep = false, cont = true },
