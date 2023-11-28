@@ -64,14 +64,6 @@ lib_items.get_items_in_track_objects = function(t_track_objects)
 	end
 end
 
-local function get_item_info(item)
-	return {
-		item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION"),
-		item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH"),
-		midi_events = nil,
-	}
-end
-
 -- REMOVE THIS!!!!!
 --
 -- -- : move all below to a lib function `get_single_item_data({
@@ -143,6 +135,8 @@ lib_items.get_item_objs_from_single_track = function(tobj, opts)
 			-- t_item_data_obj.midi_data = require("library.midi").get_midi_data_from_take(take, {
 			-- 	filter = data_filter and data_filter.midi,
 			-- })
+			t_item_data_obj.item_info = lib_items.get_item_info(item)
+			t_item_data_obj.take_info = lib_items.get_take_info(take)
 		end
 
 		-- COLLECT ITEM DATA
@@ -168,63 +162,6 @@ lib_items.get_item_objs_from_single_track = function(tobj, opts)
 
 	return t_return_all_item_objs
 end
-
--- NOTE: reaper.GetMediaItemInfo_Value( item, parmname )
---
--- Get media item numerical-value attributes.
--- B_MUTE : bool * : muted (item solo overrides). setting this value will clear C_MUTE_SOLO.
--- B_MUTE_ACTUAL : bool * : muted (ignores solo). setting this value will not affect C_MUTE_SOLO.
--- C_LANEPLAYS : char * : in fixed lane tracks, 0=this item lane does not play, 1=this item lane plays exclusively, 2=this item lane plays and other lanes also play (read-only)
--- C_MUTE_SOLO : char * : solo override (-1=soloed, 0=no override, 1=unsoloed). note that this API does not automatically unsolo other items when soloing (nor clear the unsolos when clearing the last soloed item), it must be done by the caller via action or via this API.
--- B_LOOPSRC : bool * : loop source
--- B_ALLTAKESPLAY : bool * : all takes play
--- B_UISEL : bool * : selected in arrange view
--- C_BEATATTACHMODE : char * : item timebase, -1=track or project default, 1=beats (position, length, rate), 2=beats (position only). for auto-stretch timebase: C_BEATATTACHMODE=1, C_AUTOSTRETCH=1
--- C_AUTOSTRETCH: : char * : auto-stretch at project tempo changes, 1=enabled, requires C_BEATATTACHMODE=1
--- C_LOCK : char * : locked, &1=locked
--- D_VOL : double * : item volume, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc
--- D_POSITION : double * : item position in seconds
--- D_LENGTH : double * : item length in seconds
--- D_SNAPOFFSET : double * : item snap offset in seconds
--- D_FADEINLEN : double * : item manual fadein length in seconds
--- D_FADEOUTLEN : double * : item manual fadeout length in seconds
--- D_FADEINDIR : double * : item fadein curvature, -1..1
--- D_FADEOUTDIR : double * : item fadeout curvature, -1..1
--- D_FADEINLEN_AUTO : double * : item auto-fadein length in seconds, -1=no auto-fadein
--- D_FADEOUTLEN_AUTO : double * : item auto-fadeout length in seconds, -1=no auto-fadeout
--- C_FADEINSHAPE : int * : fadein shape, 0..6, 0=linear
--- C_FADEOUTSHAPE : int * : fadeout shape, 0..6, 0=linear
--- I_GROUPID : int * : group ID, 0=no group
--- I_LASTY : int * : Y-position (relative to top of track) in pixels (read-only)
--- I_LASTH : int * : height in pixels (read-only)
--- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x1000000 (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it will not be used, but will store the color
--- I_CURTAKE : int * : active take number
--- IP_ITEMNUMBER : int : item number on this track (read-only, returns the item number directly)
--- F_FREEMODE_Y : float * : free item positioning or fixed lane Y-position. 0=top of track, 1.0=bottom of track
--- F_FREEMODE_H : float * : free item positioning or fixed lane height. 0.5=half the track height, 1.0=full track height
--- I_FIXEDLANE : int * : fixed lane of item (fine to call with setNewValue, but returned value is read-only)
--- B_FIXEDLANE_HIDDEN : bool * : true if displaying only one fixed lane and this item is in a different lane (read-only)
--- P_TRACK : MediaTrack * : (read-only)
-
--- NOTE: reaper.GetMediaItemTakeInfo_Value( take, parmname )
---
--- Get media item take numerical-value attributes.
--- D_STARTOFFS : double * : start offset in source media, in seconds
--- D_VOL : double * : take volume, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc, negative if take polarity is flipped
--- D_PAN : double * : take pan, -1..1
--- D_PANLAW : double * : take pan law, -1=default, 0.5=-6dB, 1.0=+0dB, etc
--- D_PLAYRATE : double * : take playback rate, 0.5=half speed, 1=normal, 2=double speed, etc
--- D_PITCH : double * : take pitch adjustment in semitones, -12=one octave down, 0=normal, +12=one octave up, etc
--- B_PPITCH : bool * : preserve pitch when changing playback rate
--- I_LASTY : int * : Y-position (relative to top of track) in pixels (read-only)
--- I_LASTH : int * : height in pixels (read-only)
--- I_CHANMODE : int * : channel mode, 0=normal, 1=reverse stereo, 2=downmix, 3=left, 4=right
--- I_PITCHMODE : int * : pitch shifter mode, -1=projext default, otherwise high 2 bytes=shifter, low 2 bytes=parameter
--- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x1000000 (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it will not be used, but will store the color
--- IP_TAKENUMBER : int : take number (read-only, returns the take number directly)
--- P_TRACK : pointer to MediaTrack (read-only)
--- P_ITEM : pointer to MediaItem (read-only)
--- P_SOURCE : PCM_source *. Note that if setting this, you should first retrieve the old source, set the new, THEN delete the old.
 
 -- NOTE: reaper.GetTakeName( take )
 --
@@ -256,8 +193,68 @@ lib_items.get_item_info = function(tr, i)
 		ref = item,
 		start = item_start,
 		_end = item_end,
+
+		-- NOTE: reaper.GetMediaItemInfo_Value( item, parmname )
+		--
+		-- Get media item numerical-value attributes.
+		-- B_MUTE : bool * : muted (item solo overrides). setting this value will clear C_MUTE_SOLO.
+		-- B_MUTE_ACTUAL : bool * : muted (ignores solo). setting this value will not affect C_MUTE_SOLO.
+		-- C_LANEPLAYS : char * : in fixed lane tracks, 0=this item lane does not play, 1=this item lane plays exclusively, 2=this item lane plays and other lanes also play (read-only)
+		-- C_MUTE_SOLO : char * : solo override (-1=soloed, 0=no override, 1=unsoloed). note that this API does not automatically unsolo other items when soloing (nor clear the unsolos when clearing the last soloed item), it must be done by the caller via action or via this API.
+		-- B_LOOPSRC : bool * : loop source
+		-- B_ALLTAKESPLAY : bool * : all takes play
+		-- B_UISEL : bool * : selected in arrange view
+		-- C_BEATATTACHMODE : char * : item timebase, -1=track or project default, 1=beats (position, length, rate), 2=beats (position only). for auto-stretch timebase: C_BEATATTACHMODE=1, C_AUTOSTRETCH=1
+		-- C_AUTOSTRETCH: : char * : auto-stretch at project tempo changes, 1=enabled, requires C_BEATATTACHMODE=1
+		-- C_LOCK : char * : locked, &1=locked
+		-- D_VOL : double * : item volume, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc
+		-- D_POSITION : double * : item position in seconds
+		-- D_LENGTH : double * : item length in seconds
+		-- D_SNAPOFFSET : double * : item snap offset in seconds
+		-- D_FADEINLEN : double * : item manual fadein length in seconds
+		-- D_FADEOUTLEN : double * : item manual fadeout length in seconds
+		-- D_FADEINDIR : double * : item fadein curvature, -1..1
+		-- D_FADEOUTDIR : double * : item fadeout curvature, -1..1
+		-- D_FADEINLEN_AUTO : double * : item auto-fadein length in seconds, -1=no auto-fadein
+		-- D_FADEOUTLEN_AUTO : double * : item auto-fadeout length in seconds, -1=no auto-fadeout
+		-- C_FADEINSHAPE : int * : fadein shape, 0..6, 0=linear
+		-- C_FADEOUTSHAPE : int * : fadeout shape, 0..6, 0=linear
+		-- I_GROUPID : int * : group ID, 0=no group
+		-- I_LASTY : int * : Y-position (relative to top of track) in pixels (read-only)
+		-- I_LASTH : int * : height in pixels (read-only)
+		-- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x1000000 (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it will not be used, but will store the color
+		-- I_CURTAKE : int * : active take number
+		-- IP_ITEMNUMBER : int : item number on this track (read-only, returns the item number directly)
+		-- F_FREEMODE_Y : float * : free item positioning or fixed lane Y-position. 0=top of track, 1.0=bottom of track
+		-- F_FREEMODE_H : float * : free item positioning or fixed lane height. 0.5=half the track height, 1.0=full track height
+		-- I_FIXEDLANE : int * : fixed lane of item (fine to call with setNewValue, but returned value is read-only)
+		-- B_FIXEDLANE_HIDDEN : bool * : true if displaying only one fixed lane and this item is in a different lane (read-only)
+		-- P_TRACK : MediaTrack * : (read-only)
 	}
 end
+
+lib_items.get_take_info = function(take)
+	-- NOTE: reaper.GetMediaItemTakeInfo_Value( take, parmname )
+	--
+	-- Get media item take numerical-value attributes.
+	-- D_STARTOFFS : double * : start offset in source media, in seconds
+	-- D_VOL : double * : take volume, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc, negative if take polarity is flipped
+	-- D_PAN : double * : take pan, -1..1
+	-- D_PANLAW : double * : take pan law, -1=default, 0.5=-6dB, 1.0=+0dB, etc
+	-- D_PLAYRATE : double * : take playback rate, 0.5=half speed, 1=normal, 2=double speed, etc
+	-- D_PITCH : double * : take pitch adjustment in semitones, -12=one octave down, 0=normal, +12=one octave up, etc
+	-- B_PPITCH : bool * : preserve pitch when changing playback rate
+	-- I_LASTY : int * : Y-position (relative to top of track) in pixels (read-only)
+	-- I_LASTH : int * : height in pixels (read-only)
+	-- I_CHANMODE : int * : channel mode, 0=normal, 1=reverse stereo, 2=downmix, 3=left, 4=right
+	-- I_PITCHMODE : int * : pitch shifter mode, -1=projext default, otherwise high 2 bytes=shifter, low 2 bytes=parameter
+	-- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x1000000 (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it will not be used, but will store the color
+	-- IP_TAKENUMBER : int : take number (read-only, returns the take number directly)
+	-- P_TRACK : pointer to MediaTrack (read-only)
+	-- P_ITEM : pointer to MediaItem (read-only)
+	-- P_SOURCE : PCM_source *. Note that if setting this, you should first retrieve the old source, set the new, THEN delete the old.
+end
+
 
 lib_items.get_track_items_in_range_time = function(track, range_start, range_end)
 	local item_cnt = reaper.GetTrackNumMediaItems(track)

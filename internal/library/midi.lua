@@ -594,6 +594,8 @@ midi.get_midi_data_from_take = function(take, opts)
 	local cc_filter = filter.cc or {}
 	local syx_filter = filter.syx or {}
 
+	log.user(string.format([[filter=%s, noflt=%s, m_and_a_=%s ]], filter, no_filters, midi_and_audio))
+
 	local t_notes = {}
 	local t_cc = {}
 	local t_syx = {}
@@ -646,7 +648,11 @@ midi.get_midi_data_from_take = function(take, opts)
 		end
 	end
 
-	return t_midi_events
+	return {
+	  notes = t_notes,
+	  cc = t_cc,
+	  syx = t_syx
+	}
 end
 
 return midi

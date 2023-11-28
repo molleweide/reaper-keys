@@ -121,7 +121,7 @@ tracks.get_focused_track_objects = function()
 	return focused_track_objects, track_objects_list
 end
 
-tracks.get_all_track_info = function(track)
+tracks.get_track_info_params = function(track)
 	-- Get track numerical-value attributes.
 	local t_track_info = {
 		-- B_MUTE : bool * : muted
@@ -282,7 +282,7 @@ local function prepare_item_data_objs_for_yanking(tobj)
 	else -- MC
 		log.user("prep item objs for yank: standard MC")
 		t_item_data_objs_for_yanking =
-			libit.get_item_objs_from_single_track(tobj, { filter = { data = { midi = {}} } })
+			libit.get_item_objs_from_single_track(tobj, { filter = { data = { midi = {} } } })
 	end
 	return t_item_data_objs_for_yanking
 end
@@ -305,6 +305,9 @@ end
 tracks.get_single_track_data_for_yanking = function(tobj)
 	log.user(string.format("yank foc tr: %s (t), %s (g)", tobj.name, tobj.group and tobj.group.name or "!g"))
 
+	-- move all information pertaining to putting together the track object to
+	--
+
 	local track_data = {
 		class = tobj.class,
 		name = tobj.name,
@@ -312,7 +315,7 @@ tracks.get_single_track_data_for_yanking = function(tobj)
 		track_name_raw = tobj.name_raw,
 		track_options = tobj.options,
 		prev_idx = tobj.trackIndex,
-		track_info = tracks.get_all_track_info(tobj.tr),
+		track_info = tracks.get_track_info_params(tobj.tr), --attach this inside of syntax.tracks instead.
 		item_objs = prepare_item_data_objs_for_yanking(tobj),
 		routes = {},
 	}
