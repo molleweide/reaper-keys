@@ -281,8 +281,10 @@ local function prepare_item_data_objs_for_yanking(tobj)
 		})
 	else -- MC
 		log.user("prep item objs for yank: standard MC")
-		t_item_data_objs_for_yanking =
-			libit.get_item_objs_from_single_track(tobj, { filter = { data = { midi = {} } } })
+		t_item_data_objs_for_yanking = libit.get_item_objs_from_single_track(
+			tobj,
+			{ filter = { info = {}, data = { midi = { notes = { pitch = { 64, 64 } } } } } }
+		)
 	end
 	return t_item_data_objs_for_yanking
 end

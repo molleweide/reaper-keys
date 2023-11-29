@@ -107,6 +107,9 @@ lib_items.get_item_objs_from_single_track = function(tobj, opts)
 	end
 
 	local filter = opts.filter or {}
+
+  -- TODO: get item ref??
+
 	local info_filter = filter.info
 	local data_filter = filter.data
 	local no_filters = not info_filter and not data_filter
@@ -127,6 +130,10 @@ lib_items.get_item_objs_from_single_track = function(tobj, opts)
 		local take_is_midi = reaper.TakeIsMIDI(take)
 
 		local t_item_data_obj = {}
+
+    if get_ref then
+      -- TODO: ...
+    end
 
 		-- COLLECT ITEM INFO
 
@@ -185,18 +192,18 @@ end
 -- -- Apply new name
 -- reaper.GetSetMediaItemTakeInfo_String(active_take, 'P_NAME', new_take_name[i], true)
 
-lib_items.get_item_info = function(tr, i)
-	local item = reaper.GetTrackMediaItem(tr, i)
-	local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-	local item_end = item_start + reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-	return {
-		ref = item,
-		start = item_start,
-		_end = item_end,
+lib_items.get_item_info = function(item)
+	if not item then
+		log.debug("no item passed to get_item_info")
+		return
+	end
 
-		-- NOTE: reaper.GetMediaItemInfo_Value( item, parmname )
-		--
-		-- Get media item numerical-value attributes.
+	local D_POSITION = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+	local D_LENGTH = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+
+	return {
+		start = D_POSITION,
+		_end = D_POSITION + D_LENGTH,
 		-- B_MUTE : bool * : muted (item solo overrides). setting this value will clear C_MUTE_SOLO.
 		-- B_MUTE_ACTUAL : bool * : muted (ignores solo). setting this value will not affect C_MUTE_SOLO.
 		-- C_LANEPLAYS : char * : in fixed lane tracks, 0=this item lane does not play, 1=this item lane plays exclusively, 2=this item lane plays and other lanes also play (read-only)
@@ -208,8 +215,8 @@ lib_items.get_item_info = function(tr, i)
 		-- C_AUTOSTRETCH: : char * : auto-stretch at project tempo changes, 1=enabled, requires C_BEATATTACHMODE=1
 		-- C_LOCK : char * : locked, &1=locked
 		-- D_VOL : double * : item volume, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc
-		-- D_POSITION : double * : item position in seconds
-		-- D_LENGTH : double * : item length in seconds
+		D_POSITION = D_POSITION, -- double * : item position in seconds
+		D_LENGTH = D_LENGTH, -- double * : item length in seconds
 		-- D_SNAPOFFSET : double * : item snap offset in seconds
 		-- D_FADEINLEN : double * : item manual fadein length in seconds
 		-- D_FADEOUTLEN : double * : item manual fadeout length in seconds
@@ -233,36 +240,43 @@ lib_items.get_item_info = function(tr, i)
 	}
 end
 
+-- only data / no ref
 lib_items.get_take_info = function(take)
-	-- NOTE: reaper.GetMediaItemTakeInfo_Value( take, parmname )
-	--
-	-- Get media item take numerical-value attributes.
-	-- D_STARTOFFS : double * : start offset in source media, in seconds
-	-- D_VOL : double * : take volume, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc, negative if take polarity is flipped
-	-- D_PAN : double * : take pan, -1..1
-	-- D_PANLAW : double * : take pan law, -1=default, 0.5=-6dB, 1.0=+0dB, etc
-	-- D_PLAYRATE : double * : take playback rate, 0.5=half speed, 1=normal, 2=double speed, etc
-	-- D_PITCH : double * : take pitch adjustment in semitones, -12=one octave down, 0=normal, +12=one octave up, etc
-	-- B_PPITCH : bool * : preserve pitch when changing playback rate
-	-- I_LASTY : int * : Y-position (relative to top of track) in pixels (read-only)
-	-- I_LASTH : int * : height in pixels (read-only)
-	-- I_CHANMODE : int * : channel mode, 0=normal, 1=reverse stereo, 2=downmix, 3=left, 4=right
-	-- I_PITCHMODE : int * : pitch shifter mode, -1=projext default, otherwise high 2 bytes=shifter, low 2 bytes=parameter
-	-- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x1000000 (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it will not be used, but will store the color
-	-- IP_TAKENUMBER : int : take number (read-only, returns the take number directly)
-	-- P_TRACK : pointer to MediaTrack (read-only)
-	-- P_ITEM : pointer to MediaItem (read-only)
-	-- P_SOURCE : PCM_source *. Note that if setting this, you should first retrieve the old source, set the new, THEN delete the old.
+	return {
+		-- reaper.GetMediaItemTakeInfo_Value( take, parmname )
+		--
+		-- Get media item take numerical-value attributes.
+		-- D_STARTOFFS : double * : start offset in source media, in seconds
+		-- D_VOL : double * : take volume, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc, negative if take polarity is flipped
+		-- D_PAN : double * : take pan, -1..1
+		-- D_PANLAW : double * : take pan law, -1=default, 0.5=-6dB, 1.0=+0dB, etc
+		-- D_PLAYRATE : double * : take playback rate, 0.5=half speed, 1=normal, 2=double speed, etc
+		-- D_PITCH : double * : take pitch adjustment in semitones, -12=one octave down, 0=normal, +12=one octave up, etc
+		-- B_PPITCH : bool * : preserve pitch when changing playback rate
+		-- I_LASTY : int * : Y-position (relative to top of track) in pixels (read-only)
+		-- I_LASTH : int * : height in pixels (read-only)
+		-- I_CHANMODE : int * : channel mode, 0=normal, 1=reverse stereo, 2=downmix, 3=left, 4=right
+		-- I_PITCHMODE : int * : pitch shifter mode, -1=projext default, otherwise high 2 bytes=shifter, low 2 bytes=parameter
+		-- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x1000000 (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it will not be used, but will store the color
+		-- IP_TAKENUMBER : int : take number (read-only, returns the take number directly)
+		-- P_TRACK : pointer to MediaTrack (read-only)
+		-- P_ITEM : pointer to MediaItem (read-only)
+		-- P_SOURCE : PCM_source *. Note that if setting this, you should first retrieve the old source, set the new, THEN delete the old.
+	}
 end
 
-
-lib_items.get_track_items_in_range_time = function(track, range_start, range_end)
+-- get_track_items_in_range_time
+lib_items.get_track_items_in_range_time_w_data = function(track, range_start, range_end)
 	local item_cnt = reaper.GetTrackNumMediaItems(track)
 	local items_found = {}
 	for i = 0, item_cnt - 1 do
-		local item_info = lib_items.get_item_info(track, i)
+		local item_ref = reaper.GetTrackMediaItem(track, i)
+		local item_info = lib_items.get_item_info(item)
 		if item_info.start >= range_start and item_info._end <= range_end then
-			table.insert(items_found, item_info)
+			table.insert(items_found, {
+			  ref = item_ref,
+			  info = item_info
+			})
 		end
 	end
 	return #items_found > 0 and items_found or false

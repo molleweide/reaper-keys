@@ -589,16 +589,16 @@ midi.get_midi_data_from_take = function(take, opts)
 	end
 
 	local filter = opts.filter or {}
-
 	local note_filter = filter.notes or {}
 	local cc_filter = filter.cc or {}
 	local syx_filter = filter.syx or {}
-
-	log.user(string.format([[filter=%s, noflt=%s, m_and_a_=%s ]], filter, no_filters, midi_and_audio))
+	local no_filters = not note_filter and not cc_filter and not syx_filter
 
 	local t_notes = {}
 	local t_cc = {}
 	local t_syx = {}
+
+	log.debug(string.format([[get_midi_data_from_take; filter=%s, noflt=%s ]], filter, no_filters))
 
 	local ret, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
 
@@ -618,7 +618,73 @@ midi.get_midi_data_from_take = function(take, opts)
 		-- end
 	end
 
-	if #note_filter > 0 then
+	-- TODO: manually filter each prop. it is easier, so that we can customize
+	-- opts for each value.
+
+
+	-- implement below so that I can make filters of types:
+	-- bool
+	-- single numbers
+	-- ranges
+	--
+	--
+	-- >>> each of these could go into utils.tables
+	--
+	-- i can still do this with my loop below but i have to make an if statement
+	-- to check if bool type or numb/table type...
+
+	if no_filters or note_filter.sel then
+	  -- true
+	  --
+	  -- false
+	end
+	if no_filters or note_filter.muted then
+	  -- true
+	  --
+	  -- false
+	end
+	if no_filters or note_filter.ppqs then
+	  -- if single number
+	  --
+	  -- if table
+	  --    if subtable number > single number
+	  --    if subtable table > use a range for each table
+	  --
+	end
+	if no_filters or note_filter.ppqe then
+	  -- if single number
+	  --
+	  -- if table
+	  --    if subtable number > single number
+	  --    if subtable table > use a range for each table
+	  --
+	end
+	if no_filters or note_filter.chan then
+	  -- if single number
+	  --
+	  -- if table
+	  --    if subtable number > single number
+	  --    if subtable table > use a range for each table
+	  --
+	end
+	if no_filters or note_filter.pitch then
+	  -- if single number
+	  --
+	  -- if table
+	  --    if subtable number > single number
+	  --    if subtable table > use a range for each table
+	  --
+	end
+	if no_filters or note_filter.vel then
+	  -- if single number
+	  --
+	  -- if table
+	  --    if subtable number > single number
+	  --    if subtable table > use a range for each table
+	  --
+	end
+
+	if no_filters or note_filter then
 		for k, v in pairs(note_filter) do
 			if type(v) == "boolean" then
 				t_notes = tbl.filter(t_notes, function(note)
@@ -638,20 +704,20 @@ midi.get_midi_data_from_take = function(take, opts)
 		end
 	end
 
-	if #cc_filter > 0 then
+	if no_filters or cc_filter then
 		for k, v in pairs(cc_filter) do
 		end
 	end
 
-	if #syx_filter > 0 then
+	if no_filters or syx_filter then
 		for k, v in pairs(syx_filter) do
 		end
 	end
 
 	return {
-	  notes = t_notes,
-	  cc = t_cc,
-	  syx = t_syx
+		notes = t_notes,
+		cc = t_cc,
+		syx = t_syx,
 	}
 end
 
