@@ -574,14 +574,12 @@ end
 -- this function should prolly go into lib/items
 --
 --
--- TODO: add filter params so that i can easilly pass filters
--- ~ pitch
--- ~ muted
--- ~ sel
--- ~ ch
--- ~ vel
--- ~ ppq_s
--- ~ ppq_e
+-- note_filters = takes parameters
+--     ~ bool
+--     ~ number
+--     ~ table of numbers or sub-tables with a two digit range to filter out.
+--         >> you can supply multiple ranges.
+--
 midi.get_midi_data_from_take = function(take, opts)
 	if not take then
 		log.debug("No take was supplied to midi.get_midi_data_from_take")
@@ -618,87 +616,34 @@ midi.get_midi_data_from_take = function(take, opts)
 		-- end
 	end
 
-	-- TODO: manually filter each prop. it is easier, so that we can customize
-	-- opts for each value.
-
-
-	-- implement below so that I can make filters of types:
-	-- bool
-	-- single numbers
-	-- ranges
+	-- TODO: this adds a lot of loops. merge this with the above
+	-- original loop to make it more efficient.
 	--
-	--
-	-- >>> each of these could go into utils.tables
-	--
-	-- i can still do this with my loop below but i have to make an if statement
-	-- to check if bool type or numb/table type...
-
-	if no_filters or note_filter.sel then
-	  -- true
-	  --
-	  -- false
-	end
-	if no_filters or note_filter.muted then
-	  -- true
-	  --
-	  -- false
-	end
-	if no_filters or note_filter.ppqs then
-	  -- if single number
-	  --
-	  -- if table
-	  --    if subtable number > single number
-	  --    if subtable table > use a range for each table
-	  --
-	end
-	if no_filters or note_filter.ppqe then
-	  -- if single number
-	  --
-	  -- if table
-	  --    if subtable number > single number
-	  --    if subtable table > use a range for each table
-	  --
-	end
-	if no_filters or note_filter.chan then
-	  -- if single number
-	  --
-	  -- if table
-	  --    if subtable number > single number
-	  --    if subtable table > use a range for each table
-	  --
-	end
-	if no_filters or note_filter.pitch then
-	  -- if single number
-	  --
-	  -- if table
-	  --    if subtable number > single number
-	  --    if subtable table > use a range for each table
-	  --
-	end
-	if no_filters or note_filter.vel then
-	  -- if single number
-	  --
-	  -- if table
-	  --    if subtable number > single number
-	  --    if subtable table > use a range for each table
-	  --
-	end
+	-- if i move this up into origin loop, then every filter can be removed.
 
 	if no_filters or note_filter then
 		for k, v in pairs(note_filter) do
-			if type(v) == "boolean" then
+			if type(v) == "bool" then
 				t_notes = tbl.filter(t_notes, function(note)
-					return note.sel == v
+					return note[k] == v
 				end)
-			end
-
-			if type(v) == "table" and #v == 2 then
+			elseif type(v) == "number" then
 				t_notes = tbl.filter(t_notes, function(note)
-					return v[1] <= note.pitch and note.pitch <= v[2]
+					return note[k] == v
 				end)
-			end
-
-			if type(v) == "function" then
+			elseif type(v) == "table" then
+				for _, subv in pairs(v) do
+					if type(subv) == "number" then
+						t_notes = tbl.filter(t_notes, function(note)
+							return note[k] == subv
+						end)
+					elseif type(subv) == "table" then
+						t_notes = tbl.filter(t_notes, function(note)
+							return subv[1] <= note[k] and note[k] <= subv[2]
+						end)
+					end
+				end
+			elseif type(v) == "function" then
 				t_notes = tbl.filter(t_notes, v) -- pass filter func
 			end
 		end
