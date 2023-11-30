@@ -136,8 +136,7 @@ ypc.put = function(meta, opts)
     local operating_on_drum_kit = tobj_at_pos.group and tobj_at_pos.group.options["m"]
 
     -- reaper.InsertTrackAtIndex( insert_new_track_at_idx, false )
-
-    -- todo: insert track_state
+    -- TODO: insert track_state
 
     -- insert data
     if operating_on_drum_kit then
@@ -150,34 +149,45 @@ ypc.put = function(meta, opts)
 
       log.user("range of interest", shift_pitches_above_note_row, shift_pitches_above_note_row + range_num - 1)
 
-      -- get data for same position to make sure that we are getting correct stuff.
-      local libit = require("library.items")
-      local t_drum_master_item_objs = libit.get_item_objs_from_single_track(tobj_at_pos.group, {
-        filter = {
-          info = {},
-          data = {
-            midi = {
-              notes = {
-                pitch = function(note)
-                  return shift_pitches_above_note_row < note.pitch
-                end,
-              },
-            },
-          },
-        },
-        -- TODO: loop all items, get take #0 and:
-        --
-        -- TODO: pass this to the function without a filter
-        -- transform = {
-        --   notes = {
-        --     pitch = range_num
-        --   }
-        -- }
-      })
+      -- -- get data for same position to make sure that we are getting correct stuff.
+      -- local libit = require("library.items")
+      -- local t_drum_master_item_objs = libit.get_item_objs_from_single_track(tobj_at_pos.group, {
+      --   filter = {
+      --     info = {},
+      --     data = {
+      --       midi = {
+      --         notes = {
+      --           pitch = function(note)
+      --             return shift_pitches_above_note_row < note.pitch
+      --           end,
+      --         },
+      --       },
+      --     },
+      --   },
+      -- })
 
-      log.user(format.block(t_drum_master_item_objs))
+      local tr = require("custom_actions.utils").getTrackByGUID(tobj.guid)
+      local item_count = reaper.CountTrackMediaItems(tr)
 
-      -- shift notes above new track in proll by range
+      -- TODO: refactor this into filter_items({
+      --    filter = {
+      --      tracks,
+      --      info,
+      --      data = { midi = {
+      --        transform = { notes = { pitch = 5 } }
+      --      }}
+      --    }
+      -- })
+
+      for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
+        local item = reaper.GetTrackMediaItem(tr, i)
+        local take = reaper.GetMediaItemTake(item, 0) -- active take?
+        require("library.midi").midi_take_filter_transform(take, {
+          transform = { notes = { pitch = range_num } },
+        })
+      end
+
+      -- log.user(format.block(t_drum_master_item_objs))
     elseif tobj_at_pos.channel_splitter then
       log.debug("ypc.put / shift & insert data into channel splitter master")
     else

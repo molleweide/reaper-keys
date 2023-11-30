@@ -581,7 +581,7 @@ end
 --         >> you can supply multiple ranges.
 --
 midi.midi_take_filter_transform = function(take, opts)
-	if not take then -- or midi take...
+	if not take or not reaper.TakeIsMIDI(take) then -- or midi take...
 		log.debug("No take was supplied to midi.midi_take_filter_transform")
 		return
 	end

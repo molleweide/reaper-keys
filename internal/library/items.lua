@@ -88,16 +88,10 @@ end
 -- 	return t_item_data
 -- end
 
--- TODO: supply filter params, eg
--- ~ note range
--- ~ channels
--- ~ cc evts
---
--- NOTE: begin by only storing/getting midi notes - cc later..
---
--- TODO: again implement filters similar to what I do with midi data.
--- so that I can easilly specify what I want from a track
---
+-- TODO: rename to `filter_items` and add a `tracks` filter, and
+-- transform opt table
+-- `filter_transform_items`
+
 lib_items.get_item_objs_from_single_track = function(tobj, opts)
   opts = opts or {}
 
