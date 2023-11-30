@@ -175,7 +175,8 @@ end
 
 -- expects split track obj
 sx_lib_util.get_channel_for_split_track = function(sobj)
-	for i = #sobj.channel_splitter.children, 1, -1 do
+	for i, v in ipairs(sobj.channel_splitter.children) do
+
 	end
 end
 
