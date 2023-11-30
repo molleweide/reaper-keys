@@ -166,6 +166,9 @@ sx_tracks.get_track_obj_for_idx = function(trIdx)
   local guid = reaper.GetTrackGUID(next_tr)
   local _, track_name_raw = reaper.GetTrackName(next_tr)
   local next_prefix, next_options, next_track_name = getNameStringParts(trIdx, track_name_raw)
+
+-- FIX: type conversion, eg. of nr=3 should be tonumber() so that 3 is a num and not string
+
   return {
     tr = next_tr,
     guid = guid,

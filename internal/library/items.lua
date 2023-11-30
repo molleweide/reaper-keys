@@ -79,7 +79,7 @@ end
 -- 	local t_item_data = get_item_info(item)
 --
 -- 	if reaper.TakeIsMIDI(take) then
--- 		t_item_data.midi_events = require("library.midi").get_midi_data_from_take(take, {
+-- 		t_item_data.midi_events = require("library.midi").midi_take_filter_transform(take, {
 -- 			filter = { notes = { pitch = { 24, 60 } } },
 -- 		})
 -- 	else
@@ -108,7 +108,7 @@ lib_items.get_item_objs_from_single_track = function(tobj, opts)
 
   local filter = opts.filter or {}
 
-  -- TODO: get item ref??
+  -- TODO: get item ref?? >>>> NO, collect the item GUID instead!
 
   local info_filter = filter.info
   local data_filter = filter.data
@@ -139,7 +139,7 @@ lib_items.get_item_objs_from_single_track = function(tobj, opts)
 
     if no_filters or info_filter then
       -- log.user("GETTING: item info data")
-      -- t_item_data_obj.midi_data = require("library.midi").get_midi_data_from_take(take, {
+      -- t_item_data_obj.midi_data = require("library.midi").midi_take_filter_transform(take, {
       -- 	filter = data_filter and data_filter.midi,
       -- })
       t_item_data_obj.item_info = lib_items.get_item_info(item)
@@ -150,9 +150,9 @@ lib_items.get_item_objs_from_single_track = function(tobj, opts)
 
     if no_filters or midi_and_audio or data_filter.midi and take_is_midi then
       -- log.user("GETTING item midi data")
-      -- get_midi_data_from_take should be moved into items since it is dealing
+      -- midi_take_filter_transform should be moved into items since it is dealing
       -- with items/takes first hand, and not midi. >>> it is an item_util!!
-      t_item_data_obj.midi_data = require("library.midi").get_midi_data_from_take(take, {
+      t_item_data_obj.midi_data = require("library.midi").midi_take_filter_transform(take, {
         filter = data_filter and data_filter.midi,
       })
     end

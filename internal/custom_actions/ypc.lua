@@ -3,7 +3,10 @@ local format = require("utils.format")
 
 local cu = require("custom_actions.utils")
 
+local project_state = require("utils.project_state")
+
 local sx_tracks = require("syntax.tracks")
+local sxu = require("syntax.utils")
 
 -- FIX: C routing does not work > need to fix lib/route bug
 
@@ -97,6 +100,18 @@ ypc.put = function(meta, opts)
   else
     -- require("utils.project_state").overwrite("ypc", "tracks", t_single_track_data)
 
+    local exists, t_data_track_to_paste = project_state.get("ypc", "tracks")
+
+    if not exists then
+      log.debug("YPC: paste data does not exist. Cannot paste nil...")
+      return
+    end
+    if t_data_track_to_paste then
+      for k, v in pairs(t_data_track_to_paste) do
+        log.user("PUT: data to paste keys:", k)
+      end
+    end
+
     local vtt_pre = sx_tracks.getVerifiedTree() -- make this an opt param in get_focused_track_objects
 
     local insert_new_track_at_idx = cu.getTrackPosition() + 1
@@ -127,13 +142,48 @@ ypc.put = function(meta, opts)
     -- insert data
     if operating_on_drum_kit then
       log.debug("ypc.put / shift & insert data into drum kit master")
+      -- log.user(paste_obj_range, type(paste_obj_range))
+      local shift_pitches_above_note_row =
+      sxu.get_note_row_after_drum_before_idx(tobj_at_pos.group, insert_new_track_at_idx)
+      local paste_obj_range = t_data_track_to_paste.track_options and t_data_track_to_paste.track_options.nr
+      local range_num = tonumber(paste_obj_range)
+
+      log.user("range of interest", shift_pitches_above_note_row, shift_pitches_above_note_row + range_num - 1)
+
+      -- get data for same position to make sure that we are getting correct stuff.
+      local libit = require("library.items")
+      local t_drum_master_item_objs = libit.get_item_objs_from_single_track(tobj_at_pos.group, {
+        filter = {
+          info = {},
+          data = {
+            midi = {
+              notes = {
+                pitch = function(note)
+                  return shift_pitches_above_note_row < note.pitch
+                end,
+              },
+            },
+          },
+        },
+        -- TODO: loop all items, get take #0 and:
+        --
+        -- TODO: pass this to the function without a filter
+        -- transform = {
+        --   notes = {
+        --     pitch = range_num
+        --   }
+        -- }
+      })
+
+      log.user(format.block(t_drum_master_item_objs))
+
+      -- shift notes above new track in proll by range
     elseif tobj_at_pos.channel_splitter then
       log.debug("ypc.put / shift & insert data into channel splitter master")
     else
       log.debug("ypc.put / insert data into standard MC track")
     end
   end
-
 end
 
 ypc.cut = function(meta, opts)

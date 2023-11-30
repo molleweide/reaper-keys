@@ -580,9 +580,9 @@ end
 --     ~ table of numbers or sub-tables with a two digit range to filter out.
 --         >> you can supply multiple ranges.
 --
-midi.get_midi_data_from_take = function(take, opts)
-	if not take then
-		log.debug("No take was supplied to midi.get_midi_data_from_take")
+midi.midi_take_filter_transform = function(take, opts)
+	if not take then -- or midi take...
+		log.debug("No take was supplied to midi.midi_take_filter_transform")
 		return
 	end
 
@@ -592,11 +592,13 @@ midi.get_midi_data_from_take = function(take, opts)
 	local syx_filter = filter.syx or {}
 	local no_filters = not note_filter and not cc_filter and not syx_filter
 
+	local transform = opts.transform or {}
+
 	local t_notes = {}
 	local t_cc = {}
 	local t_syx = {}
 
-	log.debug(string.format([[get_midi_data_from_take; filter=%s, noflt=%s ]], filter, no_filters))
+	log.debug(string.format([[midi_take_filter_transform; filter=%s, noflt=%s ]], filter, no_filters))
 
 	local ret, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
 
@@ -659,11 +661,27 @@ midi.get_midi_data_from_take = function(take, opts)
 		end
 	end
 
+	-- TODO: after events have been filtered. now we can apply transform to the
+	-- filtered events
+	-- eg. delete notes or set/shift values.
+	if transform.notes then
+		for k, v in pairs(transform.notes) do
+		end
+	end
+
 	return {
 		notes = t_notes,
 		cc = t_cc,
 		syx = t_syx,
 	}
+end
+
+midi.remove_notes_in_range = function(take)
+
+	-- pass criterion
+	--
+	-- NOTE: i believe that I should be able to add this info to the midi
+	-- data function above.
 end
 
 return midi
