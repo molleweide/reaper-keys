@@ -205,6 +205,7 @@ end
 --    I think that should work actually.
 sx_tracks.make_tree = function(t_trk_objs)
   local vtt = {
+    track_list = t_trk_objs,
     groups = {},
     -- midi_tracks = {}
     -- audio_tracks = {},

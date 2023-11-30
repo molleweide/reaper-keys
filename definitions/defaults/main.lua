@@ -139,7 +139,7 @@ return {
     ["dd"] = "CutTrack",
     ["d"] = {
       "+delete",
-      { ["d"] = "CutTrack", ["c"] = "CmdCustomCutTrack" },
+      { ["d"] = "CutTrack", ["C"] = "CmdCustomCutTrack" },
     },
     ["aa"] = "ArmTracks",
     -- ["O"] = "EnterTrackAbove",
@@ -157,7 +157,7 @@ return {
     -- ["p"] = "Paste",
     ["p"] = {
       "+put",
-      { ["p"] = "Paste", ["c"] = "CmdCustomPutTrack" },
+      { ["p"] = "Paste", ["C"] = "CmdCustomPutTrack" },
     },
     -- ["<C-v>"] = "Paste",
     -- ["yy"] = "CopyTrack",

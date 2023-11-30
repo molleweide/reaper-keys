@@ -919,7 +919,7 @@ return {
 	-- TODO: refactor this into configurable funcs...
 
 	RandomizeRs5kSampleForFocusedTracks = {
-		require("library.fx").focus_tracks_fx_do,
+		require("library.tracks").focus_tracks_fx_do,
 		opts = {
 			"RS5K",
 			"updateSample",
@@ -1002,14 +1002,6 @@ return {
 			end
 		end,
 	},
-
-	-- TRACK EDITING YPC | only applies to MCABS tracks??
-	--
-	-- ypc functions only work on a single track for the moment.
-
-	-- TODO: enforce so that you only can copy certain classes together.
-	--
-
 
 	CmdCustomYankTrack = require("custom_actions.ypc").yank,
 	CmdCustomPutTrack = require("custom_actions.ypc").put,

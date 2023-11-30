@@ -1,7 +1,10 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
+local r = require("utils.reaper")
+
 local tbl = require("utils.table")
+local fxu = require("library.fx")
 
 local sx = require("syntax.tracks")
 local midi_editor = require("library.midi_editor")
@@ -251,6 +254,10 @@ end
 -- refactor into which module
 --
 -- defaults to return everything
+--
+-- TODO: collect item/take fx_chain??
+--
+--
 local function prepare_item_data_objs_for_yanking(tobj)
 	local sxu = require("syntax.utils")
 	local libit = require("library.items")
@@ -324,6 +331,13 @@ tracks.get_single_track_data_for_yanking = function(tobj)
 	-- move all information pertaining to putting together the track object to
 	--
 
+	local tr = r.getTrackByGUID(tobj.guid)
+
+	-- TODO: NEED to collect if track data comes from LANE or not
+
+	-- TODO: it feels like the structure of the `tobj` could be improved.
+	-- now it feels a bit cluttered - but this is fine for now.
+
 	local track_data = {
 		class = tobj.class,
 		name = tobj.name,
@@ -333,9 +347,81 @@ tracks.get_single_track_data_for_yanking = function(tobj)
 		prev_idx = tobj.trackIndex,
 		track_info = tracks.get_track_info_params(tobj.tr), --attach this inside of syntax.tracks instead.
 		item_objs = prepare_item_data_objs_for_yanking(tobj),
+		state_chunk = r.get_single_track_state_chunk(tr),
+		-- fx_chain_state = fxu.get_single_tracks_fx_state_chunk(tobj.tr),
 		routes = {},
 	}
 	return track_data
+end
+
+--
+--
+--
+--
+--
+--
+--
+--
+-- FIX: rename -> the current name is a bit misleading
+--
+--
+-- TEST: does this function work from all aspects, as standalone passed with tobj,
+-- from main selection, or from ME?
+--
+--
+-- NOTE: only targets first instance of effect_name found
+--
+-- TODO: add rec_fx
+--
+-- TODO: move everything that pertains to fx over into lib.fx but
+-- keep the track selection in this file.
+--
+--
+tracks.focus_tracks_fx_do = function(meta, opts)
+	-- log.user("plugname", format.block(plugin_name))
+
+	local plugin_name = opts[1]
+	local callback = opts[2]
+
+	-- FIX: this has to be passed to the fx lib
+	local target_trk_objects, track_objects_list = tracks.get_focused_track_objects()
+
+	for _, tobj in pairs(target_trk_objects) do
+		-- local gobj = sxlu.get_track_object_group(sx.getVerifiedTree(track_objects_list), tobj)
+		local fx_obj = fxu.get_fx_objs_by_name_string(tobj.guid, plugin_name)
+
+		if not fx_obj then
+			log.debug(
+				string.format([[ [plugins.randomize_rs5k_...]: %s has no RS5K to load with samples..]], tobj.name)
+			)
+		else
+			local ok, fx_mod = pcall(require, "plugins." .. plugin_name)
+			if not ok then
+				log.debug("fx has no module or doesn't exist")
+			end
+
+			-- if is_rec_fx then
+			--   Pcall, FXGUID = pcall(reaper.TrackFX_GetFXGUID, tr, REC_FX + idx_fx)
+			-- else
+			--   Pcall, FXGUID = pcall(reaper.TrackFX_GetFXGUID, tr, idx_fx)
+			-- end
+
+			if type(callback) == "string" then
+				fx_mod[callback](tobj, fx_obj.idx)
+			elseif type(callback) == "function" then
+				callback(fx_mod)
+			end
+		end
+
+		-- -- check that we are working with a midi drum track
+		-- if sxlu.trackObjHasOption(gobj, "m") then
+		--   rs5k.updateSample(tobj, fx_idx)
+		-- else
+		--   log.debug(
+		--     string.format([[ [plugins.randomize_rs5k_...]: %s has no RS5K to load with samples..]], tobj.name)
+		--   )
+		-- end
+	end
 end
 
 return tracks

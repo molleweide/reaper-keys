@@ -23,13 +23,14 @@ return {
   },
   default_track_props = function(trk_obj)
   end,
-  default_routing = function(trk_obj)
-    local trr = require("library.routing")
-    trr.updateState("-#", trk_obj.guid)
-    for _, split_obj in pairs(trk_obj.children) do
-      trr.updateState(string.format("{0|%s}", trk_obj.guid, split_obj.guid))
-    end
-  end,
+  -- FIX: C routing gives error >> need to revise
+  -- routing = function(trk_obj)
+  --   local trr = require("library.routing")
+  --   trr.updateState("-#", trk_obj.guid)
+  --   for _, split_obj in pairs(trk_obj.children) do
+  --     trr.updateState(string.format("{0|%s}", trk_obj.guid, split_obj.guid))
+  --   end
+  -- end,
   fx_syntax = { -- class M syntax
     default = {},
     m = {

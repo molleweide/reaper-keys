@@ -2,7 +2,8 @@
 local ru = require("custom_actions.utils")
 local log = require("utils.log")
 local format = require("utils.format")
-local lib_tr = require("library.tracks")
+
+local r = require("utils.reaper")
 
 local fx_util = {}
 
@@ -130,6 +131,14 @@ function fx_util.removeAllFXAfterIndex(guid_tr, index)
 	end
 end
 
+--
+--
+--
+--
+-- TODO: merge set fx param funcs into one - accepting single param or
+-- table.
+--
+--
 -- NOTE: is_rec_fx is optional right??
 
 --- Given track guid, update FX param for FX index..
@@ -265,12 +274,14 @@ function fx_util.insertFxToLastIdxAndGuiRename(guid_tr, fx_search_str, fx_gui_na
 	return fx_idx
 end
 
+-- TODO:...
 function fx_util.fxSetBypass(guid_tr, fx_idx, bypass)
 	-- 0 = off
 	-- 1 = one
 	-- 2 = toggle
 end
 
+-- TODO:...
 function fx_util.fxBypassToggle(guid_tr, fx_idx)
 	fx_util.fxSetBypass(guid_tr, fx_idx, 2)
 end
@@ -334,7 +345,50 @@ fx_util.get_fx_objs_by_name_string = function(guid_tr, search_name, found_idx)
 	end
 end
 
+fx_util.get_single_tracks_fx_state_chunk = function(tr)
+	-- https://mespotin.uber.space/Ultraschall/US_Api_Functions.html#SaveFXStateChunkAsRFXChainfile
+	--
+	-- TODO: test ultra shall `GetFX`
+	--
+	--
+	-- todo: install -> https://mespotin.uber.space/Ultraschall/US_Api_Introduction_and_Concepts.html#Introduction_001_Api
+
+	local s_track_state_chunk = reaper.GetTrackStateChunk(tr, "", false)
+	dofile(reaper.GetResourcePath() .. "/UserPlugins/ultraschall_api.lua")
+	local s_FXStateChunk, i_line_num = ultraschall.GetFXStateChunk(s_track_state_chunk)
+	-- log.user(s_FXStateChunk)
+	return s_FXStateChunk
+end
+
+---
+---@param tr userdata
+---@param fx_state string
+fx_util.set_single_tracks_fx_state_chunk = function(tobj, fx_state)
+  local tr, tr_i = r.getTrackByGUID(tobj.guid)
+	local retval, s_track_state_chunk = r.get_single_track_state_chunk(tr)
+	dofile(reaper.GetResourcePath() .. "/UserPlugins/ultraschall_api.lua")
+	local retval, s_altered_track_state_chunk = ultraschall.SetFXStateChunk(s_track_state_chunk, fx_state)
+
+  r.set_single_track_state_chunk(tr, state)
+end
+--
+--
+--
+--
+--
+--
+--
+--
+--
+-- TODO: improve this function with filters similar to `get_item_info`
+-- and `get_midi_data_from_item`
+--
+--
 -- NOTE: currently only works on selected track single
+--
+--
+-- fix: pass tobj or tr?
+--
 fx_util.get_track_fx_chain_info = function()
 	local t_track_fx = {}
 	local tr = reaper.GetSelectedTrack(0, 0)
@@ -357,63 +411,72 @@ fx_util.get_track_fx_chain_info = function()
 	return t_track_fx
 end
 
--- TEST: does this function work from all aspects, as standalone passed with tobj,
--- from main selection, or from ME?
+-- --
+-- --
+-- --
+-- --
+-- --
+-- --
+-- --
+-- --
+-- -- FIX: rename -> the current name is a bit misleading
+-- --
+-- --
+-- -- TEST: does this function work from all aspects, as standalone passed with tobj,
+-- -- from main selection, or from ME?
+-- --
+-- --
+-- -- NOTE: only targets first instance of effect_name found
+-- --
+-- -- TODO: add rec_fx
+-- --
+-- --
+-- --
+-- fx_util.focus_tracks_fx_do = function(meta, opts)
+-- 	-- log.user("plugname", format.block(plugin_name))
 --
+-- 	local plugin_name = opts[1]
+-- 	local callback = opts[2]
 --
--- NOTE: only targets first instance of effect_name found
+-- 	-- FIX: this has to be passed to the fx lib
+-- 	local target_trk_objects, track_objects_list = lib_tr.get_focused_track_objects()
 --
--- TODO: add rec_fx
+-- 	for _, tobj in pairs(target_trk_objects) do
+-- 		-- local gobj = sxlu.get_track_object_group(sx.getVerifiedTree(track_objects_list), tobj)
+-- 		local fx_obj = fx_util.get_fx_objs_by_name_string(tobj.guid, plugin_name)
 --
-fx_util.focus_tracks_fx_do = function(meta, opts)
-	-- log.user("plugname", format.block(plugin_name))
-
-	local plugin_name = opts[1]
-	local callback = opts[2]
-
-	-- -- FIX: is this good pattern?
-	-- if opts then
-	-- 	plugin_name = plugin_name.opts[1]
-	-- end
-
-	local target_trk_objects, track_objects_list = lib_tr.get_focused_track_objects()
-
-	for _, tobj in pairs(target_trk_objects) do
-		-- local gobj = sxlu.get_track_object_group(sx.getVerifiedTree(track_objects_list), tobj)
-		local fx_obj = fx_util.get_fx_objs_by_name_string(tobj.guid, plugin_name)
-
-		if not fx_obj then
-			log.debug(
-				string.format([[ [plugins.randomize_rs5k_...]: %s has no RS5K to load with samples..]], tobj.name)
-			)
-		else
-			local ok, fx_mod = pcall(require, "plugins." .. plugin_name)
-			if not ok then
-				log.debug("fx has no module or doesn't exist")
-			end
-
-			-- if is_rec_fx then
-			--   Pcall, FXGUID = pcall(reaper.TrackFX_GetFXGUID, tr, REC_FX + idx_fx)
-			-- else
-			--   Pcall, FXGUID = pcall(reaper.TrackFX_GetFXGUID, tr, idx_fx)
-			-- end
-
-			if type(callback) == "string" then
-				fx_mod[callback](tobj, fx_obj.idx)
-			elseif type(callback) == "function" then
-				callback(fx_mod)
-			end
-		end
-
-		-- -- check that we are working with a midi drum track
-		-- if sxlu.trackObjHasOption(gobj, "m") then
-		--   rs5k.updateSample(tobj, fx_idx)
-		-- else
-		--   log.debug(
-		--     string.format([[ [plugins.randomize_rs5k_...]: %s has no RS5K to load with samples..]], tobj.name)
-		--   )
-		-- end
-	end
-end
+-- 		if not fx_obj then
+-- 			log.debug(
+-- 				string.format([[ [plugins.randomize_rs5k_...]: %s has no RS5K to load with samples..]], tobj.name)
+-- 			)
+-- 		else
+-- 			local ok, fx_mod = pcall(require, "plugins." .. plugin_name)
+-- 			if not ok then
+-- 				log.debug("fx has no module or doesn't exist")
+-- 			end
+--
+-- 			-- if is_rec_fx then
+-- 			--   Pcall, FXGUID = pcall(reaper.TrackFX_GetFXGUID, tr, REC_FX + idx_fx)
+-- 			-- else
+-- 			--   Pcall, FXGUID = pcall(reaper.TrackFX_GetFXGUID, tr, idx_fx)
+-- 			-- end
+--
+-- 			if type(callback) == "string" then
+-- 				fx_mod[callback](tobj, fx_obj.idx)
+-- 			elseif type(callback) == "function" then
+-- 				callback(fx_mod)
+-- 			end
+-- 		end
+--
+-- 		-- -- check that we are working with a midi drum track
+-- 		-- if sxlu.trackObjHasOption(gobj, "m") then
+-- 		--   rs5k.updateSample(tobj, fx_idx)
+-- 		-- else
+-- 		--   log.debug(
+-- 		--     string.format([[ [plugins.randomize_rs5k_...]: %s has no RS5K to load with samples..]], tobj.name)
+-- 		--   )
+-- 		-- end
+-- 	end
+-- end
 
 return fx_util

@@ -9,7 +9,7 @@ return {
     trackHeight = { attrString = "I_HEIGHTOVERRIDE", attrVal = 20 },
     trackColor = { attrString = "I_CUSTOMCOLOR", val = 122 },
   },
-  default_routing = function(trk_obj)
+  routing = function(trk_obj)
     local trr = require("library.routing")
     local rc = require("definitions.routing")
     local has_sends = trr.trackHasSends(trk_obj.guid, rc.flags.CAT_SEND)

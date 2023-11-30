@@ -1,6 +1,6 @@
 local log = require("utils.log")
 
--- TODO: move all these funcs to their appropriate lib/<file>
+-- TODO: move all these funcs to their appropriate `utils/reaper`
 --
 -- There are too many functions like these, so I have to move them to
 -- under /library.
@@ -177,6 +177,7 @@ function utils.getTrackByGUID(search_guid)
   return false
 end
 
+--
 function utils.getTrackPosition()
   local last_touched_track = reaper.GetLastTouchedTrack()
   if last_touched_track then
