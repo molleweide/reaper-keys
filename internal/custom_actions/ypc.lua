@@ -93,13 +93,13 @@ end
 --
 
 ypc.put = function(meta, opts)
-  local exists, t_data_track_to_paste = project_state.get("ypc", "tracks")
+  local exists, t_paste_data = project_state.get("ypc", "tracks")
   if not exists then
     log.debug("YPC: paste data does not exist. Cannot paste nil...")
     return
   end
-  if t_data_track_to_paste then
-    for k, v in pairs(t_data_track_to_paste) do
+  if t_paste_data then
+    for k, v in pairs(t_paste_data) do
       log.user("PUT: data to paste keys:", k)
     end
   end
@@ -112,7 +112,7 @@ ypc.put = function(meta, opts)
   -- INSERT NEW TRACK AND SET STATE CHUNK
   --
 
-  -- log.user(">>>",t_data_track_to_paste.state_chunk)
+  -- log.user(">>>",t_paste_data.state_chunk)
   -- reaper.InsertTrackAtIndex( insert_new_track_at_idx, false )
   -- r.set_single_track_state_chunk(insert_new_track_at_idx, state)
 
@@ -120,11 +120,12 @@ ypc.put = function(meta, opts)
   local parent_obj
 
   -- drum kit vars
-  local shift_pitches_above_note_row
-  local paste_obj_range
-  local drum_tr_range_num
   local shift_pitches_starting_from
-  local pname
+  local pitch_shift_amount
+  local pname_sel_track
+
+  local preceding_drum_obj
+  local preceding_range_start, preceding_range_end
 
   -- splitter vars
 
@@ -138,17 +139,16 @@ ypc.put = function(meta, opts)
     put_type = "drumkit"
     parent_obj = tobj_at_pos.group
 
-    shift_pitches_above_note_row =
-    sxu.get_note_row_after_drum_before_idx(tobj_at_pos.group, insert_new_track_at_idx)
+    preceding_drum_obj = sxu.get_drum_track_obj_before(tobj_at_pos)
+    preceding_range_start, preceding_range_end =
+    sxu.get_drum_track_lane_indices(tobj_at_pos.group, preceding_drum_obj)
 
-    -- TODO: move this into sx.utils.get_drum_track_context
-    --
-    paste_obj_range = t_data_track_to_paste.track_options and t_data_track_to_paste.track_options.nr or 1
-    drum_tr_range_num = tonumber(paste_obj_range)
-    shift_pitches_starting_from = shift_pitches_above_note_row
+    shift_pitches_starting_from = preceding_range_end + 1
 
+    pitch_shift_amount = tonumber(t_paste_data.track_options and t_paste_data.track_options.nr or 1)
     midi_transform_target_track = r.getTrackByGUID(tobj_at_pos.group.guid)
-    pname = reaper.GetTrackMIDINoteNameEx(0, midi_transform_target_track, shift_pitches_starting_from, 0)
+    pname_sel_track = reaper.GetTrackMIDINoteNameEx(0, midi_transform_target_track, shift_pitches_starting_from, 0)
+    --
   elseif tobj_at_pos.channel_splitter then
     put_type = "splitter"
     -- todo...
@@ -161,38 +161,53 @@ ypc.put = function(meta, opts)
 
   midi_transform_target_track_item_count = reaper.CountTrackMediaItems(midi_transform_target_track)
 
-  log.user("range of interest", shift_pitches_above_note_row, shift_pitches_above_note_row + drum_tr_range_num - 1)
-
-  log.debug(
-    string.format(
-      [[---------------------------------
+  log.debug(string.format(
+    [[---------------------------------
   YPC -> PUT (type: %s)
-  tr@pos name = %s
+  ::SELECTED TRACK IN MAIN::
+         name = %s
          class = %s
          idx = %s (GUI idx = %s)
-         range = %s
-         rstart = %s; rend = %s
-  parent name = %s
+         prollname = %s
+
+  ::INSERTION DATA INFO::
+         rstart = %s
+         rend = %s (this is the value we have to shift up to in order to make place for insertion data)
+         pitch_shift_amount = %s
+
+  ::PARENT OBJECT INFO::
+         name = %s
          class = %s
          opt.m = %s
-  proll  name = %s (@ shift_pitches_above_note_row = %s - this is the last proll before insertion idx)
+
+  ::PRECEDING DRUM TRACK INFO::
+        name = %s
+        preceding range_start = %s
+        preceding_range_end = %s
   ---------------------------------
-    ]] ,
-      put_type,
-      tobj_at_pos.name,
-      tobj_at_pos.class,
-      tobj_at_pos.trackIndex,
-      tobj_at_pos.trackIndex + 1,
-      drum_tr_range_num,
-      shift_pitches_starting_from,
-      shift_pitches_above_note_row + drum_tr_range_num - 1,
-      parent_obj and parent_obj.name,
-      parent_obj and parent_obj.class,
-      parent_obj and parent_obj.options["m"],
-      pname,
-      shift_pitches_starting_from
-    )
-  )
+    ]],
+    --tr@pos
+    put_type,
+    tobj_at_pos.name,
+    tobj_at_pos.class,
+    tobj_at_pos.trackIndex,
+    tobj_at_pos.trackIndex + 1,
+    pname_sel_track,
+
+    -- preceding_range_end + 1,
+    shift_pitches_starting_from,
+    shift_pitches_starting_from + pitch_shift_amount - 1,
+    pitch_shift_amount > 0 and "+" .. tostring(pitch_shift_amount) or pitch_shift_amount,
+
+    -- parent
+    parent_obj and parent_obj.name,
+    parent_obj and parent_obj.class,
+    parent_obj and parent_obj.options["m"],
+    -- drums preceeding
+    preceding_drum_obj.name,
+    preceding_range_start,
+    preceding_range_end
+  ))
 
   --
   -- INSERT APPLY DATA
@@ -211,7 +226,7 @@ ypc.put = function(meta, opts)
             end,
           },
         },
-        transform = { notes = { pitch = drum_tr_range_num } },
+        transform = { notes = { pitch = pitch_shift_amount } },
       })
     end
     -- log.user(format.block(t_drum_master_item_objs))
@@ -250,7 +265,7 @@ ypc.cut = function(meta, opts)
     cut_type = "drumkit"
     parent_obj = target_tobj.group
     drum_tr_range_num = target_tobj.options and target_tobj.options["nr"] or 1
-    range_start, range_end = sxu.get_drum_lane_indices_from_child_track_obj(target_tobj.group, target_tobj)
+    range_start, range_end = sxu.get_drum_track_lane_indices(target_tobj.group, target_tobj)
     shift_value = range_end - range_start + 1
     midi_data_collect_track = require("custom_actions.utils").getTrackByGUID(target_tobj.group.guid)
 

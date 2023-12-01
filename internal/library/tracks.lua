@@ -272,7 +272,7 @@ local function prepare_item_data_objs_for_yanking(tobj)
 				data = {
 					midi = {
 						-- pitch -> filter range
-						notes = { pitch = { { sxu.get_drum_lane_indices_from_child_track_obj(tobj.group, tobj) } } },
+						notes = { pitch = { { sxu.get_drum_track_lane_indices(tobj.group, tobj) } } },
 					},
 				},
 			},

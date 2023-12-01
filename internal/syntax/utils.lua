@@ -144,7 +144,7 @@ function sx_lib_util.get_track_object_group(vtt, tobj)
   return parent_group_obj
 end
 
-sx_lib_util.get_drum_lane_indices_from_child_track_obj = function(parent_group_obj, child_track_obj)
+sx_lib_util.get_drum_track_lane_indices = function(parent_group_obj, child_track_obj)
   local note_row_start, note_row_end
   local lane_idx_start = 0
   local found_range = 0
@@ -183,8 +183,8 @@ sx_lib_util.get_note_row_after_drum_before_idx = function(parent_group_obj, idx)
 
     -- reverse -> must check that idx is greater than..
     if idx >= the_child.trackIndex then
-      local range_add = sx_lib_util.trackObjHasOption(the_child, "nr")
-          and (tonumber(the_child.options.nr) - 1 or 0)
+      local range_add = sx_lib_util.trackObjHasOption(the_child, "nr") and (tonumber(the_child.options.nr) - 1)
+          or 0
 
       return lane_idx_start + range_add + rk_config.drum_lanes_low_note_start - 1
     end
@@ -207,6 +207,18 @@ sx_lib_util.get_drum_lane_context = function()
   -- ~ drum index (index from bottom)
   -- ~ range start
   -- ~ range end
+end
+
+sx_lib_util.get_drum_track_obj_before = function(drum_obj)
+  local cur_obj
+  local prev_obj
+  for i = #drum_obj.group.children, 1, -1 do
+    local cur_obj = drum_obj.group.children[i]
+    if drum_obj.guid == cur_obj.guid then
+      return prev_obj
+    end
+    prev_obj = cur_obj
+  end
 end
 
 -- expects split track obj
