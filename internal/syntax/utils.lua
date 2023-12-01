@@ -183,7 +183,10 @@ sx_lib_util.get_note_row_after_drum_before_idx = function(parent_group_obj, idx)
 
     -- reverse -> must check that idx is greater than..
     if idx >= the_child.trackIndex then
-      return lane_idx_start + rk_config.drum_lanes_low_note_start - 1
+      local range_add = sx_lib_util.trackObjHasOption(the_child, "nr")
+          and (tonumber(the_child.options.nr) - 1 or 0)
+
+      return lane_idx_start + range_add + rk_config.drum_lanes_low_note_start - 1
     end
 
     if sx_lib_util.strHasOneOfChars(the_child.class, "MC") then
@@ -196,6 +199,14 @@ sx_lib_util.get_note_row_after_drum_before_idx = function(parent_group_obj, idx)
   end
 
   return lane_idx_start + rk_config.drum_lanes_low_note_start - 1
+end
+
+sx_lib_util.get_drum_lane_context = function()
+  -- TODO: merge above function into one that gives me all necessary
+  -- info about a drum lane and its context
+  -- ~ drum index (index from bottom)
+  -- ~ range start
+  -- ~ range end
 end
 
 -- expects split track obj

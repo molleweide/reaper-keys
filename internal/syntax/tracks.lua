@@ -223,6 +223,8 @@ sx_tracks.make_tree = function(t_trk_objs)
   local prev_lvl4_obj = nil
   local prev_track_obj = nil
 
+  -- TODO: i should also map each child to child.parent = zone/group/C/...
+
   -- TODO: each if conditional block should be refactored into a single
   -- function that makes it easier to visualize what is going on here.
 

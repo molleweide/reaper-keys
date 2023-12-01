@@ -19,12 +19,6 @@ local sxu = require("syntax.utils")
 
 local ypc = {}
 
--- ultrashall api has state chunk functions for storing and
--- loading FX Chains
---
--- HACK: hold up!!!!!
--- when copy / pasting tracks couldn't i just store the track state chunk???
-
 -- TODO: enforce so that you only can copy certain classes together.
 
 local USE_NATIVE_YPC = false
@@ -68,30 +62,28 @@ end
 -- FIX: needs proper return codes, so that `CUT` can return if yank did not
 -- succeed
 --
+-- FIX: remove libtr and use cu.getTrackPosition()
+--
 ---@param meta table | nil
 ---@param opts table | nil
 ypc.yank = function(meta, opts)
-  -- FIX: remove libtr and use cu.getTrackPosition()
   local libtr = require("library.tracks")
   local t_foc_tr, t_tobj_list = libtr.get_focused_track_objects()
   sx_tracks.getVerifiedTree(t_tobj_list) -- make this an opt param in get_focused_track_objects
-
-  log.user("TARGET TOBJ OPTIONS", format.block(t_foc_tr[1].options))
-
   local t_single_track_data = libtr.get_single_track_data_for_yanking(t_foc_tr[1])
-
-  -- log.user(format.block(t_single_track_data.item_objs))
-  -- log.user(format.block(t_single_track_data.state_chunk))
-
-  -- for k, v in pairs(t_single_track_data) do
-  -- 	log.user("yank", k, format.block(v))
-  -- end
-
-  -- need to store
-
-  -- Note: Need to store data in both cases since the source data can come from a
-  -- different track source
-
+  log.debug(string.format(
+    [[
+---------------------------------
+  YPC -> YANK
+  track name = %s
+        idx  = %s
+  group name = %s
+---------------------------------
+  ]] ,
+    t_foc_tr[1].name,
+    t_foc_tr[1].trackIdx,
+    t_foc_tr[1].group and t_foc_tr[1].group.name
+  ))
   require("utils.project_state").overwrite("ypc", "tracks", t_single_track_data)
   return t_foc_tr[1], t_tobj_list
 end
@@ -111,30 +103,9 @@ ypc.put = function(meta, opts)
       log.user("PUT: data to paste keys:", k)
     end
   end
-
   local vtt_pre = sx_tracks.getVerifiedTree() -- make this an opt param in get_focused_track_objects
-
   local insert_new_track_at_idx = cu.getTrackPosition() + 1
-
   local tobj_at_pos = vtt_pre.track_list[insert_new_track_at_idx]
-
-  -- DEBUG LOGGING
-
-  log.debug(
-    string.format(
-      [[ YPC PUT TOBJ @ POS
-    name = %s
-    class = %s
-    idx = %s
-    group name = %s
-    ]] ,
-      tobj_at_pos.name,
-      tobj_at_pos.class,
-      tobj_at_pos.trackIndex,
-      tobj_at_pos.group and tobj_at_pos.group.options["m"]
-    )
-  )
-
   local operating_on_drum_kit = tobj_at_pos.group and tobj_at_pos.group.options["m"]
 
   --
@@ -145,28 +116,92 @@ ypc.put = function(meta, opts)
   -- reaper.InsertTrackAtIndex( insert_new_track_at_idx, false )
   -- r.set_single_track_state_chunk(insert_new_track_at_idx, state)
 
+  local put_type
+  local parent_obj
+
+  -- drum kit vars
+  local shift_pitches_above_note_row
+  local paste_obj_range
+  local drum_tr_range_num
+  local shift_pitches_starting_from
+  local pname
+
+  -- splitter vars
+
+  -- regular put vars
+
+  --
+  local midi_transform_target_track
+  local midi_transform_target_track_item_count
+
+  if operating_on_drum_kit then
+    put_type = "drumkit"
+    parent_obj = tobj_at_pos.group
+
+    shift_pitches_above_note_row =
+    sxu.get_note_row_after_drum_before_idx(tobj_at_pos.group, insert_new_track_at_idx)
+
+    -- TODO: move this into sx.utils.get_drum_track_context
+    --
+    paste_obj_range = t_data_track_to_paste.track_options and t_data_track_to_paste.track_options.nr or 1
+    drum_tr_range_num = tonumber(paste_obj_range)
+    shift_pitches_starting_from = shift_pitches_above_note_row
+
+    midi_transform_target_track = r.getTrackByGUID(tobj_at_pos.group.guid)
+    pname = reaper.GetTrackMIDINoteNameEx(0, midi_transform_target_track, shift_pitches_starting_from, 0)
+  elseif tobj_at_pos.channel_splitter then
+    put_type = "splitter"
+    -- todo...
+    parent_obj = tobj_at_pos.channel_splitter
+    midi_transform_target_track = r.getTrackByGUID(tobj_at_pos.channel_splitter.guid)
+  else
+    put_type = "regular"
+    midi_transform_target_track = "NEW TRACK"
+  end
+
+  midi_transform_target_track_item_count = reaper.CountTrackMediaItems(midi_transform_target_track)
+
+  log.user("range of interest", shift_pitches_above_note_row, shift_pitches_above_note_row + drum_tr_range_num - 1)
+
+  log.debug(
+    string.format(
+      [[---------------------------------
+  YPC -> PUT (type: %s)
+  tr@pos name = %s
+         class = %s
+         idx = %s (GUI idx = %s)
+         range = %s
+         rstart = %s; rend = %s
+  parent name = %s
+         class = %s
+         opt.m = %s
+  proll  name = %s (@ shift_pitches_above_note_row = %s - this is the last proll before insertion idx)
+  ---------------------------------
+    ]] ,
+      put_type,
+      tobj_at_pos.name,
+      tobj_at_pos.class,
+      tobj_at_pos.trackIndex,
+      tobj_at_pos.trackIndex + 1,
+      drum_tr_range_num,
+      shift_pitches_starting_from,
+      shift_pitches_above_note_row + drum_tr_range_num - 1,
+      parent_obj and parent_obj.name,
+      parent_obj and parent_obj.class,
+      parent_obj and parent_obj.options["m"],
+      pname,
+      shift_pitches_starting_from
+    )
+  )
+
   --
   -- INSERT APPLY DATA
   --
 
-  if operating_on_drum_kit then
-    log.debug("YPC PUT / shift & insert data into drum kit master")
-    -- log.user(paste_obj_range, type(paste_obj_range))
-    local shift_pitches_above_note_row =
-    sxu.get_note_row_after_drum_before_idx(tobj_at_pos.group, insert_new_track_at_idx)
-    local paste_obj_range = t_data_track_to_paste.track_options and t_data_track_to_paste.track_options.nr or 1
-    local range_num = tonumber(paste_obj_range)
-    local shift_pitches_starting_from = shift_pitches_above_note_row + 1
-
-    log.user("range of interest", shift_pitches_above_note_row, shift_pitches_above_note_row + range_num - 1)
-    local tr = require("custom_actions.utils").getTrackByGUID(tobj_at_pos.group.guid)
-    local item_count = reaper.CountTrackMediaItems(tr)
-    local pname = reaper.GetTrackMIDINoteNameEx(0, tr, shift_pitches_starting_from, 0)
-
-    log.user("PNAME:", pname)
-
-    for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-      local item = reaper.GetTrackMediaItem(tr, i)
+  -- shift data if necessary
+  if put_type == "drumkit" then
+    for i = 0, midi_transform_target_track_item_count - 1 do -- does parent_item_cnt need to be stored????
+      local item = reaper.GetTrackMediaItem(midi_transform_target_track, i)
       local take = reaper.GetMediaItemTake(item, 0) -- active take?
       require("library.midi").midi_take_filter_transform(take, {
         filter = {
@@ -176,15 +211,14 @@ ypc.put = function(meta, opts)
             end,
           },
         },
-        transform = { notes = { pitch = range_num } },
+        transform = { notes = { pitch = drum_tr_range_num } },
       })
     end
-
     -- log.user(format.block(t_drum_master_item_objs))
-  elseif tobj_at_pos.channel_splitter then
-    log.debug("ypc.put / shift & insert data into channel splitter master")
+  elseif put_type == "splitter" then
+  elseif put_type == "regular" then
   else
-    log.debug("ypc.put / insert data into standard MC track")
+    log.debug("PUT: something went wrong...")
   end
 end
 
@@ -198,31 +232,86 @@ ypc.cut = function(meta, opts)
     log.debug("YPC CUT: yanking did not suceed - aborting...")
     return
   end
-  -- log.user(target_tobj.name, target_tobj.trackIndex, target_tobj.options.nr)
-
+  local cut_type, parent_obj
   local operating_on_drum_kit = target_tobj.group and target_tobj.group.options["m"]
 
+  --
+  local drum_tr_range_num
+  local range_start, range_end
+  local shift_value
+  local pname
+  local pname_shift
+
+  --
+  local midi_data_collect_track
+  local midi_data_collect_track_item_count
+
   if operating_on_drum_kit then
-    log.debug("CUT data from drum kit master")
-    local range_start, range_end = sxu.get_drum_lane_indices_from_child_track_obj(target_tobj.group, target_tobj)
-    local shift_value = range_end - range_start + 1
-    log.user("CUT range:", range_start, range_end, "shiftval =", -shift_value)
+    cut_type = "drumkit"
+    parent_obj = target_tobj.group
+    drum_tr_range_num = target_tobj.options and target_tobj.options["nr"] or 1
+    range_start, range_end = sxu.get_drum_lane_indices_from_child_track_obj(target_tobj.group, target_tobj)
+    shift_value = range_end - range_start + 1
+    midi_data_collect_track = require("custom_actions.utils").getTrackByGUID(target_tobj.group.guid)
 
-    local tr = require("custom_actions.utils").getTrackByGUID(target_tobj.group.guid)
-    local item_count = reaper.CountTrackMediaItems(tr)
-    local pname = reaper.GetTrackMIDINoteNameEx(0, tr, range_start, 0)
-    local pname_shift = reaper.GetTrackMIDINoteNameEx(0, tr, range_end + 1, 0)
-    log.user("PNAME:", pname, pname_shift)
+    pname = reaper.GetTrackMIDINoteNameEx(0, midi_data_collect_track, range_start, 0)
+    pname_shift = reaper.GetTrackMIDINoteNameEx(0, midi_data_collect_track, range_end + 1, 0)
+  elseif target_tobj.channel_splitter then
+    cut_type = "splitter"
+    parent_obj = target_tobj.channel_splitter
+    midi_data_collect_track = require("custom_actions.utils").getTrackByGUID(target_tobj.channel_splitter.guid)
+  else
+    cut_type = "regular"
+    parent_obj = target_tobj.channel_splitter
+    midi_data_collect_track = require("custom_actions.utils").getTrackByGUID(target_tobj.guid)
+  end
 
-    for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-      local item = reaper.GetTrackMediaItem(tr, i)
+  midi_data_collect_track_item_count = reaper.CountTrackMediaItems(midi_data_collect_track)
+
+  log.debug(
+    string.format(
+      [[---------------------------------
+  YPC -> CUT (type: %s)
+  tr@pos name = %s
+         class = %s
+         idx = %s (GUI idx = %s)
+         range = %s
+         range start = %s; range end = %s
+  parent name = %s
+         class = %s
+         opt.m = %s
+  proll  name = %s (@ shift_pitches_above_note_row)
+         name_shift = %s
+  shift  value = %s
+  ---------------------------------
+    ]] ,
+      cut_type,
+      target_tobj.name,
+      target_tobj.class,
+      target_tobj.trackIndex,
+      target_tobj.trackIndex + 1,
+      drum_tr_range_num,
+      range_start,
+      range_end,
+      parent_obj and parent_obj.name,
+      parent_obj and parent_obj.class,
+      parent_obj and parent_obj.options["m"],
+      pname,
+      pname_shift,
+      -shift_value
+    )
+  )
+
+  if cut_type == "drumkit" then
+    for i = 0, midi_data_collect_track_item_count - 1 do -- does parent_item_cnt need to be stored????
+      local item = reaper.GetTrackMediaItem(midi_data_collect_track, i)
       local take = reaper.GetMediaItemTake(item, 0) -- active take?
       -- delete notes inside range
       require("library.midi").midi_take_filter_transform(take, {
         remove = {
           notes = { pitch = { { range_start, range_end } } },
         },
-        dry_run = true
+        dry_run = true,
       })
       -- shift notes
       require("library.midi").midi_take_filter_transform(take, {
@@ -236,11 +325,14 @@ ypc.cut = function(meta, opts)
         transform = { notes = { pitch = -shift_value } },
       })
     end
-  elseif target_tobj.channel_splitter then
+  elseif cut_type == "splitter" then
     log.debug("CUT data from channel splitter master")
     -- shift existing
+  elseif cut_type == "regular" then
+    log.debug("CUT: something went wrong")
   end
 
+  log.debug(string.format([[YPC -> CUT]]))
   -- reaper.DeleteTrack(tr)
 end
 
