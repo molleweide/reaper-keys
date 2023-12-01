@@ -6,6 +6,8 @@ local r = require("utils.reaper")
 
 local project_state = require("utils.project_state")
 
+local libtr = require("library.tracks")
+
 local sx_tracks = require("syntax.tracks")
 local sxu = require("syntax.utils")
 
@@ -67,7 +69,8 @@ end
 ---@param meta table | nil
 ---@param opts table | nil
 ypc.yank = function(meta, opts)
-  local libtr = require("library.tracks")
+  opts = opts or {}
+
   local t_foc_tr, t_tobj_list = libtr.get_focused_track_objects()
   sx_tracks.getVerifiedTree(t_tobj_list) -- make this an opt param in get_focused_track_objects
   local t_single_track_data = libtr.get_single_track_data_for_yanking(t_foc_tr[1])
@@ -93,6 +96,7 @@ end
 --
 
 ypc.put = function(meta, opts)
+  opts = opts or {}
   local exists, t_paste_data = project_state.get("ypc", "tracks")
   if not exists then
     log.debug("YPC: paste data does not exist. Cannot paste nil...")
@@ -118,33 +122,26 @@ ypc.put = function(meta, opts)
 
   local put_type
   local parent_obj
+  local midi_transform_target_track
+  local midi_transform_target_track_item_count
 
   -- drum kit vars
   local shift_pitches_starting_from
   local pitch_shift_amount
   local pname_sel_track
-
   local preceding_drum_obj
-  local preceding_range_start, preceding_range_end
-
+  local preceding_drum_range = {}
   -- splitter vars
-
   -- regular put vars
-
-  --
-  local midi_transform_target_track
-  local midi_transform_target_track_item_count
 
   if operating_on_drum_kit then
     put_type = "drumkit"
     parent_obj = tobj_at_pos.group
-
     preceding_drum_obj = sxu.get_drum_track_obj_before(tobj_at_pos)
-    preceding_range_start, preceding_range_end =
-    sxu.get_drum_track_lane_indices(tobj_at_pos.group, preceding_drum_obj)
-
-    shift_pitches_starting_from = preceding_range_end + 1
-
+    preceding_drum_range = {
+      sxu.get_drum_track_lane_indices(tobj_at_pos.group, preceding_drum_obj),
+    }
+    shift_pitches_starting_from = preceding_drum_range[2] + 1
     pitch_shift_amount = tonumber(t_paste_data.track_options and t_paste_data.track_options.nr or 1)
     midi_transform_target_track = r.getTrackByGUID(tobj_at_pos.group.guid)
     pname_sel_track = reaper.GetTrackMIDINoteNameEx(0, midi_transform_target_track, shift_pitches_starting_from, 0)
@@ -205,8 +202,8 @@ ypc.put = function(meta, opts)
     parent_obj and parent_obj.options["m"],
     -- drums preceeding
     preceding_drum_obj.name,
-    preceding_range_start,
-    preceding_range_end
+    preceding_drum_range[1],
+    preceding_drum_range[2]
   ))
 
   --
@@ -242,6 +239,7 @@ end
 --
 
 ypc.cut = function(meta, opts)
+  opts = opts or {}
   local target_tobj, t_sx_tobj_list = ypc.yank() -- pass track to yank
   if not target_tobj then
     log.debug("YPC CUT: yanking did not suceed - aborting...")
@@ -261,24 +259,38 @@ ypc.cut = function(meta, opts)
   local midi_data_collect_track
   local midi_data_collect_track_item_count
 
+  --
+
+  local t_foc_tr, t_tobj_list = libtr.get_focused_track_objects()
+  local focus_tobj = t_foc_tr[1]
+  if not focus_tobj then
+    log.debug("CUT: couldn't retrieve focus track with r.getTrackByGUID")
+  end
+  local focus_tr = r.getTrackByGUID(focus_tobj.guid)
+
+
+  --
+  -- A. COLLECT CONTEXT INFO
+  --
+
   if operating_on_drum_kit then
     cut_type = "drumkit"
     parent_obj = target_tobj.group
     drum_tr_range_num = target_tobj.options and target_tobj.options["nr"] or 1
     range_start, range_end = sxu.get_drum_track_lane_indices(target_tobj.group, target_tobj)
     shift_value = range_end - range_start + 1
-    midi_data_collect_track = require("custom_actions.utils").getTrackByGUID(target_tobj.group.guid)
+    midi_data_collect_track = r.getTrackByGUID(target_tobj.group.guid)
 
     pname = reaper.GetTrackMIDINoteNameEx(0, midi_data_collect_track, range_start, 0)
     pname_shift = reaper.GetTrackMIDINoteNameEx(0, midi_data_collect_track, range_end + 1, 0)
   elseif target_tobj.channel_splitter then
     cut_type = "splitter"
     parent_obj = target_tobj.channel_splitter
-    midi_data_collect_track = require("custom_actions.utils").getTrackByGUID(target_tobj.channel_splitter.guid)
+    midi_data_collect_track = r.getTrackByGUID(target_tobj.channel_splitter.guid)
   else
     cut_type = "regular"
     parent_obj = target_tobj.channel_splitter
-    midi_data_collect_track = require("custom_actions.utils").getTrackByGUID(target_tobj.guid)
+    midi_data_collect_track = focus_tr
   end
 
   midi_data_collect_track_item_count = reaper.CountTrackMediaItems(midi_data_collect_track)
@@ -287,14 +299,17 @@ ypc.cut = function(meta, opts)
     string.format(
       [[---------------------------------
   YPC -> CUT (type: %s)
-  tr@pos name = %s
+  ::FOCUS TRACK TO CUT::
+         name = %s
          class = %s
          idx = %s (GUI idx = %s)
          range = %s
          range start = %s; range end = %s
-  parent name = %s
+  ::PARENT OBJ::
+         name = %s
          class = %s
          opt.m = %s
+  :::::::::::::
   proll  name = %s (@ shift_pitches_above_note_row)
          name_shift = %s
   shift  value = %s
@@ -347,8 +362,9 @@ ypc.cut = function(meta, opts)
     log.debug("CUT: something went wrong")
   end
 
-  log.debug(string.format([[YPC -> CUT]]))
-  -- reaper.DeleteTrack(tr)
+  if not opts.dry_run then
+    reaper.DeleteTrack(focus_tr)
+  end
 end
 
 --
