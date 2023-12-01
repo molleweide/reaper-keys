@@ -218,12 +218,13 @@ ypc.cut = function(meta, opts)
       local item = reaper.GetTrackMediaItem(tr, i)
       local take = reaper.GetMediaItemTake(item, 0) -- active take?
       -- delete notes inside range
-      -- shift notes
       require("library.midi").midi_take_filter_transform(take, {
         remove = {
           notes = { pitch = { { range_start, range_end } } },
         },
+        dry_run = true
       })
+      -- shift notes
       require("library.midi").midi_take_filter_transform(take, {
         filter = {
           notes = {
