@@ -65,17 +65,20 @@ end
 -- YANK
 --
 
+-- FIX: needs proper return codes, so that `CUT` can return if yank did not
+-- succeed
+--
+---@param meta table | nil
+---@param opts table | nil
 ypc.yank = function(meta, opts)
+  -- FIX: remove libtr and use cu.getTrackPosition()
   local libtr = require("library.tracks")
-  local t_foc_tr, t_obj_list = libtr.get_focused_track_objects()
-  sx_tracks.getVerifiedTree(t_obj_list) -- make this an opt param in get_focused_track_objects
+  local t_foc_tr, t_tobj_list = libtr.get_focused_track_objects()
+  sx_tracks.getVerifiedTree(t_tobj_list) -- make this an opt param in get_focused_track_objects
 
-  -- log.user(format.block(t_foc_tr))
+  log.user("TARGET TOBJ OPTIONS", format.block(t_foc_tr[1].options))
 
   local t_single_track_data = libtr.get_single_track_data_for_yanking(t_foc_tr[1])
-
-  local log = require("utils.log")
-  local format = require("utils.format")
 
   -- log.user(format.block(t_single_track_data.item_objs))
   -- log.user(format.block(t_single_track_data.state_chunk))
@@ -90,6 +93,7 @@ ypc.yank = function(meta, opts)
   -- different track source
 
   require("utils.project_state").overwrite("ypc", "tracks", t_single_track_data)
+  return t_foc_tr[1], t_tobj_list
 end
 
 --
@@ -98,7 +102,6 @@ end
 
 ypc.put = function(meta, opts)
   local exists, t_data_track_to_paste = project_state.get("ypc", "tracks")
-
   if not exists then
     log.debug("YPC: paste data does not exist. Cannot paste nil...")
     return
@@ -147,38 +150,17 @@ ypc.put = function(meta, opts)
   --
 
   if operating_on_drum_kit then
-    log.debug("ypc.put / shift & insert data into drum kit master")
+    log.debug("YPC PUT / shift & insert data into drum kit master")
     -- log.user(paste_obj_range, type(paste_obj_range))
     local shift_pitches_above_note_row =
     sxu.get_note_row_after_drum_before_idx(tobj_at_pos.group, insert_new_track_at_idx)
-    local paste_obj_range = t_data_track_to_paste.track_options and t_data_track_to_paste.track_options.nr
+    local paste_obj_range = t_data_track_to_paste.track_options and t_data_track_to_paste.track_options.nr or 1
     local range_num = tonumber(paste_obj_range)
     local shift_pitches_starting_from = shift_pitches_above_note_row + 1
 
     log.user("range of interest", shift_pitches_above_note_row, shift_pitches_above_note_row + range_num - 1)
-
-    -- -- get data for same position to make sure that we are getting correct stuff.
-    -- local libit = require("library.items")
-    -- local t_drum_master_item_objs = libit.get_item_objs_from_single_track(tobj_at_pos.group, {
-    --   filter = {
-    --     info = {},
-    --     data = {
-    --       midi = {
-    --         notes = {
-    --           pitch = function(note)
-    --             return shift_pitches_above_note_row < note.pitch
-    --           end,
-    --         },
-    --       },
-    --     },
-    --   },
-    -- })
-
     local tr = require("custom_actions.utils").getTrackByGUID(tobj_at_pos.group.guid)
     local item_count = reaper.CountTrackMediaItems(tr)
-
-    -- TODO: add debug = show note_row names
-
     local pname = reaper.GetTrackMIDINoteNameEx(0, tr, shift_pitches_starting_from, 0)
 
     log.user("PNAME:", pname)
@@ -211,18 +193,49 @@ end
 --
 
 ypc.cut = function(meta, opts)
-  -- ypc.yank() -- pass track to yank
+  local target_tobj, t_sx_tobj_list = ypc.yank() -- pass track to yank
+  if not target_tobj then
+    log.debug("YPC CUT: yanking did not suceed - aborting...")
+    return
+  end
+  -- log.user(target_tobj.name, target_tobj.trackIndex, target_tobj.options.nr)
 
-  local target_track_index = cu.getTrackPosition() + 1
-  local vtt_pre = sx_tracks.getVerifiedTree() -- make this an opt param in get_focused_track_objects
-  local tobj_at_pos = vtt_pre.track_list[target_track_index]
-
-  local operating_on_drum_kit = tobj_at_pos.group and tobj_at_pos.group.options["m"]
+  local operating_on_drum_kit = target_tobj.group and target_tobj.group.options["m"]
 
   if operating_on_drum_kit then
     log.debug("CUT data from drum kit master")
-    -- shift existing
-  elseif tobj_at_pos.channel_splitter then
+    local range_start, range_end = sxu.get_drum_lane_indices_from_child_track_obj(target_tobj.group, target_tobj)
+    local shift_value = range_end - range_start + 1
+    log.user("CUT range:", range_start, range_end, "shiftval =", -shift_value)
+
+    local tr = require("custom_actions.utils").getTrackByGUID(target_tobj.group.guid)
+    local item_count = reaper.CountTrackMediaItems(tr)
+    local pname = reaper.GetTrackMIDINoteNameEx(0, tr, range_start, 0)
+    local pname_shift = reaper.GetTrackMIDINoteNameEx(0, tr, range_end + 1, 0)
+    log.user("PNAME:", pname, pname_shift)
+
+    for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
+      local item = reaper.GetTrackMediaItem(tr, i)
+      local take = reaper.GetMediaItemTake(item, 0) -- active take?
+      -- delete notes inside range
+      -- shift notes
+      require("library.midi").midi_take_filter_transform(take, {
+        remove = {
+          notes = { pitch = { { range_start, range_end } } },
+        },
+      })
+      require("library.midi").midi_take_filter_transform(take, {
+        filter = {
+          notes = {
+            pitch = function(note)
+              return range_end + 1 <= note.pitch
+            end,
+          },
+        },
+        transform = { notes = { pitch = -shift_value } },
+      })
+    end
+  elseif target_tobj.channel_splitter then
     log.debug("CUT data from channel splitter master")
     -- shift existing
   end
