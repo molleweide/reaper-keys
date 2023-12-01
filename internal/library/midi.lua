@@ -593,6 +593,8 @@ midi.midi_take_filter_transform = function(take, opts)
 	local no_filters = not note_filter and not cc_filter and not syx_filter
 
 	local transform = opts.transform or {}
+	local insert = opts.insert or {}
+
 
 	local t_notes = {}
 	local t_cc = {}
@@ -661,12 +663,43 @@ midi.midi_take_filter_transform = function(take, opts)
 		end
 	end
 
-	-- TODO: after events have been filtered. now we can apply transform to the
-	-- filtered events
-	-- eg. delete notes or set/shift values.
+  -- FIX: values outside of allowed range
+
 	if transform.notes then
-		for k, v in pairs(transform.notes) do
+	  -- log.user("?????")
+		for i, note in ipairs(t_notes) do
+			for k, v in pairs(transform.notes) do
+				if v == "remove" then
+					-- log.user("midi take transform: delete:", i, note.pitch)
+					-- reaper.MIDI_DeleteNote(take, i)
+				elseif type(v) == "bool" then
+					-- log.user("midi take transform: set bool:", i, note[k], "->", v)
+					-- note[k] = v -- set bool value
+				elseif type(v) == "number" then
+					-- log.user("midi take transform: shift num:", i, note[k], "->", note[k] + v)
+					-- note[k] = note[k] + v -- shift by number
+				elseif type(v) == "table" then
+					-- log.user("midi take transform: force const:", i, note[k], "->", v[1])
+					-- note[k] = v[2] == "force" and v[1] -- { number, "force"} means force all notes to value
+				elseif type(v) == "function" then
+					-- log.user("midi take transform: func:", i, note[k], "->", v(note))
+					-- note[k] = v(note) -- apply function transform per note
+				end
+			end
 		end
+	end
+
+	if transform.cc then
+	end
+	if transform.syx then
+	end
+
+	if insert.notes then
+		-- handle inserting notes
+	end
+	if insert.cc then
+	end
+	if insert.syx then
 	end
 
 	return {
