@@ -3,6 +3,8 @@ local reaper_utils = require("custom_actions.utils")
 local log = require("utils.log")
 local rk_config = require("definitions.config")
 
+local r = require("utils.reaper")
+
 local sx_lib_util = {}
 
 -- wtf never use tr idx
@@ -148,7 +150,7 @@ sx_lib_util.get_drum_lane_indices = function(parent_group_obj, child_track_obj)
   local note_row_start, note_row_end
   local lane_idx_start = 0
   local found_range = 0
-  local  cfg_lane_start = rk_config.drum_lanes_low_note_start
+  local cfg_lane_start = rk_config.drum_lanes_low_note_start
 
   if not child_track_obj then
     return cfg_lane_start, cfg_lane_start
@@ -242,6 +244,12 @@ function sx_lib_util.trackNameMatchCategory(name)
   --        return cat_type
 
   -- return false
+end
+
+-- todo: error handling and nil checks
+sx_lib_util.select_node = function(node)
+  local tr = r.getTrackByGUID(node.guid)
+  reaper.SetOnlyTrackSelected(tr)
 end
 
 return sx_lib_util
