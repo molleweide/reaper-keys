@@ -179,4 +179,22 @@ function actions.log_vtt()
 	-- end
 end
 
+
+actions.sort_group_children = function()
+
+  local t_children_sorted = {}
+
+  -- for all group children
+  --
+  -- sort MCAB into a table
+  --
+  -- for each sorted child
+  --    reorder tracks to `after next coming group`
+  --    >>> this is done by supplying the next group track as index to reorder.
+  --    if child is C,
+  --       then reorder and sort all its children at once
+  --
+end
+
+
 return actions

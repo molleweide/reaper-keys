@@ -144,10 +144,15 @@ function sx_lib_util.get_track_object_group(vtt, tobj)
   return parent_group_obj
 end
 
-sx_lib_util.get_drum_track_lane_indices = function(parent_group_obj, child_track_obj)
+sx_lib_util.get_drum_lane_indices = function(parent_group_obj, child_track_obj)
   local note_row_start, note_row_end
   local lane_idx_start = 0
   local found_range = 0
+  local  cfg_lane_start = rk_config.drum_lanes_low_note_start
+
+  if not child_track_obj then
+    return cfg_lane_start, cfg_lane_start
+  end
 
   for i = #parent_group_obj.children, 1, -1 do
     local the_child = parent_group_obj.children[i]
@@ -168,7 +173,7 @@ sx_lib_util.get_drum_track_lane_indices = function(parent_group_obj, child_track
       end
     end
   end
-  note_row_start = lane_idx_start + rk_config.drum_lanes_low_note_start - 1
+  note_row_start = lane_idx_start + cfg_lane_start - 1
 
   return note_row_start, note_row_start + found_range
 end
@@ -209,7 +214,7 @@ sx_lib_util.get_drum_lane_context = function()
   -- ~ range end
 end
 
-sx_lib_util.get_drum_track_obj_before = function(drum_obj)
+sx_lib_util.get_prev_drum = function(drum_obj)
   local cur_obj
   local prev_obj
   for i = #drum_obj.group.children, 1, -1 do

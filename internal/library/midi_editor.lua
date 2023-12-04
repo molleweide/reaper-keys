@@ -103,7 +103,9 @@ end
 ---@return boolean retval, table data
 midi_editor.getMidiValidContext = function(hwnd)
   local ME = hwnd or reaper.MIDIEditor_GetActive()
+
   local take = reaper.MIDIEditor_GetTake(ME)
+
   local editor_item = take and reaper.GetMediaItemTake_Item(take) or nil
 
   local retval = true
@@ -585,7 +587,7 @@ midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new
   if sx_utils.trackObjHasOption(g_obj, "m") then -- drum lanes
     target_tr = g_obj.tr
     items_found = containers.get_track_items_in_range_time(g_obj.tr, check_start_pos, check_end_pos)
-    note_row = sx_utils.get_drum_track_lane_indices(g_obj, track_obj)
+    note_row = sx_utils.get_drum_lane_indices(g_obj, track_obj)
 
     -- TODO: midi channelsplitters -> set channel splitter master and set active midi channel in ME
     --

@@ -111,7 +111,7 @@ end
 --
 tracks.get_focused_track_objects = function()
   local context = state_interface.getContext()
-  -- log.debug("CONTEXT:", context)
+  log.debug("CONTEXT:", context)
 
   local vtt = sx.getVerifiedTree()
 
@@ -281,7 +281,7 @@ local function prepare_item_data_objs_for_yanking(tobj)
         data = {
           midi = {
             -- pitch -> filter range
-            notes = { pitch = { { sxu.get_drum_track_lane_indices(tobj.group, tobj) } } },
+            notes = { pitch = { { sxu.get_drum_lane_indices(tobj.group, tobj) } } },
           },
         },
       },
@@ -333,6 +333,8 @@ end
 -- Since data and track is separated with drum lanes this requires a custom
 -- function that collects track info and then takes the data from the correct
 -- source track container.
+--
+-- TODO: migrate this func into custom/ypc.lua
 
 tracks.get_single_track_data_for_yanking = function(tobj)
   log.user(string.format("yank foc tr: %s (t), %s (g)", tobj.name, tobj.group and tobj.group.name or "!g"))
