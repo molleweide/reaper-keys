@@ -229,8 +229,15 @@ sx_lib_util.get_prev_drum = function(drum_obj)
 end
 
 -- expects split track obj
-sx_lib_util.get_channel_for_split_track = function(sobj)
-  for i, v in ipairs(sobj.channel_splitter.children) do
+sx_lib_util.get_split_index = function(s)
+  local split_chan_num = 0
+  for i, v in ipairs(s.channel_splitter.children) do
+    if v.class == "S" then
+      split_chan_num = split_chan_num + 1
+      if v.guid == s.guid then
+        return split_chan_num
+      end
+    end
   end
 end
 

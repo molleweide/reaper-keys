@@ -342,6 +342,13 @@ tracks.get_single_track_data_for_yanking = function(tobj)
   -- move all information pertaining to putting together the track object to
   --
 
+  local copied_from_type = "regular"
+  if tobj.group and tobj.group.options["m"] then
+    copied_from_type = "drumkit"
+  elseif tobj.channel_splitter then
+    copied_from_type = "splitter"
+  end
+
   local tr = r.getTrackByGUID(tobj.guid)
 
   -- TODO: NEED to collect if track data comes from LANE or not
@@ -350,6 +357,7 @@ tracks.get_single_track_data_for_yanking = function(tobj)
   -- now it feels a bit cluttered - but this is fine for now.
 
   local track_data = {
+    copied_from_type = copied_from_type,
     class = tobj.class,
     name = tobj.name,
     name_components = tobj.name_components,
