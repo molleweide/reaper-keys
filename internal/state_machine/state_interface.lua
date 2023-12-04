@@ -100,11 +100,16 @@ end
 
 function state_interface.setModeToNormal()
   local state = state_interface.get()
-  state['key_sequence'] = ""
+  state['key_sequence'] = ""
   state['context'] = "main"
   state['mode'] = "normal"
   state['timeline_selection_side'] = "left"
   state_interface.set(state)
+end
+
+state_interface.getContext = function()
+  local state = state_interface.get()
+  return state.context
 end
 
 return state_interface

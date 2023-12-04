@@ -1,6 +1,9 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
+
+
+
 local cu = require("custom_actions.utils")
 local r = require("utils.reaper")
 
@@ -71,8 +74,10 @@ end
 ypc.yank = function(meta, opts)
   opts = opts or {}
 
-  local t_foc_tr, t_tobj_list = libtr.get_focused_track_objects()
-  sx_tracks.getVerifiedTree(t_tobj_list) -- make this an opt param in get_focused_track_objects
+  local t_foc_tr, vtt = libtr.get_focused_track_objects()
+
+  -- TODO: this function should go into ypc, since it is specifically prepping for ypc
+  --
   local t_single_track_data = libtr.get_single_track_data_for_yanking(t_foc_tr[1])
   log.debug(string.format(
     [[
@@ -88,7 +93,7 @@ ypc.yank = function(meta, opts)
     t_foc_tr[1].group and t_foc_tr[1].group.name
   ))
   require("utils.project_state").overwrite("ypc", "tracks", t_single_track_data)
-  return t_foc_tr[1], t_tobj_list
+  return t_foc_tr, vtt
 end
 
 --
@@ -107,13 +112,20 @@ ypc.put = function(meta, opts)
       log.user("PUT: data to paste keys:", k)
     end
   end
+
+  -- FIX: redo focused track here so that it returns more of a "context" that
+  -- can be used when managing tracks.
+  -- >> It already does return selection and vtt, so I could just use the selection
+  -- objects...
+  --
   local vtt_pre = sx_tracks.getVerifiedTree() -- make this an opt param in get_focused_track_objects
+
   local insert_new_track_at_idx = cu.getTrackPosition() + 1
   local tobj_at_pos = vtt_pre.track_list[insert_new_track_at_idx]
   local operating_on_drum_kit = tobj_at_pos.group and tobj_at_pos.group.options["m"]
 
   --
-  -- INSERT NEW TRACK AND SET STATE CHUNK
+  -- PUT: VARIABLES
   --
 
   -- log.user(">>>",t_paste_data.state_chunk)
@@ -137,7 +149,9 @@ ypc.put = function(meta, opts)
   if operating_on_drum_kit then
     put_type = "drumkit"
     parent_obj = tobj_at_pos.group
+
     preceding_drum_obj = sxu.get_drum_track_obj_before(tobj_at_pos)
+
     preceding_drum_range = {
       sxu.get_drum_track_lane_indices(tobj_at_pos.group, preceding_drum_obj),
     }
@@ -166,17 +180,14 @@ ypc.put = function(meta, opts)
          class = %s
          idx = %s (GUI idx = %s)
          prollname = %s
-
   ::INSERTION DATA INFO::
          rstart = %s
          rend = %s (this is the value we have to shift up to in order to make place for insertion data)
          pitch_shift_amount = %s
-
   ::PARENT OBJECT INFO::
          name = %s
          class = %s
          opt.m = %s
-
   ::PRECEDING DRUM TRACK INFO::
         name = %s
         preceding range_start = %s
@@ -207,7 +218,7 @@ ypc.put = function(meta, opts)
   ))
 
   --
-  -- INSERT APPLY DATA
+  -- PUT: ACT -------------------------------------------------------
   --
 
   -- shift data if necessary
@@ -216,6 +227,7 @@ ypc.put = function(meta, opts)
       local item = reaper.GetTrackMediaItem(midi_transform_target_track, i)
       local take = reaper.GetMediaItemTake(item, 0) -- active take?
       require("library.midi").midi_take_filter_transform(take, {
+        dry_run = true,
         filter = {
           notes = {
             pitch = function(note)
@@ -235,16 +247,19 @@ ypc.put = function(meta, opts)
 end
 
 --
--- CUT
+-- CUT -------------------------------------------------------
 --
 
 ypc.cut = function(meta, opts)
   opts = opts or {}
-  local target_tobj, t_sx_tobj_list = ypc.yank() -- pass track to yank
+  local t_foc_tr, _ = ypc.yank() -- pass track to yank
+  local target_tobj = t_foc_tr[1]
+
   if not target_tobj then
     log.debug("YPC CUT: yanking did not suceed - aborting...")
     return
   end
+
   local cut_type, parent_obj
   local operating_on_drum_kit = target_tobj.group and target_tobj.group.options["m"]
 
@@ -260,17 +275,7 @@ ypc.cut = function(meta, opts)
   local midi_data_collect_track_item_count
 
   --
-
-  local t_foc_tr, t_tobj_list = libtr.get_focused_track_objects()
-  local focus_tobj = t_foc_tr[1]
-  if not focus_tobj then
-    log.debug("CUT: couldn't retrieve focus track with r.getTrackByGUID")
-  end
-  local focus_tr = r.getTrackByGUID(focus_tobj.guid)
-
-
-  --
-  -- A. COLLECT CONTEXT INFO
+  -- CUT: VARIABLES
   --
 
   if operating_on_drum_kit then
@@ -290,7 +295,7 @@ ypc.cut = function(meta, opts)
   else
     cut_type = "regular"
     parent_obj = target_tobj.channel_splitter
-    midi_data_collect_track = focus_tr
+    midi_data_collect_track = r.getTrackByGUID(target_tobj.guid)
   end
 
   midi_data_collect_track_item_count = reaper.CountTrackMediaItems(midi_data_collect_track)
@@ -332,6 +337,17 @@ ypc.cut = function(meta, opts)
     )
   )
 
+  local cut_track
+  if cut_type == "drumkit" or cut_type == "channel_splitter" then
+    cut_track = midi_data_collect_track
+  else
+    cut_track = r.getTrackByGUID(target_tobj.guid)
+  end
+
+  --
+  -- CUT: ACT
+  --
+
   if cut_type == "drumkit" then
     for i = 0, midi_data_collect_track_item_count - 1 do -- does parent_item_cnt need to be stored????
       local item = reaper.GetTrackMediaItem(midi_data_collect_track, i)
@@ -363,7 +379,7 @@ ypc.cut = function(meta, opts)
   end
 
   if not opts.dry_run then
-    reaper.DeleteTrack(focus_tr)
+    reaper.DeleteTrack(cut_track)
   end
 end
 
