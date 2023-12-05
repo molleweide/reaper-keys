@@ -180,6 +180,28 @@ sx_lib_util.get_drum_lane_indices = function(parent_group_obj, child_track_obj)
   return note_row_start, note_row_start + found_range
 end
 
+sx_lib_util.DRUMKITS_extend_with_context = function(vtt)
+  local cfg_lane_start = rk_config.drum_lanes_low_note_start - 1
+  -- each group
+  for gi, g in ipairs(vtt.groups) do
+    local lane_idx_start = 0
+    -- each child
+    for ci = #g.children, 1, -1 do
+      local child = g.children[ci]
+      if child.class == "M" or child.class == "C" then
+        local drum = child
+        local range = sx_lib_util.trackObjHasOption(drum, "nr") and tonumber(drum.options.nr) or 1
+        drum.lanes = {
+          start = cfg_lane_start + lane_idx_start,
+          _end = cfg_lane_start + lane_idx_start + range,
+          range = range,
+        }
+        lane_idx_start = lane_idx_start + 1 + range
+      end
+    end
+  end
+end
+
 sx_lib_util.get_note_row_after_drum_before_idx = function(parent_group_obj, idx)
   local note_row_start
   local lane_idx_start = 0
