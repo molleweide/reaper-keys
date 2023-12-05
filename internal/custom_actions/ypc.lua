@@ -130,96 +130,80 @@ ypc.put = function(meta, opts)
   -- objects...
   --
   local vtt_pre = sx_tracks.getVerifiedTree() -- make this an opt param in get_focused_track_objects
-
   local insert_new_track_at_idx = cu.getTrackPosition() + 1
   local tobj_pos = vtt_pre.track_list[insert_new_track_at_idx]
-  local operating_on_drum_kit = tobj_pos.group and tobj_pos.group.options["m"]
-
-  --
-  -- PUT: VARIABLES
-  --
-
-  local put_type
-  local parent_obj
-  local midi_transform_target_track
-  local midi_transform_target_track_item_count
-
-  -- drum kit vars
-  local shift_pitches_starting_from
-  local pitch_shift_amount
-  local pname_sel_track
-  local preceding_drum_obj
-  local preceding_drum_range = {}
-  -- splitter vars
-  local split_chan_num
-  -- regular put vars
-
-  if operating_on_drum_kit then
+  local put_type = "regular"
+  if tobj_pos.group and tobj_pos.group.options["m"] then
     put_type = "drumkit"
-    parent_obj = tobj_pos.group
-    preceding_drum_obj = sxu.get_prev_drum(tobj_pos)
-    preceding_drum_range = { sxu.get_drum_lane_indices(tobj_pos.group, preceding_drum_obj) }
-    shift_pitches_starting_from = preceding_drum_range[2] + 1
-    pitch_shift_amount = tonumber(t_paste_data.track_options and t_paste_data.track_options.nr or 1)
-    midi_transform_target_track = r.getTrackByGUID(tobj_pos.group.guid)
-    pname_sel_track = reaper.GetTrackMIDINoteNameEx(0, midi_transform_target_track, shift_pitches_starting_from, 0)
-    --
   elseif tobj_pos.channel_splitter then
     put_type = "splitter"
-    parent_obj = tobj_pos.channel_splitter
-    midi_transform_target_track = r.getTrackByGUID(tobj_pos.channel_splitter.guid)
-    split_chan_num = sxu.get_split_index(tobj_pos)
-  else
-    put_type = "regular"
   end
 
-  midi_transform_target_track_item_count = reaper.CountTrackMediaItems(midi_transform_target_track)
+  local function prepare_put_context(tobj, type)
+    if type == "drumkit" then
+      local preceding_drum_obj = sxu.get_prev_drum(tobj)
+      local preceding_drum_range = { sxu.get_drum_lane_indices(tobj.group, preceding_drum_obj) }
+      return {
+        shift_pitches_starting_from = preceding_drum_range[2] + 1,
+        pitch_shift_amount = tonumber(t_paste_data.track_options and t_paste_data.track_options.nr or 1),
+        midi_transform_target_track = r.getTrackByGUID(tobj.group.guid),
+      }
+    elseif put_type == "splitter" then
+      return {
+        midi_transform_target_track = r.getTrackByGUID(tobj.channel_splitter.guid),
+        split_chan_num = sxu.get_split_index(tobj),
+      }
+    else
+      return {}
+    end
+  end
 
-  -- TODO: migrate this into debug_ypc
-  log.debug(string.format(
-    [[---------------------------------
-  YPC -> PUT (type: %s)
-  ::SELECTED TRACK IN MAIN::
-         name = %s
-         class = %s
-         idx = %s (GUI idx = %s)
-         prollname = %s
-  ::INSERTION DATA INFO::
-         rstart = %s
-         rend = %s (this is the value we have to shift up to in order to make place for insertion data)
-         pitch_shift_amount = %s
-  ::PARENT OBJECT INFO::
-         name = %s
-         class = %s
-         opt.m = %s
-  ::PRECEDING DRUM TRACK INFO::
-        name = %s
-        preceding range_start = %s
-        preceding_range_end = %s
-  ---------------------------------
-    ]],
-    --tr@pos
-    put_type,
-    tobj_pos.name,
-    tobj_pos.class,
-    tobj_pos.trackIndex,
-    tobj_pos.trackIndex + 1,
-    pname_sel_track,
+  local ctx = prepare_put_context(tobj_pos, put_type)
+  local transform_track_item_count = reaper.CountTrackMediaItems(ctx.midi_transform_target_track)
 
-    -- preceding_range_end + 1,
-    shift_pitches_starting_from,
-    shift_pitches_starting_from + pitch_shift_amount - 1,
-    pitch_shift_amount > 0 and "+" .. tostring(pitch_shift_amount) or pitch_shift_amount,
+  -- log.debug(string.format(
+  --   [[---------------------------------
+  -- YPC -> PUT (type: %s)
+  -- ::SELECTED TRACK IN MAIN::
+  --        name = %s
+  --        class = %s
+  --        idx = %s (GUI idx = %s)
+  --        prollname = %s
+  -- ::INSERTION DATA INFO::
+  --        rstart = %s
+  --        rend = %s (this is the value we have to shift up to in order to make place for insertion data)
+  --        pitch_shift_amount = %s
+  -- ::PARENT OBJECT INFO::
+  --        name = %s
+  --        class = %s
+  --        opt.m = %s
+  -- ::PRECEDING DRUM TRACK INFO::
+  --       name = %s
+  --       preceding range_start = %s
+  --       preceding_range_end = %s
+  -- ---------------------------------
+  --   ]],
+  --   --tr@pos
+  --   put_type,
+  --   tobj_pos.name,
+  --   tobj_pos.class,
+  --   tobj_pos.trackIndex,
+  --   tobj_pos.trackIndex + 1,
+  --   pname_sel_track,
+  --   -- preceding_range_end + 1,
+  --   shift_pitches_starting_from,
+  --   shift_pitches_starting_from + pitch_shift_amount - 1,
+  --   pitch_shift_amount > 0 and "+" .. tostring(pitch_shift_amount) or pitch_shift_amount,
+  --   -- parent
+  --   parent_obj and parent_obj.name,
+  --   parent_obj and parent_obj.class,
+  --   parent_obj and parent_obj.options["m"],
+  --   -- drums preceeding
+  --   preceding_drum_obj.name,
+  --   preceding_drum_range[1],
+  --   preceding_drum_range[2]
+  -- ))
 
-    -- parent
-    parent_obj and parent_obj.name,
-    parent_obj and parent_obj.class,
-    parent_obj and parent_obj.options["m"],
-    -- drums preceeding
-    preceding_drum_obj.name,
-    preceding_drum_range[1],
-    preceding_drum_range[2]
-  ))
   --
   -- PUT: NEW TRACK -------------------------------------------------------
   --
@@ -230,9 +214,8 @@ ypc.put = function(meta, opts)
     reaper.InsertTrackAtIndex(insert_new_track_at_idx, false)
     local state_insert = t_paste_data.state_chunk
     r.set_single_track_state_chunk(insert_new_track_at_idx, state_insert)
-
     if put_type == "regular" then
-      midi_transform_target_track = reaper.GetTrack(0, insert_new_track_at_idx)
+      ctx.midi_transform_target_track = reaper.GetTrack(0, insert_new_track_at_idx)
     end
   end
 
@@ -242,10 +225,10 @@ ypc.put = function(meta, opts)
 
   -- shift data if necessary
   if put_type == "drumkit" then
-    for i = 0, midi_transform_target_track_item_count - 1 do -- does parent_item_cnt need to be stored????
-      local item = reaper.GetTrackMediaItem(midi_transform_target_track, i)
+    for i = 0, transform_track_item_count - 1 do -- does parent_item_cnt need to be stored????
+      local item = reaper.GetTrackMediaItem(ctx.midi_transform_target_track, i)
       local take = reaper.GetMediaItemTake(item, 0) -- active take?
-      midi.shift_pitches_above_thresh(take, shift_pitches_starting_from, pitch_shift_amount)
+      midi.shift_pitches_above_thresh(take, ctx.shift_pitches_starting_from, ctx.pitch_shift_amount)
     end
     -- TODO: insert data and set channel == split_chan_num
     for i = 0, #t_paste_data.item_objs - 1 do -- does parent_item_cnt need to be stored????
@@ -253,10 +236,10 @@ ypc.put = function(meta, opts)
     end
     -- log.user(format.block(t_drum_master_item_objs))
   elseif put_type == "splitter" then
-    for i = 0, midi_transform_target_track_item_count - 1 do -- does parent_item_cnt need to be stored????
-      local item = reaper.GetTrackMediaItem(midi_transform_target_track, i)
+    for i = 0, transform_track_item_count - 1 do -- does parent_item_cnt need to be stored????
+      local item = reaper.GetTrackMediaItem(ctx.midi_transform_target_track, i)
       local take = reaper.GetMediaItemTake(item, 0) -- active take?
-      midi.shift_channels_for_channels_below(take, split_chan_num, 1)
+      midi.shift_channels_for_channels_below(take, ctx.split_chan_num, 1)
     end
     -- TODO: insert data and set channel == split_chan_num
     for i = 0, t_paste_data.item_objs - 1 do -- does parent_item_cnt need to be stored????
@@ -330,43 +313,42 @@ ypc.cut = function(meta, opts)
 
   midi_data_collect_track_item_count = reaper.CountTrackMediaItems(midi_data_collect_track)
 
-  -- TODO: migrate this into debug_ypc
-  log.debug(
-    string.format(
-      [[---------------------------------
-  YPC -> CUT (type: %s)
-  ::FOCUS TRACK TO CUT::
-         name = %s
-         class = %s
-         idx = %s (GUI idx = %s)
-         range = %s
-         range start = %s; range end = %s
-  ::PARENT OBJ::
-         name = %s
-         class = %s
-         opt.m = %s
-  :::::::::::::
-  proll  name = %s (@ shift_pitches_above_note_row)
-         name_shift = %s
-  shift  value = %s
-  ---------------------------------
-    ]] ,
-      cut_type,
-      target_tobj.name,
-      target_tobj.class,
-      target_tobj.trackIndex,
-      target_tobj.trackIndex + 1,
-      drum_tr_range_num,
-      range_start,
-      range_end,
-      parent_obj and parent_obj.name,
-      parent_obj and parent_obj.class,
-      parent_obj and parent_obj.options["m"],
-      pname,
-      pname_shift,
-      -shift_value
-    )
-  )
+  -- log.debug(
+  --   string.format(
+  --     [[---------------------------------
+  -- YPC -> CUT (type: %s)
+  -- ::FOCUS TRACK TO CUT::
+  --        name = %s
+  --        class = %s
+  --        idx = %s (GUI idx = %s)
+  --        range = %s
+  --        range start = %s; range end = %s
+  -- ::PARENT OBJ::
+  --        name = %s
+  --        class = %s
+  --        opt.m = %s
+  -- :::::::::::::
+  -- proll  name = %s (@ shift_pitches_above_note_row)
+  --        name_shift = %s
+  -- shift  value = %s
+  -- ---------------------------------
+  --   ]] ,
+  --     cut_type,
+  --     target_tobj.name,
+  --     target_tobj.class,
+  --     target_tobj.trackIndex,
+  --     target_tobj.trackIndex + 1,
+  --     drum_tr_range_num,
+  --     range_start,
+  --     range_end,
+  --     parent_obj and parent_obj.name,
+  --     parent_obj and parent_obj.class,
+  --     parent_obj and parent_obj.options["m"],
+  --     pname,
+  --     pname_shift,
+  --     -shift_value
+  --   )
+  -- )
 
   local cut_track
   if cut_type == "drumkit" or cut_type == "channel_splitter" then
