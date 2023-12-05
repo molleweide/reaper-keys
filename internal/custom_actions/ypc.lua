@@ -95,6 +95,15 @@ ypc.yank = function(meta, opts)
   opts = opts or {}
 
   local t_foc_tr, vtt = libtr.get_focused_track_objects()
+  sxu.DRUMKITS_extend_with_context(vtt)
+
+  for _, g in ipairs(vtt.groups) do
+    if g.mc_drums and g.name == "DKIT2" then
+      for _, c in ipairs(g.mc_drums) do
+        log.debug(c.name, format.block(c.lanes))
+      end
+    end
+  end
 
   debug_ypc("yank", t_foc_tr[1])
 
@@ -313,42 +322,42 @@ ypc.cut = function(meta, opts)
 
   midi_data_collect_track_item_count = reaper.CountTrackMediaItems(midi_data_collect_track)
 
-  -- log.debug(
-  --   string.format(
-  --     [[---------------------------------
-  -- YPC -> CUT (type: %s)
-  -- ::FOCUS TRACK TO CUT::
-  --        name = %s
-  --        class = %s
-  --        idx = %s (GUI idx = %s)
-  --        range = %s
-  --        range start = %s; range end = %s
-  -- ::PARENT OBJ::
-  --        name = %s
-  --        class = %s
-  --        opt.m = %s
-  -- :::::::::::::
-  -- proll  name = %s (@ shift_pitches_above_note_row)
-  --        name_shift = %s
-  -- shift  value = %s
-  -- ---------------------------------
-  --   ]] ,
-  --     cut_type,
-  --     target_tobj.name,
-  --     target_tobj.class,
-  --     target_tobj.trackIndex,
-  --     target_tobj.trackIndex + 1,
-  --     drum_tr_range_num,
-  --     range_start,
-  --     range_end,
-  --     parent_obj and parent_obj.name,
-  --     parent_obj and parent_obj.class,
-  --     parent_obj and parent_obj.options["m"],
-  --     pname,
-  --     pname_shift,
-  --     -shift_value
-  --   )
-  -- )
+  log.debug(
+    string.format(
+      [[---------------------------------
+  YPC -> CUT (type: %s)
+  ::FOCUS TRACK TO CUT::
+         name = %s
+         class = %s
+         idx = %s (GUI idx = %s)
+         range = %s
+         range start = %s; range end = %s
+  ::PARENT OBJ::
+         name = %s
+         class = %s
+         opt.m = %s
+  :::::::::::::
+  proll  name = %s (@ shift_pitches_above_note_row)
+         name_shift = %s
+  shift  value = %s
+  ---------------------------------
+    ]] ,
+      cut_type,
+      target_tobj.name,
+      target_tobj.class,
+      target_tobj.trackIndex,
+      target_tobj.trackIndex + 1,
+      drum_tr_range_num,
+      range_start,
+      range_end,
+      parent_obj and parent_obj.name,
+      parent_obj and parent_obj.class,
+      parent_obj and parent_obj.options["m"],
+      pname,
+      pname_shift,
+      -shift_value
+    )
+  )
 
   local cut_track
   if cut_type == "drumkit" or cut_type == "channel_splitter" then
