@@ -278,86 +278,24 @@ ypc.cut = function(meta, opts)
     return
   end
 
-  local cut_type, parent_obj
+  local cut_type
   local operating_on_drum_kit = target_tobj.group and target_tobj.group.options["m"]
 
-  -- drumkit
-  local drum_tr_range_num
-  local range_start, range_end
-  local shift_value
-  local pname
-  local pname_shift
-
-  -- splitter vars
-  local split_chan_num
-
-  --
   local midi_data_collect_track
   local midi_data_collect_track_item_count
 
-  --
-  -- CUT: VARIABLES
-  --
-
   if operating_on_drum_kit then
     cut_type = "drumkit"
-    parent_obj = target_tobj.group
-    drum_tr_range_num = target_tobj.options and target_tobj.options["nr"] or 1
-    range_start, range_end = sxu.get_drum_lane_indices(target_tobj.group, target_tobj)
-    shift_value = range_end - range_start + 1
     midi_data_collect_track = r.getTrackByGUID(target_tobj.group.guid)
-    pname = reaper.GetTrackMIDINoteNameEx(0, midi_data_collect_track, range_start, 0)
-    pname_shift = reaper.GetTrackMIDINoteNameEx(0, midi_data_collect_track, range_end + 1, 0)
   elseif target_tobj.channel_splitter then
     cut_type = "splitter"
-    parent_obj = target_tobj.channel_splitter
     midi_data_collect_track = r.getTrackByGUID(target_tobj.channel_splitter.guid)
-
-    split_chan_num = sxu.get_split_index(target_tobj)
   else
     cut_type = "regular"
-    parent_obj = target_tobj.group
     midi_data_collect_track = r.getTrackByGUID(target_tobj.guid)
   end
 
   midi_data_collect_track_item_count = reaper.CountTrackMediaItems(midi_data_collect_track)
-
-  log.debug(
-    string.format(
-      [[---------------------------------
-  YPC -> CUT (type: %s)
-  ::FOCUS TRACK TO CUT::
-         name = %s
-         class = %s
-         idx = %s (GUI idx = %s)
-         range = %s
-         range start = %s; range end = %s
-  ::PARENT OBJ::
-         name = %s
-         class = %s
-         opt.m = %s
-  :::::::::::::
-  proll  name = %s (@ shift_pitches_above_note_row)
-         name_shift = %s
-  shift  value = %s
-  ---------------------------------
-    ]] ,
-      cut_type,
-      target_tobj.name,
-      target_tobj.class,
-      target_tobj.trackIndex,
-      target_tobj.trackIndex + 1,
-      drum_tr_range_num,
-      range_start,
-      range_end,
-      parent_obj and parent_obj.name,
-      parent_obj and parent_obj.class,
-      parent_obj and parent_obj.options["m"],
-      pname,
-      pname_shift,
-      -shift_value
-    )
-  )
 
   local cut_track
   if cut_type == "drumkit" or cut_type == "channel_splitter" then
@@ -366,24 +304,20 @@ ypc.cut = function(meta, opts)
     cut_track = midi_data_collect_track
   end
 
-  --
-  -- CUT: ACT
-  --
-
-  if cut_type == "drumkit" then
+  if target_tobj.group.mc_drums then
     for i = 0, midi_data_collect_track_item_count - 1 do -- does parent_item_cnt need to be stored????
       local item = reaper.GetTrackMediaItem(midi_data_collect_track, i)
       local take = reaper.GetMediaItemTake(item, 0) -- active take?
-      midi.delete_notes_in_pitch_range(take, range_start, range_end)
-      midi.shift_pitches_above_thresh(take, range_end + 1, -shift_value)
+      midi.delete_notes_in_pitch_range(take, target_tobj.lanes.start, target_tobj.lanes._end)
+      midi.shift_pitches_above_thresh(take, target_tobj.lanes._end + 1, -target_tobj.lanes.range)
     end
-  elseif cut_type == "splitter" then
+  elseif target_tobj.channel_splitter then
     log.debug("CUT data from channel splitter master")
     for i = 0, midi_data_collect_track_item_count - 1 do -- does parent_item_cnt need to be stored????
       local item = reaper.GetTrackMediaItem(midi_data_collect_track, i)
       local take = reaper.GetMediaItemTake(item, 0) -- active take?
-      midi.delete_notes_for_channel(take, split_chan_num)
-      midi.shift_channels_for_channels_below(take, split_chan_num, -1)
+      midi.delete_notes_for_channel(take, sxu.get_split_index(target_tobj))
+      midi.shift_channels_for_channels_below(take, sxu.get_split_index(target_tobj), -1)
     end
   elseif cut_type == "regular" then
     -- nothing to do here.
