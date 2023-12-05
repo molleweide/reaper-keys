@@ -821,6 +821,7 @@ midi.delete_notes_for_channel = function(take, ch, dry_run)
   })
 end
 
+-- func name is ambiguous
 midi.shift_channels_for_channels_below = function(take, chan_thresh, shift_amount, dry_run)
   return midi.midi_take_filter_transform(take, {
     dry_run = not dry_run and false or true,
@@ -835,13 +836,13 @@ midi.shift_channels_for_channels_below = function(take, chan_thresh, shift_amoun
   })
 end
 
-midi.shift_pitches_above_thresh = function(take, pitch_thresh, shift_amount, dry_run)
+midi.shift_pitches_above_including = function(take, pitch_thresh, shift_amount, dry_run)
   require("library.midi").midi_take_filter_transform(take, {
     dry_run = not dry_run and false or true,
     filter = {
       notes = {
         pitch = function(note)
-          return pitch_thresh + 1 <= note.pitch
+          return pitch_thresh <= note.pitch
         end,
       },
     },

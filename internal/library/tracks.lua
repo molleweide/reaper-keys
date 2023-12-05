@@ -351,14 +351,10 @@ tracks.get_single_track_data_for_yanking = function(tobj)
 
   local tr = r.getTrackByGUID(tobj.guid)
 
-  -- TODO: NEED to collect if track data comes from LANE or not
-
-  -- TODO: it feels like the structure of the `tobj` could be improved.
-  -- now it feels a bit cluttered - but this is fine for now.
-
   local track_data = {
     copied_from_type = copied_from_type,
     class = tobj.class,
+    lanes = tobj.lanes and tobj.lanes,
     name = tobj.name,
     name_components = tobj.name_components,
     track_name_raw = tobj.name_raw,
