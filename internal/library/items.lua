@@ -93,6 +93,9 @@ end
 -- TODO: there should be a an additional lib.tracks.filter_transform(),
 -- where I can prefilter tracks, so that filtering/transforming is applied
 -- hierarchicaly, which follows a logical and maintainable structure.
+--
+-- TODO: insert new item and add params, such as POSITION and LENGTH, NAME, and
+-- COLOR
 
 lib_items.get_item_objs_from_single_track = function(tobj, opts)
 	opts = opts or {}
@@ -120,7 +123,6 @@ lib_items.get_item_objs_from_single_track = function(tobj, opts)
 	local tr = require("custom_actions.utils").getTrackByGUID(tobj.guid)
 	local item_count = reaper.CountTrackMediaItems(tr)
 	for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-
 		local item = reaper.GetTrackMediaItem(tr, i)
 		local take = reaper.GetMediaItemTake(item, 0) -- only support active take #0
 		local take_is_midi = reaper.TakeIsMIDI(take)
@@ -194,11 +196,9 @@ lib_items.get_item_info = function(item)
 		log.debug("no item passed to get_item_info")
 		return
 	end
-	local guid = reaper.BR_GetMediaItemGUID(item)
 	local D_POSITION = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
 	local D_LENGTH = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
 	return {
-		guid = guid,
 		start = D_POSITION,
 		_end = D_POSITION + D_LENGTH,
 		-- B_MUTE : bool * : muted (item solo overrides). setting this value will clear C_MUTE_SOLO.

@@ -87,4 +87,11 @@ reaper_utils.get_track_and_item_count_for_node = function(node)
   return tr, item_count
 end
 
+-- error handling
+reaper_utils.get_item_and_first_take = function(tr, i)
+  local item = reaper.GetTrackMediaItem(tr, i)
+  local take = reaper.GetMediaItemTake(item, 0) -- active take
+  return item, take
+end
+
 return reaper_utils

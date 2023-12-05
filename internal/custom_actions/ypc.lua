@@ -131,50 +131,65 @@ ypc.put = function(meta, opts)
       log.user("PUT: data to paste keys:", k)
     end
   end
-
   -- log.user(format.block(t_paste_data.item_objs))
   local t_foc_tr, vtt = libtr.get_focused_track_objects()
-  sxu.DRUMKITS_extend_with_context(vtt)
+  sxu.DRUMKITS_extend_with_context(vtt) -- move this into make_tree()
   local tobj_pos = t_foc_tr[1]
+  local insert_new_track_at_idx = tobj_pos.trackIndex
+  local new_tr
 
   -- insert new track
   if not opts.dry_run then
     reaper.InsertTrackAtIndex(insert_new_track_at_idx, false)
     local state_insert = t_paste_data.state_chunk
     r.set_single_track_state_chunk(insert_new_track_at_idx, state_insert)
+    new_tr = reaper.GetTrack(0, insert_new_track_at_idx)
   end
 
   -- shift data if necessary
   if tobj_pos.group and tobj_pos.group.options["m"] then
     local tr, item_count = r.get_track_and_item_count_for_node(tobj_pos.group)
     for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-      local item = reaper.GetTrackMediaItem(tr, i)
-      local take = reaper.GetMediaItemTake(item, 0) -- active take?
+      local item, take = r.get_item_and_first_take(tr, i)
       midi.shift_pitches_above_including(take, tobj_pos.lanes.start, t_paste_data.lanes.range)
     end
-    -- todo: insert data and set channel == split_chan_num
-    for i = 0, #t_paste_data.item_objs - 1 do -- does parent_item_cnt need to be stored????
-      -- todo: insert data and set channel == split_chan_num
+    --
+    -- FIX: add dry_runs
+    --
+    for _, item_data in ipairs(t_paste_data.item_objs) do
+      local item = reaper.BR_GetMediaItemByGUID(0, item_data.guid)
+      log.user(item_data.guid, item)
+      if type(item) == "userdata" then
+        -- insert data into existing item.
+      else
+        local new_item = reaper.AddMediaItemToTrack(new_tr)
+        -- HACK: could i just set the item state chunk instead??
+        for k, v in pairs(item_data.item_info) do
+          local ret = reaper.SetMediaItemInfo_Value(new_item, k, v)
+        end
+        -- insert midi data into new_item
+      end
     end
-    -- log.user(format.block(t_drum_master_item_objs))
   elseif tobj_pos.channel_splitter then
     local tr, item_count = r.get_track_and_item_count_for_node(tobj_pos.channel_splitter)
     for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-      local item = reaper.GetTrackMediaItem(tr, i)
-      local take = reaper.GetMediaItemTake(item, 0) -- active take?
+      local item, take = r.get_item_and_first_take(tr, i)
       midi.shift_channels_for_channels_below(take, sxu.get_split_index(tobj_pos), 1)
     end
-    -- todo: insert data and set channel == split_chan_num
-    for i = 0, t_paste_data.item_objs - 1 do -- does parent_item_cnt need to be stored????
-      -- todo: insert data and set channel == split_chan_num
+    for _, item_data in ipairs(t_paste_data.item_objs) do
+      local item = reaper.BR_GetMediaItemByGUID(0, item_data.guid)
+      log.user(item_data.guid, item)
+      if type(item) == "userdata" then
+        -- insert data into existing item.
+      else
+        local new_item = reaper.AddMediaItemToTrack(new_tr)
+        -- insert midi data into new_item
+      end
     end
   else
-    local tr = reaper.GetTrack(0, insert_new_track_at_idx)
-    local item_count = reaper.CountTrackMediaItems(tr)
-    -- todo: just insert the data.
-    for i = 0, t_paste_data.item_objs - 1 do -- does parent_item_cnt need to be stored????
-      -- todo: insert data and set channel == split_chan_num
-    end
+    local item_count = reaper.CountTrackMediaItems(new_tr)
+    -- make new items
+    -- insert midi data.
   end
 end
 
@@ -189,16 +204,14 @@ ypc.cut = function(meta, opts)
   if target_tobj.group.mc_drums then
     local tr, item_count = r.get_track_and_item_count_for_node(target_tobj.group)
     for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-      local item = reaper.GetTrackMediaItem(tr, i)
-      local take = reaper.GetMediaItemTake(item, 0) -- active take?
+      local _, take = r.get_item_and_first_take(tr, i)
       midi.delete_notes_in_pitch_range(take, target_tobj.lanes.start, target_tobj.lanes._end)
       midi.shift_pitches_above_including(take, target_tobj.lanes._end + 1, -target_tobj.lanes.range)
     end
   elseif target_tobj.channel_splitter then
     local tr, item_count = r.get_track_and_item_count_for_node(target_tobj.channel_splitter)
-    for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-      local item = reaper.GetTrackMediaItem(tr, i)
-      local take = reaper.GetMediaItemTake(item, 0) -- active take?
+    for i = 0, item_count - 1 do
+      local _, take = r.get_item_and_first_take(tr, i)
       midi.delete_notes_for_channel(take, sxu.get_split_index(target_tobj))
       midi.shift_channels_for_channels_below(take, sxu.get_split_index(target_tobj), -1)
     end
