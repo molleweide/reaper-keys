@@ -7,9 +7,14 @@ local r = require("utils.reaper")
 local project_state = require("utils.project_state")
 
 local libtr = require("library.tracks")
+local midi = require("library.midi")
 
 local sx_tracks = require("syntax.tracks")
 local sxu = require("syntax.utils")
+
+-- NOTE:
+-- how should i structure this.
+-- Should I move ypc functions for tracks into lib/tracks.
 
 -- FIX: C routing does not work > need to fix lib/route bug
 
@@ -117,6 +122,8 @@ ypc.put = function(meta, opts)
     end
   end
 
+  -- log.user(format.block(t_paste_data.item_objs))
+
   -- FIX: redo focused track here so that it returns more of a "context" that
   -- can be used when managing tracks.
   -- >> It already does return selection and vtt, so I could just use the selection
@@ -150,7 +157,8 @@ ypc.put = function(meta, opts)
   if operating_on_drum_kit then
     put_type = "drumkit"
     parent_obj = tobj_pos.group
-    preceding_drum_range = { sxu.get_drum_lane_indices(tobj_pos.group, sxu.get_prev_drum(tobj_pos)) }
+    preceding_drum_obj = sxu.get_prev_drum(tobj_pos)
+    preceding_drum_range = { sxu.get_drum_lane_indices(tobj_pos.group, preceding_drum_obj) }
     shift_pitches_starting_from = preceding_drum_range[2] + 1
     pitch_shift_amount = tonumber(t_paste_data.track_options and t_paste_data.track_options.nr or 1)
     midi_transform_target_track = r.getTrackByGUID(tobj_pos.group.guid)
@@ -237,22 +245,10 @@ ypc.put = function(meta, opts)
     for i = 0, midi_transform_target_track_item_count - 1 do -- does parent_item_cnt need to be stored????
       local item = reaper.GetTrackMediaItem(midi_transform_target_track, i)
       local take = reaper.GetMediaItemTake(item, 0) -- active take?
-      require("library.midi").midi_take_filter_transform(take, {
-        dry_run = true,
-        -- select proll lanes to target
-        filter = {
-          notes = {
-            pitch = function(note)
-              return shift_pitches_starting_from <= note.pitch
-            end,
-          },
-        },
-        -- shift select target.
-        transform = { notes = { pitch = pitch_shift_amount } },
-      })
+      midi.shift_pitches_above_thresh(take, shift_pitches_starting_from, pitch_shift_amount)
     end
     -- TODO: insert data and set channel == split_chan_num
-    for i = 0, t_paste_data.item_objs - 1 do -- does parent_item_cnt need to be stored????
+    for i = 0, #t_paste_data.item_objs - 1 do -- does parent_item_cnt need to be stored????
       -- TODO: insert data and set channel == split_chan_num
     end
     -- log.user(format.block(t_drum_master_item_objs))
@@ -260,19 +256,7 @@ ypc.put = function(meta, opts)
     for i = 0, midi_transform_target_track_item_count - 1 do -- does parent_item_cnt need to be stored????
       local item = reaper.GetTrackMediaItem(midi_transform_target_track, i)
       local take = reaper.GetMediaItemTake(item, 0) -- active take?
-      require("library.midi").midi_take_filter_transform(take, {
-        dry_run = true,
-        -- select proll lanes to target
-        filter = {
-          notes = {
-            ch = function(note)
-              return split_chan_num <= note.ch
-            end,
-          },
-        },
-        -- increment channels by one.
-        transform = { notes = { ch = 1 } },
-      })
+      midi.shift_channels_for_channels_below(take, split_chan_num, 1)
     end
     -- TODO: insert data and set channel == split_chan_num
     for i = 0, t_paste_data.item_objs - 1 do -- does parent_item_cnt need to be stored????
@@ -330,7 +314,6 @@ ypc.cut = function(meta, opts)
     range_start, range_end = sxu.get_drum_lane_indices(target_tobj.group, target_tobj)
     shift_value = range_end - range_start + 1
     midi_data_collect_track = r.getTrackByGUID(target_tobj.group.guid)
-
     pname = reaper.GetTrackMIDINoteNameEx(0, midi_data_collect_track, range_start, 0)
     pname_shift = reaper.GetTrackMIDINoteNameEx(0, midi_data_collect_track, range_end + 1, 0)
   elseif target_tobj.channel_splitter then
@@ -400,50 +383,16 @@ ypc.cut = function(meta, opts)
     for i = 0, midi_data_collect_track_item_count - 1 do -- does parent_item_cnt need to be stored????
       local item = reaper.GetTrackMediaItem(midi_data_collect_track, i)
       local take = reaper.GetMediaItemTake(item, 0) -- active take?
-      -- delete notes inside range
-      require("library.midi").midi_take_filter_transform(take, {
-        remove = {
-          notes = { pitch = { { range_start, range_end } } },
-        },
-        dry_run = true,
-      })
-      -- shift notes
-      require("library.midi").midi_take_filter_transform(take, {
-        dry_run = true,
-        filter = {
-          notes = {
-            pitch = function(note)
-              return range_end + 1 <= note.pitch
-            end,
-          },
-        },
-        transform = { notes = { pitch = -shift_value } },
-      })
+      midi.delete_notes_in_pitch_range(take, range_start, range_end)
+      midi.shift_pitches_above_thresh(take, range_end + 1, -shift_value)
     end
   elseif cut_type == "splitter" then
     log.debug("CUT data from channel splitter master")
     for i = 0, midi_data_collect_track_item_count - 1 do -- does parent_item_cnt need to be stored????
       local item = reaper.GetTrackMediaItem(midi_data_collect_track, i)
       local take = reaper.GetMediaItemTake(item, 0) -- active take?
-      -- delete notes inside range
-      require("library.midi").midi_take_filter_transform(take, {
-        remove = {
-          notes = { ch = split_chan_num },
-        },
-        dry_run = true,
-      })
-      -- shift existing
-      require("library.midi").midi_take_filter_transform(take, {
-        dry_run = true,
-        filter = {
-          notes = {
-            ch = function(note)
-              return split_chan_num < note.ch
-            end,
-          },
-        },
-        transform = { notes = { ch = -1 } },
-      })
+      midi.delete_notes_for_channel(take, split_chan_num)
+      midi.shift_channels_for_channels_below(take, split_chan_num, -1)
     end
   elseif cut_type == "regular" then
     -- nothing to do here.
