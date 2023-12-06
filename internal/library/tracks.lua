@@ -275,7 +275,7 @@ local function prepare_item_data_objs_for_yanking(tobj)
   if sxu.trackObjHasOption(tobj.group, "m") then
     -- filter out correct midi lane range data from lane master
     log.user("prep item objs for yank: opt M")
-    t_item_data_objs_for_yanking = libit.get_item_objs_from_single_track(tobj.group, {
+    t_item_data_objs_for_yanking = libit.single_track_filter_transform_items(tobj.group, {
       filter = {
         info = {},
         data = {
@@ -289,7 +289,7 @@ local function prepare_item_data_objs_for_yanking(tobj)
   elseif tobj.class == "S" then
     -- filter out correct midi chan data on split master
     log.user("prep item objs for yank: S")
-    t_item_data_objs_for_yanking = libit.get_item_objs_from_single_track(tobj.channel_splitter, {
+    t_item_data_objs_for_yanking = libit.single_track_filter_transform_items(tobj.channel_splitter, {
       {
         info = {},
         data = {
@@ -306,7 +306,7 @@ local function prepare_item_data_objs_for_yanking(tobj)
     })
   else -- MC
     log.user("prep item objs for yank: standard MC")
-    t_item_data_objs_for_yanking = libit.get_item_objs_from_single_track(
+    t_item_data_objs_for_yanking = libit.single_track_filter_transform_items(
       tobj,
       --
       -- TODO: if I want all info then i should just pass it as a "info" string

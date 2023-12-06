@@ -97,7 +97,7 @@ end
 -- TODO: insert new item and add params, such as POSITION and LENGTH, NAME, and
 -- COLOR
 
-lib_items.get_item_objs_from_single_track = function(tobj, opts)
+lib_items.single_track_filter_transform_items = function(tobj, opts)
 	opts = opts or {}
 
 	if not tobj then

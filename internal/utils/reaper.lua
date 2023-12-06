@@ -94,4 +94,40 @@ reaper_utils.get_item_and_first_take = function(tr, i)
   return item, take
 end
 
+reaper_utils.check_item_belongs_to_track = function(tr, item)
+  return tr == reaper.GetMediaItemTrack(item)
+end
+
+-- should this be moved into sxu?
+--
+-- This function is used when restoring items. if an item can be found by
+-- GUID then we use it. Otherwise we create it
+---
+---@param in_track userdata | table (node)
+---@param item_node
+reaper_utils.get_create_item_from_node = function(in_track, item_node)
+  -- this means we were passed a node
+  if type(in_track) ~= "userdata" then
+    in_track = reaper_utils.getTrackByGUID(node.guid)
+  end
+
+  local item = reaper.BR_GetMediaItemByGUID(0, item_node.guid)
+  local valid_item = type(item) == "userdata" and true or false
+  local in_correct_track = valid_item and reaper_utils.check_item_belongs_to_track(in_track, item) or false
+
+  if valid_item and in_correct_track then
+    local take = reaper.GetMediaItemTake(item, 0) -- active take
+    return item, take
+  else
+    local new_item = reaper.AddMediaItemToTrack(in_track)
+
+    -- HACK: could i just set the item state chunk instead??
+    for k, v in pairs(item_node.item_info) do
+      local ret = reaper.SetMediaItemInfo_Value(new_item, k, v)
+    end
+    local new_take = reaper.GetMediaItemTake(new_item, 0) -- active take
+    return new_item, new_take
+  end
+end
+
 return reaper_utils
