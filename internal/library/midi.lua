@@ -536,6 +536,21 @@ midi.insert_notes = function(opts)
   end
 end
 
+midi.insert_single_note = function(take, note, noSortIn)
+  local note_defaults = require("constants.constants").midi_note_defaults
+  return reaper.MIDI_InsertNote(
+    take,
+    note.sel and note.sel or note_defaults.selected,
+    note.muted and note.muted or note_defaults.muted,
+    note.ppq_s and note.ppq_s or reaper.MIDI_GetPPQPosFromProjTime(take, note.time_pos_start),
+    note.ppq_e and note.ppq_e or reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
+    note.ch and note.ch or note_defaults.chan,
+    note.pitch and note.pitch or note_defaults.pitch,
+    note.vel and note.vel or note_defaults.velocity,
+    noSortIn and noSortIn or note_defaults.noSortIn
+  )
+end
+
 -- TODO: move to midi library and rename to midi.remove_notes({opts})
 -- improve by adding a range from [60, 64]
 -- range opt
@@ -602,7 +617,6 @@ midi.midi_take_filter_transform = function(take, opts)
   local note_filter = filter.notes or {}
   local cc_filter = filter.cc or {}
   local syx_filter = filter.syx or {}
-  local no_filters = not note_filter and not cc_filter and not syx_filter
 
   if opts.remove and opts.transform then
     -- if transform and insert -> transform needs to be done first!
@@ -612,7 +626,13 @@ midi.midi_take_filter_transform = function(take, opts)
 
   local remove = opts.remove or {}
   local transform = opts.transform or {}
-  local insert = opts.insert or {}
+  local insert = opts.insert
+
+  if remove.notes then
+    note_filter = remove.notes
+  end
+
+  local no_filters = not note_filter and not cc_filter and not syx_filter
 
   local t_notes = {}
   local t_cc = {}
@@ -620,28 +640,32 @@ midi.midi_take_filter_transform = function(take, opts)
 
   log.debug(string.format([[midi_take_filter_transform; filter=%s, noflt=%s ]], filter, no_filters))
 
-  local ret, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
-
-  -- notes
-  for i = 0, notecnt do
-    local ret, sel, muted, ppq_s, ppq_e, ch, pitch, vel = reaper.MIDI_GetNote(take, i)
-    -- if filt_low <= pitch and pitch <= filt_high then
-    table.insert(t_notes, {
-      muted = muted,
-      ppq_s = ppq_s,
-      ppq_e = ppq_e,
-      ch = ch,
-      -- real_pitch = pitch,
-      pitch = pitch,
-      vel = vel,
-    })
-    -- end
+  -- COLLECT ALL NOTES IN TAKE || ASSIGN INSERTION DATA
+  if not insert then
+    local ret, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
+    for i = 0, notecnt do
+      local ret, sel, muted, ppq_s, ppq_e, ch, pitch, vel = reaper.MIDI_GetNote(take, i)
+      -- if filt_low <= pitch and pitch <= filt_high then
+      table.insert(t_notes, {
+        index = i,
+        muted = muted,
+        ppq_s = ppq_s,
+        ppq_e = ppq_e,
+        ch = ch,
+        -- real_pitch = pitch,
+        pitch = pitch,
+        vel = vel,
+      })
+      -- end
+    end
+  else
+    -- if insertion notes are passed, then these are the ones we are operating
+    -- on
+    t_notes = insert
   end
 
-  -- TODO: this adds a lot of loops. merge this with the above
-  -- original loop to make it more efficient.
-  --
-  -- if i move this up into origin loop, then every filter can be removed.
+  -- NOTE: filters could be used to only insert a specific subset from `insert`
+  -- notes data.
 
   if no_filters or note_filter then
     for k, v in pairs(note_filter) do
@@ -682,62 +706,75 @@ midi.midi_take_filter_transform = function(take, opts)
   end
 
   if remove.notes then
-    for i, note in ipairs(t_notes) do
-      local should_remove = false
-      for k, v in pairs(remove.notes) do
-        if type(v) == "bool" then
-          if note[k] == v then
-            log.trace("midi delete: set bool:", i, note[k])
-            should_remove = true
-          end
-        elseif type(v) == "number" then
-          if note[k] == v then -- shift by number
-            log.trace("midi delete: eq 2 num:", i, note[k])
-            should_remove = true
-          end
-        elseif type(v) == "table" then
-          for _, subv in pairs(v) do
-            if type(subv) == "number" then
-              if note[k] == subv then
-                log.trace("midi delete: eq 2 num in tbl:", i, note[k])
-                should_remove = true
-              end
-            elseif type(subv) == "table" then
-              log.trace("DELETE RANGE!")
-              if subv[1] <= note[k] and note[k] <= subv[2] then
-                log.trace(
-                  string.format(
-                    "MIDI (delete): noteIdx = %s, pitch = %s, [%s,%s]",
-                    i,
-                    note[k],
-                    subv[1],
-                    subv[2]
-                  )
-                )
-                should_remove = true
-              end
-            end
-          end
-        elseif type(v) == "function" then
-          if note[k] == v(note) then -- apply function transform per note
-            log.trace("midi delete: func:", i, note[k])
-            -- reaper.MIDI_DeleteNote(take, i)
-          end
-        end
-      end
-      if not opts.dry_run and should_remove then
-        reaper.MIDI_DeleteNote(take, i)
+    -- for i, note in ipairs(t_notes) do
+    --   local should_remove = false
+    --   for k, v in pairs(remove.notes) do
+    --     if type(v) == "bool" then
+    --       if note[k] == v then
+    --         log.trace("midi delete: set bool:", i, note[k])
+    --         should_remove = true
+    --       end
+    --     elseif type(v) == "number" then
+    --       if note[k] == v then -- shift by number
+    --         log.trace("midi delete: eq 2 num:", i, note[k])
+    --         should_remove = true
+    --       end
+    --     elseif type(v) == "table" then
+    --       for _, subv in pairs(v) do
+    --         if type(subv) == "number" then
+    --           if note[k] == subv then
+    --             log.trace("midi delete: eq 2 num in tbl:", i, note[k])
+    --             should_remove = true
+    --           end
+    --         elseif type(subv) == "table" then
+    --           log.trace("DELETE RANGE!")
+    --           if subv[1] <= note[k] and note[k] <= subv[2] then
+    --             log.trace(
+    --               string.format(
+    --                 "MIDI (delete): noteIdx = %s, pitch = %s, [%s,%s]",
+    --                 i,
+    --                 note[k],
+    --                 subv[1],
+    --                 subv[2]
+    --               )
+    --             )
+    --             should_remove = true
+    --           end
+    --         end
+    --       end
+    --     elseif type(v) == "function" then
+    --       if note[k] == v(note) then -- apply function transform per note
+    --         log.trace("midi delete: func:", i, note[k])
+    --         -- reaper.MIDI_DeleteNote(take, i)
+    --       end
+    --     end
+    --   end
+    --
+    for _, note in ipairs(t_notes) do
+      if not opts.dry_run then
+        reaper.MIDI_DeleteNote(take, note.index)
       end
     end
+    -- end
   end
 
   -- FIX: values outside of allowed range
+  --
+  -- TODO: transforming notes require them to be deleted and reinserted
+  --
+  --
+  -- TODO: if transform.note and insert -> only insert
 
   if transform.notes then
     local notes_updated = 0
+    local t_indices_to_remove = {}
     for i, note in ipairs(t_notes) do
       local update = false
+
+      -- check each filter
       for k, v in pairs(transform.notes) do
+        -- if k == "remove"
+
         if type(v) == "bool" then
           log.trace("midi take transform: set bool:", i, note[k], "->", v)
           note[k] = v -- set bool value
@@ -755,26 +792,20 @@ midi.midi_take_filter_transform = function(take, opts)
           note[k] = v(note) -- apply function transform per note
           update = true
         end
+        -- if update do...
         if update then
           notes_updated = notes_updated + 1
           if not opts.dry_run then
-            reaper.MIDI_SetNote(
-              take,
-              i,
-              t_notes[i].sel,
-              t_notes[i].muted,
-              t_notes[i].ppq_s,
-              t_notes[i].ppq_e,
-              t_notes[i].ch,
-              t_notes[i].pitch,
-              t_notes[i].vel,
-              true
-            )
+            -- don't delete existing if we are inserting notes.
+            if not opts.insert then
+              reaper.MIDI_DeleteNote(take, note.index)
+            end
+            midi.insert_single_note(take, note)
           end
         end
       end
     end
-    if notes_updated and not opts.dry_run then
+    if notes_updated > 0 and not opts.dry_run then
       reaper.MIDI_Sort(take)
     end
   end

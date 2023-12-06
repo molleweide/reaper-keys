@@ -6,6 +6,7 @@ constants.midi_note_defaults = {
 	chan = 0,
 	velocity = 80,
 	noSortIn = true,
+	pitch = 60,
 }
 
 constants.midi_helpers = {

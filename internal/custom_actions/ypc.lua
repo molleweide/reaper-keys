@@ -82,6 +82,14 @@ local function debug_ypc(type, tobj_pos)
     tobj_pos.trackIdx,
     tobj_pos.group and tobj_pos.group.name
   ))
+
+  -- for _, g in ipairs(vtt.groups) do
+  --   if g.mc_drums and g.name == "DKIT2" then
+  --     for _, c in ipairs(g.mc_drums) do
+  --       log.debug(c.name, format.block(c.lanes))
+  --     end
+  --   end
+  -- end
 end
 
 ---- module funcs
@@ -100,17 +108,8 @@ end
 ypc.yank = function(meta, opts)
   opts = opts or {}
   local t_foc_tr, vtt = libtr.get_focused_track_objects()
-  sxu.DRUMKITS_extend_with_context(vtt)
 
-  -- for _, g in ipairs(vtt.groups) do
-  --   if g.mc_drums and g.name == "DKIT2" then
-  --     for _, c in ipairs(g.mc_drums) do
-  --       log.debug(c.name, format.block(c.lanes))
-  --     end
-  --   end
-  -- end
-
-  debug_ypc("yank", t_foc_tr[1])
+  debug_ypc("yank", t_foc_tr[1], vtt)
 
   -- TODO: this function should go into ypc, since it is specifically prepping for ypc
   local t_single_track_data = libtr.get_single_track_data_for_yanking(t_foc_tr[1])
@@ -126,14 +125,12 @@ ypc.put = function(meta, opts)
     log.debug("YPC: paste data does not exist. Cannot paste nil...")
     return
   end
-  if t_paste_data then
-    for k, v in pairs(t_paste_data) do
-      log.user("PUT: data to paste keys:", k)
-    end
-  end
-  -- log.user(format.block(t_paste_data.item_objs))
+  -- if t_paste_data then
+  --   for k, v in pairs(t_paste_data) do
+  --     log.debug("PUT: data to paste keys:", k)
+  --   end
+  -- end
   local t_foc_tr, vtt = libtr.get_focused_track_objects()
-  sxu.DRUMKITS_extend_with_context(vtt) -- move this into make_tree()
   local tobj_pos = t_foc_tr[1]
   local insert_new_track_at_idx = tobj_pos.trackIndex
   local new_tr
@@ -153,21 +150,35 @@ ypc.put = function(meta, opts)
       local item, take = r.get_item_and_first_take(tr, i)
       midi.shift_pitches_above_including(take, tobj_pos.lanes.start, t_paste_data.lanes.range)
     end
-    --
-    -- FIX: add dry_runs
-    --
+    -- NOTE: Insert paste item data
+    -- HACK: could i just set the item state chunk instead??
     for _, item_data in ipairs(t_paste_data.item_objs) do
       local item = reaper.BR_GetMediaItemByGUID(0, item_data.guid)
-      log.user(item_data.guid, item)
+      local take = reaper.GetMediaItemTake(item, 0) -- active take
       if type(item) == "userdata" then
-        -- insert data into existing item.
+        midi.midi_take_filter_transform(take, {
+          dry_run = opts.dry_run,
+          insert = item_data,
+          transform = {
+            notes = { pitch = tobj_pos.lanes.start - t_paste_data.lanes.start },
+          },
+        })
       else
-        local new_item = reaper.AddMediaItemToTrack(new_tr)
-        -- HACK: could i just set the item state chunk instead??
-        for k, v in pairs(item_data.item_info) do
-          local ret = reaper.SetMediaItemInfo_Value(new_item, k, v)
+        local new_item, new_take
+        if not opts.dry_run then
+          new_item = reaper.AddMediaItemToTrack(new_tr)
+          new_take = reaper.GetMediaItemTake(new_item, 0) -- active take
+          for k, v in pairs(item_data.item_info) do
+            local ret = reaper.SetMediaItemInfo_Value(new_item, k, v)
+          end
+          midi.midi_take_filter_transform(new_take, {
+            dry_run = opts.dry_run,
+            insert = item_data,
+            transform = {
+              notes = { pitch = tobj_pos.lanes.start - t_paste_data.lanes.start },
+            },
+          })
         end
-        -- insert midi data into new_item
       end
     end
   elseif tobj_pos.channel_splitter then

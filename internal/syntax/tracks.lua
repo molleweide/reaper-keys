@@ -3,7 +3,7 @@ local format = require("utils.format")
 local str_util = require("utils.string")
 
 local class_configs = require("definitions.syntax.config").classes
-local util = require("syntax.utils")
+local sxu = require("syntax.utils")
 
 local sx_tracks = {}
 
@@ -167,7 +167,7 @@ sx_tracks.get_track_obj_for_idx = function(trIdx)
   local _, track_name_raw = reaper.GetTrackName(next_tr)
   local next_prefix, next_options, next_track_name = getNameStringParts(trIdx, track_name_raw)
 
--- FIX: type conversion, eg. of nr=3 should be tonumber() so that 3 is a num and not string
+  -- FIX: type conversion, eg. of nr=3 should be tonumber() so that 3 is a num and not string
 
   return {
     tr = next_tr,
@@ -314,7 +314,9 @@ sx_tracks.tree_make_flat = function(t_trk_objs)
 end
 
 sx_tracks.getVerifiedTree = function(sx_list)
-  return sx_list and sx_tracks.make_tree(sx_list) or sx_tracks.make_tree(sx_tracks.get_list_of_track_objects())
+  local vtt = sx_list and sx_tracks.make_tree(sx_list) or sx_tracks.make_tree(sx_tracks.get_list_of_track_objects())
+  sxu.DRUMKITS_extend_with_context(vtt)
+  return vtt
 end
 
 sx_tracks.trackHasOption = function(trk_obj, opt)

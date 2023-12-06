@@ -111,7 +111,7 @@ end
 --
 tracks.get_focused_track_objects = function()
   local context = state_interface.getContext()
-  log.debug("CONTEXT:", context)
+  log.debug("get_focused_track_objects/rk context:", context)
 
   local vtt = sx.getVerifiedTree()
 
