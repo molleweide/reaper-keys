@@ -881,4 +881,24 @@ midi.shift_pitches_above_including = function(take, pitch_thresh, shift_amount, 
   })
 end
 
+midi.shift_insert_notes = function(take, shift_amount, item_data, dry_run)
+  midi.midi_take_filter_transform(take, {
+    dry_run = not dry_run and false or true,
+    insert = item_data,
+    transform = {
+      notes = { pitch = shift_amount },
+    },
+  })
+end
+
+midi.insert_notes_and_force_chan = function(take, force_ch, item_data, dry_run)
+  midi.midi_take_filter_transform(take, {
+    dry_run = not dry_run and false or true,
+    insert = item_data,
+    transform = {
+      notes = { ch = { force_ch, "force" } },
+    },
+  })
+end
+
 return midi

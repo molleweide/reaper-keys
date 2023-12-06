@@ -154,30 +154,18 @@ ypc.put = function(meta, opts)
     -- HACK: could i just set the item state chunk instead??
     for _, item_data in ipairs(t_paste_data.item_objs) do
       local item = reaper.BR_GetMediaItemByGUID(0, item_data.guid)
-      local take = reaper.GetMediaItemTake(item, 0) -- active take
       if type(item) == "userdata" then
-        midi.midi_take_filter_transform(take, {
-          dry_run = opts.dry_run,
-          insert = item_data,
-          transform = {
-            notes = { pitch = tobj_pos.lanes.start - t_paste_data.lanes.start },
-          },
-        })
+        local take = reaper.GetMediaItemTake(item, 0) -- active take
+        midi.shift_insert_notes(take, tobj_pos.lanes.start - t_paste_data.lanes.start, item_data)
       else
-        local new_item, new_take
         if not opts.dry_run then
-          new_item = reaper.AddMediaItemToTrack(new_tr)
-          new_take = reaper.GetMediaItemTake(new_item, 0) -- active take
+          local new_item = reaper.AddMediaItemToTrack(new_tr)
+          local new_take = reaper.GetMediaItemTake(new_item, 0) -- active take
+          -- TODO: move this into util
           for k, v in pairs(item_data.item_info) do
             local ret = reaper.SetMediaItemInfo_Value(new_item, k, v)
           end
-          midi.midi_take_filter_transform(new_take, {
-            dry_run = opts.dry_run,
-            insert = item_data,
-            transform = {
-              notes = { pitch = tobj_pos.lanes.start - t_paste_data.lanes.start },
-            },
-          })
+          midi.shift_insert_notes(new_take, tobj_pos.lanes.start - t_paste_data.lanes.start, item_data)
         end
       end
     end
@@ -189,12 +177,19 @@ ypc.put = function(meta, opts)
     end
     for _, item_data in ipairs(t_paste_data.item_objs) do
       local item = reaper.BR_GetMediaItemByGUID(0, item_data.guid)
-      log.user(item_data.guid, item)
       if type(item) == "userdata" then
-        -- insert data into existing item.
+        local take = reaper.GetMediaItemTake(item, 0) -- active take
+        midi.insert_notes_and_force_chan(take, sxu.get_split_index(tobj_pos), item_data)
       else
-        local new_item = reaper.AddMediaItemToTrack(new_tr)
-        -- insert midi data into new_item
+        if not opts.dry_run then
+          local new_item = reaper.AddMediaItemToTrack(new_tr)
+          local new_take = reaper.GetMediaItemTake(new_item, 0) -- active take
+          -- TODO: move this into util
+          for k, v in pairs(item_data.item_info) do
+            local ret = reaper.SetMediaItemInfo_Value(new_item, k, v)
+          end
+          midi.insert_notes_and_force_chan(new_take, sxu.get_split_index(tobj_pos), item_data)
+        end
       end
     end
   else
