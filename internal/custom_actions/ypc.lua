@@ -108,85 +108,73 @@ end
 ypc.yank = function(meta, opts)
   opts = opts or {}
   local t_foc_tr, vtt = libtr.get_focused_track_objects()
-
   debug_ypc("yank", t_foc_tr[1], vtt)
-
   -- TODO: this function should go into ypc, since it is specifically prepping for ypc
   local t_single_track_data = libtr.get_single_track_data_for_yanking(t_foc_tr[1])
-
   require("utils.project_state").overwrite("ypc", "tracks", t_single_track_data)
   return t_foc_tr, vtt
 end
 
 ypc.put = function(meta, opts)
   opts = opts or {}
-  local exists, t_paste_data = project_state.get("ypc", "tracks")
+  local exists, pdata = project_state.get("ypc", "tracks")
   if not exists then
     log.debug("YPC: paste data does not exist. Cannot paste nil...")
     return
   end
-  -- if t_paste_data then
-  --   for k, v in pairs(t_paste_data) do
-  --     log.debug("PUT: data to paste keys:", k)
-  --   end
-  -- end
   local t_foc_tr, vtt = libtr.get_focused_track_objects()
-  local tobj_pos = t_foc_tr[1]
-  local insert_new_track_at_idx = tobj_pos.trackIndex
+  local npos = t_foc_tr[1]
+  local insert_new_track_at_idx = npos.trackIndex
   local new_tr
 
   -- insert new track
   if not opts.dry_run then
+    -- NOTE: i will probably have to + 1 here, since I have been assuming insertion
+    -- after the tobj at pos.
     reaper.InsertTrackAtIndex(insert_new_track_at_idx, false)
-    local state_insert = t_paste_data.state_chunk
+    local state_insert = pdata.state_chunk
     r.set_single_track_state_chunk(insert_new_track_at_idx, state_insert)
     new_tr = reaper.GetTrack(0, insert_new_track_at_idx)
   end
 
-  -- shift data if necessary
-  if tobj_pos.group and tobj_pos.group.options["m"] then
-    local tr, item_count = r.get_track_and_item_count_for_node(tobj_pos.group)
+  -- NOTE: it seems that this could be refactored into one single statement,
+  -- where I use the correct midi func call based on type.
+  if npos.group and npos.group.options["m"] then
+    r.node_takes_do(npos.group, midi.shift_pitches_above_including, npos.lanes.start, pdata.lanes.range)
+    -- local tr, item_count = r.get_track_and_item_count_for_node(npos.group)
+    -- for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
+    --   local _, take = r.get_item_and_first_take(tr, i)
+    --   midi.shift_pitches_above_including(take, npos.lanes.start, pdata.lanes.range)
+    -- end
 
-    -- TODO: this loop should be done within libitems.single_track_filter_transform_items(tobj_pos.group,{
-    --
-    --  I can refactor some of the below loops as a `transform` option.
-    --  This will take some fiddling around but it could make sense.
-    --  So that in the end I have valid APIs for
-    --  ~ tracks/nodes
-    --  ~ items/nodes
-    --  ~ takes/nodes
-    --  ~ midi
-    --  ~ audio ?
-    --
-    --   transform = { midi = function(item, active_take)
-    --       midi.shift_pitches_above_including(active_take, tobj_pos.lanes.start, t_paste_data.lanes.range)
-    --     end
-    --   }
-    -- })
-    --
-    for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-      local _, take = r.get_item_and_first_take(tr, i)
-      midi.shift_pitches_above_including(take, tobj_pos.lanes.start, t_paste_data.lanes.range)
-    end
-    for _, item_data in ipairs(t_paste_data.item_objs) do
-      local _, take = r.get_create_item_from_node(tobj_pos.group, item_data)
-      midi.shift_insert_notes(take, tobj_pos.lanes.start - t_paste_data.lanes.start, item_data)
-    end
-  elseif tobj_pos.channel_splitter then
-    local tr, item_count = r.get_track_and_item_count_for_node(tobj_pos.channel_splitter)
-    for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-      local _, take = r.get_item_and_first_take(tr, i)
-      midi.shift_channels_for_channels_below(take, sxu.get_split_index(tobj_pos), 1)
-    end
-    for _, item_data in ipairs(t_paste_data.item_objs) do
-      local _, take = r.get_create_item_from_node(tobj_pos.channel_splitter, item_data)
-      midi.insert_notes_and_force_chan(take, sxu.get_split_index(tobj_pos), item_data)
-    end
+    r.node_insert_takes_do(
+      npos.group,
+      pdata.item_objs,
+      midi.shift_insert_notes,
+      npos.lanes.start - pdata.lanes.start
+    )
+    -- for _, item_data in ipairs(pdata.item_objs) do
+    --   local _, take = r.get_create_item_from_node(npos.group, item_data)
+    --   midi.shift_insert_notes(take, item_data, npos.lanes.start - pdata.lanes.start)
+    -- end
+  elseif npos.channel_splitter then
+    r.node_takes_do(npos.channel_splitter, midi.shift_channels_above, sxu.get_split_index(npos), 1)
+    -- local tr, item_count = r.get_track_and_item_count_for_node(npos.channel_splitter)
+    -- for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
+    --   local _, take = r.get_item_and_first_take(tr, i)
+    --   midi.shift_channels_above(take, sxu.get_split_index(npos), 1)
+    -- end
+    r.node_insert_takes_do(npos.group, pdata.item_objs, midi.insert_notes_force_chan, sxu.get_split_index(npos))
+    -- for _, item_data in ipairs(pdata.item_objs) do
+    --   local _, take = r.get_create_item_from_node(npos.channel_splitter, item_data)
+    --   midi.insert_notes_force_chan(take, sxu.get_split_index(npos), item_data)
+    -- end
   else
-    for _, item_data in ipairs(t_paste_data.item_objs) do
-      local _, take = r.get_create_item_from_node(new_tr, item_data)
-    end
-    -- insert midi data.
+    r.node_insert_takes_do(new_tr, pdata.item_objs, midi.insert_notes_force_chan, 0)
+    -- for _, item_data in ipairs(pdata.item_objs) do
+    --   local _, take = r.get_create_item_from_node(new_tr, item_data)
+    --   midi.insert_notes_force_chan(take, 0, item_data)
+    -- end
   end
 end
 
@@ -198,6 +186,10 @@ ypc.cut = function(meta, opts)
     log.debug("YPC CUT: yanking did not suceed - aborting...")
     return
   end
+
+  -- TODO: these for loops could also be done as transform of
+  -- single_track_filter_transform_items
+  --
   if target_tobj.group.mc_drums then
     local tr, item_count = r.get_track_and_item_count_for_node(target_tobj.group)
     for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
@@ -210,7 +202,7 @@ ypc.cut = function(meta, opts)
     for i = 0, item_count - 1 do
       local _, take = r.get_item_and_first_take(tr, i)
       midi.delete_notes_for_channel(take, sxu.get_split_index(target_tobj))
-      midi.shift_channels_for_channels_below(take, sxu.get_split_index(target_tobj), -1)
+      midi.shift_channels_above(take, sxu.get_split_index(target_tobj), -1)
     end
   end
   if not opts.dry_run then

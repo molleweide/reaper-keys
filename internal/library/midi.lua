@@ -626,7 +626,7 @@ midi.midi_take_filter_transform = function(take, opts)
 
   local remove = opts.remove or {}
   local transform = opts.transform or {}
-  local insert = opts.insert
+  local insert = opts.insert or {}
 
   if remove.notes then
     note_filter = remove.notes
@@ -641,7 +641,7 @@ midi.midi_take_filter_transform = function(take, opts)
   log.debug(string.format([[midi_take_filter_transform; filter=%s, noflt=%s ]], filter, no_filters))
 
   -- COLLECT ALL NOTES IN TAKE || ASSIGN INSERTION DATA
-  if not insert then
+  if not opts.insert then
     local ret, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
     for i = 0, notecnt do
       local ret, sel, muted, ppq_s, ppq_e, ch, pitch, vel = reaper.MIDI_GetNote(take, i)
@@ -661,7 +661,7 @@ midi.midi_take_filter_transform = function(take, opts)
   else
     -- if insertion notes are passed, then these are the ones we are operating
     -- on
-    t_notes = insert
+    t_notes = opts.insert
   end
 
   -- NOTE: filters could be used to only insert a specific subset from `insert`
@@ -853,7 +853,7 @@ midi.delete_notes_for_channel = function(take, ch, dry_run)
 end
 
 -- func name is ambiguous
-midi.shift_channels_for_channels_below = function(take, chan_thresh, shift_amount, dry_run)
+midi.shift_channels_above = function(take, chan_thresh, shift_amount, dry_run)
   return midi.midi_take_filter_transform(take, {
     dry_run = not dry_run and false or true,
     filter = {
@@ -863,7 +863,7 @@ midi.shift_channels_for_channels_below = function(take, chan_thresh, shift_amoun
         end,
       },
     },
-    transform = { notes = { ch = sshift_amount } },
+    transform = { notes = { ch = shift_amount } },
   })
 end
 
@@ -881,7 +881,7 @@ midi.shift_pitches_above_including = function(take, pitch_thresh, shift_amount, 
   })
 end
 
-midi.shift_insert_notes = function(take, shift_amount, item_data, dry_run)
+midi.shift_insert_notes = function(take, item_data, shift_amount, dry_run)
   midi.midi_take_filter_transform(take, {
     dry_run = not dry_run and false or true,
     insert = item_data,
@@ -891,7 +891,7 @@ midi.shift_insert_notes = function(take, shift_amount, item_data, dry_run)
   })
 end
 
-midi.insert_notes_and_force_chan = function(take, force_ch, item_data, dry_run)
+midi.insert_notes_force_chan = function(take, force_ch, item_data, dry_run)
   midi.midi_take_filter_transform(take, {
     dry_run = not dry_run and false or true,
     insert = item_data,

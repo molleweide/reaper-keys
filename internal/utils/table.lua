@@ -23,8 +23,8 @@ end
 
 tbl.filter = function(t, condition, debug)
 	local result = {}
-	for _, item in ipairs(t) do
-		if condition(item) then
+	for i, item in ipairs(t) do
+		if condition(item, i) then
 			if debug then
 				log.user(format.block(item))
 			end

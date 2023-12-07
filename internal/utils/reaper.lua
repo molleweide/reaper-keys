@@ -4,6 +4,8 @@ local reaper_utils = {}
 -- keep generalized utils for reaper
 --
 -- NOTE: this file should not import any modules except for logging
+--
+-- FIX: some utils should move over to sxu!!
 
 function reaper_utils.isSel()
   return reaper.CountSelectedTracks(0) ~= 0
@@ -108,7 +110,7 @@ end
 reaper_utils.get_create_item_from_node = function(in_track, item_node)
   -- this means we were passed a node
   if type(in_track) ~= "userdata" then
-    in_track = reaper_utils.getTrackByGUID(node.guid)
+    in_track = reaper_utils.getTrackByGUID(in_track.guid)
   end
 
   local item = reaper.BR_GetMediaItemByGUID(0, item_node.guid)
@@ -127,6 +129,21 @@ reaper_utils.get_create_item_from_node = function(in_track, item_node)
     end
     local new_take = reaper.GetMediaItemTake(new_item, 0) -- active take
     return new_item, new_take
+  end
+end
+
+reaper_utils.node_takes_do = function(node, fn, ...)
+  local tr, item_count = reaper_utils.get_track_and_item_count_for_node(node)
+  for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
+    local _, take = reaper_utils.get_item_and_first_take(tr, i)
+    fn(take, ...)
+  end
+end
+
+reaper_utils.node_insert_takes_do = function(node_or_tr, item_objs, fn, ...)
+  for _, item_data in ipairs(item_objs) do
+    local _, take = reaper_utils.get_create_item_from_node(node_or_tr, item_data)
+    fn(take, item_data, ...)
   end
 end
 
