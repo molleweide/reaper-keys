@@ -104,11 +104,21 @@ end
 --
 -- This function is used when restoring items. if an item can be found by
 -- GUID then we use it. Otherwise we create it
+--
+--- NOTE: a node is expected, but if you pass a regular track or index,
+--- then that will be used for getting the track.
 ---
----@param in_track userdata | table (node)
+---@param in_track userdata | table | number
 ---@param item_node
 reaper_utils.get_create_item_from_node = function(in_track, item_node)
   -- this means we were passed a node
+
+  if type(in_track) == "number" then
+    in_track = reaper.GetTrack(0, in_track)
+
+  end
+
+
   if type(in_track) ~= "userdata" then
     in_track = reaper_utils.getTrackByGUID(in_track.guid)
   end

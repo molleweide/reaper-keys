@@ -94,22 +94,14 @@ end
 
 ---- module funcs
 
---
--- YANK
---
-
--- FIX: needs proper return codes, so that `CUT` can return if yank did not
+-- todo: needs proper return codes, so that `CUT` can return if yank did not
 -- succeed
---
--- FIX: remove libtr and use cu.getTrackPosition()
---
 ---@param meta table | nil
 ---@param opts table | nil
 ypc.yank = function(meta, opts)
   opts = opts or {}
   local t_foc_tr, vtt = libtr.get_focused_track_objects()
-  debug_ypc("yank", t_foc_tr[1], vtt)
-  -- TODO: this function should go into ypc, since it is specifically prepping for ypc
+  -- todo: this function should go into ypc, since it is specifically prepping for ypc
   local t_single_track_data = libtr.get_single_track_data_for_yanking(t_foc_tr[1])
   require("utils.project_state").overwrite("ypc", "tracks", t_single_track_data)
   return t_foc_tr, vtt
@@ -124,57 +116,28 @@ ypc.put = function(meta, opts)
   end
   local t_foc_tr, vtt = libtr.get_focused_track_objects()
   local npos = t_foc_tr[1]
-  local insert_new_track_at_idx = npos.trackIndex
-  local new_tr
-
-  -- insert new track
+  local new_tr_at_idx = npos.trackIndex
+  -- INSERT NEW TRACK - i will probably have to + 1 here, since I have been
+  -- assuming insertion after the tobj at pos.
   if not opts.dry_run then
-    -- NOTE: i will probably have to + 1 here, since I have been assuming insertion
-    -- after the tobj at pos.
-    reaper.InsertTrackAtIndex(insert_new_track_at_idx, false)
+    reaper.InsertTrackAtIndex(new_tr_at_idx, false)
     local state_insert = pdata.state_chunk
-    r.set_single_track_state_chunk(insert_new_track_at_idx, state_insert)
-    new_tr = reaper.GetTrack(0, insert_new_track_at_idx)
+    r.set_single_track_state_chunk(new_tr_at_idx, state_insert)
   end
-
-  -- NOTE: it seems that this could be refactored into one single statement,
-  -- where I use the correct midi func call based on type.
+  -- INSERT DATA
   if npos.group and npos.group.options["m"] then
     r.node_takes_do(npos.group, midi.shift_pitches_above_including, npos.lanes.start, pdata.lanes.range)
-    -- local tr, item_count = r.get_track_and_item_count_for_node(npos.group)
-    -- for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-    --   local _, take = r.get_item_and_first_take(tr, i)
-    --   midi.shift_pitches_above_including(take, npos.lanes.start, pdata.lanes.range)
-    -- end
-
     r.node_insert_takes_do(
       npos.group,
       pdata.item_objs,
       midi.shift_insert_notes,
-      npos.lanes.start - pdata.lanes.start
+      npos.lanes.start - pdata.lanes.start -- i could shorten `lanes` to `lane`, since a node has 1 lane that can span mult midi pitches.
     )
-    -- for _, item_data in ipairs(pdata.item_objs) do
-    --   local _, take = r.get_create_item_from_node(npos.group, item_data)
-    --   midi.shift_insert_notes(take, item_data, npos.lanes.start - pdata.lanes.start)
-    -- end
   elseif npos.channel_splitter then
     r.node_takes_do(npos.channel_splitter, midi.shift_channels_above, sxu.get_split_index(npos), 1)
-    -- local tr, item_count = r.get_track_and_item_count_for_node(npos.channel_splitter)
-    -- for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-    --   local _, take = r.get_item_and_first_take(tr, i)
-    --   midi.shift_channels_above(take, sxu.get_split_index(npos), 1)
-    -- end
     r.node_insert_takes_do(npos.group, pdata.item_objs, midi.insert_notes_force_chan, sxu.get_split_index(npos))
-    -- for _, item_data in ipairs(pdata.item_objs) do
-    --   local _, take = r.get_create_item_from_node(npos.channel_splitter, item_data)
-    --   midi.insert_notes_force_chan(take, sxu.get_split_index(npos), item_data)
-    -- end
   else
-    r.node_insert_takes_do(new_tr, pdata.item_objs, midi.insert_notes_force_chan, 0)
-    -- for _, item_data in ipairs(pdata.item_objs) do
-    --   local _, take = r.get_create_item_from_node(new_tr, item_data)
-    --   midi.insert_notes_force_chan(take, 0, item_data)
-    -- end
+    r.node_insert_takes_do(new_tr_at_idx, pdata.item_objs, midi.insert_notes_force_chan, 0)
   end
 end
 
@@ -186,10 +149,8 @@ ypc.cut = function(meta, opts)
     log.debug("YPC CUT: yanking did not suceed - aborting...")
     return
   end
-
-  -- TODO: these for loops could also be done as transform of
+  -- todo: these for loops could also be done as transform of
   -- single_track_filter_transform_items
-  --
   if target_tobj.group.mc_drums then
     local tr, item_count = r.get_track_and_item_count_for_node(target_tobj.group)
     for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
@@ -211,11 +172,11 @@ ypc.cut = function(meta, opts)
 end
 
 ypc.insertTrackAbove = function(meta, opts)
-  reaper.InsertTrackAtIndex(insertion_idx, false)
+  -- reaper.InsertTrackAtIndex(insertion_idx, false)
 end
 
 ypc.insertTrackBelow = function(meta, opts)
-  reaper.InsertTrackAtIndex(insertion_idx, false)
+  -- reaper.InsertTrackAtIndex(insertion_idx, false)
 end
 
 return ypc
