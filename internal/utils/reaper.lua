@@ -1,11 +1,11 @@
 local log = require("utils.log")
 local reaper_utils = {}
 
--- keep generalized utils for reaper
+-- KEEP GENERALIZED UTILS FOR REAPER
 --
--- NOTE: this file should not import any modules except for logging
+-- NOTE: this file is not allowed to import any modules except for logging
 --
--- FIX: some utils should move over to sxu!!
+-- fix: some utils should move over to sxu!?
 
 function reaper_utils.isSel()
   return reaper.CountSelectedTracks(0) ~= 0

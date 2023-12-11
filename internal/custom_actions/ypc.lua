@@ -109,35 +109,26 @@ end
 
 ypc.put = function(meta, opts)
   opts = opts or {}
-  local exists, pdata = project_state.get("ypc", "tracks")
-  if not exists then
+  local paste_data_exists, pd = project_state.get("ypc", "tracks")
+  if not paste_data_exists then
     log.debug("YPC: paste data does not exist. Cannot paste nil...")
     return
   end
   local t_foc_tr, vtt = libtr.get_focused_track_objects()
-  local npos = t_foc_tr[1]
-  local new_tr_at_idx = npos.trackIndex
-  -- INSERT NEW TRACK - i will probably have to + 1 here, since I have been
-  -- assuming insertion after the tobj at pos.
+  local np = t_foc_tr[1] -- node at position / first selected track in main
   if not opts.dry_run then
-    reaper.InsertTrackAtIndex(new_tr_at_idx, false)
-    local state_insert = pdata.state_chunk
-    r.set_single_track_state_chunk(new_tr_at_idx, state_insert)
+    reaper.InsertTrackAtIndex(np.trackIndex, false) -- should I add + 1 here?
+    local state_insert = pd.state_chunk
+    r.set_single_track_state_chunk(np.trackIndex, state_insert)
   end
-  -- INSERT DATA
-  if npos.group and npos.group.options["m"] then
-    r.node_takes_do(npos.group, midi.shift_pitches_above_including, npos.lanes.start, pdata.lanes.range)
-    r.node_insert_takes_do(
-      npos.group,
-      pdata.item_objs,
-      midi.shift_insert_notes,
-      npos.lanes.start - pdata.lanes.start-- i could shorten `lanes` to `lane`, since a node has 1 lane that can span mult midi pitches.
-    )
-  elseif npos.channel_splitter then
-    r.node_takes_do(npos.channel_splitter, midi.shift_channels_above, sxu.get_split_index(npos), 1)
-    r.node_insert_takes_do(npos.group, pdata.item_objs, midi.insert_notes_force_chan, sxu.get_split_index(npos))
+  if np.group and np.group.options["m"] then
+    r.node_takes_do(np.group, midi.shift_pitches_above_including, np.lanes.start, pd.lanes.range)
+    r.node_insert_takes_do(np.group, pd.item_objs, midi.shift_insert_notes, np.lanes.start - pd.lanes.start)
+  elseif np.channel_splitter then
+    r.node_takes_do(np.channel_splitter, midi.shift_channels_above, sxu.get_split_index(np), 1)
+    r.node_insert_takes_do(np.group, pd.item_objs, midi.insert_notes_force_chan, sxu.get_split_index(np))
   else
-    r.node_insert_takes_do(new_tr_at_idx, pdata.item_objs, midi.insert_notes_force_chan, 0)
+    r.node_insert_takes_do(np.trackIndex, pd.item_objs, midi.insert_notes_force_chan, 0)
   end
 end
 
