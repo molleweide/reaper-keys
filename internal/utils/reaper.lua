@@ -116,12 +116,15 @@ reaper_utils.get_create_item_from_node = function(in_track, item_node)
   if type(in_track) == "number" then
     in_track = reaper.GetTrack(0, in_track)
 
+    -- todo: handle errors
   end
-
 
   if type(in_track) ~= "userdata" then
     in_track = reaper_utils.getTrackByGUID(in_track.guid)
+    -- todo: handle errors
   end
+
+  -- todo: handle errors
 
   local item = reaper.BR_GetMediaItemByGUID(0, item_node.guid)
   local valid_item = type(item) == "userdata" and true or false
@@ -145,15 +148,26 @@ end
 reaper_utils.node_takes_do = function(node, fn, ...)
   local tr, item_count = reaper_utils.get_track_and_item_count_for_node(node)
   for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-    local _, take = reaper_utils.get_item_and_first_take(tr, i)
+    local item, take = reaper_utils.get_item_and_first_take(tr, i)
     fn(take, ...)
   end
 end
 
+-- first param is usually a track node, but you can also pass a media track
+-- ref or pass the index of a track.
 reaper_utils.node_insert_takes_do = function(node_or_tr, item_objs, fn, ...)
   for _, item_data in ipairs(item_objs) do
     local _, take = reaper_utils.get_create_item_from_node(node_or_tr, item_data)
     fn(take, item_data, ...)
+  end
+end
+
+reaper_utils.node_iter_items_and_xtake = function(node, fn)
+  local tr, item_count = reaper_utils.get_track_and_item_count_for_node(node)
+  for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
+    local item, take = reaper_utils.get_item_and_first_take(tr, i)
+    local take_is_midi = reaper.TakeIsMIDI(take)
+    fn(item, take, take_is_midi)
   end
 end
 
