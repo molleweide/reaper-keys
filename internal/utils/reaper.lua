@@ -171,4 +171,8 @@ reaper_utils.node_iter_items_and_xtake = function(node, fn)
   end
 end
 
+reaper_utils.delete_node = function(node)
+  reaper.DeleteTrack(reaper_utils.getTrackByGUID(node.guid))
+end
+
 return reaper_utils

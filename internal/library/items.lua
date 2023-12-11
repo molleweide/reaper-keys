@@ -94,39 +94,31 @@ end
 
 lib_items.single_track_filter_transform_items = function(tobj, opts)
   opts = opts or {}
-
   if not tobj then
     log.debug("no tobj passed to lib_items.get_all_items_data")
     return
   end
 
   -- HANDLE CONFIGS
-
   local filter = opts.filter or {}
-
   local info_filter = filter.info
   local data_filter = filter.data -- this is good that I use the `data` term during config. makes things clearer
   local no_filters = not info_filter and not data_filter
-
   local midi_and_audio
   if data_filter then
     midi_and_audio = data_filter.midi == nil and data_filter.audio == nil
   end
   -- log.user(string.format([[filter=%s, noflt=%s, m_and_a_=%s ]], filter, no_filters, midi_and_audio))
-
   local t_return_all_item_objs = {}
-
   r.node_iter_items_and_xtake(tobj, function(item, take, take_is_midi)
-    local t_item_data_obj = {
+    local t_item_data_obj = { -- this info is already capture in get item info, and get take info
       guid = reaper.BR_GetMediaItemGUID(item),
     }
-    -- COLLECT ITEM INFO
     if no_filters or info_filter then
       log.debug("GETTING: item info data")
       t_item_data_obj.item_info = lib_items.get_item_info(item)
       t_item_data_obj.take_info = lib_items.get_take_info(take)
     end
-    -- COLLECT ITEM DATA
     -- midi_take_filter_transform should be moved into items since it is dealing
     -- with items/takes first hand, and not midi. >>> it is an item_util!!
     if no_filters or midi_and_audio or data_filter.midi and take_is_midi then

@@ -131,7 +131,7 @@ ypc.put = function(meta, opts)
       npos.group,
       pdata.item_objs,
       midi.shift_insert_notes,
-      npos.lanes.start - pdata.lanes.start -- i could shorten `lanes` to `lane`, since a node has 1 lane that can span mult midi pitches.
+      npos.lanes.start - pdata.lanes.start-- i could shorten `lanes` to `lane`, since a node has 1 lane that can span mult midi pitches.
     )
   elseif npos.channel_splitter then
     r.node_takes_do(npos.channel_splitter, midi.shift_channels_above, sxu.get_split_index(npos), 1)
@@ -149,25 +149,19 @@ ypc.cut = function(meta, opts)
     log.debug("YPC CUT: yanking did not suceed - aborting...")
     return
   end
-  -- todo: these for loops could also be done as transform of
-  -- single_track_filter_transform_items
   if target_tobj.group.mc_drums then
-    local tr, item_count = r.get_track_and_item_count_for_node(target_tobj.group)
-    for i = 0, item_count - 1 do -- does parent_item_cnt need to be stored????
-      local _, take = r.get_item_and_first_take(tr, i)
+    r.node_iter_items_and_xtake(target_tobj.group, function(item, take, take_is_midi)
       midi.delete_notes_in_pitch_range(take, target_tobj.lanes.start, target_tobj.lanes._end)
       midi.shift_pitches_above_including(take, target_tobj.lanes._end + 1, -target_tobj.lanes.range)
-    end
+    end)
   elseif target_tobj.channel_splitter then
-    local tr, item_count = r.get_track_and_item_count_for_node(target_tobj.channel_splitter)
-    for i = 0, item_count - 1 do
-      local _, take = r.get_item_and_first_take(tr, i)
+    r.node_iter_items_and_xtake(target_tobj.channel_splitter, function(item, take, take_is_midi)
       midi.delete_notes_for_channel(take, sxu.get_split_index(target_tobj))
       midi.shift_channels_above(take, sxu.get_split_index(target_tobj), -1)
-    end
+    end)
   end
   if not opts.dry_run then
-    reaper.DeleteTrack(r.getTrackByGUID(target_tobj.guid))
+    r.delete_node(target_tobj)
   end
 end
 
