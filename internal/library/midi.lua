@@ -543,7 +543,7 @@ midi.insert_single_note = function(take, note, noSortIn)
     note.sel and note.sel or note_defaults.selected,
     note.muted and note.muted or note_defaults.muted,
     note.ppq_s and note.ppq_s or reaper.MIDI_GetPPQPosFromProjTime(take, note.time_pos_start),
-    note.ppq_e and note.ppq_e or reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
+    note.ppq_e and note.ppq_e or reaper.MIDI_GetPPQPosFromProjTime(take, note.time_pos_end),
     note.ch and note.ch or note_defaults.chan,
     note.pitch and note.pitch or note_defaults.pitch,
     note.vel and note.vel or note_defaults.velocity,
@@ -618,6 +618,8 @@ midi.midi_take_filter_transform = function(take, opts)
   local cc_filter = filter.cc or {}
   local syx_filter = filter.syx or {}
 
+  log.debug(format.block(opts))
+
   if opts.remove and opts.transform then
     -- if transform and insert -> transform needs to be done first!
     log.debug("MIDI (filter/transform): Cannot remove and transform together! Abort..")
@@ -690,6 +692,7 @@ midi.midi_take_filter_transform = function(take, opts)
           end
         end
       elseif type(v) == "function" then
+        log.user("?????????")
         t_notes = tbl.filter(t_notes, v) -- pass filter func
       end
     end
@@ -765,6 +768,8 @@ midi.midi_take_filter_transform = function(take, opts)
   --
   -- TODO: if transform.note and insert -> only insert
 
+  log.debug("t_note length after filtering:", #t_notes)
+
   if transform.notes then
     local notes_updated = 0
     local t_indices_to_remove = {}
@@ -797,15 +802,33 @@ midi.midi_take_filter_transform = function(take, opts)
           notes_updated = notes_updated + 1
           if not opts.dry_run then
             -- don't delete existing if we are inserting notes.
-            if not opts.insert then
-              reaper.MIDI_DeleteNote(take, note.index)
-            end
-            midi.insert_single_note(take, note)
+            -- if not opts.insert then
+            --   log.debug("put delete:", note.index)
+            --   reaper.MIDI_DeleteNote(take, note.index)
+            -- end
+            -- midi.insert_single_note(take, note)
           end
         end
-      end
-    end
+      end -- transform.notes -> k, v
+    end -- t_notes -> i, note
+
     if notes_updated > 0 and not opts.dry_run then
+
+      for i = #t_notes, 1, -1 do
+          reaper.MIDI_DeleteNote(take, t_notes[i].index)
+      end
+
+      -- for i, note in ipairs(t_notes) do
+      --   if not opts.insert then -- this is stupid??
+      --     log.debug("put delete:", note.index)
+      --     reaper.MIDI_DeleteNote(take, note.index)
+      --   end
+      -- end
+
+      for i, note in ipairs(t_notes) do
+        midi.insert_single_note(take, note)
+      end
+
       reaper.MIDI_Sort(take)
     end
   end
@@ -869,7 +892,7 @@ end
 
 midi.shift_pitches_above_including = function(take, pitch_thresh, shift_amount, dry_run)
   require("library.midi").midi_take_filter_transform(take, {
-    dry_run = not dry_run and false or true,
+    dry_run = dry_run,
     filter = {
       notes = {
         pitch = function(note)
@@ -883,7 +906,7 @@ end
 
 midi.shift_insert_notes = function(take, item_data, shift_amount, dry_run)
   midi.midi_take_filter_transform(take, {
-    dry_run = not dry_run and false or true,
+    dry_run = dry_run,
     insert = item_data,
     transform = {
       notes = { pitch = shift_amount },
