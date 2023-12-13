@@ -220,7 +220,7 @@ ypc.put = function(meta, opts)
 	if sxu.trackObjHasOption(np.group, "m") then
 		log.debug("ypc put: drumkit")
 		r.node_takes_do(np.group, midi.shift_pitches_above_including, np.lanes.start, pd.lanes.range)
-		-- r.node_insert_takes_do(np.group, pd.item_objs, midi.shift_insert_notes, np.lanes.start - pd.lanes.start)
+		r.node_insert_takes_do(np.group, pd.item_objs, midi.shift_insert_notes, np.lanes.start - pd.lanes.start)
 	elseif np.channel_splitter then
 		log.debug("ypc put: splitter")
 		r.node_takes_do(np.channel_splitter, midi.shift_channels_above, sxu.get_split_index(np), 1)
