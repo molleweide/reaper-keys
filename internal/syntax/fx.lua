@@ -131,7 +131,10 @@ end
 -- 1. first we handle standard FX parameters
 -- 2. update named config paramteres, if any.
 local function handle_fx_params(spawn_idx, state, sx_fx_opts)
-  if #sx_fx_opts.t_sx_current_fx.fx_params > 0 then
+
+  -- FIX: why am I checking for then length here. looping is fast anyways if
+  -- the table is empty? So I could remove the outermst if-statement
+  if #sx_fx_opts.t_sx_current_fx.fx_params >= 0 then
     for pidx, parameter_func in pairs(sx_fx_opts.t_sx_current_fx.fx_params) do
       reaper.TrackFX_SetParam(
         state.trk_obj.tr,

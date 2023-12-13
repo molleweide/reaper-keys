@@ -79,6 +79,9 @@ reaper_utils.get_single_track_state_chunk = function(tr)
 end
 
 reaper_utils.set_single_track_state_chunk = function(tr, state)
+  if type(tr) == "number" then
+    tr = reaper.GetTrack(0, tr)
+  end
   return reaper.SetTrackStateChunk(tr, state, false)
 end
 

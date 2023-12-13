@@ -191,13 +191,17 @@ ypc.yank = function(meta, opts)
 	opts = opts or {}
 	local t_foc_tr, vtt = libtr.get_focused_track_objects()
 	-- todo: this function should go into ypc, since it is specifically prepping for ypc
+	--
+	--
+
 	local t_single_track_data = get_single_track_data_for_yanking(t_foc_tr[1])
 	require("utils.project_state").overwrite("ypc", "tracks", t_single_track_data)
 	return t_foc_tr, vtt
 end
 
--- todo: it turns out that putting inserts new track above but I want default
--- to be below
+-- todo: the issue is that i have to collect all of the pitches and batch delet
+-- them and then insert new events, because otherwise the order of notes gets fucked.
+-- which is not good. but it makes for a funny effect tho.
 
 ypc.put = function(meta, opts)
 	opts = opts or {}
@@ -216,7 +220,7 @@ ypc.put = function(meta, opts)
 	if sxu.trackObjHasOption(np.group, "m") then
 		log.debug("ypc put: drumkit")
 		r.node_takes_do(np.group, midi.shift_pitches_above_including, np.lanes.start, pd.lanes.range)
-		r.node_insert_takes_do(np.group, pd.item_objs, midi.shift_insert_notes, np.lanes.start - pd.lanes.start)
+		-- r.node_insert_takes_do(np.group, pd.item_objs, midi.shift_insert_notes, np.lanes.start - pd.lanes.start)
 	elseif np.channel_splitter then
 		log.debug("ypc put: splitter")
 		r.node_takes_do(np.channel_splitter, midi.shift_channels_above, sxu.get_split_index(np), 1)

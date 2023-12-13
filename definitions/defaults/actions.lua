@@ -1003,9 +1003,9 @@ return {
     end,
   },
 
-  CmdCustomYankTrack = { require("custom_actions.ypc").yank, opts = { dry_run = true, } },
-  CmdCustomPutTrack = { require("custom_actions.ypc").put, opts = { dry_run = true } },
-  CmdCustomCutTrack = { require("custom_actions.ypc").cut, opts = { dry_run = true } },
+  CmdCustomYankTrack = { require("custom_actions.ypc").yank, opts = { dry_run = false, } },
+  CmdCustomPutTrack = { require("custom_actions.ypc").put, opts = { dry_run = false } },
+  CmdCustomCutTrack = { require("custom_actions.ypc").cut, opts = { dry_run = false } },
   CmdCustomInsertTrackAbove = require("custom_actions.ypc").insertTrackAbove,
   CmdCustomInsertTrackBelow = require("custom_actions.ypc").InsertTrackBelow,
 

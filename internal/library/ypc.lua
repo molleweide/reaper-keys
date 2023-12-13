@@ -8,6 +8,8 @@ local syntax_utils = require('syntax.utils')
 -- local config = require('definitions.syntax.config')
 --
 
+-- NOTE: THIS FILE IS OUTDATED/DEPRECATED!!!!
+
 -- NOTE: func names in this file are stupid as fuck
 
 local ypc = {}

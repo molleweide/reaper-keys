@@ -1,4 +1,4 @@
-local samplerNoteBass = 48
+local samplerNoteBass = require("definitions.config").drum_lanes_low_note_start -- 48
 local log = require("utils.log")
 
 ---- mv >>> util file

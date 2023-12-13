@@ -1,5 +1,7 @@
 -- refactor into general fx / util settings file??
-local samplerNoteBass = 48
+-- local samplerNoteBass = 48
+local samplerNoteBass = require("definitions.config").drum_lanes_low_note_start -- 48
+
 
 local function midiNumToNormalized(num)
   -- normalized values are used in, eg. RS5K for setting note values...
