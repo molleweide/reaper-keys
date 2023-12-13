@@ -65,32 +65,17 @@ lib_items.get_items_in_track_objects = function(t_track_objects)
   end
 end
 
--- REMOVE THIS!!!!!
---
--- -- : move all below to a lib function `get_single_item_data({
--- -- type = "midi|audio|both|???"
--- -- })`
--- lib_items.get_single_item_data = function(item, opts)
--- 	opts = opts or {}
--- 	if not item then
--- 		log.debug("No item was supplied to get_single_item_data")
--- 		return
--- 	end
--- 	local take = reaper.GetMediaItemTake(item, 0) -- active take?
--- 	local t_item_data = get_item_info(item)
---
--- 	if reaper.TakeIsMIDI(take) then
--- 		t_item_data.midi_events = require("library.midi").midi_take_filter_transform(take, {
--- 			filter = { notes = { pitch = { 24, 60 } } },
--- 		})
--- 	else
--- 		-- handle audio data
--- 	end
--- 	return t_item_data
--- end
-
 -- TODO: insert new item and add params, such as POSITION and LENGTH, NAME, and
 -- COLOR
+--
+--
+-- 1. filter existing items
+-- 2. transform/deete output if necessary.
+-- 3. insert new afterwards.
+--
+-- This is pretty much the same ogic as the midi transform func. the difference
+-- is that everything is done in the main loop instead of separated as in the midi
+-- func. this is probably more efficient.
 
 lib_items.single_track_filter_transform_items = function(tobj, opts)
   opts = opts or {}
@@ -101,13 +86,17 @@ lib_items.single_track_filter_transform_items = function(tobj, opts)
 
   -- HANDLE CONFIGS
   local filter = opts.filter or {}
+
   local info_filter = filter.info
   local data_filter = filter.data -- this is good that I use the `data` term during config. makes things clearer
+
   local no_filters = not info_filter and not data_filter
+
   local midi_and_audio
   if data_filter then
     midi_and_audio = data_filter.midi == nil and data_filter.audio == nil
   end
+
   -- log.user(string.format([[filter=%s, noflt=%s, m_and_a_=%s ]], filter, no_filters, midi_and_audio))
   local t_return_all_item_objs = {}
   r.node_iter_items_and_xtake(tobj, function(item, take, take_is_midi)
@@ -133,8 +122,31 @@ lib_items.single_track_filter_transform_items = function(tobj, opts)
       -- 	filter = data_filter and data_filter.audio,
       -- })
     end
+
+    -- NOTE: i am processing every single item/take here.
+    -- This means that I can remove and transform items/takes
+    --
+    -- removing should be moved above so i don't run the midi filters if
+    -- i am intending to delete something.
+    --
+    -- this has to be cleaned up a bit so that can specify exactly what I want
+    -- in the opts config. now i am a bit confused but. I know that I
+    -- need to be able to transform items. and it would mostly be updating the
+    -- length parameter when glueing items together and what not.
+
+    if opts.remove then
+    elseif opts.transform then
+    end
+
     table.insert(t_return_all_item_objs, t_item_data_obj)
   end)
+
+  -- opts is outside since it is outside of the loop
+  -- but, what if I want to check if exists by comparing guits, then
+  -- i should do it inside the loop above.
+  if opts.insert then
+  end
+
   return t_return_all_item_objs
 end
 
