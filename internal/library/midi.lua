@@ -598,7 +598,6 @@ end
 --       end
 -- end
 
-
 -------------------------------------------------------------------------------
 -- API: This is the main midi_function for managing midi data.
 -- It can do the following:
@@ -620,13 +619,25 @@ end
 --     ~ table of numbers or sub-tables with a two digit range to filter out.
 --         >> you can supply multiple ranges.
 --
+--  FIX:I need to do error handling, eg. ranges, and values.
+--
+--- Currently returns the data filter output.
+---
+---@param take userdata
+---@param opts table
+---@return table | nil
 midi.midi_take_filter_transform = function(take, opts)
   if not take or not reaper.TakeIsMIDI(take) then -- or midi take...
     log.debug("No take was supplied to midi.midi_take_filter_transform")
     return
   end
+  if opts.insert and opts.remove then
+    log.debug("midi transform filter: you cannot INSERT and REMOVE at same time")
+    return
+  end
 
-  -- FIX: only one action insert/transform/delete can be performed at once.
+  -- FIX: you can insert and transform at same time, ie the insertion data will
+  -- be pre transformed. BUT you cannot transform and delete at the same time.
   --
   -- FIX: only one type notes/cc/syx can be handled at once??
 
@@ -637,7 +648,10 @@ midi.midi_take_filter_transform = function(take, opts)
 
   log.debug(format.block(opts))
 
-  if opts.remove and opts.transform then
+  -- NOTE: Hmmm, by doing type = { notes|cc|syx }, it allows me to do removal
+  -- and insertion of differnt types at once.
+
+  if opts.remove and (opts.transform or opts.insert) then
     -- if transform and insert -> transform needs to be done first!
     log.debug("MIDI (filter/transform): Cannot remove and transform together! Abort..")
     return
@@ -647,9 +661,9 @@ midi.midi_take_filter_transform = function(take, opts)
   local transform = opts.transform or {}
   local insert = opts.insert or {}
 
-  if remove.notes then
-    note_filter = remove.notes
-  end
+  --
+
+  -- you can either
 
   local no_filters = not note_filter and not cc_filter and not syx_filter
 
@@ -659,7 +673,10 @@ midi.midi_take_filter_transform = function(take, opts)
 
   log.debug(string.format([[midi_take_filter_transform; filter=%s, noflt=%s ]], filter, no_filters))
 
-  -- COLLECT ALL NOTES IN TAKE || ASSIGN INSERTION DATA
+  --
+  -- ENSURE MIDI DATA: COLLECT ALL NOTES IN TAKE || ASSIGN INSERTION DATA
+  --
+
   if not opts.insert then
     local ret, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
     for i = 0, notecnt do
@@ -683,8 +700,14 @@ midi.midi_take_filter_transform = function(take, opts)
     t_notes = opts.insert
   end
 
-  -- NOTE: filters could be used to only insert a specific subset from `insert`
-  -- notes data.
+  ---------------------------------------------------------
+  -- FILTER MIDI NOTE DATA
+  --
+
+  -- remove filtered data
+  if remove.notes then
+    note_filter = remove.notes
+  end
 
   if no_filters or note_filter then
     for k, v in pairs(note_filter) do
@@ -725,28 +748,25 @@ midi.midi_take_filter_transform = function(take, opts)
     end
   end
 
+  ---------------------------------------------------------
+  -- HANDLE MIDI NOTE DATA
+  --
+
   -- delete filtered notes
-  -- TODO: remove has to be alone
   if remove.notes then
     midi.delete_notes(take, t_notes)
+
+    -- TODO: insert.notes is not yet implemented. Atm midi data is assigned
+    -- to insert = {data}, but I should make it possible to do this with
+    --    -> insert {notes|cc|syx}
+  elseif transform.notes or insert.notes then
   end
 
-  -- FIX: values outside of allowed range
-  --
-  --
-  -- TODO: if transform.note and insert -> only insert
-
-  log.debug("t_note length after filtering:", #t_notes)
-
+  local notes_updated = 0
   if transform.notes then
-    local notes_updated = 0
-    local t_indices_to_remove = {}
     for i, note in ipairs(t_notes) do
       local update = false
-
-      -- check each filter
       for k, v in pairs(transform.notes) do
-
         if type(v) == "bool" then
           log.trace("midi take transform: set bool:", i, note[k], "->", v)
           note[k] = v -- set bool value
@@ -764,42 +784,31 @@ midi.midi_take_filter_transform = function(take, opts)
           note[k] = v(note) -- apply function transform per note
           update = true
         end
-        -- if update do...
         if update then
+          -- i am not sure if this is useful to keep a counter
           notes_updated = notes_updated + 1
-          if not opts.dry_run then
-            -- don't delete existing if we are inserting notes.
-            -- if not opts.insert then
-            --   log.debug("put delete:", note.index)
-            --   reaper.MIDI_DeleteNote(take, note.index)
-            -- end
-            -- midi.insert_single_note(take, note)
-          end
         end
       end -- transform.notes -> k, v
     end -- t_notes -> i, note
+  end
 
-    if notes_updated > 0 and not opts.dry_run then
+  if (notes_updated > 0 or opts.insert) and not opts.dry_run then
+    if not opts.insert then
       midi.delete_notes(take, t_notes)
-      midi.insert_notes({
-        take = take,
-        notes = t_notes
-      })
     end
+    midi.insert_notes({
+      take = take,
+      notes = t_notes,
+    })
   end
 
-  if transform.cc then
-  end
-  if transform.syx then
-  end
+  ---------------------------------------------------------
+  -- HANDLE MIDI CC DATA
+  --
 
-  if insert.notes then
-    -- handle inserting notes
-  end
-  if insert.cc then
-  end
-  if insert.syx then
-  end
+  ---------------------------------------------------------
+  -- HANDLE MIDI SYX DATA
+  --
 
   return {
     notes = t_notes,
