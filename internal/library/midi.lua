@@ -653,7 +653,7 @@ midi.midi_take_filter_transform = function(take, opts)
   local cc_filter = filter.cc or {}
   local syx_filter = filter.syx or {}
 
-  log.debug(format.block(opts))
+  log.user(format.block(opts), "*********")
 
   -- NOTE: Hmmm, by doing type = { notes|cc|syx }, it allows me to do removal
   -- and insertion of differnt types at once.
@@ -702,9 +702,14 @@ midi.midi_take_filter_transform = function(take, opts)
       -- end
     end
   else
-    -- if insertion notes are passed, then these are the ones we are operating
-    -- on
-    t_notes = opts.insert
+    -- NOTE: Pass notes for insertion.
+    -- It is important here that I have a unified way for setting up midi data.
+    --
+    -- this means that an item hass been passed and I want to insert notes.
+    -- This api is a bit unclear but i have to look at this later.
+    log.user("did we get here?")
+    t_notes = opts.insert.midi_data.notes
+
   end
 
   ---------------------------------------------------------
@@ -803,6 +808,7 @@ midi.midi_take_filter_transform = function(take, opts)
     if not opts.insert then
       midi.delete_notes(take, t_notes)
     end
+    log.user("just before inserting notes")
     midi.insert_notes({
       take = take,
       notes = t_notes,
@@ -878,7 +884,7 @@ end
 midi.shift_insert_notes = function(take, item_data, shift_amount, dry_run)
   midi.midi_take_filter_transform(take, {
     dry_run = dry_run,
-    insert = item_data,
+    insert = item_data, -- do i need to pass midi data, or can I check inside midi transform?
     transform = {
       notes = { pitch = shift_amount },
     },

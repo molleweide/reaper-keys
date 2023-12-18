@@ -220,7 +220,8 @@ ypc.put = function(meta, opts)
   end
   if sxu.trackObjHasOption(np.group, "m") then
     log.debug("ypc put: drumkit")
-    r.node_takes_do(np.group, midi.shift_pitches_above_including, np.lanes.start, pd.lanes.range)
+    -- why do I need to add 1 here?
+    r.node_takes_do(np.group, midi.shift_pitches_above_including, np.lanes.start + 1, pd.lanes.range)
 
     -- `pd` is the data node version of an item. this means that I could actually just send the pd
     -- table, so that these calls get a little tighter.
@@ -251,7 +252,7 @@ ypc.cut = function(meta, opts)
     -- so instead i might pass an opts table instead and use the libit filter_transform
     -- func instead.
     r.node_iter_items_and_xtake(target_tobj.group, function(item, take, take_is_midi)
-      midi.delete_notes_in_pitch_range(take, target_tobj.lanes.start, target_tobj.lanes._end)
+      midi.delete_notes_in_pitch_range(take, target_tobj.lanes.start + 1, target_tobj.lanes._end)
       midi.shift_pitches_above_including(take, target_tobj.lanes._end + 1, -target_tobj.lanes.range)
     end)
   elseif target_tobj.channel_splitter then

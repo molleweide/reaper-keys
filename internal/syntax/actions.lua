@@ -24,7 +24,7 @@ actions.apply_everything= function()
 end
 
 function actions.applyConfigs()
-  log.clear()
+  -- log.clear()
 
   local tracks_list = sx_tracks.get_list_of_track_objects()
   -- move this as an opt into `get_list_of_track_objects`
@@ -46,15 +46,15 @@ function actions.applyConfigs()
     --
 
     local routing = sx_configs.classes[sx_obj.class].routing -- (sx_obj)
-    log.user(sx_obj.name, type(routing), routing)
+    -- log.user(sx_obj.name, type(routing), routing)
     if routing then
       if type(routing) == "function" then
         routing(sx_obj)
       elseif type(routing) == "table" then
         for routing_opt_key, routing_func in pairs(routing) do
-          log.user(routing_opt_key, routing_func)
+          -- log.user(routing_opt_key, routing_func)
           if sxu.trackObjHasOption(sx_obj, routing_opt_key) then
-            log.user("apply lanes for:", sx_obj.name)
+            -- log.user("apply lanes for:", sx_obj.name)
             routing_func(sx_obj)
           end
         end
