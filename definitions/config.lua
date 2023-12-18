@@ -41,8 +41,9 @@ return {
 	drum_lanes_low_note_start = 24,
 	syntax = {
 		samplers = {
-			load_random_sample_if_empy = true,
+			load_random_sample_if_empty = true,
 			always_reload_random_sample = false,
+			testing = true,
 		},
 	},
 }

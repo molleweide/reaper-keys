@@ -25,8 +25,6 @@ return {
       local sx_tracks = require("syntax.tracks")
       local trr = require("library.routing")
 
-      log.user("!!!!")
-
       local opt_m_children = {}
       for _, mcab_obj in pairs(gobj.children) do
         if sxu.strHasOneOfChars(mcab_obj.class, "MC") and sxu.trackObjHasOption(gobj, "m") then

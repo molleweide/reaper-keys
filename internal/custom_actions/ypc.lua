@@ -214,10 +214,30 @@ ypc.put = function(meta, opts)
   local t_foc_tr, vtt = libtr.get_focused_track_objects()
   local np = t_foc_tr[1] -- node at position / first selected track in main
   local insertion_idx = np.trackIndex + 1 -- put below.. not above.
+
+  -- put new track
   if not opts.dry_run then
     reaper.InsertTrackAtIndex(insertion_idx, false) -- should I add + 1 here?
-    r.set_single_track_state_chunk(insertion_idx, pd.state_chunk)
+
+    -- TODO: is this necessary?
+    -- r.set_single_track_state_chunk(insertion_idx, pd.state_chunk)
+
+    function recall_track(idx)
+      local tr = reaper.GetTrack(0, idx)
+      local _, str = reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", pd.track_name_raw, 1)
+
+      -- TODO: why isn't the correct color applied?
+
+      -- TODO: unset master send
+
+
+    end
+
+    recall_track(insertion_idx)
   end
+
+  -- put data
+
   if sxu.trackObjHasOption(np.group, "m") then
     log.debug("ypc put: drumkit")
     -- why do I need to add 1 here?

@@ -1,5 +1,8 @@
-local samplerNoteBass = require("definitions.config").drum_lanes_low_note_start -- 48
+local cfg = require("definitions.config")
+local samplerNoteBass = cfg.drum_lanes_low_note_start -- 48
 local log = require("utils.log")
+local format = require("utils.format")
+
 
 ---- mv >>> util file
 function midiNumToNormalized(num)
@@ -86,7 +89,6 @@ return {
           end, -- note range end
         },
         named_config_params = function(state, t_rsfx)
-          local cfg = require("definitions.config")
           local constants = require("constants.constants")
           local rs5k = require("plugins.rs5k")
           log.debug(
@@ -100,10 +102,11 @@ return {
           )
 
           local _, buf = rs5k.hasSampleLoaded(state.trk_obj, state.new_fx_chain_idx)
-          -- log.user(state.trk_obj.name .. ":", retval, buf, type(buf), buf == "", buf:find(wav_ext_pattern))
+          -- log.user(">>>>>>", state.trk_obj.name .. ":", retval, buf," | ", type(buf), buf == "", buf:find(constants.patterns.extension_wav))
+
           if (
               cfg.syntax.samplers.load_random_sample_if_empty
-                  and buf:find(constants.patterns.extension_wav) == nil
+                  and buf == ""--:find(constants.patterns.extension_wav) == nil
               ) or cfg.syntax.samplers.always_reload_random_sample
           then
             rs5k.updateSample(state.trk_obj, state.new_fx_chain_idx)
