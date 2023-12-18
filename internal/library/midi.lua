@@ -518,17 +518,19 @@ midi.insert_notes = function(opts)
 
   for _, t_note in ipairs(opts.notes) do
     if not t_note.silent then
-      local ret = reaper.MIDI_InsertNote(
-        take,
-        note_defaults.selected,
-        note_defaults.muted,
-        reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_start),
-        reaper.MIDI_GetPPQPosFromProjTime(take, t_note.time_pos_end),
-        note_defaults.chan,
-        t_note.pitch,
-        note_defaults.velocity,
-        note_defaults.noSortIn
-      )
+      midi.insert_single_note(take, t_note, false)
+
+      -- local ret = reaper.MIDI_InsertNote(
+      --   take,
+      --   note_defaults.selected,
+      --   note_defaults.muted,
+      --   reaper.MIDI_GetPPQPosFromProjTime(take, t_note.ppq_s),
+      --   reaper.MIDI_GetPPQPosFromProjTime(take, t_note.ppq_e),
+      --   note_defaults.chan,
+      --   t_note.pitch,
+      --   note_defaults.velocity,
+      --   note_defaults.noSortIn
+      -- )
     end
   end
   if opts.sort ~= false then
@@ -586,6 +588,11 @@ midi.select_notes = function()
   --
 end
 
+--- Deleting notes needs to be done from the end of the array to
+--- preserve indices of existing notes.
+---
+---@param take userdata
+---@param t_notes table
 midi.delete_notes = function(take, t_notes)
   for i = #t_notes, 1, -1 do
     reaper.MIDI_DeleteNote(take, t_notes[i].index)

@@ -14,6 +14,15 @@ local trr = require("library.routing")
 
 local actions = {}
 
+-- TODO: split up each section into a util function for running a specific
+-- set of configs so that I can control exactly what should be updated
+-- after eg. YPC
+
+actions.apply_everything= function()
+  actions.apply_node_info()
+  actions.apply_node_routing()
+end
+
 function actions.applyConfigs()
   log.clear()
 
