@@ -709,7 +709,6 @@ midi.midi_take_filter_transform = function(take, opts)
     -- This api is a bit unclear but i have to look at this later.
     log.user("did we get here?")
     t_notes = opts.insert.midi_data.notes
-
   end
 
   ---------------------------------------------------------
@@ -732,6 +731,8 @@ midi.midi_take_filter_transform = function(take, opts)
           return note[k] == v
         end)
       elseif type(v) == "table" then
+        -- FIX: since there can be multiple ranges, i need to collect the filtered
+        -- values and then assign them to t_notes at the end
         for _, subv in pairs(v) do
           if type(subv) == "number" then
             t_notes = tbl.filter(t_notes, function(note)
@@ -835,6 +836,14 @@ end
 ---------
 
 midi.delete_notes_in_pitch_range = function(take, range_start, range_end, dry_run)
+  local tr = reaper.GetMediaItemTake_Track(take)
+  local index = reaper.GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER") - 1
+
+  local n1 = reaper.GetTrackMIDINoteName(index, range_start, 0)
+  -- reaper.GetTrackMIDINoteNameEx( proj, track, pitch, chan )
+
+  log.user(string.format("delete_notes_in_pitch_range: [%s (%s), %s]", range_start, n1, range_end))
+
   return midi.midi_take_filter_transform(take, {
     dry_run = not dry_run and false or true,
     remove = {
@@ -868,6 +877,13 @@ midi.shift_channels_above = function(take, chan_thresh, shift_amount, dry_run)
 end
 
 midi.shift_pitches_above_including = function(take, pitch_thresh, shift_amount, dry_run)
+
+  local tr = reaper.GetMediaItemTake_Track(take)
+  local index = reaper.GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER") - 1
+  local n1 = reaper.GetTrackMIDINoteName(index, pitch_thresh, 0)
+
+  log.user(string.format("shift_pitches_above_including: %s (%s)", pitch_thresh, n1))
+
   require("library.midi").midi_take_filter_transform(take, {
     dry_run = dry_run,
     filter = {

@@ -229,8 +229,6 @@ ypc.put = function(meta, opts)
       -- TODO: why isn't the correct color applied?
 
       -- TODO: unset master send
-
-
     end
 
     recall_track(insertion_idx)
@@ -272,8 +270,8 @@ ypc.cut = function(meta, opts)
     -- so instead i might pass an opts table instead and use the libit filter_transform
     -- func instead.
     r.node_iter_items_and_xtake(target_tobj.group, function(item, take, take_is_midi)
-      midi.delete_notes_in_pitch_range(take, target_tobj.lanes.start + 1, target_tobj.lanes._end)
-      midi.shift_pitches_above_including(take, target_tobj.lanes._end + 1, -target_tobj.lanes.range)
+      midi.delete_notes_in_pitch_range(take, target_tobj.lanes.start + 1, target_tobj.lanes._end + 1)
+      midi.shift_pitches_above_including(take, target_tobj.lanes._end + 2, -target_tobj.lanes.range)
     end)
   elseif target_tobj.channel_splitter then
     r.node_iter_items_and_xtake(target_tobj.channel_splitter, function(item, take, take_is_midi)

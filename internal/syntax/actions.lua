@@ -26,8 +26,6 @@ end
 function actions.applyConfigs()
   -- log.clear()
 
-  log.user("####", rk_config.syntax.samplers.load_random_sample_if_empy)
-
   local tracks_list = sx_tracks.get_list_of_track_objects()
   -- move this as an opt into `get_list_of_track_objects`
   -- return vtt as optional.
