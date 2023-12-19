@@ -28,6 +28,9 @@ function deleteByCategory(tr, cat)
   end
 end
 
+-- FIX: the name is ambigous since one can configure the
+-- function to not remove ALL..
+-- It should be `node_remove_all_routes_by_category`
 function rlib_remove.removeAllRoutesTrack(rp)
   for i = 1, #rp.src_guids do
     local tr, tr_idx = ru.getTrackByGUID(rp.src_guids[i].guid)

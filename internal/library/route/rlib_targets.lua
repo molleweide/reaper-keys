@@ -6,6 +6,10 @@ local table_util = require("utils.table")
 
 local targets = {}
 
+-- NOTE: checking order is first for track name and then track guids, and then
+-- track indices.
+-- But why isnt track indices checked for if type(new_tracks_data) == "string"??
+
 --    key = src_guid/dst_guids
 --    new_track_data = (tr / tr_guid / tr_name / table)
 function targets.setRouteTargetGuids(rp, key, new_tracks_data)
@@ -16,12 +20,14 @@ function targets.setRouteTargetGuids(rp, key, new_tracks_data)
 	if type(new_tracks_data) == "string" then -- NOT TABLE ::::::::::::::
 		-- single name str
 		if r.getMatchedTrackGUIDs(new_tracks_data) then
+			-- NOTE: First I try to find tracks by
+
 			local match_t = r.getMatchedTrackGUIDs(new_tracks_data)
 			if match_t ~= false then
 				tr_guids = table_util.tableConcat(tr_guids, match_t)
 			end
 
-		-- single guid str
+		-- single guid str | why is this checked after track name?
 		elseif ru.getTrackByGUID(new_tracks_data) ~= false then
 			retval = true
 			local tr, tr_idx = ru.getTrackByGUID(new_tracks_data)
@@ -29,6 +35,9 @@ function targets.setRouteTargetGuids(rp, key, new_tracks_data)
 			tr_guids = { { name = current_name, guid = new_tracks_data } }
 		else
 			retval = false
+
+			-- FIX: prompt something went wrong...
+
 			log.user("new tracks data NOT table but did not pass as STRING/GUID")
 		end
 	elseif type(new_tracks_data) == "table" then -----------------------
@@ -47,6 +56,7 @@ function targets.setRouteTargetGuids(rp, key, new_tracks_data)
 				local _, current_name = reaper.GetTrackName(tr)
 				tr_guids[i] = { name = current_name, guid = new_tracks_data[i] }
 
+			-- NOTE: checking for track indices
 			-- table number string
 			-- should i really use this one??
 			elseif tonumber(new_tracks_data[i]) ~= nil then

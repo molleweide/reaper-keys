@@ -41,6 +41,7 @@ end
 
 function rlib.handleRemoval(rp)
   if #rp.src_guids == 0 then
+
     log.user('REMOVAL ERROR > NO SOURCE TARGETS SPECIFIED')
 
   elseif #rp.dst_guids == 0 then
@@ -49,6 +50,8 @@ function rlib.handleRemoval(rp)
     rlib_remove.removeAllRoutesTrack(rp) -- 2 == both send/rec
 
   else
+    -- NOTE: This means that we want to remove a specific set of routes.
+    --
     -- logHeader('src rm > connections btw list src/dst')
     -- logConfirmList(rp)
     rlib.targetLoop(rp)

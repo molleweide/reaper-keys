@@ -11,6 +11,7 @@ local rlib_targets = require("library.route.rlib_targets")
 
 local rlib_string = {}
 
+-- TODO: this should go into the config file
 local USER_INPUT_TARGETS_DIV = "|"
 
 function removeEnclosureFromString(str, encl_type)
@@ -130,34 +131,52 @@ function handleSecondaryParams(rp, str, key, primary)
 end
 
 function rlib_string.extractParamsFromString(rp, str)
+	-- find first literal hyphen
 	if str:find("%-") then
 		rp.remove_routes = true
 		rp.remove_both = true
 	end
+
+	-- find any # literal
 	if str:find("%#") then
 		rp.category = 0
 		rp.remove_both = false
 	end
+
+	-- find any dollar literal
 	if str:find("%$") then
-		rp.category = -1
+		rp.category = -1 -- ???
 		rp.remove_both = false
 	end
 
 	-- HANDLE PARENTHESIS
+	--
+	-- TODO: throw error if trying to pass more than two ()s
+
 	local ret, src_tr_data, dst_tr_data, str = extractParenthesisTargets(str)
 
 	-- log.user(ret, src_tr_data, dst_tr_data)
+
+	-- NOTE: if the first parenthisis of two contains sub info about sources to pull
+	-- from
 
 	if src_tr_data ~= nil then -- SRC PROVIDED
 		local src_tr_split = str_util.getStringSplitPattern(src_tr_data, USER_INPUT_TARGETS_DIV)
 		local ret, rp = rlib_targets.setRouteTargetGuids(rp, "src_guids", src_tr_split)
 	elseif r.isSel() then -- FALLBACK SRC SEL
+
+    -- NOTE: if selection
+
 		-- log.user('only one paren')
 		-- rp.src_from_selection = true
 		-- if rp.category == 0 then
+
+		-- TODO: get this from utils/reaper
 		rp["src_guids"] = ru.getSelectedTracksGUIDs()
 		-- end
 	end
+
+	-- NOTE: If only one () or second ()
 
 	if dst_tr_data ~= nil then
 		local dst_tr_split = str_util.getStringSplitPattern(dst_tr_data, USER_INPUT_TARGETS_DIV)
@@ -173,11 +192,15 @@ function rlib_string.extractParamsFromString(rp, str)
 
 	-- A. HANDLE PRIMARY COMMANDS
 
+  -- what is b ??
+  -- TODO: again move the separator into config file
 	str, bSrc, bDst = getEnclosedChannelData(str, "[]", "|", 0, 6)
 
 	str, cSrc, cDst = getEnclosedChannelData(str, "{}", "|", 0, 16)
 
 	-- B. HANDLE SECONDARY PARAMS
+
+	-- NOTE: Here I think I am just forcing `a` and `d` as defaults..
 
 	rp, str = handleSecondaryParams(rp, str, "a", bSrc)
 
@@ -185,6 +208,7 @@ function rlib_string.extractParamsFromString(rp, str)
 
 	local midi_flags
 	if cSrc ~= nil and cDst ~= nil then
+	  -- TODO: i need to learn this well
 		midi_flags = midi_util.create_send_flags(cSrc, cDst)
 	end
 	-- log.user(cSrc, cDst, midi_flags)

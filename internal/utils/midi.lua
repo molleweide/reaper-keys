@@ -1,5 +1,7 @@
 local midi = {}
 
+-- TODO: ask chat gpt about how this works??
+
 --  GET FIRST 5 BITS
 function midi.get_send_flags_src(flags) return flags & ((1 << 5)- 1) end
 
