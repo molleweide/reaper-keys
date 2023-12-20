@@ -122,6 +122,8 @@ pickers.all_tracks = function(meta, opts)
       return true
     end,
     sort_comp = "name",
+
+    -- TODO: add zone/group name before each track name
     entry_maker = "name",
   })
 end

@@ -565,7 +565,15 @@ end
 
 -- TODO: create new item for selected mark/region
 --
+-- TODO: this function when used with fzf should always prefix tracks with
+-- their respective group node names
 --
+--- FIX: Should find item if it starts
+---
+---@param meta table
+---@param track_obj table
+---@param new_item_start number
+---@param new_item_end number
 midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new_item_start, new_item_end)
   local sx = require("syntax.tracks")
   local sx_utils = require("syntax.utils")
@@ -586,14 +594,14 @@ midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new
 
   if sx_utils.trackObjHasOption(g_obj, "m") then -- drum lanes
     target_tr = g_obj.tr
-    items_found = containers.get_track_items_in_range_time(g_obj.tr, check_start_pos, check_end_pos)
+    items_found = containers.get_track_items_in_range_time_w_data(g_obj.tr, check_start_pos, check_end_pos)
     note_row = sx_utils.get_drum_lane_indices(g_obj, track_obj)
 
     -- TODO: midi channelsplitters -> set channel splitter master and set active midi channel in ME
     --
     -- elseif track_obj.level == 4 then -- channelsplit child
     --   target_tr = "track obj channel split parrent"
-    --   items_found = containers.get_track_items_in_range_time(
+    --   items_found = containers.get_track_items_in_range_time_w_data(
     --     "track obj channel split parrent",
     --     check_start_pos,
     --     check_end_pos
@@ -601,7 +609,7 @@ midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new
   else -- regular
     target_tr = track_obj.tr
     items_found =
-    containers.get_track_items_in_range_time(track_obj.tr, check_start_pos, check_end_pos)
+    containers.get_track_items_in_range_time_w_data(track_obj.tr, check_start_pos, check_end_pos)
   end
 
   containers.unselect_items()

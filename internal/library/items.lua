@@ -254,8 +254,10 @@ lib_items.get_track_items_in_range_time_w_data = function(track, range_start, ra
   local items_found = {}
   for i = 0, item_cnt - 1 do
     local item_ref = reaper.GetTrackMediaItem(track, i)
-    local item_info = lib_items.get_item_info(item)
-    if item_info.start >= range_start and item_info._end <= range_end then
+    local item_info = lib_items.get_item_info(item_ref)
+
+    -- NOTE: the commented out part ._end makes func ignore ites that span wider..
+    if item_info.start >= range_start then -- and item_info._end <= range_end then
       table.insert(items_found, {
         ref = item_ref,
         info = item_info,
