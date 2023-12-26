@@ -182,6 +182,7 @@ return {
           "+midi",
           {
             ["F"] = "Midi_ChangeActiveSelection",
+            ["f"] = "MIDI_EditMidiAtCurPosForTrack",
             ["r"] = "Midi_EditMidiForRegionsMarksAndSelectTrack",
 
             ["g"] = "SetMidiGridDivision",

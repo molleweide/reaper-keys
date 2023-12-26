@@ -23,7 +23,9 @@ actions.apply_everything= function()
   actions.apply_node_routing()
 end
 
-function actions.applyConfigs()
+-- TODO: pass single node and only apply config to it.
+
+function actions.applyConfigs(sx_node_single)
   -- log.clear()
 
   local tracks_list = sx_tracks.get_list_of_track_objects()
@@ -31,9 +33,7 @@ function actions.applyConfigs()
   -- return vtt as optional.
   local vtt = sx_tracks.getVerifiedTree(tracks_list)
 
-  --
-  -- APPLY BASIC DEFAULTS
-  --
+  -- NOTE: apply configs to tracks list if NOT a specific node is passed
 
   for _, sx_obj in pairs(tracks_list) do
     --

@@ -569,6 +569,8 @@ end
 -- their respective group node names
 --
 --- FIX: Should find item if it starts
+--
+--- NOTE: why am i passing `meta` as parm?
 ---
 ---@param meta table
 ---@param track_obj table

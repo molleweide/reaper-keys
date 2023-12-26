@@ -132,7 +132,7 @@ tracks.get_focused_track_objects = function()
     end
   end
 
-  return focused_track_objects, vtt
+  return focused_track_objects, vtt, context
 end
 
 tracks.get_track_info_params = function(track)
@@ -259,7 +259,6 @@ tracks.get_track_info_params = function(track)
   }
   return t_track_info
 end
-
 
 --
 --

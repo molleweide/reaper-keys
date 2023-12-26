@@ -843,6 +843,22 @@ return {
     },
   },
 
+  MIDI_EditMidiAtCurPosForTrack = function()
+    local log = require("utils.log")
+    local format = require("utils.format")
+    local lib_tr = require("library.tracks")
+
+    -- this function could be renamed to `get_rk_context()` and return all possible
+    -- useful information.
+    local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+
+    if context == "main" then
+      local focus_track_obj = focused_track_objects[1]
+      log.user(">>>", focus_track_obj)
+      require("library.midi_editor").createEditMidiItemAtPositionForTrack(_, focus_track_obj)
+    end
+  end,
+
   Midi_EditMidiForRegionsMarksAndSelectTrack = {
     pickers.marks_and_regions,
     opts = {
@@ -1003,7 +1019,7 @@ return {
     end,
   },
 
-  CmdCustomYankTrack = { require("custom_actions.ypc").yank, opts = { dry_run = false, } },
+  CmdCustomYankTrack = { require("custom_actions.ypc").yank, opts = { dry_run = false } },
   CmdCustomPutTrack = { require("custom_actions.ypc").put, opts = { dry_run = false } },
   CmdCustomCutTrack = { require("custom_actions.ypc").cut, opts = { dry_run = false } },
   CmdCustomInsertTrackAbove = require("custom_actions.ypc").insertTrackAbove,

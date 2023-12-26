@@ -33,6 +33,10 @@ local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
 --  the param_name is not necessarily the input format ?!
 --
 --  -------------------------------------------------------------
+--  REMOVE ROUTE AUDIO/MIDI WITH `-`
+--
+--
+--  -------------------------------------------------------------
 --  DISABLING ROUTES
 --
 --  Prepend symbol with `!` to disable the following route.
@@ -184,7 +188,6 @@ return {
 
     -- NOTE: `amd` parameters have been implemented - the ones below commented
     -- out have not yet been impl.
-
 
 		-- ////////////////////////////////////////////////////////////////////
 		-- WHICH TYPE
