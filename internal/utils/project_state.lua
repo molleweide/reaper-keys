@@ -1,6 +1,10 @@
 local log = require("utils.log")
 local serpent = require("serpent")
 
+--
+-- REAPER PROJECT STATE API
+--
+
 local project_state = {}
 
 ---

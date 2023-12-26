@@ -4,7 +4,6 @@ local binding_list = require('gui.binding_list.controller')
 local executeCommand = require('command.executor')
 local utils = require('command.utils')
 local format = require('utils.format')
-local saved = require('saved')
 local definitions = require('utils.definitions')
 local state_machine_constants = require('state_machine.constants')
 local action_sequences = require('command.action_sequences')
@@ -51,7 +50,7 @@ local meta_commands = {
     if macro_commands then
       executeMacroCommands(state, command, macro_commands, repetitions)
       if state['macro_recording'] then
-        saved.append('macros', state['macro_register'], command)
+        reaper_state.append('macros', state['macro_register'], command)
       end
     end
 
