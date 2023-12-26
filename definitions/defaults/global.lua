@@ -529,13 +529,15 @@ return {
                 -- >>> later, when I know more about treesitter, then I can
                 -- do all of the parsing in lua instead...
                 --
-                ["t"] = "SetLogLevelTrack",
-                -- ["d"] = "SetLogLevelDebug",
-                -- ["i"] = "SetLogLevelInfo",
-                -- ["w"] = "SetLogLevelWarn",
+                ["t"] = "SetLogLevelTrace",
+                ["d"] = "SetLogLevelDebug",
+                ["i"] = "SetLogLevelInfo",
+                ["w"] = "SetLogLevelWarn",
                 ["u"] = "SetLogLevelUser",
-                -- ["e"] = "SetLogLevelError",
-                -- ["f"] = "SetLogLevelFatal",
+                ["e"] = "SetLogLevelError",
+                ["f"] = "SetLogLevelFatal",
+                ["x"] = "CloseReaConsole",
+                ["C"] = "ClearConsole",
               },
             },
           },

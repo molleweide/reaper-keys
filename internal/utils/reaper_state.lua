@@ -1,5 +1,5 @@
-local log = require("utils.log")
-local format = require("utils.format")
+-- local log = require("utils.log")
+-- local format = require("utils.format")
 local serpent = require("serpent")
 
 -- todo: merge `saved.lua`
