@@ -149,6 +149,8 @@ return {
       {
         ["o"] = "EnterTrackBelow",
         ["O"] = "EnterTrackAbove",
+        -- FIX: implement these!!
+        -- This should work with count prefix just as the o/O commands above.
         ["c"] = "CmdCustomInsertTrackBelow",
         ["C"] = "CmdCustomInsertTrackAbove",
       },

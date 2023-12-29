@@ -51,6 +51,26 @@
 return {
 	timeline_selector = {
 		["s"] = "SelectedNotes",
+		["i"] = {
+			"+inner",
+			{
+				["n"] = "NoteChunkHorz", -- select all notes at cursor that are X distance apart in time
+				-- [""] = "xxx", -- 16th notes apart.
+				-- [""] = "xxx" -- eight notes
+				-- [""] = "xxx" -- beat
+				-- [""] = "xxx"
+				-- [""] = "xxx"
+				["c"] = "NoteChunkVert", --
+				-- select notes in
+				-- octave
+				-- two octaves up
+				-- N notes up / down
+				-- N notes up AND down.
+				-- Eg. select 16th notes within current octave.
+				--
+				-- Select notes above pitch
+			},
+		},
 	},
 	timeline_operator = {
 		["d"] = "CutNotes", -- TODO: make custom
@@ -80,6 +100,7 @@ return {
 		["e"] = "EventSelectionEnd",
 		-- [""] = "PrevItemStart", -- TODO:
 		-- [""] = "NextItemStart", -- TODO:
+		-- [""] = "Prev/Next Vertical", -- chord...
 	},
 	command = {
 		["Q"] = {
@@ -132,6 +153,11 @@ return {
 			"+midi_go",
 			{
 				["g"] = "TopNote",
+				["s"] = "MoveCurrentNoteRowToClosestSeleced",
+				-- if you come from the right, then it should jump to the end of the
+				-- last selected note, and to the start of first selected if coming
+				-- from the left.
+				["S"] = "MoveCursorToSelection",
 				-- ["h"] = "LeftMostNote",
 				-- ["j"] = "TopNote",
 				-- ["k"] = "BottomNote",
@@ -180,11 +206,19 @@ return {
 		["J"] = "PitchDownOctave",
 
 		-- NOTE: Need commands AND oper/motion - maybe `fit` does it.
+		--
 		-- [""] = "ExtendNotesToNextClosestGrid",
 		-- [""] = "ExtendNotesToNextClosestBeat",
 		-- [""] = "ExtendNotesToNextClosestMeasure",
 		-- [""] = "MakeNotesLegato",
 		-- [""] = "ForceNotesToLength_UI", -- use fzf window -> specify custom length or select predefined.
+
+    -- NOTE: Say that I select a note, then i want to be able to extend my selection
+    -- in various directions, up down, left and right.
+    -- Maybe, there should be a dedicated mode for visually selecting notes?
+    --
+    -- [""] = "ExtendNoteSelectionToNoteRowAbove",
+    -- [""] = "...NoteRowAbove"
 
 		["<C-b>"] = "PitchUpOctave",
 		["<C-f>"] = "PitchDownOctave",

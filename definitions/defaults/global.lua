@@ -17,6 +17,7 @@ return {
 		["<M-l>"] = "Right10Pix",
 		["<M-H>"] = "Left40Pix",
 		["<M-L>"] = "Right40Pix",
+		-- how do i change the grid??
 		["h"] = "LeftGridDivision",
 		["l"] = "RightGridDivision",
 		["H"] = "PrevMeasure",
@@ -182,7 +183,7 @@ return {
 				["M"] = {
 					"+Mixing",
 					-- NOTE: create a UI window with RK gui that shows the value for each
-					-- mix parameter and a legend with all key mappings
+					-- mix parameter and a legend with each
 					{ ["M"] = "EnterMixMode" },
 				},
 				["m"] = {
@@ -244,8 +245,8 @@ return {
 				["S"] = {
 					"+segments",
 					{
+					  -- TEST: make sure that all these can be used with count prefix.
 						["T"] = "RepeatInsertTimeSelection",
-
 						-- TODO: these three
 						["R"] = "Items_DuplicateCountTimes",
 						["r"] = "Items_DuplicateCountTimesAndGlue",

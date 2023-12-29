@@ -4,6 +4,7 @@ local media_explorer = require("library.media_explorer")
 local midi2vox = require("library.vox_to_midi")
 local dev = require("utils.dev")
 -- this one should be included in the `custom_actions` namespace
+local midi = require("library.midi")
 local midi_patterns = require("library.midi_patterns")
 local pickers = require("pickers.pickers")
 
@@ -191,8 +192,11 @@ return {
 		"SelectNearestNote",
 		"FitNotes",
 	},
-	InsertNoteBlock = custom.insertMidiNoteChunk,
-	InsertNoteBlockCommand = custom.insertMidiNoteChunk,
+
+	-- NOTE: should these be moved under `actions/`
+	InsertNoteBlock = midi.insertMidiNoteChunk,
+	InsertNoteBlockCommand = midi.insertMidiNoteChunk,
+
 	InsertMidiBlockPicker = custom.midiChordPicker,
 	InsertMidiBlockPickerOperator = custom.midiChordPicker,
 
@@ -314,7 +318,7 @@ return {
 	Next4Beats = { "NextBeat", repetitions = 4, prefixRepetitionCount = true },
 	Next4Measures = { "NextMeasure", repetitions = 4, prefixRepetitionCount = true },
 	Next5Track = { "NextTrack", repetitions = 5, prefixRepetitionCount = true },
-	NextBeat = 40841,
+	NextBeat = 40841, -- ID cant be found when searching in reaper's action palette ???
 	NextBigItemEnd = { custom.move.nextBigItemEnd, prefixRepetitionCount = true },
 	NextBigItemStart = { custom.move.nextBigItemStart, prefixRepetitionCount = true },
 	NextEnvelope = { 41864, prefixRepetitionCount = true },

@@ -6,7 +6,8 @@ local config = require('definitions.config')
 local state = {}
 
 function state.setModeNormal()
-  os.execute(config.run_ext_cmd_on_enter_mode.normal)
+  log.user("???")
+  -- os.execute(config.run_ext_cmd_on_enter_mode.normal)
   state_interface.setMode('normal')
 end
 
@@ -67,7 +68,7 @@ function state.setModeVirtualKeyboard()
   -- https://unix.stackexchange.com/questions/8101/how-to-insert-the-result-of-a-command-into-the-text-in-vim/8109#8109
   -- how do i get the output from a shell comm
 
-  os.execute(config.run_ext_cmd_on_enter_mode.vkb)
+  -- os.execute(config.run_ext_cmd_on_enter_mode.vkb)
   state_interface.setMode('vkb')
 end
 
