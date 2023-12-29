@@ -8,8 +8,10 @@ local lib_items = {}
 -- unit.
 
 --
--- ITEMS / TAKES -> RENAMETO: containers?
+-- ITEMS / TAKES
 --
+
+-- NOTE: import this file as `libit` to avoid name collisions.
 
 local test_new_struct = {
   items = {},

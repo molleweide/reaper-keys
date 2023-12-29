@@ -13,16 +13,51 @@
 -- set opacity for secondary items
 -- set custom color palette
 
+-- TODO: INSERT PATTERN FROM STRING
+-- 1. use fzf
+-- 2. results list should represent patterns from state history
+-- 3. so that I can easilly search and select already created patterns.
+-- 4. <CR> -> use selected pattern
+-- 5. <C-r> -> set text input element to selection for further editing.
+-- 6. allow for further editing
+-- 7. ...
+
+-- TODO: MIDI STEP MODE NOTES
+--
+-- ~ use [single|chord|pattern]
+-- ~ restrict pitches to closed set [0, 127]
+-- ~ use eg. shift keys for ascending/descending notes, so that I don't have
+--     to hit a char to toggle direction everytime. this might be slow over time.
+-- ~ keys to incr/decr step size.
+-- ~ fuzzy finder -> select current step_size.
+-- ~ put the most regularly used step_sizes/note lengths as single key switches.
+-- ~ Maybe -> use left hand for notes, and right hand for changing step_size,
+--     and shift modifier keys to switch direction.
+-- ~ use ALT key for: ???
+--     move previous inserted note(s) up down chromatically, so that I can error correct.
+--       >>> Always make the last inserted note "selected" so that it becomes easy
+--           to just shift selection up/down.
+-- ~ ALT-(interval key/pitch key) >> throw up chord picker for each note.
+--        Eg. `alt-(minor3rd)` -> opens a picker and inserts chord at minor
+--        third up/down from prev position
+-- ~ use modifier keys + key to select specific length for "pause and move"
+-- ~ octave-operator: key preceding intreval/pitch hits that makes next insertion
+--        insert at ( interval + octave )
+--
+-- FIX: set octave -> currently, octave and direction are set simultaneously
+-- which can cause wierd behavior if you set octave down but keep direction
+-- up. MAYBE the direction should be changed if octae direction is being set?
+
 return {
 	timeline_selector = {
-		["s"] = "SelectedNotes", -- ??
+		["s"] = "SelectedNotes",
 	},
 	timeline_operator = {
-		["d"] = "CutNotes",
-		["y"] = "CopyNotes",
+		["d"] = "CutNotes", -- TODO: make custom
+		["y"] = "CopyNotes", -- TODO: make custom
 		["c"] = "FitNotes",
 		["a"] = "InsertNote",
-		["A"] = "InsertNoteBlock", -- testing
+		["A"] = "InsertNoteBlock", -- Use this instead of build in
 		["Q"] = {
 			"+pattern/pickers",
 			{
@@ -38,11 +73,13 @@ return {
 		["h"] = "LeftMidiGridDivision",
 		["("] = "MidiTimeSelectionStart",
 		[")"] = "MidiTimeSelectionEnd",
-		["w"] = "NextNoteStart",
-		-- ["???"] = "Next",
+		["w"] = "NextNoteStart", -- horizontal, ie. iterates pitch indices.
+		["W"] = "NextNoteStartHorizontal", -- TODO:
 		["b"] = "PrevNoteStart",
-		["B"] = "PrevNoteSamePitchStart",
+		["B"] = "PrevNoteSamePitchStart", -- TODO: replace this with prev note horizontal
 		["e"] = "EventSelectionEnd",
+		-- [""] = "PrevItemStart", -- TODO:
+		-- [""] = "NextItemStart", -- TODO:
 	},
 	command = {
 		["Q"] = {
@@ -51,15 +88,6 @@ return {
 				["i"] = "InsertNoteBlockCommand", -- FIX: doesn't work...... bc the func is using meta or opts now..
 				["I"] = "InsertMidiBlockPicker",
 				["W"] = "NoteRowPattern",
-
-				-- TODO: insert pattern from string
-				-- 1. use fzf
-				-- 2. results list should represent patterns from state history
-				-- 3. so that I can easilly search and select already created patterns.
-				-- 4. <CR> -> use selected pattern
-				-- 5. <C-r> -> set text input element to selection for further editing.
-				-- 6. allow for further editing
-				-- 7. ...
 
 				["E"] = "MidiPattern_InsertFromString_at_cursor",
 				["e"] = "MidiPattern_InsertFromString_at_current_measure",
@@ -81,8 +109,8 @@ return {
 				-- pass opts via fzf gui input. so that I can.
 			},
 		},
-		["C"] = "InsertNoteBlockCommand",
-		["G"] = "InsertMidiBlockPicker",
+		["C"] = "InsertNoteBlockCommand", -- TODO: move this to a leader
+		["G"] = "InsertMidiBlockPicker", -- TODO: move to leader
 		--  [""] = "SelectChord",   -- test and see how midi note selections can be improved.
 		--  [""] = "SelectNotesFromScale",
 		--  [""] = "SelectNotes_NextVertical", -- use a threshold variabe to select evts that are close in time.
@@ -90,24 +118,74 @@ return {
 		--  [""] = "CycleChords", -- if not notes then select nearest chord or vertical selection
 		["n"] = "AddNextNoteToSelection",
 		["N"] = "AddPrevNoteToSelection",
+
+		-- TODO: Zoom mode, that senses if you're in ME/main.
+
+		["zp"] = "MidiZoomContent",
 		["+"] = "MidiZoomInHoriz",
 		["-"] = "MidiZoomOutHoriz",
-		-- ["gg"] = "TopNote",
-		-- ["G"] = "BottomNote",
-		["<C-+>"] = "MidiZoomInVert",
-		["<C-->"] = "MidiZoomOutVert",
-		["Z"] = "CloseWindow", -- TODO: rename to something more descriptive.
-		["p"] = "MidiPaste",
+		["<C-+>"] = "MidiZoomInVert", -- FIX: bigger increment steps.
+		["<C-->"] = "MidiZoomOutVert", -- FIX: bigger increment steps.
+
+		-- NOTE: should some of these be motions instead
+		["g"] = {
+			"+midi_go",
+			{
+				["g"] = "TopNote",
+				-- ["h"] = "LeftMostNote",
+				-- ["j"] = "TopNote",
+				-- ["k"] = "BottomNote",
+				-- ["l"] = "RightMostNote",
+				-- ["u"] = "TopLeftMostNote",
+				-- ["i"] = "TopRightMostNote",
+				-- ["m"] = "BottomLeftMostNote",
+				-- [","] = "BottomRightMostNote",
+			},
+		},
+		["G"] = "BottomNote",
+		["Z"] = {
+			"+me_window",
+			{
+				["Z"] = "CloseWindow",
+				["E"] = "JumpToMain",
+			},
+		},
+
+		["p"] = "MidiPaste", -- TODO: make custom
 		["P"] = "NoteRowPattern",
 		["S"] = "UnselectAllEvents",
 		["Y"] = "CopySelectedEvents",
-		["D"] = "CutSelectedEvents",
+
+		["D"] = {
+			"+cut",
+			{
+				["D"] = "CutSelectedEvents",
+				-- NOTE: these should maybe become `midi_selector`
+				["A"] = "NotesAfter",
+				-- [""] = "NotesBefore",
+				-- [""] = "TopLeftNotes",
+				-- [""] = "BottomLeftNotes",
+				-- [""] = "TopRightNotes",
+				-- [""] = "BottomRightNotes",
+			},
+		},
+
+		-- [""] = "CutNotesAfterCursorOfSamePitch", -- TODO:
+		-- [""] = "CutNotesBeforeCursorOfSamePitch", -- TODO:
+
 		["k"] = "PitchUp",
 		["j"] = "PitchDown",
 		["K"] = "PitchUpOctave",
-		["zp"] = "MidiZoomContent",
 		-- [";"] = "MoveNotesToEditCursor", -- !!!!!!!!!!
 		["J"] = "PitchDownOctave",
+
+		-- NOTE: Need commands AND oper/motion - maybe `fit` does it.
+		-- [""] = "ExtendNotesToNextClosestGrid",
+		-- [""] = "ExtendNotesToNextClosestBeat",
+		-- [""] = "ExtendNotesToNextClosestMeasure",
+		-- [""] = "MakeNotesLegato",
+		-- [""] = "ForceNotesToLength_UI", -- use fzf window -> specify custom length or select predefined.
+
 		["<C-b>"] = "PitchUpOctave",
 		["<C-f>"] = "PitchDownOctave",
 		["<C-u>"] = "PitchUp7",
@@ -131,37 +209,27 @@ return {
 		},
 	},
 	midi_step_command = {
-
-		-- okay so fixing the direction now is goig to be fuckNg mazing and then
-
-		-- TODO: today
-		-- ~ use [single|chord|pattern]
-		-- ~ restrict pitches to closed set [0, 127]
-		-- ~ use eg. shift keys for ascending/descending notes, so that I don't have
-		--     to hit a char to toggle direction everytime. this might be slow over time.
-		-- ~ keys to incr/decr step size.
-		-- ~ fuzzy finder -> select current step_size.
-		-- ~ put the most regularly used step_sizes/note lengths as single key switches.
-		-- ~ Maybe -> use left hand for notes, and right hand for changing step_size,
-		--     and shift modifier keys to switch direction.
-		-- ~ use ALT key for: ???
-		--     move previous inserted note(s) up down chromatically, so that I can error correct.
-		--       >>> Always make the last inserted note "selected" so that it becomes easy
-		--           to just shift selection up/down.
-		-- ~ ALT-(interval key/pitch key) >> throw up chord picker for each note.
-		--        Eg. `alt-(minor3rd)` -> opens a picker and inserts chord at minor
-		--        third up/down from prev position
-		-- ~ use modifier keys + key to select specific length for "pause and move"
-		-- ~ octave-operator: key preceding intreval/pitch hits that makes next insertion
-		--        insert at ( interval + octave )
-		--
-
-		-- LEFT HAND
-		["q"] = "", -- jump forward by predefined (*) length
-		["w"] = "", -- (*) set predefined length.
-		["e"] = "",
-		["r"] = "",
-		["t"] = "", --
+		["Q"] = {
+			"+SetStepSize",
+			{
+				["g"] = "StepSizeGrid",
+				-- [""] = "32th",
+				-- [""] = "16th",
+				-- [""] = "8th",
+				-- [""] = "8th_dot",
+				-- [""] = "QN",
+				-- [""] = "QN_dot",
+				-- [""] = "2xQN",
+				-- [""] = "3xQN",
+				-- [""] = "4xQN",
+				-- [""] = "Step_Measure",
+			},
+		},
+		-- [""] = "", -- jump forward by predefined (*) length
+		-- ["w"] = "", -- (*) set predefined length.
+		-- ["e"] = "",
+		-- ["r"] = "",
+		-- ["t"] = "", --
 		["a"] = "SetModeNormal", -- set pause/silent
 		["s"] = "ToggleMidiStepSilent",
 		["d"] = {
@@ -172,10 +240,6 @@ return {
 				-- set dir down
 			},
 		},
-
-		-- FIX: currently, octave and direction are set simultaneously
-		-- which can cause wierd behavior if you set octave down but keep direction
-		-- up. MAYBE the direction should be changed if octae direction is being set?
 		["f"] = {
 			"+setNextOctave",
 			{
@@ -183,20 +247,16 @@ return {
 				["d"] = "MidiStepSetNextOctaveDown",
 			},
 		},
-
 		["g"] = "", --
-		["G"] = "JumpToNote", --
-		["z"] = "",
-		["x"] = "",
-		["c"] = "",
-		["v"] = "",
-		["b"] = "",
+		["G"] = "JumpToNote", -- not implemented
+		-- ["z"] = "",
+		-- ["x"] = "",
+		-- ["c"] = "",
+		-- ["v"] = "",
+		-- ["b"] = "",
 
-    -- NOTE: use
-    -- A. small leters for ascending intervals
-    -- B. shifted letters for descending intervals.
+		-- NOTE: small letters should ascend and capital should descend.
 
-		-- RIGHT HAND
 		["n"] = "InsertMidiStep_P1",
 		["m"] = "InsertMidiStep_m2",
 		[","] = "InsertMidiStep_M2",
@@ -213,7 +273,6 @@ return {
 		["o"] = "InsertMidiStep_M7",
 		["p"] = "InsertMidiStep_P8",
 
-		-- THUMBS
-		["<TAB>"] = "ToggleMidiStepDirection", -- TODO: integrate, not used atm..
+		["<TAB>"] = "ToggleMidiStepDirection",
 	},
 }

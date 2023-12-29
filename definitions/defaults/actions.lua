@@ -251,6 +251,7 @@ return {
 	MatchedTrackForward = { "MatchTrackNameForward", "ScrollToSelectedTracks" },
 	MatchTrackNameBackward = lib.matchTrackNameBackward,
 	MatchTrackNameForward = lib.matchTrackNameForward,
+	-- Measure = custom_actions.select.innerMeasure,
 	MenuCustomize = 1528,
 	MidiCCMoveLeftByGrid = { 40672, prefixRepetitionCount = true },
 	MidiCCMoveLeftByPixel = { 40674, prefixRepetitionCount = true },
@@ -1025,6 +1026,7 @@ return {
 	CmdCustomInsertTrackAbove = require("custom_actions.ypc").insertTrackAbove,
 	CmdCustomInsertTrackBelow = require("custom_actions.ypc").InsertTrackBelow,
 
+	-- TODO: move these to custom actions/logging
 	SetLogLevelTrace = function()
 		reaper.SetExtState("reaper_keys_logging", "log_level", "trace", true)
 	end,
