@@ -228,7 +228,8 @@ ypc.put = function(meta, opts)
 
       -- TODO: why isn't the correct color applied?
 
-      -- TODO: unset master send
+      -- TODO: move this into route lib.
+      reaper.SetMediaTrackInfo_Value(tr, 'B_MAINSEND', 0)
     end
 
     recall_track(insertion_idx)
