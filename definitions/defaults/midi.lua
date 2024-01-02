@@ -49,6 +49,9 @@
 -- up. MAYBE the direction should be changed if octae direction is being set?
 
 return {
+  midi_selector = {},
+  midi_operator = {},
+  midi_motion = {},
 	timeline_selector = {
 		["s"] = "SelectedNotes",
 		["i"] = {

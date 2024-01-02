@@ -245,7 +245,7 @@ return {
 				["S"] = {
 					"+segments",
 					{
-					  -- TEST: make sure that all these can be used with count prefix.
+						-- TEST: make sure that all these can be used with count prefix.
 						["T"] = "RepeatInsertTimeSelection",
 						-- TODO: these three
 						["R"] = "Items_DuplicateCountTimes",
@@ -350,7 +350,14 @@ return {
 						["r"] = "UpdateTrackName",
 						["p"] = "UpdateTrackNamePrefix",
 						["z"] = "MinimizeTracks",
-						["m"] = "TrackMixerUI", -- TODO: todo.
+						["m"] = {
+							"+track mixer",
+							{
+								["e"] = "PickerFirstEQ",
+								["c"] = "PickerFirstComp",
+								["u"] = "TrackMixerUI",
+							},
+						},
 						["M"] = "CycleRecordMonitor",
 						["f"] = "CycleFolderState",
 						["S"] = "ShowTrackRecordingSettings",
