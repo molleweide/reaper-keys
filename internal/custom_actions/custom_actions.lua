@@ -6,6 +6,7 @@ local fx = require("library.fx")
 local io = require("definitions.io")
 local project_state = require("utils.project_state")
 local tu = require("utils.table")
+local state_interface = require("state_machine.state_interface")
 
 -- FIX: all custom actions should recieve an `opts` table from the
 -- runner function, so that you always know that you have all the info
@@ -377,12 +378,15 @@ custom_actions.midiStepSelectNoteDuration = function(meta, opts)
 end
 
 custom_actions.midi_patterns_insert_at_measure = function(meta, opts)
-
   require("library.midi_patterns").insertPatternFromString(meta, {
-    start_at_measure = true
+    start_at_measure = true,
   })
 end
 
 custom_actions.mmidi_patterns_insert_at_measure_random = function(meta, opts) end
+
+custom_actions.toggle_follow_motions = function()
+  state_interface.toggleKey("ME_follow_motions")
+end
 
 return custom_actions

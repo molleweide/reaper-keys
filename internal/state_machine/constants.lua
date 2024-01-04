@@ -20,6 +20,7 @@ local constants = {
         "command"
       }
     },
+    ME_follow_motions = false,
   }
 }
 

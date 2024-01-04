@@ -49,9 +49,16 @@
 -- up. MAYBE the direction should be changed if octae direction is being set?
 
 return {
-  midi_selector = {},
-  midi_operator = {},
-  midi_motion = {},
+	-- midi_selector = {},
+	-- midi_operator = {},
+	pitch_motion = {
+
+	  -- NOTE: I want to be able to use the pitch motions, without moving the
+	  -- pitch row sometimes, so that I can jump the pitch or use it as in data
+	  -- for another operator. Therefore it needs to be a custom function.
+		["k"] = "NextPitch", -- move pitch row up
+		["j"] = "PrevPitch", -- move pitch row down
+	},
 	timeline_selector = {
 		["s"] = "SelectedNotes",
 		["i"] = {
@@ -216,12 +223,12 @@ return {
 		-- [""] = "MakeNotesLegato",
 		-- [""] = "ForceNotesToLength_UI", -- use fzf window -> specify custom length or select predefined.
 
-    -- NOTE: Say that I select a note, then i want to be able to extend my selection
-    -- in various directions, up down, left and right.
-    -- Maybe, there should be a dedicated mode for visually selecting notes?
-    --
-    -- [""] = "ExtendNoteSelectionToNoteRowAbove",
-    -- [""] = "...NoteRowAbove"
+		-- NOTE: Say that I select a note, then i want to be able to extend my selection
+		-- in various directions, up down, left and right.
+		-- Maybe, there should be a dedicated mode for visually selecting notes?
+		--
+		-- [""] = "ExtendNoteSelectionToNoteRowAbove",
+		-- [""] = "...NoteRowAbove"
 
 		["<C-b>"] = "PitchUpOctave",
 		["<C-f>"] = "PitchDownOctave",
@@ -241,6 +248,8 @@ return {
 			{
 				["m"] = { "+midi", {
 					["w"] = "SetModeMidiStep",
+					-- todo: ext state -> do this and see where it goes...
+					-- [""] = "Toggle_MoveCursorWith_Motions",
 				} },
 			},
 		},

@@ -136,7 +136,7 @@ reaper_utils.GetFXByGUID = function(GUID, tr, proj)
 	end
 end
 
-reaper_utils.CalibrateFont = function (sz, rawsz) -- https://forum.cockos.com/showpost.php?p=2066576&postcount=17
+reaper_utils.CalibrateFont = function(sz, rawsz) -- https://forum.cockos.com/showpost.php?p=2066576&postcount=17
 	--  rawsz starting from 2.08 used for new script to allow use raw sz values rather than table hardcoded values
 	local t = { [13] = 80, [15] = 90, [19] = 110, [21] = 150 } -- windows measured
 	gfx.setfont(1, "Calibri", sz)

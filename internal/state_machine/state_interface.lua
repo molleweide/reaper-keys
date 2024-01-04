@@ -1,9 +1,11 @@
-local reaper_state = require('utils.reaper_state')
-local log = require('utils.log')
-local constants = require('state_machine.constants')
-local utils = require('command.utils')
+local reaper_state = require("utils.reaper_state")
+local log = require("utils.log")
+local constants = require("state_machine.constants")
+local utils = require("command.utils")
 
-local state_interface= {}
+-- NOTE: This file hosts global reaper state pertaining to
+
+local state_interface = {}
 local state_table_name = "state"
 
 -- map state to state key
@@ -21,44 +23,66 @@ end
 -- get state and return key
 function state_interface.getKey(key)
   local state = state_interface.get()
-  return state[key]
+
+  -- dynamically add new keys ( during dev )
+  local val = state[key]
+  if val == nil then
+    log.user("getKey " .. key .. " = nil")
+    local default_val = constants.reset_state[key]
+    state_interface.setKey(key, default_val)
+    return default_val
+  else
+    log.user("getKey " .. key .. " exists")
+    return val
+  end
+
+  -- return state[key]
 end
 
 -- get state; return reset state if err
 function state_interface.get()
-    local state = reaper_state.get(state_table_name)
-    if not state then
-      log.info("Could not read state data. Returning reset state.")
-      state = constants['reset_state']
-    end
+  local state = reaper_state.get(state_table_name)
+  if not state then
+    log.info("Could not read state data. Returning reset state.")
+    state = constants["reset_state"]
+  end
   return state
+end
+
+function state_interface.toggleKey(key)
+  local old_val = state_interface.getKey(key)
+  if type(old_val) == "boolean" then
+    state_interface.setKey("ME_follow_motions", not old_val)
+  else
+    log.trace("[state_interface]: Cannot toggle non-boolean key.")
+  end
 end
 
 -- TODO: annotate below functions
 
--- FIXME reduntant functions
+-- FIXME reduntant functions ?????
 
 function state_interface.getLastSearchedTrackNameAndDirection()
   local state = state_interface.get()
-  return state['last_searched_track_name'], state['last_track_name_search_direction_was_forward']
+  return state["last_searched_track_name"], state["last_track_name_search_direction_was_forward"]
 end
 
 function state_interface.setLastSearchedTrackNameAndDirection(name, forward)
   local new_state = state_interface.get()
-  new_state['last_searched_track_name'] = name
-  new_state['last_track_name_search_direction_was_forward'] = forward
+  new_state["last_searched_track_name"] = name
+  new_state["last_track_name_search_direction_was_forward"] = forward
   state_interface.set(new_state)
 end
 
 function state_interface.checkIfConsistentState(state)
   local current_state = state_interface.get()
-  for k,value in pairs(current_state) do
-    if k == 'last_command' then
+  for k, value in pairs(current_state) do
+    if k == "last_command" then
       if not utils.checkIfCommandsAreEqual(state.last_command, current_state.last_command) then
         return false
       end
     elseif value ~= state[k] then
-        return false
+      return false
     end
   end
   return true
@@ -66,25 +90,25 @@ end
 
 function state_interface.setVisualTrackPivotIndex(visual_track_pivot_i)
   local state = state_interface.get()
-  state['visual_track_pivot_i'] = visual_track_pivot_i
+  state["visual_track_pivot_i"] = visual_track_pivot_i
   state_interface.set(state)
 end
 
 function state_interface.getVisualTrackPivotIndex()
   local state = state_interface.get()
-  local visual_track_pivot_i = state['visual_track_pivot_i']
+  local visual_track_pivot_i = state["visual_track_pivot_i"]
   return visual_track_pivot_i
 end
 
 function state_interface.setTimelineSelectionSide(left_or_right)
   local state = state_interface.get()
-  state['timeline_selection_side'] = left_or_right
+  state["timeline_selection_side"] = left_or_right
   state_interface.set(state)
 end
 
 function state_interface.getTimelineSelectionSide()
   local state = state_interface.get()
-  return state['timeline_selection_side']
+  return state["timeline_selection_side"]
 end
 
 function state_interface.getMode()
@@ -100,10 +124,10 @@ end
 
 function state_interface.setModeToNormal()
   local state = state_interface.get()
-  state['key_sequence'] = ""
-  state['context'] = "main"
-  state['mode'] = "normal"
-  state['timeline_selection_side'] = "left"
+  state["key_sequence"] = ""
+  state["context"] = "main"
+  state["mode"] = "normal"
+  state["timeline_selection_side"] = "left"
   state_interface.set(state)
 end
 

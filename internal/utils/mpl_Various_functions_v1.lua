@@ -1293,6 +1293,7 @@ function VF_decBase64(data) -- https://stackoverflow.com/questions/34618946/lua-
 end
 
 ------------------------------------------------------------------------------------------------------
+--
 function VF_GetMediaTrackByGUID(optional_proj, GUID)
 	local optional_proj0 = optional_proj or 0
 	for i = 1, CountTracks(optional_proj0) do
@@ -1323,6 +1324,7 @@ function VF_NormToFormatValue(val, min, max, quantize)
 end
 
 ----------------------------------------------------------------------
+-- lib/item
 function VF_GetItemGUID(item)
 	local retval, str = reaper.GetItemStateChunk(item, "", false)
 	local GUID = str:match("\nIGUID%s(%{.-%})")
@@ -1330,6 +1332,7 @@ function VF_GetItemGUID(item)
 end
 
 ----------------------------------------------------------------------
+-- lib/item
 function VF_GetTakeGUID(take)
 	local item = GetMediaItemTake_Item(take)
 	local retval, str = reaper.GetItemStateChunk(item, "", false)
@@ -1368,6 +1371,7 @@ function VF_ConvertNoteOnVel0toNoteOff(take)
 end
 
 ------------------------------------------------------------------------------------------------------
+-- utils/table
 function VF_getKeysSortedByValue(tbl, sortFunction, param) -- https://stackoverflow.com/questions/2038418/associatively-sorting-a-table-by-value-in-lua
 	local keys = {}
 	for key in pairs(tbl) do
@@ -1380,6 +1384,7 @@ function VF_getKeysSortedByValue(tbl, sortFunction, param) -- https://stackoverf
 end
 
 ---------------------------------------------------
+-- utils/table
 function VF_CopyTable(orig) --http://lua-users.org/wiki/CopyTable
 	local orig_type = type(orig)
 	local copy
@@ -1396,6 +1401,7 @@ function VF_CopyTable(orig) --http://lua-users.org/wiki/CopyTable
 end
 
 ---------------------------------------------------------------------
+--
 function VF_GetMediaItemByGUID(optional_proj, itemGUID)
 	local optional_proj0 = optional_proj or 0
 	local itemCount = CountMediaItems(optional_proj)
@@ -1409,6 +1415,7 @@ function VF_GetMediaItemByGUID(optional_proj, itemGUID)
 end
 
 ------------------------------------------------------------------------------------------------------
+-- lib/items
 function VF_AnalyzeItemLoudness(item) -- https://forum.cockos.com/showpost.php?p=2050961&postcount=6
 	if not item then
 		return
@@ -1485,6 +1492,7 @@ function VF2_Action(s, section, midieditor, flag, proj)
 end
 
 ---------------------------------------------------
+-- lib/fx
 function VF2_GetSetFXChunk(track, fx, strreplace) -- from BYPASS to WAK -- 15.05.2021
 	local retval, trchunk = reaper.GetTrackStateChunk(track, "", false)
 	local GUID = reaper.TrackFX_GetFXGUID(track, fx)
@@ -1510,6 +1518,7 @@ function VF2_GetSetFXChunk(track, fx, strreplace) -- from BYPASS to WAK -- 15.05
 end
 
 -------------------------------------------------------------------
+-- lib/midi_editor
 function VF2_GetMEZoom(take)
 	local Hzoom
 	if not take then
@@ -1602,6 +1611,7 @@ function VF2_ShiftRegions(offset)
 end
 
 ---------------------------------------------------------------------------------------------------------------------
+-- lib/midi
 function VF2_ConvertNoteOnVel0toNoteOff(take)
 	local tableEvents = {}
 	local s_unpack = string.unpack

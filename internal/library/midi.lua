@@ -1,5 +1,7 @@
 local log = require("utils.log")
 local format = require("utils.format")
+
+local state_interface = require("state_machine.state_interface")
 local project_state = require("utils.project_state")
 local tbl = require("utils.table")
 
@@ -496,7 +498,15 @@ function midi.insertMidiNoteChunk(meta, opts)
   project_state.overwrite("mode_state", "midi_step", midi_step_state)
 end
 
--- todo: move to state.
+-------------------------------------------------------
+-------------------------------------------------------
+
+-- TODO: migrate this to RK state interface and keep everything in the
+-- main state table.
+
+midi.set_step_state = function(state)
+  project_state.overwrite("mode_state", "midi_step", state)
+end
 
 midi.get_midi_step_state = function()
   local did_exist, midi_step_state = project_state.get("mode_state", "midi_step")
@@ -508,6 +518,9 @@ midi.get_midi_step_state = function()
   end
   return did_exist, midi_step_state
 end
+
+-------------------------------------------------------
+-------------------------------------------------------
 
 midi.insert_notes = function(opts)
   if not opts.notes then
@@ -877,7 +890,6 @@ midi.shift_channels_above = function(take, chan_thresh, shift_amount, dry_run)
 end
 
 midi.shift_pitches_above_including = function(take, pitch_thresh, shift_amount, dry_run)
-
   local tr = reaper.GetMediaItemTake_Track(take)
   local index = reaper.GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER") - 1
   local n1 = reaper.GetTrackMIDINoteName(index, pitch_thresh, 0)
@@ -916,5 +928,49 @@ midi.insert_notes_force_chan = function(take, force_ch, item_data, dry_run)
     },
   })
 end
+
+midi.set_note_row = function(ME, pitch)
+  reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", pitch)
+end
+
+-- Used as a pitch motion so recieves Meta.
+midi.get_or_jump_current_note_row = function(meta, opts)
+  local midi_editor = require("library.midi_editor")
+
+  log.user("meta = ", format.block(meta), "opts = ", format.block(opts))
+
+  local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+  if not ME_EXISTS then
+    log.debug("ME did not exist in `get_or_jump_current_note_row")
+    return
+  end
+
+  -- 1. if `move_with_motions`
+  --       move cursor/row with motions
+  -- 2.
+
+  local follow_motions = state_interface.getKey("ME_follow_motions")
+
+  log.user("follow_motions:", follow_motions)
+
+  if meta.action_type == "pitch_motion" then
+    local row = reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")
+    -- midi.set_note_row(ME, pitch)
+
+    reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", row + opts.amount)
+  end
+end
+-- integer reaper.MIDIEditor_GetSetting_int(HWND midieditor, string setting_desc)
+-- Get settings from a MIDI editor. setting_desc can be:
+-- snap_enabled: returns 0 or 1
+-- active_note_row: returns 0-127
+-- last_clicked_cc_lane: returns 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch, 0x202=program, 0x203=channel pressure, 0x204=bank/program select, 0x205=text, 0x206=sysex, 0x207=off velocity, 0x208=notation events, 0x210=media item lane
+-- default_note_vel: returns 0-127
+-- default_note_chan: returns 0-15
+-- default_note_len: returns default length in MIDI ticks
+-- scale_enabled: returns 0-1
+-- scale_root: returns 0-12 (0=C)
+-- list_cnt: if viewing list view, returns event count
+-- if setting_desc is unsupported, the function returns -1.
 
 return midi
