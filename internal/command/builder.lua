@@ -66,6 +66,14 @@ local function stripNextActionKeyInKeySequence(key_sequence, action_type_entries
   return nil, nil, false
 end
 
+--- Builds the command table mapping of ACTIONS (action keys) to Action Sequence
+--- function.
+--- The ordering of ASF pairs in their respective modules can affect how commands
+--- are found/built, so make sure to investigate the order of ASFs when debuggin.
+---@param key_sequence
+---@param action_sequence
+---@param entries
+---@return
 local function buildCommandWithSequence(key_sequence, action_sequence, entries)
   local command = {
     action_sequence = {},
@@ -74,11 +82,10 @@ local function buildCommandWithSequence(key_sequence, action_sequence, entries)
 
   local rest_of_key_sequence = key_sequence
 
-  -- log.debug("RKS:" .. rest_of_key_sequence)
-
   for _, action_type in pairs(action_sequence) do
     local action_key, found
     rest_of_key_sequence, action_key, found = stripNextActionKeyInKeySequence(rest_of_key_sequence, entries[action_type])
+    log.user(rest_of_key_sequence, format.block( action_key ), found)
     if not found then
       return nil
     else
@@ -91,6 +98,8 @@ local function buildCommandWithSequence(key_sequence, action_sequence, entries)
   if #rest_of_key_sequence > 0 then
     return nil
   end
+
+  -- log.user(format.block(command))
 
   return command
 end
@@ -118,6 +127,8 @@ end
 local function buildCommand(state)
   local possible_sequences = action_sequences.getPossibleActionSequences(state['context'], state['mode'])
   local entries = definitions.getPossibleEntries(state['context'])
+
+  -- log.user(format.block(possible_sequences))
 
   for _, action_sequence in pairs(possible_sequences) do
     local command = buildCommandWithSequence(state['key_sequence'], action_sequence, entries)

@@ -50,12 +50,18 @@
 
 return {
 	-- midi_selector = {},
-	-- midi_operator = {},
-	pitch_motion = {
+	midi_operator = {
+	  	      ["U"] = "MidiCut",
 
-	  -- NOTE: I want to be able to use the pitch motions, without moving the
-	  -- pitch row sometimes, so that I can jump the pitch or use it as in data
-	  -- for another operator. Therefore it needs to be a custom function.
+	  -- ["M"] = {
+	  --   "+midi_operators",
+	  --   {
+	  --     ["d"] = "MidiCut",
+	  --   }
+	  -- }
+	},
+	-- NOTE: it might make sense to name it `pitch_motion`
+	pitch_motion = {
 		["k"] = "NextPitch", -- move pitch row up
 		["j"] = "PrevPitch", -- move pitch row down
 	},

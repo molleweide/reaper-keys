@@ -1,0 +1,4 @@
+
+The order of action sequence tables is important. Eg. single "pitch_motion"
+should come after operator/motion. This is becaause of how bindings to ASF
+pairs is implemented in the builder module.

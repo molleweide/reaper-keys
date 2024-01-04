@@ -1,3 +1,6 @@
+local format = require('utils.format')
+local log = require('utils.log')
+
 local action_sequences = {}
 
 local action_sequence_definitions = {
@@ -68,6 +71,9 @@ end
 ---@return table possible_action_sequences
 function action_sequences.getPossibleActionSequences(context, mode)
   local action_sequence_function_pairs = getPossibleActionSequenceFunctionPairs(context, mode)
+
+  log.user("???", context, mode)
+
   -- TODO: use lib/refactor into `map` function??
   --
   -- filter out only AS from ARFPs

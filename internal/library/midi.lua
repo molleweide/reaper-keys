@@ -937,7 +937,7 @@ end
 midi.get_or_jump_current_note_row = function(meta, opts)
   local midi_editor = require("library.midi_editor")
 
-  log.user("meta = ", format.block(meta), "opts = ", format.block(opts))
+  -- log.user("meta = ", format.block(meta), "opts = ", format.block(opts))
 
   local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
   if not ME_EXISTS then
@@ -951,7 +951,7 @@ midi.get_or_jump_current_note_row = function(meta, opts)
 
   local follow_motions = state_interface.getKey("ME_follow_motions")
 
-  log.user("follow_motions:", follow_motions)
+  -- log.user("follow_motions:", follow_motions)
 
   if meta.action_type == "pitch_motion" then
     local row = reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")

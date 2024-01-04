@@ -1076,6 +1076,14 @@ return {
     prefixRepetitionCount = true,
   },
 
+  MidiCut = {
+    function(meta, opts)
+      local log = require("utils.log")
+      log.user("action: MidiCut")
+    end,
+    midiCommand = true,
+  },
+
   ToggleFollowMotions = custom.toggle_follow_motions,
 
   n71 = lib.midi.sendMidiNote_61,

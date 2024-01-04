@@ -27,12 +27,12 @@ function state_interface.getKey(key)
   -- dynamically add new keys ( during dev )
   local val = state[key]
   if val == nil then
-    log.user("getKey " .. key .. " = nil")
+    -- log.user("getKey " .. key .. " = nil")
     local default_val = constants.reset_state[key]
     state_interface.setKey(key, default_val)
     return default_val
   else
-    log.user("getKey " .. key .. " exists")
+    -- log.user("getKey " .. key .. " exists")
     return val
   end
 
