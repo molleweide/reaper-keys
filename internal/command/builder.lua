@@ -85,7 +85,6 @@ local function buildCommandWithSequence(key_sequence, action_sequence, entries)
   for _, action_type in pairs(action_sequence) do
     local action_key, found
     rest_of_key_sequence, action_key, found = stripNextActionKeyInKeySequence(rest_of_key_sequence, entries[action_type])
-    log.user(rest_of_key_sequence, format.block( action_key ), found)
     if not found then
       return nil
     else

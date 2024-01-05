@@ -1,3 +1,6 @@
+local log = require("utils.log")
+local format = require("utils.format")
+
 local lib = require("library")
 local custom = require("custom_actions")
 local media_explorer = require("library.media_explorer")
@@ -1078,13 +1081,19 @@ return {
 
   MidiCut = {
     function(meta, opts)
-      local log = require("utils.log")
-      log.user("action: MidiCut")
+
+      log.user("action: MidiCut", format.block(meta))
+
+      -- TODO: use midi transform api to cut notes within pitch row range.
     end,
     midiCommand = true,
   },
 
   ToggleFollowMotions = custom.toggle_follow_motions,
+
+  ActiveTake = function(meta)
+    log.user("ActiveTake meta:", format.block(meta))
+  end,
 
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,

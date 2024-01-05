@@ -5,26 +5,34 @@ local runner = require("command.runner")
 return {
   normal = {
     {
-      -- BUG: Function is not called if used with prefix repetition count.
+      { "midi_operator", "midi_selector" },
+      function(midi_operator, midi_selector)
+
+        -- local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+        runner.runAction(midi_selector)
+        runner.runAction(midi_operator)
+        --
+        -- if type(timeline_operator) ~= "table" or not timeline_operator["setTimeSelection"] then
+        --   reaper.GetSet_LoopTimeRange(true, false, start_sel, end_sel, false)
+        -- end
+      end,
+    },
+    {
       { "midi_operator", "pitch_motion" },
       function(midi_operator, pitch_motion)
         local midi_editor = require("library.midi_editor")
-        log.user(format.block(midi_operator), format.block(pitch_motion))
+        -- log.user(format.block(midi_operator), format.block(pitch_motion))
 
-        -- log.user("meta = ", format.block(meta), "opts = ", format.block(opts))
         local ME_EXISTS, ME = midi_editor.getMidiValidContext()
         if not ME_EXISTS then
           log.debug("ME did not exist in `")
           return
         end
-        -- local start, _end = runner.getPitchRangeFromPitchMotion(pitch, 1)
-        local start_row = reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")
+
+        midi_operator.meta.start_row =reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")
         runner.runAction(pitch_motion)
-        local end_row = reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")
-
-        log.user("MIDI MOTION: range = ", start_row, end_row)
-
-        -- runner.runAction(midi_operator)
+        midi_operator.meta.end_row = reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")
+        runner.runAction(midi_operator)
       end,
     },
     {
