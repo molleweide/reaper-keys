@@ -252,6 +252,8 @@ return {
             ["r"] = "Items_DuplicateCountTimesAndGlue",
             ["l"] = "Items_LoopCountTimes",
             ---------------------------------
+            -- use this to controll the song structure with fuzzy finder.
+            ["i"] = "InsertNewRegionSectionAfterExistingRegionPicker",
           },
         },
         ["s"] = {
