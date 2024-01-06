@@ -180,4 +180,7 @@ function runner.makeSelectionFromTrackMotion(track_motion, repetitions)
   end
 end
 
+-- function runner.makeMidiSelectionFromMidiSelector(midi_selector)
+-- end
+
 return runner

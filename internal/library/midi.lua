@@ -711,6 +711,7 @@ midi.midi_take_filter_transform = function(take, opts)
         -- real_pitch = pitch,
         pitch = pitch,
         vel = vel,
+        sel = sel,
       })
       -- end
     end
@@ -735,7 +736,7 @@ midi.midi_take_filter_transform = function(take, opts)
 
   if no_filters or note_filter then
     for k, v in pairs(note_filter) do
-      if type(v) == "bool" then
+      if type(v) == "boolean" then
         t_notes = tbl.filter(t_notes, function(note)
           return note[k] == v
         end)
@@ -793,7 +794,7 @@ midi.midi_take_filter_transform = function(take, opts)
     for i, note in ipairs(t_notes) do
       local update = false
       for k, v in pairs(transform.notes) do
-        if type(v) == "bool" then
+        if type(v) == "boolean" then
           log.trace("midi take transform: set bool:", i, note[k], "->", v)
           note[k] = v -- set bool value
           update = true

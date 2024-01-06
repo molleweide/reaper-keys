@@ -121,8 +121,9 @@ tracks.get_focused_track_objects = function()
     local ME_ACTIVE, ME = midi_editor.getMidiValidContext(hwnd)
     if ME_ACTIVE then
 
-      -- find track corresponding to actively editing midi item.
-      -- >> randomize
+      -- ~ get corresponding track
+      -- ~ get corresponding item
+
     end
   elseif context == "main" then
     local t_sel_trk_indices = cust_util.getSelectedTrackIndices()

@@ -1081,20 +1081,31 @@ return {
 
   MidiCut = {
     function(meta, opts)
-
       log.user("action: MidiCut", format.block(meta))
-
-      -- TODO: use midi transform api to cut notes within pitch row range.
+      -- local lib_tr = require("library.tracks")
+      -- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+      midi.midi_take_filter_transform(meta.active_take, {
+        remove = {
+          notes = { sel = true }, -- this would select all notes in take
+        },
+      })
     end,
     midiCommand = true,
   },
+  MidiInnerActiveTake = {
+    function(meta, opts)
+      -- log.user("MidiInnerActiveTake | meta:", format.block(meta), "opts:", format.block(opts))
+      midi.midi_take_filter_transform(meta.active_take, {
+        transform = {
+          notes = { sel = true }, -- this would select all notes in take
+        },
+      })
+    end,
+    -- opts = "hej",
+    midiCommand = true, -- is it necessary to add this for my own custom ME commands?
+  },
 
   ToggleFollowMotions = custom.toggle_follow_motions,
-
-  ActiveTake = function(meta)
-    log.user("ActiveTake meta:", format.block(meta))
-  end,
-
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,
   n69 = lib.midi.sendMidiNote_69,

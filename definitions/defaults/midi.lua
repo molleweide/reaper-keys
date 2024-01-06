@@ -57,7 +57,7 @@ return {
     ["i"] = {
       "+inner",
       {
-        ["a"] = "ActiveTake",
+        ["a"] = "MidiInnerActiveTake",
         ["h"] = "NoteChunkHorz", -- select all notes at cursor that are X distance apart in time
         -- [""] = "Measure",
         -- [""] = "xxx", -- 16th notes apart.
@@ -268,7 +268,18 @@ return {
       },
     },
   },
+
+  -- RENAME: `midi-step-right-hand-insert`
   midi_step_command = {
+    -- TODO: easy actions
+    -- ~ Toggle playback
+    -- ~ Insert a pattern string.
+    -- ~ Select rhyhtm pattern string AND use this as template for stepping forward.
+    -- ~ Left hand -> repeat last right hand insert.
+    --
+    -- TODO: advanced / new modes
+    -- ~ Set left and right handed mode for inserting pitches.
+    --
     ["Q"] = {
       "+SetStepSize",
       {
@@ -371,4 +382,5 @@ return {
 
     ["<TAB>"] = "ToggleMidiStepDirection",
   },
+  midi_step_both_hands = {},
 }
