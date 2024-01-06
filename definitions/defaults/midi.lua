@@ -58,6 +58,10 @@ return {
       "+inner",
       {
         ["a"] = "MidiInnerActiveTake",
+        -- [""] = "SelectFromRowAndAbove",
+        -- [""] = "SelectFromRowAndBelow",
+
+
         ["h"] = "NoteChunkHorz", -- select all notes at cursor that are X distance apart in time
         -- [""] = "Measure",
         -- [""] = "xxx", -- 16th notes apart.
@@ -80,13 +84,19 @@ return {
   },
   midi_operator = {
     ["U"] = "MidiCut", -- MidiCutNotes
+    ["M"] = "SelectNoteRows",
     -- [""] = "SelectFromRowAndAbove",
     [""] = "SelectFromRowAndBelow",
   },
-  -- NOTE: it might make sense to name it `pitch_motion`
+  -- RENAME: to note_row_motion
   pitch_motion = {
     ["k"] = "NextPitch", -- move pitch row up
     ["j"] = "PrevPitch", -- move pitch row down
+  },
+  -- these motions both work on note row and timeline together, so that
+  -- you can eg target rectangular areas of midi data.
+  midi_motion = {
+
   },
   timeline_selector = {
     ["s"] = "SelectedNotes",
@@ -107,6 +117,10 @@ return {
     ["s"] = "SelectNotes",
     ["z"] = "MidiZoomTimeSelection",
   },
+  -- NOTE: midi time line motions only move the edit cursor.
+  -- >> This makes it impossible to discern which note is moved to
+  -- in thick clusters of notes. Therefore I need custom next/prev note
+  -- commands that move BOTH edit cursor AND note row.
   timeline_motion = {
     ["l"] = "RightMidiGridDivision",
     ["h"] = "LeftMidiGridDivision",
@@ -222,7 +236,9 @@ return {
 
     ["k"] = "PitchUp",
     ["j"] = "PitchDown",
-    ["K"] = "PitchUpOctave",
+
+    ["K"] = "PitchUpOctave", -- rewrite this as repeat running pitch_motions.
+
     -- [";"] = "MoveNotesToEditCursor", -- !!!!!!!!!!
     ["J"] = "PitchDownOctave",
 
@@ -351,9 +367,12 @@ return {
         ["d"] = "MidiStepSetNextOctaveDown",
       },
     },
-    ["g"] = { "+midi_step/go", {
-      ["o"] = "MidiStepGoBack", -- Why not just use `Undo`??
-    } }, --
+    ["g"] = {
+      "+midi_step/go",
+      {
+        ["o"] = "MidiStepGoBack", -- Why not just use `Undo`??
+      },
+    }, --
     -- TODO: reuse the motion function here and call it as a command, similar to insert note chunk fn.
     ["G"] = "JumpToNote",
     -- ["z"] = "",

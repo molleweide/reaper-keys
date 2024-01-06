@@ -41,9 +41,36 @@ return {
           return
         end
 
-        midi_operator.meta.start_row = reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")
+        local active_take = reaper.MIDIEditor_GetTake(ME.editor)
+
+        -- how do I handle SelectNoteRows - do I just select notes twice here instead.
+
+        midi.midi_take_filter_transform(active_take, {
+          transform = {
+            notes = { sel = false },
+          },
+        })
+        local start_row = reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")
+
+        -- runner.make
         runner.runAction(pitch_motion)
-        midi_operator.meta.end_row = reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")
+
+        local end_row = reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")
+
+
+        -- Set selected notes from motion.
+        -- Ensure range is ascending when passing to transform.
+        if end_row < start_row then
+          start_row, end_row = end_row, start_row
+        end
+
+        midi.midi_take_filter_transform(active_take, {
+          filter = { notes = { pitch = { { start_row, end_row } } } },
+          transform = {
+            notes = { sel = true },
+          },
+        })
+        midi_operator.meta.active_take = active_take
         runner.runAction(midi_operator)
       end,
     },
