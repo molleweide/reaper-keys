@@ -94,13 +94,15 @@ end
 --
 
 pickers.all_tracks = function(meta, opts)
-  local t_track_objects = syntax.get_list_of_track_objects()
+  local vtt = syntax.getVerifiedTree()
+
+  local t_picker_results = vtt.track_list
 
   log.user("<PICKER: ALL TRACKS>")
 
   if opts.filter then
     -- TODO: should the filter be passed as a param to syntax.get_list_of_track_objects(filter)
-    t_track_objects = tbl.filter(t_track_objects, function(o)
+    t_picker_results = tbl.filter(vtt.track_list, function(o)
       return str.strHasOneOfChars(o.class, opts.filter)
     end)
   end
@@ -109,7 +111,7 @@ pickers.all_tracks = function(meta, opts)
 
   fzf.init({
     title = opts.title or "All Tracks (Default)",
-    results = t_track_objects,
+    results = t_picker_results,
 
     -- move into module
     on_select_func = function(self, i)
@@ -124,7 +126,7 @@ pickers.all_tracks = function(meta, opts)
     sort_comp = "name",
 
     -- TODO: add zone/group name before each track name
-    entry_maker = "name",
+    entry_maker = require("pickers.entry_makers.track_nodes")
   })
 end
 
