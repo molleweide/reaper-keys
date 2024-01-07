@@ -1079,6 +1079,19 @@ return {
     prefixRepetitionCount = true,
   },
 
+  MidiSelectNotes = {
+    function(meta, opts)
+      log.user("action: MidiCut", format.block(meta))
+      -- local lib_tr = require("library.tracks")
+      -- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+      midi.midi_take_filter_transform(meta.active_take, {
+        remove = {
+          notes = { sel = true }, -- this would select all notes in take
+        },
+      })
+    end,
+    midiCommand = true,
+  },
   MidiCut = {
     function(meta, opts)
       log.user("action: MidiCut", format.block(meta))
@@ -1099,6 +1112,65 @@ return {
         transform = {
           notes = { sel = true }, -- this would select all notes in take
         },
+      })
+    end,
+    -- opts = "hej",
+    midiCommand = true, -- is it necessary to add this for my own custom ME commands?
+  },
+
+  -- midi operator -> pitch_motion
+  --   ranges will be passed to the operator, in order to make the selection.
+  --
+  --
+  SelectNoteRows = function(meta)
+    -- if meta.start_row and meta.end_row then
+    --   midi.midi_take_filter_transform(meta.active_take, {
+    --     filter = { notes = { pitch = { { meta.start_row, meta.end_row } } } },
+    --     transform = {
+    --       notes = { sel = true },
+    --     },
+    --   })
+    -- end
+  end,
+
+  MidiInnerActiveTakeAbove = {
+    function(meta, opts)
+      log.user("Midi Above | meta:", format.block(meta), "opts:", format.block(opts))
+      local row = reaper.MIDIEditor_GetSetting_int(meta.ME.editor, "active_note_row")
+
+      midi.midi_take_filter_transform(meta.active_take, {
+        filter = {
+          notes = {
+            pitch = function(note)
+              return row <= note.pitch
+            end,
+          },
+        },
+        transform = { notes = { sel = true } },
+      })
+
+      -- midi.midi_take_filter_transform(meta.active_take, {
+      --   transform = {
+      --     notes = { sel = true }, -- this would select all notes in take
+      --   },
+      -- })
+    end,
+    -- opts = "hej",
+    midiCommand = true, -- is it necessary to add this for my own custom ME commands?
+  },
+  MidiInnerActiveTakeBelow = {
+    function(meta, opts)
+      log.user("Midi Below | meta:", format.block(meta), "opts:", format.block(opts))
+      local row = reaper.MIDIEditor_GetSetting_int(meta.ME.editor, "active_note_row")
+      midi.midi_take_filter_transform(meta.active_take, {
+        filter = {
+          notes = {
+            pitch = function(note)
+              return note.pitch <= row
+            end,
+          },
+        },
+        transform = { notes = { sel = true } },
       })
     end,
     -- opts = "hej",

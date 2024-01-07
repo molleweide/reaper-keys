@@ -58,9 +58,8 @@ return {
       "+inner",
       {
         ["a"] = "MidiInnerActiveTake",
-        -- [""] = "SelectFromRowAndAbove",
-        -- [""] = "SelectFromRowAndBelow",
-
+        ["U"] = "MidiInnerActiveTakeAbove",
+        ["D"] = "MidiInnerActiveTakeBelow",
 
         ["h"] = "NoteChunkHorz", -- select all notes at cursor that are X distance apart in time
         -- [""] = "Measure",
@@ -85,8 +84,6 @@ return {
   midi_operator = {
     ["U"] = "MidiCut", -- MidiCutNotes
     ["M"] = "SelectNoteRows",
-    -- [""] = "SelectFromRowAndAbove",
-    [""] = "SelectFromRowAndBelow",
   },
   -- RENAME: to note_row_motion
   pitch_motion = {
@@ -95,9 +92,7 @@ return {
   },
   -- these motions both work on note row and timeline together, so that
   -- you can eg target rectangular areas of midi data.
-  midi_motion = {
-
-  },
+  midi_motion = {},
   timeline_selector = {
     ["s"] = "SelectedNotes",
   },

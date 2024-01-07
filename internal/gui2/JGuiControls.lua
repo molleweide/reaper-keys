@@ -29,8 +29,11 @@ jGuiControl = {
 	},
 	color_focus_border = {1, .9, 0, .5},
 
-	label_fontsize = 10,
-	label_font = "Calibri",
+
+	-- NOTE: I don't feel like changing values here has any effect.
+
+	label_fontsize = 15,
+	label_font = "Arial",
 	label_align = "c",
 	label_valign = "t",
 	label_padding = 0,
