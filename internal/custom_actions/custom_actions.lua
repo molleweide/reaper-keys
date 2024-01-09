@@ -316,38 +316,6 @@ custom_actions.midiStepRel_P8 = function(meta, opts)
   midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 13 } } })
 end
 
---
--- FIX: refactor both these. it should be possible to toggle things easier.
---      >>> project_state > toggle state value
---      >>> reaper_state > toggle state value
---
--- refactor all these functions into module so that I can configure these inside
--- actions instead
-
-custom_actions.midiStepToggleDirection = function(meta, opts)
-  local _, midi_step_state = midi.get_midi_step_state()
-  midi_step_state.direction = not midi_step_state.direction
-  project_state.overwrite("mode_state", "midi_step", midi_step_state)
-end
-
-custom_actions.midiStepToggleSilent = function(meta, opts)
-  local _, midi_step_state = midi.get_midi_step_state()
-  midi_step_state.silent = not midi_step_state.silent
-  project_state.overwrite("mode_state", "midi_step", midi_step_state)
-end
-
-custom_actions.midiStepSetOctaveNextUp = function(meta, opts)
-  local midi_step_state = midi.get_midi_step_state()
-  midi_step_state.octave_next = 1
-  project_state.overwrite("mode_state", "midi_step", midi_step_state)
-end
-
-custom_actions.midiStepSetOctaveNextDown = function(meta, opts)
-  local midi_step_state = midi.get_midi_step_state()
-  midi_step_state.octave_next = -1
-  project_state.overwrite("mode_state", "midi_step", midi_step_state)
-end
-
 -- TODO: i can impl this as a toggle first, and then layer on the picker..
 -- then use leader key later for selection durations quickly.
 

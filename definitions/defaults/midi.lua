@@ -89,6 +89,8 @@ return {
   pitch_motion = {
     ["k"] = "NextPitch", -- move pitch row up
     ["j"] = "PrevPitch", -- move pitch row down
+    [""] = "NextNotesBig",
+    [""] = "PrevNotesBig",
   },
   -- these motions both work on note row and timeline together, so that
   -- you can eg target rectangular areas of midi data.

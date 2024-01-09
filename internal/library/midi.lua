@@ -935,12 +935,13 @@ midi.set_note_row = function(ME, pitch)
 end
 
 -- Used as a pitch motion so recieves Meta.
-midi.get_or_jump_current_note_row = function(meta, opts)
+midi.get_or_jump_current_note_row = function(amount, set_note_row)
+-- midi.get_or_jump_current_note_row = function(amount, move_cursor)
   local midi_editor = require("library.midi_editor")
 
   -- log.user("meta = ", format.block(meta), "opts = ", format.block(opts))
 
-  local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+  local ME_EXISTS, ME = midi_editor.getMidiValidContext()
   if not ME_EXISTS then
     log.debug("ME did not exist in `get_or_jump_current_note_row")
     return
@@ -954,11 +955,11 @@ midi.get_or_jump_current_note_row = function(meta, opts)
 
   -- log.user("follow_motions:", follow_motions)
 
-  if meta.action_type == "pitch_motion" then
+  if set_note_row then
     local row = reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")
     -- midi.set_note_row(ME, pitch)
 
-    reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", row + opts.amount)
+    reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", row + amount)
   end
 end
 -- integer reaper.MIDIEditor_GetSetting_int(HWND midieditor, string setting_desc)

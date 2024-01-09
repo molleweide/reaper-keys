@@ -11,6 +11,14 @@ local midi = require("library.midi")
 local midi_patterns = require("library.midi_patterns")
 local pickers = require("pickers.pickers")
 
+-- TEST: is it necessary to add this for my own custom ME commands?
+local midi_motions = require("custom_actions.midi_motions")
+local midi_selection = require("custom_actions.midi_selection")
+local midi_operators = require("custom_actions.midi_operators")
+local midi_step_commands = require("custom_actions.midi_step_commands")
+
+local fx_commands = require("custom_actions.commands.fx")
+
 -- NOTE: Action key/value pairs
 --  key = the name of the action
 --  val = command/function corresponding to this action.
@@ -552,10 +560,10 @@ return {
   SelectPrevNoteSamePitch = { 40427, midiCommand = true },
   SelectTracks = { setTrackSelection = true },
   ToggleItemDefaultFadeInAndOut = 41194,
-  ToggleMidiStepDirection = custom.midiStepToggleDirection,
-  ToggleMidiStepSilent = custom.midiStepToggleSilent,
-  MidiStepSetNextOctaveUp = custom.midiStepSetOctaveNextUp,
-  MidiStepSetNextOctaveDown = custom.midiStepSetOctaveNextDown,
+  ToggleMidiStepDirection = midi_step_commands.midiStepToggleDirection,
+  ToggleMidiStepSilent = midi_step_commands.midiStepToggleSilent,
+  MidiStepSetNextOctaveUp = midi_step_commands.midiStepSetOctaveNextUp,
+  MidiStepSetNextOctaveDown = midi_step_commands.midiStepSetOctaveNextDown,
   SetAutomationModeLatch = 40404,
   SetAutomationModeLatchAndArm = { "SetAutomationModeLatch", "ArmAllEnvelopes" },
   SetAutomationModeLatchPreview = 42023,
@@ -839,6 +847,8 @@ return {
     "TODO: region/marks picker -> tracks picker -> jump-to-position-in-main",
   },
 
+  -- TODO: move to `custom_actions/commands/editing.lua`
+
   -- TODO: prefix actions with MidiEditor_
   Midi_ChangeActiveSelection = {
     pickers.all_tracks,
@@ -850,6 +860,8 @@ return {
       end,
     },
   },
+
+  -- TODO: move to `custom_actions/commands/editing.lua`
 
   MIDI_EditMidiAtCurPosForTrack = function()
     local log = require("utils.log")
@@ -866,6 +878,8 @@ return {
       require("library.midi_editor").createEditMidiItemAtPositionForTrack(_, focus_track_obj)
     end
   end,
+
+  -- TODO: move to `custom_actions/commands/editing.lua`
 
   Midi_EditMidiForRegionsMarksAndSelectTrack = {
     pickers.marks_and_regions,
@@ -940,92 +954,79 @@ return {
     opts = {},
   },
 
-  -- TODO: refactor this into configurable funcs...
+  RandomizeRs5kSampleForFocusedTracks = fx_commands.randomizeRs5kSampleForFocusedTracks,
+  --   {
+  --   require("library.tracks").focus_tracks_fx_do,
+  --   opts = {
+  --     "RS5K",
+  --     "updateSample",
+  --   },
+  -- },
 
-  RandomizeRs5kSampleForFocusedTracks = {
-    require("library.tracks").focus_tracks_fx_do,
-    opts = {
-      "RS5K",
-      "updateSample",
-    },
-  },
-
-  -- TODO: generalize this to PickerSoundSourceByTrackTypeAndName
-  --  ~ check if track is
-  --       sampler | vst | ??
-  --  ~ can this be facilitated via fx syntax string?
-  --  ~ create plugin module for massive
-  --  ~ save some synth patches manually
-  --     >>> in a smart manner/dir/file structure
-  --  ~
+  PickerSelectSampleForSamplerOnSelectOrFocusedTrack = fx_commands.pickerSelectSampleForSamplerOnSelectOrFocusedTrack,
+  -- {
+  -- function()
+  --   local lib_tr = require("library.tracks")
+  --   local utils_io = require("utils.fs")
+  --   local rs5k = require("plugins.rs5k")
+  --   local lib_fx = require("library.fx")
+  --   local log = require("utils.log")
+  --   local format = require("utils.format")
   --
-  --  see where this ends up. potentially this will become a good
-  --  system for easilly switching sounds
+  --   -- TODO: on up/down or change -> previow results[1] or scroll_selection.
   --
-
-  PickerSelectSampleForSamplerOnSelectOrFocusedTrack = {
-    function()
-      local lib_tr = require("library.tracks")
-      local utils_io = require("utils.fs")
-      local rs5k = require("plugins.rs5k")
-      local lib_fx = require("library.fx")
-      local log = require("utils.log")
-      local format = require("utils.format")
-
-      -- TODO: on up/down or change -> previow results[1] or scroll_selection.
-
-      local focused_track_objects, _ = lib_tr.get_focused_track_objects()
-      local focus_track_obj = focused_track_objects[1]
-
-      local function get_basename_without_extension(filepath)
-        local pattern = "[\\/]?([^\\/]+)%.(%w+)$" -- Pattern to match the last part of the path and the extension
-        local basename, extension = string.match(filepath, pattern)
-        return basename
-      end
-
-      -- if sx_utils.trackObjHasOption(g_obj, "m") and #t_fx_by_name > 0 then
-      --   -- if i want to only allow on drum lanes?
-      --   -- NOTE: but this should be a more general funcion so that it becomes
-      --   -- easy and flexible to update any track with a sampler.
-      -- end
-
-      if focus_track_obj then
-        local first_rs5k_fx_obj = lib_fx.get_fx_objs_by_name_string(focus_track_obj.guid, rs5k.PLUGIN_NAME)
-        if first_rs5k_fx_obj then
-          log.debug("select `sample` for:", first_rs5k_fx_obj.name)
-
-          local wav_files_found = utils_io.findWavFilesWithNameX(focus_track_obj.name_components[1])
-
-          local results_prepared = {}
-          for i, wavf in ipairs(wav_files_found) do
-            table.insert(results_prepared, {
-              full_path = wavf,
-              name = get_basename_without_extension(wavf),
-            })
-          end
-
-          require("library.fzf").init({
-            title = string.format("Change rs5k sample for track (%s)", focus_track_obj.name),
-            results = results_prepared,
-            on_select_func = function(self, i)
-              local selection = self.t_search_results[i]
-
-              rs5k.updateSample(focus_track_obj, first_rs5k_fx_obj.idx, selection.full_path)
-
-              -- if opts.next then
-              --   opts.next(meta, {
-              --     selection = selection,
-              --   })
-              -- end
-              return true
-            end,
-            sort_comp = "name",
-            entry_maker = "name",
-          })
-        end
-      end
-    end,
-  },
+  --   local focused_track_objects, _ = lib_tr.get_focused_track_objects()
+  --   local focus_track_obj = focused_track_objects[1]
+  --
+  --   local function get_basename_without_extension(filepath)
+  --     local pattern = "[\\/]?([^\\/]+)%.(%w+)$" -- Pattern to match the last part of the path and the extension
+  --     local basename, extension = string.match(filepath, pattern)
+  --     return basename
+  --   end
+  --
+  --   -- if sx_utils.trackObjHasOption(g_obj, "m") and #t_fx_by_name > 0 then
+  --   --   -- if i want to only allow on drum lanes?
+  --   --   -- NOTE: but this should be a more general funcion so that it becomes
+  --   --   -- easy and flexible to update any track with a sampler.
+  --   -- end
+  --
+  --   if focus_track_obj then
+  --     local first_rs5k_fx_obj = lib_fx.get_fx_objs_by_name_string(focus_track_obj.guid, rs5k.PLUGIN_NAME)
+  --     if first_rs5k_fx_obj then
+  --       log.debug("select `sample` for:", first_rs5k_fx_obj.name)
+  --
+  --       local wav_files_found = utils_io.findWavFilesWithNameX(focus_track_obj.name_components[1])
+  --
+  --       local results_prepared = {}
+  --       for i, wavf in ipairs(wav_files_found) do
+  --         table.insert(results_prepared, {
+  --           full_path = wavf,
+  --           name = get_basename_without_extension(wavf),
+  --         })
+  --       end
+  --
+  --       require("library.fzf").init({
+  --         title = string.format("Change rs5k sample for track (%s)", focus_track_obj.name),
+  --         results = results_prepared,
+  --         on_select_func = function(self, i)
+  --           local selection = self.t_search_results[i]
+  --
+  --           rs5k.updateSample(focus_track_obj, first_rs5k_fx_obj.idx, selection.full_path)
+  --
+  --           -- if opts.next then
+  --           --   opts.next(meta, {
+  --           --     selection = selection,
+  --           --   })
+  --           -- end
+  --           return true
+  --         end,
+  --         sort_comp = "name",
+  --         entry_maker = "name",
+  --       })
+  --     end
+  --   end
+  -- end,
+  -- },
 
   CmdCustomYankTrack = { require("custom_actions.ypc").yank, opts = { dry_run = false } },
   CmdCustomPutTrack = { require("custom_actions.ypc").put, opts = { dry_run = false } },
@@ -1033,7 +1034,7 @@ return {
   CmdCustomInsertTrackAbove = require("custom_actions.ypc").insertTrackAbove,
   CmdCustomInsertTrackBelow = require("custom_actions.ypc").InsertTrackBelow,
 
-  -- TODO: move these to custom actions/logging
+  -- TODO: move these to custom `actions/commands/logging.lua`
   SetLogLevelTrace = function()
     reaper.SetExtState("reaper_keys_logging", "log_level", "trace", true)
   end,
@@ -1066,116 +1067,30 @@ return {
     require("utils.log").clear()
   end,
 
-  NextPitch = {
-    midi.get_or_jump_current_note_row,
-    opts = { amount = 1 },
-    midiCommand = true,
-    prefixRepetitionCount = true,
-  },
-  PrevPitch = {
-    midi.get_or_jump_current_note_row,
-    opts = { amount = -1 },
-    midiCommand = true,
-    prefixRepetitionCount = true,
-  },
+  NextPitch = { midi_motions.nextPitch, prefixRepetitionCount = true },
+  PrevPitch = { midi_motions.prevPitch, prefixRepetitionCount = true },
 
-  MidiSelectNotes = {
-    function(meta, opts)
-      log.user("action: MidiCut", format.block(meta))
-      -- local lib_tr = require("library.tracks")
-      -- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
-      midi.midi_take_filter_transform(meta.active_take, {
-        remove = {
-          notes = { sel = true }, -- this would select all notes in take
-        },
-      })
-    end,
-    midiCommand = true,
-  },
-  MidiCut = {
-    function(meta, opts)
-      log.user("action: MidiCut", format.block(meta))
-      -- local lib_tr = require("library.tracks")
-      -- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
-      midi.midi_take_filter_transform(meta.active_take, {
-        remove = {
-          notes = { sel = true }, -- this would select all notes in take
-        },
-      })
-    end,
-    midiCommand = true,
-  },
-  MidiInnerActiveTake = {
-    function(meta, opts)
-      -- log.user("MidiInnerActiveTake | meta:", format.block(meta), "opts:", format.block(opts))
-      midi.midi_take_filter_transform(meta.active_take, {
-        transform = {
-          notes = { sel = true }, -- this would select all notes in take
-        },
-      })
-    end,
-    -- opts = "hej",
-    midiCommand = true, -- is it necessary to add this for my own custom ME commands?
-  },
+  -- MidiSelectNotes = {
+  --   function(meta, opts)
+  --     log.user("action: MidiCut", format.block(meta))
+  --     -- local lib_tr = require("library.tracks")
+  --     -- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+  --     midi.midi_take_filter_transform(meta.active_take, {
+  --       remove = {
+  --         notes = { sel = true }, -- this would select all notes in take
+  --       },
+  --     })
+  --   end,
+  --   midiCommand = true,
+  -- },
+  MidiCut = midi_operators.cut,
+  MidiInnerActiveTake = midi_selection.innerActiveTake,
+  SelectNoteRows = midi_selection.selectNoteRows,
+  MidiInnerActiveTakeAbove = midi_selection.rowAndAbove,
+  MidiInnerActiveTakeBelow = midi_selection.rowAndBelow,
 
-  -- midi operator -> pitch_motion
-  --   ranges will be passed to the operator, in order to make the selection.
-  --
-  --
-  SelectNoteRows = function(meta)
-    -- if meta.start_row and meta.end_row then
-    --   midi.midi_take_filter_transform(meta.active_take, {
-    --     filter = { notes = { pitch = { { meta.start_row, meta.end_row } } } },
-    --     transform = {
-    --       notes = { sel = true },
-    --     },
-    --   })
-    -- end
-  end,
-
-  MidiInnerActiveTakeAbove = {
-    function(meta, opts)
-      log.user("Midi Above | meta:", format.block(meta), "opts:", format.block(opts))
-      local row = reaper.MIDIEditor_GetSetting_int(meta.ME.editor, "active_note_row")
-
-      midi.midi_take_filter_transform(meta.active_take, {
-        filter = {
-          notes = {
-            pitch = function(note)
-              return row <= note.pitch
-            end,
-          },
-        },
-        transform = { notes = { sel = true } },
-      })
-
-      -- midi.midi_take_filter_transform(meta.active_take, {
-      --   transform = {
-      --     notes = { sel = true }, -- this would select all notes in take
-      --   },
-      -- })
-    end,
-    -- opts = "hej",
-    midiCommand = true, -- is it necessary to add this for my own custom ME commands?
-  },
-  MidiInnerActiveTakeBelow = {
-    function(meta, opts)
-      log.user("Midi Below | meta:", format.block(meta), "opts:", format.block(opts))
-      local row = reaper.MIDIEditor_GetSetting_int(meta.ME.editor, "active_note_row")
-      midi.midi_take_filter_transform(meta.active_take, {
-        filter = {
-          notes = {
-            pitch = function(note)
-              return note.pitch <= row
-            end,
-          },
-        },
-        transform = { notes = { sel = true } },
-      })
-    end,
-    -- opts = "hej",
-    midiCommand = true, -- is it necessary to add this for my own custom ME commands?
-  },
+  NextNotesBig = function(meta) end,
+  PrevNotesBig = function(meta) end,
 
   ToggleFollowMotions = custom.toggle_follow_motions,
   n71 = lib.midi.sendMidiNote_61,
