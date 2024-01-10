@@ -11,13 +11,14 @@ local midi = require("library.midi")
 local midi_patterns = require("library.midi_patterns")
 local pickers = require("pickers.pickers")
 
--- TEST: is it necessary to add this for my own custom ME commands?
 local midi_motions = require("custom_actions.midi_motions")
 local midi_selection = require("custom_actions.midi_selection")
 local midi_operators = require("custom_actions.midi_operators")
 local midi_step_commands = require("custom_actions.midi_step_commands")
 
+local commands = require("custom_actions.commands.commands")
 local fx_commands = require("custom_actions.commands.fx")
+local logging_commands = require("custom_actions.commands.logging")
 
 -- NOTE: Action key/value pairs
 --  key = the name of the action
@@ -847,94 +848,9 @@ return {
     "TODO: region/marks picker -> tracks picker -> jump-to-position-in-main",
   },
 
-  -- TODO: move to `custom_actions/commands/editing.lua`
-
-  -- TODO: prefix actions with MidiEditor_
-  Midi_ChangeActiveSelection = {
-    pickers.all_tracks,
-    opts = {
-      title = "jump to track midi",
-      filter = "MCS", -- filter track_obj.class = [MCS]
-      next = function(meta, data)
-        require("library.midi_editor").createEditMidiItemAtPositionForTrack(_, data.selection)
-      end,
-    },
-  },
-
-  -- TODO: move to `custom_actions/commands/editing.lua`
-
-  MIDI_EditMidiAtCurPosForTrack = function()
-    local log = require("utils.log")
-    local format = require("utils.format")
-    local lib_tr = require("library.tracks")
-
-    -- this function could be renamed to `get_rk_context()` and return all possible
-    -- useful information.
-    local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
-
-    if context == "main" then
-      local focus_track_obj = focused_track_objects[1]
-      log.user(">>>", focus_track_obj)
-      require("library.midi_editor").createEditMidiItemAtPositionForTrack(_, focus_track_obj)
-    end
-  end,
-
-  -- TODO: move to `custom_actions/commands/editing.lua`
-
-  Midi_EditMidiForRegionsMarksAndSelectTrack = {
-    pickers.marks_and_regions,
-    opts = {
-      filter = "MCS",
-      next_is_picker = true,
-      next = function(meta, data)
-        local log = require("utils.log")
-        local format = require("utils.format")
-        log.user("selection data", format.block(data))
-        local mark_sel = data.selection
-
-        -- # tResultButtons 10.0
-        -- selection data {
-        --   selection = {
-        --     id = 1,
-        --     index = 1,
-        --     left = 8.0,
-        --     name = "testing",
-        --     position = 10.0,
-        --     register = "r",
-        --     right = 16.0,
-        --     time = 1699895229,
-        --     track_position = 169.0,
-        --     track_selection = {
-        --       169.0
-        --     },
-        --     type = "region"
-        --   }
-        -- }
-
-        pickers.all_tracks(meta, {
-          title = "Choose track for editing @ region = [" .. data.selection.name .. "]",
-          filter = "MCS",
-          next_is_picker = false,
-          next = function(meta2, data2)
-            log.user("selection data2", format.block(data2), "sel mark->", format.block(data))
-            require("library.midi_editor").createEditMidiItemAtPositionForTrack(
-              _,
-              data2.selection,
-              mark_sel.left,
-              mark_sel.right
-            )
-            -- move edit cursor
-            -- note: i dunno if this is the best place to put the move command.
-            reaper.SetEditCurPos(mark_sel.left, false, false)
-          end,
-        })
-
-        -- pickers.all_tracks
-        --     >>> next = reuse next from above
-        --        >>>> first - move it into library.
-      end,
-    },
-  },
+  Midi_ChangeActiveSelection = commands.MIDI_ChangeActiveSelection,
+  MIDI_EditMidiAtCurPosForTrack = commands.MIDI_EditMidiAtCurPosForTrack,
+  Midi_EditMidiForRegionsMarksAndSelectTrack = commands.Midi_EditMidiForRegionsMarksAndSelectTrack,
 
   Midi_EditRegionForZoneAndSelActiveTrack = {
     "TODO: reg/mrk picker -> track picker MSC -> edit selected track in region",
@@ -955,134 +871,28 @@ return {
   },
 
   RandomizeRs5kSampleForFocusedTracks = fx_commands.randomizeRs5kSampleForFocusedTracks,
-  --   {
-  --   require("library.tracks").focus_tracks_fx_do,
-  --   opts = {
-  --     "RS5K",
-  --     "updateSample",
-  --   },
-  -- },
-
   PickerSelectSampleForSamplerOnSelectOrFocusedTrack = fx_commands.pickerSelectSampleForSamplerOnSelectOrFocusedTrack,
-  -- {
-  -- function()
-  --   local lib_tr = require("library.tracks")
-  --   local utils_io = require("utils.fs")
-  --   local rs5k = require("plugins.rs5k")
-  --   local lib_fx = require("library.fx")
-  --   local log = require("utils.log")
-  --   local format = require("utils.format")
-  --
-  --   -- TODO: on up/down or change -> previow results[1] or scroll_selection.
-  --
-  --   local focused_track_objects, _ = lib_tr.get_focused_track_objects()
-  --   local focus_track_obj = focused_track_objects[1]
-  --
-  --   local function get_basename_without_extension(filepath)
-  --     local pattern = "[\\/]?([^\\/]+)%.(%w+)$" -- Pattern to match the last part of the path and the extension
-  --     local basename, extension = string.match(filepath, pattern)
-  --     return basename
-  --   end
-  --
-  --   -- if sx_utils.trackObjHasOption(g_obj, "m") and #t_fx_by_name > 0 then
-  --   --   -- if i want to only allow on drum lanes?
-  --   --   -- NOTE: but this should be a more general funcion so that it becomes
-  --   --   -- easy and flexible to update any track with a sampler.
-  --   -- end
-  --
-  --   if focus_track_obj then
-  --     local first_rs5k_fx_obj = lib_fx.get_fx_objs_by_name_string(focus_track_obj.guid, rs5k.PLUGIN_NAME)
-  --     if first_rs5k_fx_obj then
-  --       log.debug("select `sample` for:", first_rs5k_fx_obj.name)
-  --
-  --       local wav_files_found = utils_io.findWavFilesWithNameX(focus_track_obj.name_components[1])
-  --
-  --       local results_prepared = {}
-  --       for i, wavf in ipairs(wav_files_found) do
-  --         table.insert(results_prepared, {
-  --           full_path = wavf,
-  --           name = get_basename_without_extension(wavf),
-  --         })
-  --       end
-  --
-  --       require("library.fzf").init({
-  --         title = string.format("Change rs5k sample for track (%s)", focus_track_obj.name),
-  --         results = results_prepared,
-  --         on_select_func = function(self, i)
-  --           local selection = self.t_search_results[i]
-  --
-  --           rs5k.updateSample(focus_track_obj, first_rs5k_fx_obj.idx, selection.full_path)
-  --
-  --           -- if opts.next then
-  --           --   opts.next(meta, {
-  --           --     selection = selection,
-  --           --   })
-  --           -- end
-  --           return true
-  --         end,
-  --         sort_comp = "name",
-  --         entry_maker = "name",
-  --       })
-  --     end
-  --   end
-  -- end,
-  -- },
+
+  SetLogLevelTrace = logging_commands.setLogLevelTrace,
+  SetLogLevelDebug = logging_commands.setLogLevelDebug,
+  SetLogLevelInfo = logging_commands.setLogLevelInfo,
+  SetLogLevelWarn = logging_commands.setLogLevelWarn,
+  SetLogLevelUser = logging_commands.setLogLevelUser,
+  SetLogLevelError = logging_commands.setLogLevelError,
+  SetLogLevelFatal = logging_commands.setLogLevelFatal,
+  CloseReaConsole = logging_commands.closeReaConsole,
+  ClearConsole = logging_commands.clearConsole,
 
   CmdCustomYankTrack = { require("custom_actions.ypc").yank, opts = { dry_run = false } },
   CmdCustomPutTrack = { require("custom_actions.ypc").put, opts = { dry_run = false } },
   CmdCustomCutTrack = { require("custom_actions.ypc").cut, opts = { dry_run = false } },
+
   CmdCustomInsertTrackAbove = require("custom_actions.ypc").insertTrackAbove,
   CmdCustomInsertTrackBelow = require("custom_actions.ypc").InsertTrackBelow,
-
-  -- TODO: move these to custom `actions/commands/logging.lua`
-  SetLogLevelTrace = function()
-    reaper.SetExtState("reaper_keys_logging", "log_level", "trace", true)
-  end,
-  SetLogLevelDebug = function()
-    reaper.SetExtState("reaper_keys_logging", "log_level", "debug", true)
-  end,
-  SetLogLevelInfo = function()
-    reaper.SetExtState("reaper_keys_logging", "log_level", "info", true)
-  end,
-  SetLogLevelWarn = function()
-    reaper.SetExtState("reaper_keys_logging", "log_level", "warn", true)
-  end,
-  SetLogLevelUser = function()
-    reaper.SetExtState("reaper_keys_logging", "log_level", "user", true)
-  end,
-  SetLogLevelError = function()
-    reaper.SetExtState("reaper_keys_logging", "log_level", "error", true)
-  end,
-  SetLogLevelFatal = function()
-    reaper.SetExtState("reaper_keys_logging", "log_level", "fatal", true)
-  end,
-  CloseReaConsole = function()
-    -- TODO: this should be moved into a util wrapper so that I can call
-    -- ultrashcall with one fn call.
-    dofile(reaper.GetResourcePath() .. "/UserPlugins/ultraschall_api.lua")
-    reaper.SetExtState("reaper_keys_logging", "log_level", "fatal", true)
-    local retval = ultraschall.CloseReaScriptConsole()
-  end,
-  ClearConsole = function()
-    require("utils.log").clear()
-  end,
 
   NextPitch = { midi_motions.nextPitch, prefixRepetitionCount = true },
   PrevPitch = { midi_motions.prevPitch, prefixRepetitionCount = true },
 
-  -- MidiSelectNotes = {
-  --   function(meta, opts)
-  --     log.user("action: MidiCut", format.block(meta))
-  --     -- local lib_tr = require("library.tracks")
-  --     -- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
-  --     midi.midi_take_filter_transform(meta.active_take, {
-  --       remove = {
-  --         notes = { sel = true }, -- this would select all notes in take
-  --       },
-  --     })
-  --   end,
-  --   midiCommand = true,
-  -- },
   MidiCut = midi_operators.cut,
   MidiInnerActiveTake = midi_selection.innerActiveTake,
   SelectNoteRows = midi_selection.selectNoteRows,
@@ -1093,6 +903,7 @@ return {
   PrevNotesBig = function(meta) end,
 
   ToggleFollowMotions = custom.toggle_follow_motions,
+
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,
   n69 = lib.midi.sendMidiNote_69,
