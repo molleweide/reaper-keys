@@ -23,6 +23,7 @@ local function make_entries(label_maker)
 
 			if tResults and iStart <= #tResults then
 				local item = tResults[iStart]
+
 				b.label = label_maker(item)
 				b.visible = true
 				info.visible = true

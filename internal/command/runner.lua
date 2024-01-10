@@ -1,10 +1,10 @@
-local definitions = require('utils.definitions')
+local definitions = require("utils.definitions")
 
-local getAction = require('utils.get_action')
-local log = require('utils.log')
-local format = require('utils.format')
-local reaper_utils = require('custom_actions.utils')
-local state_interface = require('state_machine.state_interface')
+local getAction = require("utils.get_action")
+local log = require("utils.log")
+local format = require("utils.format")
+local reaper_utils = require("custom_actions.utils")
+local state_interface = require("state_machine.state_interface")
 
 --
 -- This file is responsible for running the actions of my action sequences.
@@ -19,7 +19,7 @@ function runActionPart(id, is_reaper_midi_command, meta, opts)
   end
 
   local numeric_id = id
-  if type(id) == 'string' then
+  if type(id) == "string" then
     local action = getAction(id)
     if action then
       runner.runAction(action)
@@ -41,48 +41,50 @@ function runActionPart(id, is_reaper_midi_command, meta, opts)
 end
 
 function runRegisterAction(registerAction)
-  local register = registerAction['register']
+  local register = registerAction["register"]
   if not register then
     log.error("Tried to run a register action but got no register!")
     return
   end
 
-  if not type(registerAction[1]) == 'function' then
-    log.error("Did not get passed a proper function for the register action. Got " .. registerAction[1] .. " instead.")
+  if not type(registerAction[1]) == "function" then
+    log.error(
+      "Did not get passed a proper function for the register action. Got " .. registerAction[1] .. " instead."
+    )
   end
 
   registerAction[1](register)
 end
 
 function runner.runAction(action)
-  if type(action) ~= 'table' then
+  if type(action) ~= "table" then
     runActionPart(action, false)
     return
   end
 
   local repetitions = 1
-  if action['repetitions'] then
-    repetitions = action['repetitions']
+  if action["repetitions"] then
+    repetitions = action["repetitions"]
   end
 
   local prefixedRepetitions = 1
-  if action['prefixedRepetitions'] then
-    prefixedRepetitions = action['prefixedRepetitions']
+  if action["prefixedRepetitions"] then
+    prefixedRepetitions = action["prefixedRepetitions"]
   end
 
-  if action['registerAction'] then
+  if action["registerAction"] then
     runRegisterAction(action)
     return
   end
 
   is_reaper_midi_command = false
-  if action['midiCommand'] then
+  if action["midiCommand"] then
     is_reaper_midi_command = true
   end
 
-  for i=1,repetitions*prefixedRepetitions do
+  for i = 1, repetitions * prefixedRepetitions do
     for _, sub_action in ipairs(action) do
-      if type(sub_action) == 'table' then
+      if type(sub_action) == "table" then
         runner.runAction(sub_action)
       else
         runActionPart(sub_action, is_reaper_midi_command, action.meta, action.opts)
@@ -92,7 +94,7 @@ function runner.runAction(action)
 end
 
 function runner.runActionNTimes(action, times)
-  for i=1,times,1 do
+  for i = 1, times, 1 do
     runner.runAction(action)
   end
 end
@@ -117,16 +119,16 @@ function runner.extendTimelineSelection(movement, args)
   movement(table.unpack(args))
   local end_pos = reaper.GetCursorPosition()
 
-  if state_interface.getTimelineSelectionSide() == 'right' then
+  if state_interface.getTimelineSelectionSide() == "right" then
     if end_pos <= left then
-      state_interface.setTimelineSelectionSide('left')
+      state_interface.setTimelineSelectionSide("left")
       reaper.GetSet_LoopTimeRange(true, false, end_pos, left, false)
     else
       reaper.GetSet_LoopTimeRange(true, false, left, end_pos, false)
     end
   else
     if end_pos >= right then
-      state_interface.setTimelineSelectionSide('right')
+      state_interface.setTimelineSelectionSide("right")
       reaper.GetSet_LoopTimeRange(true, false, right, end_pos, false)
     else
       reaper.GetSet_LoopTimeRange(true, false, end_pos, right, false)
@@ -174,13 +176,13 @@ function runner.makeSelectionFromTrackMotion(track_motion, repetitions)
     first_index = swp
   end
 
-  for i=first_index,second_index do
+  for i = first_index, second_index do
     local track = reaper.GetTrack(0, i)
     reaper.SetTrackSelected(track, true)
   end
 end
 
--- function runner.makeMidiSelectionFromMidiSelector(midi_selector)
+-- function runner.makeMidiSelectionFromPitchMotion(midi_selector)
 -- end
 
 return runner

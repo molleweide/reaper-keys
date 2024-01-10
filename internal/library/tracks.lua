@@ -109,6 +109,8 @@ end
 
 -- FIX: should not return ME if ME is open AND NOT focused.
 --
+-- option: not to get track tree
+--
 tracks.get_focused_track_objects = function()
   local context = state_interface.getContext()
   log.debug("get_focused_track_objects/rk context:", context)
@@ -123,6 +125,7 @@ tracks.get_focused_track_objects = function()
 
       -- ~ get corresponding track
       -- ~ get corresponding item
+       -- reaper.MIDIEditor_EnumTakes( ME, 0, editable_only )
 
     end
   elseif context == "main" then

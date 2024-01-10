@@ -20,6 +20,9 @@ local commands = require("custom_actions.commands.commands")
 local fx_commands = require("custom_actions.commands.fx")
 local logging_commands = require("custom_actions.commands.logging")
 
+-- FIX: I need to name long actions with `_` underscores - Otherwise the names
+-- become to long and hard to read.
+
 -- NOTE: Action key/value pairs
 --  key = the name of the action
 --  val = command/function corresponding to this action.
@@ -47,11 +50,6 @@ local logging_commands = require("custom_actions.commands.logging")
 
 -- WARN: The `opts` table is passed to all sub-functions of an action, ie. it
 -- acts as an action global opts table.
-
--- TODO: should I move all funcs that are configured to opts into custom_actions/
--- files?? Hmmm, but that is annoying because it is nicer to keep things here.
--- But on the other hand, I could just keep things here until they have settled
--- and then I can move them into custom actions...
 
 return {
   ActivateNextMidiItem = { 40833, midiCommand = true },
@@ -216,21 +214,19 @@ return {
   -- be configured right here in the actions table instead of having to be
   -- a custom function for each, which is hellannoying
 
-  InsertMidiStep_P1 = custom.midiStepRel_P1,
-  InsertMidiStep_m2 = custom.midiStepRel_m2,
-  InsertMidiStep_M2 = custom.midiStepRel_M2,
-  InsertMidiStep_m3 = custom.midiStepRel_m3,
-
-  InsertMidiStep_M3 = custom.midiStepRel_M3,
-  InsertMidiStep_P4 = custom.midiStepRel_P4,
-  InsertMidiStep_b5 = custom.midiStepRel_b5,
-  InsertMidiStep_P5 = custom.midiStepRel_P5,
-
-  InsertMidiStep_m6 = custom.midiStepRel_m6,
-  InsertMidiStep_M6 = custom.midiStepRel_M6,
-  InsertMidiStep_m7 = custom.midiStepRel_m7,
-  InsertMidiStep_M7 = custom.midiStepRel_M7,
-  InsertMidiStep_P8 = custom.midiStepRel_P8,
+  InsertMidiStep_P1 = midi_step_commands.midiStepRel_P1,
+  InsertMidiStep_m2 = midi_step_commands.midiStepRel_m2,
+  InsertMidiStep_M2 = midi_step_commands.midiStepRel_M2,
+  InsertMidiStep_m3 = midi_step_commands.midiStepRel_m3,
+  InsertMidiStep_M3 = midi_step_commands.midiStepRel_M3,
+  InsertMidiStep_P4 = midi_step_commands.midiStepRel_P4,
+  InsertMidiStep_b5 = midi_step_commands.midiStepRel_b5,
+  InsertMidiStep_P5 = midi_step_commands.midiStepRel_P5,
+  InsertMidiStep_m6 = midi_step_commands.midiStepRel_m6,
+  InsertMidiStep_M6 = midi_step_commands.midiStepRel_M6,
+  InsertMidiStep_m7 = midi_step_commands.midiStepRel_m7,
+  InsertMidiStep_M7 = midi_step_commands.midiStepRel_M7,
+  InsertMidiStep_P8 = midi_step_commands.midiStepRel_P8,
 
   InsertOrExtendMidiItem = 42069,
   InsertTrackFromTrackTemplate = 46000,
@@ -829,13 +825,12 @@ return {
 
   MidiVoxSetCurrentDrumTrigNote = midi2vox.setDrumTrigMIDIOutFromCurrentNote,
 
+  -- TODO: move these to `custom_actions/commands/midi_patterns.lua`
   NoteRowPattern = { midi_patterns.insertPatternForCurrentBarAndNoteRow, midiCommand = true },
-
   MidiPattern_InsertFromString_at_cursor = midi_patterns.insertPatternFromString,
   MidiPattern_InsertFromString_at_current_measure = custom.midi_patterns_insert_at_measure,
-
-  -- FIX: action deletes all midi notes including outside of target measure.
   MidiPattern_InsertRandom16thNotes_fill_bar = {
+    -- FIX: action deletes all midi notes including outside of target measure.
     midi_patterns.insertPatternFromString,
     opts = {
       pattern = "**** **** **** ****",

@@ -259,63 +259,6 @@ custom_actions.jumpToRegionAndLoop = function(opts)
   })
 end
 
--- FIX: it is a bit stupid to pass chords here. i should make it possible to
--- pass single note / relative interval
---
--- TODO: all of these should be configured under `/actions`
-
-custom_actions.midiStepRel_P1 = function(meta)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 1 } } })
-end
-
-custom_actions.midiStepRel_m2 = function(meta, opts)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 2 } } })
-end
-
-custom_actions.midiStepRel_M2 = function(meta, opts)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 3 } } })
-end
-
-custom_actions.midiStepRel_m3 = function(meta)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 4 } } })
-end
-
-custom_actions.midiStepRel_M3 = function(meta, opts)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 5 } } })
-end
-
-custom_actions.midiStepRel_P4 = function(meta, opts)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 6 } } })
-end
-
-custom_actions.midiStepRel_b5 = function(meta, opts)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 7 } } })
-end
-
-custom_actions.midiStepRel_P5 = function(meta, opts)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 8 } } })
-end
-
-custom_actions.midiStepRel_m6 = function(meta, opts)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 9 } } })
-end
-
-custom_actions.midiStepRel_M6 = function(meta, opts)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 10 } } })
-end
-
-custom_actions.midiStepRel_m7 = function(meta, opts)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 11 } } })
-end
-
-custom_actions.midiStepRel_M7 = function(meta, opts)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 12 } } })
-end
-
-custom_actions.midiStepRel_P8 = function(meta, opts)
-  midi.insertMidiNoteChunk(meta, { move_cursor = true, chord = { "midi_step_rel_pitch_chord_name", { 13 } } })
-end
-
 -- TODO: i can impl this as a toggle first, and then layer on the picker..
 -- then use leader key later for selection durations quickly.
 
@@ -351,7 +294,7 @@ custom_actions.midi_patterns_insert_at_measure = function(meta, opts)
   })
 end
 
-custom_actions.mmidi_patterns_insert_at_measure_random = function(meta, opts) end
+custom_actions.midi_patterns_insert_at_measure_random = function(meta, opts) end
 
 custom_actions.toggle_follow_motions = function()
   state_interface.toggleKey("ME_follow_motions")

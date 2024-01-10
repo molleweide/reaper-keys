@@ -11,6 +11,13 @@ local tbl = require("utils.table")
 
 -- TODO: look at chordgun for good midi library functions
 
+local function wait(seconds)
+	local start_time = os.clock()
+	while os.clock() - start_time < seconds do
+		-- Wait until the desired time has passed
+	end
+end
+
 -- // MIDI HELPER VARIABLE
 -- WAS_FILTERED = 1024;  // array for storing which notes are filtered
 -- PASS_THRU_CC = 0;
@@ -40,291 +47,291 @@ local midi = {}
 --          return note_start_index + range - 1 end} -- high thresh
 
 function midi.sendMidiNote_71()
-  sendMidiNote(61)
+	sendMidiNote(61)
 end
 
 function midi.sendMidiNote_70()
-  sendMidiNote(70)
+	sendMidiNote(70)
 end
 
 function midi.sendMidiNote_69()
-  sendMidiNote(69)
+	sendMidiNote(69)
 end
 
 function midi.sendMidiNote_68()
-  sendMidiNote(68)
+	sendMidiNote(68)
 end
 
 function midi.sendMidiNote_67()
-  sendMidiNote(67)
+	sendMidiNote(67)
 end
 
 function midi.sendMidiNote_66()
-  sendMidiNote(66)
+	sendMidiNote(66)
 end
 
 function midi.sendMidiNote_65()
-  sendMidiNote(65)
+	sendMidiNote(65)
 end
 
 function midi.sendMidiNote_64()
-  sendMidiNote(64)
+	sendMidiNote(64)
 end
 
 function midi.sendMidiNote_63()
-  sendMidiNote(63)
+	sendMidiNote(63)
 end
 
 function midi.sendMidiNote_62()
-  sendMidiNote(62)
+	sendMidiNote(62)
 end
 
 function midi.sendMidiNote_61()
-  sendMidiNote(61)
+	sendMidiNote(61)
 end
 
 function midi.sendMidiNote_60()
-  sendMidiNote(60)
+	sendMidiNote(60)
 end
 
 function midi.sendMidiNote_59()
-  sendMidiNote(59)
+	sendMidiNote(59)
 end
 
 function midi.sendMidiNote_58()
-  sendMidiNote(58)
+	sendMidiNote(58)
 end
 
 function midi.sendMidiNote_57()
-  sendMidiNote(57)
+	sendMidiNote(57)
 end
 
 function midi.sendMidiNote_56()
-  sendMidiNote(56)
+	sendMidiNote(56)
 end
 
 function midi.sendMidiNote_55()
-  sendMidiNote(55)
+	sendMidiNote(55)
 end
 
 function midi.sendMidiNote_54()
-  sendMidiNote(54)
+	sendMidiNote(54)
 end
 
 function midi.sendMidiNote_53()
-  sendMidiNote(53)
+	sendMidiNote(53)
 end
 
 function midi.sendMidiNote_52()
-  sendMidiNote(52)
+	sendMidiNote(52)
 end
 
 function midi.sendMidiNote_51()
-  sendMidiNote(51)
+	sendMidiNote(51)
 end
 
 function midi.sendMidiNote_50()
-  sendMidiNote(50)
+	sendMidiNote(50)
 end
 
 function midi.sendMidiNote_49()
-  sendMidiNote(49)
+	sendMidiNote(49)
 end
 
 function midi.sendMidiNote_48()
-  sendMidiNote(48)
+	sendMidiNote(48)
 end
 
 function midi.sendMidiNote_47()
-  sendMidiNote(47)
+	sendMidiNote(47)
 end
 
 function midi.sendMidiNote_46()
-  sendMidiNote(46)
+	sendMidiNote(46)
 end
 
 function midi.sendMidiNote_45()
-  sendMidiNote(45)
+	sendMidiNote(45)
 end
 
 function midi.sendMidiNote_44()
-  sendMidiNote(44)
+	sendMidiNote(44)
 end
 
 function midi.sendMidiNote_43()
-  sendMidiNote(43)
+	sendMidiNote(43)
 end
 
 function midi.sendMidiNote_42()
-  sendMidiNote(42)
+	sendMidiNote(42)
 end
 
 function midi.sendMidiNote_41()
-  sendMidiNote(41)
+	sendMidiNote(41)
 end
 
 function midi.sendMidiNote_40()
-  sendMidiNote(40)
+	sendMidiNote(40)
 end
 
 function midi.sendMidiNote_39()
-  sendMidiNote(39)
+	sendMidiNote(39)
 end
 
 function midi.sendMidiNote_38()
-  sendMidiNote(38)
+	sendMidiNote(38)
 end
 
 function midi.sendMidiNote_37()
-  sendMidiNote(37)
+	sendMidiNote(37)
 end
 
 function midi.sendMidiNote_36()
-  sendMidiNote(36)
+	sendMidiNote(36)
 end
 
 function midi.sendMidiNote_35()
-  sendMidiNote(35)
+	sendMidiNote(35)
 end
 
 function midi.sendMidiNote_34()
-  sendMidiNote(34)
+	sendMidiNote(34)
 end
 
 function midi.sendMidiNote_33()
-  sendMidiNote(33)
+	sendMidiNote(33)
 end
 
 function midi.sendMidiNote_32()
-  sendMidiNote(32)
+	sendMidiNote(32)
 end
 
 function midi.sendMidiNote_31()
-  sendMidiNote(31)
+	sendMidiNote(31)
 end
 
 function midi.sendMidiNote_30()
-  sendMidiNote(30)
+	sendMidiNote(30)
 end
 
 function midi.sendMidiNote_29()
-  sendMidiNote(29)
+	sendMidiNote(29)
 end
 
 function midi.sendMidiNote_28()
-  sendMidiNote(28)
+	sendMidiNote(28)
 end
 
 function midi.sendMidiNote_27()
-  sendMidiNote(27)
+	sendMidiNote(27)
 end
 
 function midi.sendMidiNote_26()
-  sendMidiNote(26)
+	sendMidiNote(26)
 end
 
 function midi.sendMidiNote_25()
-  sendMidiNote(25)
+	sendMidiNote(25)
 end
 
 function midi.sendMidiNote_24()
-  sendMidiNote(24)
+	sendMidiNote(24)
 end
 
 function midi.sendMidiNote_23()
-  sendMidiNote(23)
+	sendMidiNote(23)
 end
 
 function midi.sendMidiNote_22()
-  sendMidiNote(22)
+	sendMidiNote(22)
 end
 
 function midi.sendMidiNote_21()
-  sendMidiNote(21)
+	sendMidiNote(21)
 end
 
 function midi.sendMidiNote_20()
-  sendMidiNote(20)
+	sendMidiNote(20)
 end
 
 function midi.sendMidiNote_19()
-  sendMidiNote(19)
+	sendMidiNote(19)
 end
 
 function midi.sendMidiNote_18()
-  sendMidiNote(18)
+	sendMidiNote(18)
 end
 
 function midi.sendMidiNote_17()
-  sendMidiNote(17)
+	sendMidiNote(17)
 end
 
 function midi.sendMidiNote_16()
-  sendMidiNote(16)
+	sendMidiNote(16)
 end
 
 function midi.sendMidiNote_15()
-  sendMidiNote(15)
+	sendMidiNote(15)
 end
 
 function midi.sendMidiNote_14()
-  sendMidiNote(14)
+	sendMidiNote(14)
 end
 
 function midi.sendMidiNote_13()
-  sendMidiNote(13)
+	sendMidiNote(13)
 end
 
 function midi.sendMidiNote_12()
-  sendMidiNote(12)
+	sendMidiNote(12)
 end
 
 function midi.sendMidiNote_11()
-  sendMidiNote(11)
+	sendMidiNote(11)
 end
 
 function midi.sendMidiNote_10()
-  sendMidiNote(10)
+	sendMidiNote(10)
 end
 
 function midi.sendMidiNote_09()
-  sendMidiNote(9)
+	sendMidiNote(9)
 end
 
 function midi.sendMidiNote_08()
-  sendMidiNote(8)
+	sendMidiNote(8)
 end
 
 function midi.sendMidiNote_07()
-  sendMidiNote(7)
+	sendMidiNote(7)
 end
 
 function midi.sendMidiNote_06()
-  sendMidiNote(6)
+	sendMidiNote(6)
 end
 
 function midi.sendMidiNote_05()
-  sendMidiNote(5)
+	sendMidiNote(5)
 end
 
 function midi.sendMidiNote_04()
-  sendMidiNote(4)
+	sendMidiNote(4)
 end
 
 function midi.sendMidiNote_03()
-  sendMidiNote(3)
+	sendMidiNote(3)
 end
 
 function midi.sendMidiNote_02()
-  sendMidiNote(2)
+	sendMidiNote(2)
 end
 
 function midi.sendMidiNote_01()
-  sendMidiNote(1)
+	sendMidiNote(1)
 end
 
 function midi.sendMidiNote_00()
-  sendMidiNote(0)
+	sendMidiNote(0)
 end
 
 --  TODO
@@ -333,9 +340,9 @@ end
 --      write an issue > ask Mike about this
 
 function sendMidiNote(note_num)
-  reaper.StuffMIDIMessage(MODE, NOTE_ON, note_num, VEL)
-  -- wait()
-  reaper.StuffMIDIMessage(MODE, NOTE_OFF, note_num, VEL)
+	reaper.StuffMIDIMessage(MODE, NOTE_ON, note_num, VEL)
+	-- wait()
+	reaper.StuffMIDIMessage(MODE, NOTE_OFF, note_num, VEL)
 end
 
 -- this string color makes it easier to read...
@@ -406,96 +413,118 @@ local easy_read = [[
 -- rename: buildNoteChunkForInsertion()
 --
 function midi.insertMidiNoteChunk(meta, opts)
-  opts = opts or {}
+	opts = opts or {}
 
-  local exists, midi_step_state = midi.get_midi_step_state()
+	-- move this to action?
+	local exists, midi_step_state = midi.get_midi_step_state()
 
-  log.user("midi_step_state:", exists, format.block(midi_step_state))
+	log.user("midi_step_state:", exists, format.block(midi_step_state))
 
-  local ret, ctxm = require("library.midi_editor").getMidiValidContext()
-  if not ret then
-    return
-  end
+	-- could this also be passed as an arg?
+	local ret, ctxm = require("library.midi_editor").getMidiValidContext()
+	if not ret then
+		return
+	end
 
-  -- TODO: move to
-  -- lib/cursor.get()
-  -- lib/midi.get_active_note_row()
-  -- lib/midi.get_important_contexts() -- merge getMidiValidContext with these and return table.
-  local cursor_pos = reaper.GetCursorPosition()
-  local active_note_row = reaper.MIDIEditor_GetSetting_int(ctxm.editor, "active_note_row")
+	-- TODO: move to
+	-- lib/cursor.get()
+	-- lib/midi.get_active_note_row()
+	-- lib/midi.get_important_contexts() -- merge getMidiValidContext with these and return table.
+	local cursor_pos = reaper.GetCursorPosition()
+	local active_note_row = reaper.MIDIEditor_GetSetting_int(ctxm.editor, "active_note_row")
 
-  local t_note_pitches = {}
-  local t_midi_notes = {}
-  local sixteen_note_len = 0.25 / 2
-  local step_len = sixteen_note_len
-  local note_end_gap = 0.005
-  local note_duration = sixteen_note_len - note_end_gap
-  local direction_mult = midi_step_state.direction and 1 or -1
-  local octave_add = midi_step_state.octave_next and (midi_step_state.octave_next * 12) or 0
+	local t_note_pitches = {}
+	local t_midi_notes = {}
+	local sixteen_note_len = 0.25 / 2
+	local step_len = sixteen_note_len
+	local note_end_gap = 0.005
+	local note_duration = sixteen_note_len - note_end_gap
+	local direction_mult = midi_step_state.direction and 1 or -1
+	local octave_add = midi_step_state.octave_next and (midi_step_state.octave_next * 12) or 0
 
-  if opts.move_cursor then
-    local new_pos = meta.end_pos and meta.endpos or reaper.GetCursorPosition() + step_len
-    reaper.SetEditCurPos(new_pos, false, false)
-  end
+	if opts.move_cursor then
+		local new_pos = meta.end_pos and meta.endpos or reaper.GetCursorPosition() + step_len
+		reaper.SetEditCurPos(new_pos, false, false)
+	end
 
-  if midi_step_state.silent then
-    return
-  end
+	if midi_step_state.silent then
+		return
+	end
 
-  -- fix: handle incoming chord here...
-  --
-  -- fix: handle single incoming pitches as well??
-  --
-  -- fix: handle direction ->
-  --
-  --
-  -- FIX: If chord, then we don't move the pitch/active or whatever,
-  -- ONLY if single note?
-  -- Or should there be a possible to insert a chord and also move the
-  -- active center pitch all at once?
+	-- fix: handle incoming chord here...
+	--
+	-- fix: handle single incoming pitches as well??
+	--
+	-- fix: handle direction ->
+	--
+	--
+	-- FIX: If chord, then we don't move the pitch/active or whatever,
+	-- ONLY if single note?
+	-- Or should there be a possible to insert a chord and also move the
+	-- active center pitch all at once?
 
-  if opts.chord then
-    for _, chord_rel_pitch in ipairs(opts.chord[2]) do
-      -- TODO: ADD OCTAVE
-      local new_pitch = active_note_row + octave_add + (chord_rel_pitch - 1) * direction_mult
+	if opts.chord then
+		for _, chord_rel_pitch in ipairs(opts.chord[2]) do
+			-- TODO: ADD OCTAVE
+			local new_pitch = active_note_row + octave_add + (chord_rel_pitch - 1) * direction_mult
 
-      table.insert(t_note_pitches, new_pitch)
-    end
-  else
-    table.insert(t_note_pitches, active_note_row)
-  end
+			table.insert(t_note_pitches, new_pitch)
+		end
+	else
+		table.insert(t_note_pitches, active_note_row)
+	end
 
-  -- move active note row
-  reaper.MIDIEditor_SetSetting_int(
-    ctxm.editor,
-    "active_note_row",
-    active_note_row + octave_add + (opts.chord[2][1] - 1) * direction_mult
-  )
+	-- if opts.move_note_row...
+	reaper.MIDIEditor_SetSetting_int(
+		ctxm.editor,
+		"active_note_row",
+		active_note_row + octave_add + (opts.chord[2][1] - 1) * direction_mult
+	)
 
-  for i in ipairs(t_note_pitches) do
-    local t_new_note = {}
-    t_new_note.pitch = t_note_pitches[i]
+	-- build notes - assign note durations
+	for i in ipairs(t_note_pitches) do
+		local t_new_note = {}
+		t_new_note.pitch = t_note_pitches[i]
 
-    if meta.action_type == "timeline_operator" then
-      t_new_note.time_pos_start = meta.start_pos
-      t_new_note.time_pos_end = meta.end_pos
-    elseif meta.action_type:match("command$") then
-      t_new_note.time_pos_start = cursor_pos
-      t_new_note.time_pos_end = cursor_pos + note_duration
-    end
-    table.insert(t_midi_notes, t_new_note)
-  end
+		-- if timeline operator, then
+		--     take the provided start/end params.
+		-- else
+		--    no passed params
+		--        use the step mode state variables.
+		--    else
+		--        use passed params.
+		--
+		if meta.action_type == "timeline_operator" then
+			t_new_note.time_pos_start = meta.start_pos
+			t_new_note.time_pos_end = meta.end_pos
+		elseif meta.action_type:match("command$") then
+			t_new_note.time_pos_start = cursor_pos
+			t_new_note.time_pos_end = cursor_pos + note_duration
+		end
+		table.insert(t_midi_notes, t_new_note)
+	end
 
-  log.user("###", format.block(t_midi_notes))
+	log.user("###", format.block(t_midi_notes))
 
-  midi.insert_notes({
-    take = ctxm.take,
-    notes = t_midi_notes,
-  })
+	midi.insert_notes({
+		take = ctxm.take,
+		notes = t_midi_notes,
+	})
 
-  -- reset state
-  midi_step_state.octave_next = nil
-  project_state.overwrite("mode_state", "midi_step", midi_step_state)
+  -- update state
+	midi_step_state.octave_next = nil
+	-- use rk state interface?
+	project_state.overwrite("mode_state", "midi_step", midi_step_state)
+
+	if opts.playback then
+		-- for all notes send ON
+		-- reaper.StuffMIDIMessage(MODE, NOTE_ON, note_num, VEL)
+
+		-- wait(0.5)
+
+		-- for all notes send OFF
+		-- reaper.StuffMIDIMessage(MODE, NOTE_OFF, note_num, VEL)
+	end
 end
 
 -------------------------------------------------------
@@ -505,65 +534,65 @@ end
 -- main state table.
 
 midi.set_step_state = function(state)
-  project_state.overwrite("mode_state", "midi_step", state)
+	project_state.overwrite("mode_state", "midi_step", state)
 end
 
 midi.get_midi_step_state = function()
-  local did_exist, midi_step_state = project_state.get("mode_state", "midi_step")
-  if not did_exist then
-    midi_step_state = {
-      silent = false,
-      direction = true,
-    }
-  end
-  return did_exist, midi_step_state
+	local did_exist, midi_step_state = project_state.get("mode_state", "midi_step")
+	if not did_exist then
+		midi_step_state = {
+			silent = false,
+			direction = true,
+		}
+	end
+	return did_exist, midi_step_state
 end
 
 -------------------------------------------------------
 -------------------------------------------------------
 
 midi.insert_notes = function(opts)
-  if not opts.notes then
-    return
-  end
-  local note_defaults = require("constants.constants").midi_note_defaults
-  local take = opts.take
+	if not opts.notes then
+		return
+	end
+	local note_defaults = require("constants.constants").midi_note_defaults
+	local take = opts.take
 
-  for _, t_note in ipairs(opts.notes) do
-    if not t_note.silent then
-      midi.insert_single_note(take, t_note, false)
+	for _, t_note in ipairs(opts.notes) do
+		if not t_note.silent then
+			midi.insert_single_note(take, t_note, false)
 
-      -- local ret = reaper.MIDI_InsertNote(
-      --   take,
-      --   note_defaults.selected,
-      --   note_defaults.muted,
-      --   reaper.MIDI_GetPPQPosFromProjTime(take, t_note.ppq_s),
-      --   reaper.MIDI_GetPPQPosFromProjTime(take, t_note.ppq_e),
-      --   note_defaults.chan,
-      --   t_note.pitch,
-      --   note_defaults.velocity,
-      --   note_defaults.noSortIn
-      -- )
-    end
-  end
-  if opts.sort ~= false then
-    reaper.MIDI_Sort(take)
-  end
+			-- local ret = reaper.MIDI_InsertNote(
+			--   take,
+			--   note_defaults.selected,
+			--   note_defaults.muted,
+			--   reaper.MIDI_GetPPQPosFromProjTime(take, t_note.ppq_s),
+			--   reaper.MIDI_GetPPQPosFromProjTime(take, t_note.ppq_e),
+			--   note_defaults.chan,
+			--   t_note.pitch,
+			--   note_defaults.velocity,
+			--   note_defaults.noSortIn
+			-- )
+		end
+	end
+	if opts.sort ~= false then
+		reaper.MIDI_Sort(take)
+	end
 end
 
 midi.insert_single_note = function(take, note, noSortIn)
-  local note_defaults = require("constants.constants").midi_note_defaults
-  return reaper.MIDI_InsertNote(
-    take,
-    note.sel and note.sel or note_defaults.selected,
-    note.muted and note.muted or note_defaults.muted,
-    note.ppq_s and note.ppq_s or reaper.MIDI_GetPPQPosFromProjTime(take, note.time_pos_start),
-    note.ppq_e and note.ppq_e or reaper.MIDI_GetPPQPosFromProjTime(take, note.time_pos_end),
-    note.ch and note.ch or note_defaults.chan,
-    note.pitch and note.pitch or note_defaults.pitch,
-    note.vel and note.vel or note_defaults.velocity,
-    noSortIn and noSortIn or note_defaults.noSortIn
-  )
+	local note_defaults = require("constants.constants").midi_note_defaults
+	return reaper.MIDI_InsertNote(
+		take,
+		note.sel and note.sel or note_defaults.selected,
+		note.muted and note.muted or note_defaults.muted,
+		note.ppq_s and note.ppq_s or reaper.MIDI_GetPPQPosFromProjTime(take, note.time_pos_start),
+		note.ppq_e and note.ppq_e or reaper.MIDI_GetPPQPosFromProjTime(take, note.time_pos_end),
+		note.ch and note.ch or note_defaults.chan,
+		note.pitch and note.pitch or note_defaults.pitch,
+		note.vel and note.vel or note_defaults.velocity,
+		noSortIn and noSortIn or note_defaults.noSortIn
+	)
 end
 
 -- TODO: move to midi library and rename to midi.remove_notes({opts})
@@ -572,19 +601,19 @@ end
 -- note filter opt, eg notes outside of scale or predicate.
 
 midi.remove_notes = function(take, t_midi_events, active_note_row, filter_indices)
-  if not t_midi_events then
-    return
-  end
+	if not t_midi_events then
+		return
+	end
 
-  -- log.user("tme",format.block(t_midi_events))
+	-- log.user("tme",format.block(t_midi_events))
 
-  for i = 1, t_midi_events[2] do
-    local note_idx = i - 1
-    local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
-    if pitch == active_note_row then
-      reaper.MIDI_DeleteNote(take, note_idx)
-    end
-  end
+	for i = 1, t_midi_events[2] do
+		local note_idx = i - 1
+		local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
+		if pitch == active_note_row then
+			reaper.MIDI_DeleteNote(take, note_idx)
+		end
+	end
 end
 
 --
@@ -594,11 +623,11 @@ end
 -- make it easier to select midi chunks close in time proximity
 midi.select_notes = function()
 
-  -- vertical | chords
-  -- similar onset time or playing simultaneously
+	-- vertical | chords
+	-- similar onset time or playing simultaneously
 
-  -- horizontal | scales / patterns
-  --
+	-- horizontal | scales / patterns
+	--
 end
 
 --- Deleting notes needs to be done from the end of the array to
@@ -607,9 +636,9 @@ end
 ---@param take userdata
 ---@param t_notes table
 midi.delete_notes = function(take, t_notes)
-  for i = #t_notes, 1, -1 do
-    reaper.MIDI_DeleteNote(take, t_notes[i].index)
-  end
+	for i = #t_notes, 1, -1 do
+		reaper.MIDI_DeleteNote(take, t_notes[i].index)
+	end
 end
 
 -- midi.insert_notes = function(take, t_notes)
@@ -647,202 +676,202 @@ end
 ---@param opts table
 ---@return table | nil
 midi.midi_take_filter_transform = function(take, opts)
-  if not take or not reaper.TakeIsMIDI(take) then -- or midi take...
-    log.debug("No take was supplied to midi.midi_take_filter_transform")
-    return
-  end
-  if opts.insert and opts.remove then
-    log.debug("midi transform filter: you cannot INSERT and REMOVE at same time")
-    return
-  end
+	if not take or not reaper.TakeIsMIDI(take) then -- or midi take...
+		log.debug("No take was supplied to midi.midi_take_filter_transform")
+		return
+	end
+	if opts.insert and opts.remove then
+		log.debug("midi transform filter: you cannot INSERT and REMOVE at same time")
+		return
+	end
 
-  -- FIX: you can insert and transform at same time, ie the insertion data will
-  -- be pre transformed. BUT you cannot transform and delete at the same time.
-  --
-  -- FIX: only one type notes/cc/syx can be handled at once??
+	-- FIX: you can insert and transform at same time, ie the insertion data will
+	-- be pre transformed. BUT you cannot transform and delete at the same time.
+	--
+	-- FIX: only one type notes/cc/syx can be handled at once??
 
-  local filter = opts.filter or {}
-  local note_filter = filter.notes or {}
-  local cc_filter = filter.cc or {}
-  local syx_filter = filter.syx or {}
+	local filter = opts.filter or {}
+	local note_filter = filter.notes or {}
+	local cc_filter = filter.cc or {}
+	local syx_filter = filter.syx or {}
 
-  log.user(format.block(opts), "*********")
+	log.user(format.block(opts), "*********")
 
-  -- NOTE: Hmmm, by doing type = { notes|cc|syx }, it allows me to do removal
-  -- and insertion of differnt types at once.
+	-- NOTE: Hmmm, by doing type = { notes|cc|syx }, it allows me to do removal
+	-- and insertion of differnt types at once.
 
-  if opts.remove and (opts.transform or opts.insert) then
-    -- if transform and insert -> transform needs to be done first!
-    log.debug("MIDI (filter/transform): Cannot remove and transform together! Abort..")
-    return
-  end
+	if opts.remove and (opts.transform or opts.insert) then
+		-- if transform and insert -> transform needs to be done first!
+		log.debug("MIDI (filter/transform): Cannot remove and transform together! Abort..")
+		return
+	end
 
-  local remove = opts.remove or {}
-  local transform = opts.transform or {}
-  local insert = opts.insert or {}
+	local remove = opts.remove or {}
+	local transform = opts.transform or {}
+	local insert = opts.insert or {}
 
-  --
+	--
 
-  -- you can either
+	-- you can either
 
-  local no_filters = not note_filter and not cc_filter and not syx_filter
+	local no_filters = not note_filter and not cc_filter and not syx_filter
 
-  local t_notes = {}
-  local t_cc = {}
-  local t_syx = {}
+	local t_notes = {}
+	local t_cc = {}
+	local t_syx = {}
 
-  log.debug(string.format([[midi_take_filter_transform; filter=%s, noflt=%s ]], filter, no_filters))
+	log.debug(string.format([[midi_take_filter_transform; filter=%s, noflt=%s ]], filter, no_filters))
 
-  --
-  -- ENSURE MIDI DATA: COLLECT ALL NOTES IN TAKE || ASSIGN INSERTION DATA
-  --
+	--
+	-- ENSURE MIDI DATA: COLLECT ALL NOTES IN TAKE || ASSIGN INSERTION DATA
+	--
 
-  if not opts.insert then
-    local ret, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
-    for i = 0, notecnt do
-      local ret, sel, muted, ppq_s, ppq_e, ch, pitch, vel = reaper.MIDI_GetNote(take, i)
-      -- if filt_low <= pitch and pitch <= filt_high then
-      table.insert(t_notes, {
-        index = i,
-        muted = muted,
-        ppq_s = ppq_s,
-        ppq_e = ppq_e,
-        ch = ch,
-        -- real_pitch = pitch,
-        pitch = pitch,
-        vel = vel,
-        sel = sel,
-      })
-      -- end
-    end
-  else
-    -- NOTE: Pass notes for insertion.
-    -- It is important here that I have a unified way for setting up midi data.
-    --
-    -- this means that an item hass been passed and I want to insert notes.
-    -- This api is a bit unclear but i have to look at this later.
-    log.user("did we get here?")
-    t_notes = opts.insert.midi_data.notes
-  end
+	if not opts.insert then
+		local ret, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
+		for i = 0, notecnt do
+			local ret, sel, muted, ppq_s, ppq_e, ch, pitch, vel = reaper.MIDI_GetNote(take, i)
+			-- if filt_low <= pitch and pitch <= filt_high then
+			table.insert(t_notes, {
+				index = i,
+				muted = muted,
+				ppq_s = ppq_s,
+				ppq_e = ppq_e,
+				ch = ch,
+				-- real_pitch = pitch,
+				pitch = pitch,
+				vel = vel,
+				sel = sel,
+			})
+			-- end
+		end
+	else
+		-- NOTE: Pass notes for insertion.
+		-- It is important here that I have a unified way for setting up midi data.
+		--
+		-- this means that an item hass been passed and I want to insert notes.
+		-- This api is a bit unclear but i have to look at this later.
+		log.user("did we get here?")
+		t_notes = opts.insert.midi_data.notes
+	end
 
-  ---------------------------------------------------------
-  -- FILTER MIDI NOTE DATA
-  --
+	---------------------------------------------------------
+	-- FILTER MIDI NOTE DATA
+	--
 
-  -- remove filtered data
-  if remove.notes then
-    note_filter = remove.notes
-  end
+	-- remove filtered data
+	if remove.notes then
+		note_filter = remove.notes
+	end
 
-  if no_filters or note_filter then
-    for k, v in pairs(note_filter) do
-      if type(v) == "boolean" then
-        t_notes = tbl.filter(t_notes, function(note)
-          return note[k] == v
-        end)
-      elseif type(v) == "number" then
-        t_notes = tbl.filter(t_notes, function(note)
-          return note[k] == v
-        end)
-      elseif type(v) == "table" then
-        -- FIX: since there can be multiple ranges, i need to collect the filtered
-        -- values and then assign them to t_notes at the end
-        for _, subv in pairs(v) do
-          if type(subv) == "number" then
-            t_notes = tbl.filter(t_notes, function(note)
-              return note[k] == subv
-            end)
-          elseif type(subv) == "table" then
-            t_notes = tbl.filter(t_notes, function(note)
-              return subv[1] <= note[k] and note[k] <= subv[2]
-            end)
-          end
-        end
-      elseif type(v) == "function" then
-        log.user("?????????")
-        t_notes = tbl.filter(t_notes, v) -- pass filter func
-      end
-    end
-  end
+	if no_filters or note_filter then
+		for k, v in pairs(note_filter) do
+			if type(v) == "boolean" then
+				t_notes = tbl.filter(t_notes, function(note)
+					return note[k] == v
+				end)
+			elseif type(v) == "number" then
+				t_notes = tbl.filter(t_notes, function(note)
+					return note[k] == v
+				end)
+			elseif type(v) == "table" then
+				-- FIX: since there can be multiple ranges, i need to collect the filtered
+				-- values and then assign them to t_notes at the end
+				for _, subv in pairs(v) do
+					if type(subv) == "number" then
+						t_notes = tbl.filter(t_notes, function(note)
+							return note[k] == subv
+						end)
+					elseif type(subv) == "table" then
+						t_notes = tbl.filter(t_notes, function(note)
+							return subv[1] <= note[k] and note[k] <= subv[2]
+						end)
+					end
+				end
+			elseif type(v) == "function" then
+				log.user("?????????")
+				t_notes = tbl.filter(t_notes, v) -- pass filter func
+			end
+		end
+	end
 
-  if no_filters or cc_filter then
-    for k, v in pairs(cc_filter) do
-    end
-  end
+	if no_filters or cc_filter then
+		for k, v in pairs(cc_filter) do
+		end
+	end
 
-  if no_filters or syx_filter then
-    for k, v in pairs(syx_filter) do
-    end
-  end
+	if no_filters or syx_filter then
+		for k, v in pairs(syx_filter) do
+		end
+	end
 
-  ---------------------------------------------------------
-  -- HANDLE MIDI NOTE DATA
-  --
+	---------------------------------------------------------
+	-- HANDLE MIDI NOTE DATA
+	--
 
-  -- delete filtered notes
-  if remove.notes then
-    midi.delete_notes(take, t_notes)
+	-- delete filtered notes
+	if remove.notes then
+		midi.delete_notes(take, t_notes)
 
-    -- TODO: insert.notes is not yet implemented. Atm midi data is assigned
-    -- to insert = {data}, but I should make it possible to do this with
-    --    -> insert {notes|cc|syx}
-  elseif transform.notes or insert.notes then
-  end
+	-- TODO: insert.notes is not yet implemented. Atm midi data is assigned
+	-- to insert = {data}, but I should make it possible to do this with
+	--    -> insert {notes|cc|syx}
+	elseif transform.notes or insert.notes then
+	end
 
-  local notes_updated = 0
-  if transform.notes then
-    for i, note in ipairs(t_notes) do
-      local update = false
-      for k, v in pairs(transform.notes) do
-        if type(v) == "boolean" then
-          log.trace("midi take transform: set bool:", i, note[k], "->", v)
-          note[k] = v -- set bool value
-          update = true
-        elseif type(v) == "number" then
-          log.trace("midi take transform: shift num:", i, note[k], "->", note[k] + v)
-          note[k] = note[k] + v -- shift by number
-          update = true
-        elseif type(v) == "table" then
-          log.trace("midi take transform: force const:", i, note[k], "->", v[1])
-          note[k] = v[2] == "force" and v[1] -- { number, "force"} means force all notes to value
-          update = true
-        elseif type(v) == "function" then
-          log.trace("midi take transform: func:", i, note[k], "->", v(note))
-          note[k] = v(note) -- apply function transform per note
-          update = true
-        end
-        if update then
-          -- i am not sure if this is useful to keep a counter
-          notes_updated = notes_updated + 1
-        end
-      end -- transform.notes -> k, v
-    end -- t_notes -> i, note
-  end
+	local notes_updated = 0
+	if transform.notes then
+		for i, note in ipairs(t_notes) do
+			local update = false
+			for k, v in pairs(transform.notes) do
+				if type(v) == "boolean" then
+					log.trace("midi take transform: set bool:", i, note[k], "->", v)
+					note[k] = v -- set bool value
+					update = true
+				elseif type(v) == "number" then
+					log.trace("midi take transform: shift num:", i, note[k], "->", note[k] + v)
+					note[k] = note[k] + v -- shift by number
+					update = true
+				elseif type(v) == "table" then
+					log.trace("midi take transform: force const:", i, note[k], "->", v[1])
+					note[k] = v[2] == "force" and v[1] -- { number, "force"} means force all notes to value
+					update = true
+				elseif type(v) == "function" then
+					log.trace("midi take transform: func:", i, note[k], "->", v(note))
+					note[k] = v(note) -- apply function transform per note
+					update = true
+				end
+				if update then
+					-- i am not sure if this is useful to keep a counter
+					notes_updated = notes_updated + 1
+				end
+			end -- transform.notes -> k, v
+		end -- t_notes -> i, note
+	end
 
-  if (notes_updated > 0 or opts.insert) and not opts.dry_run then
-    if not opts.insert then
-      midi.delete_notes(take, t_notes)
-    end
-    log.user("just before inserting notes")
-    midi.insert_notes({
-      take = take,
-      notes = t_notes,
-    })
-  end
+	if (notes_updated > 0 or opts.insert) and not opts.dry_run then
+		if not opts.insert then
+			midi.delete_notes(take, t_notes)
+		end
+		log.user("just before inserting notes")
+		midi.insert_notes({
+			take = take,
+			notes = t_notes,
+		})
+	end
 
-  ---------------------------------------------------------
-  -- HANDLE MIDI CC DATA
-  --
+	---------------------------------------------------------
+	-- HANDLE MIDI CC DATA
+	--
 
-  ---------------------------------------------------------
-  -- HANDLE MIDI SYX DATA
-  --
+	---------------------------------------------------------
+	-- HANDLE MIDI SYX DATA
+	--
 
-  return {
-    notes = t_notes,
-    cc = t_cc,
-    syx = t_syx,
-  }
+	return {
+		notes = t_notes,
+		cc = t_cc,
+		syx = t_syx,
+	}
 end
 
 -------------------------------------------------------------
@@ -850,117 +879,117 @@ end
 ---------
 
 midi.delete_notes_in_pitch_range = function(take, range_start, range_end, dry_run)
-  local tr = reaper.GetMediaItemTake_Track(take)
-  local index = reaper.GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER") - 1
+	local tr = reaper.GetMediaItemTake_Track(take)
+	local index = reaper.GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER") - 1
 
-  local n1 = reaper.GetTrackMIDINoteName(index, range_start, 0)
-  -- reaper.GetTrackMIDINoteNameEx( proj, track, pitch, chan )
+	local n1 = reaper.GetTrackMIDINoteName(index, range_start, 0)
+	-- reaper.GetTrackMIDINoteNameEx( proj, track, pitch, chan )
 
-  log.user(string.format("delete_notes_in_pitch_range: [%s (%s), %s]", range_start, n1, range_end))
+	log.user(string.format("delete_notes_in_pitch_range: [%s (%s), %s]", range_start, n1, range_end))
 
-  return midi.midi_take_filter_transform(take, {
-    dry_run = not dry_run and false or true,
-    remove = {
-      notes = { pitch = { { range_start, range_end } } },
-    },
-  })
+	return midi.midi_take_filter_transform(take, {
+		dry_run = not dry_run and false or true,
+		remove = {
+			notes = { pitch = { { range_start, range_end } } },
+		},
+	})
 end
 
 midi.delete_notes_for_channel = function(take, ch, dry_run)
-  return midi.midi_take_filter_transform(take, {
-    dry_run = not dry_run and false or true,
-    remove = {
-      notes = { ch = ch },
-    },
-  })
+	return midi.midi_take_filter_transform(take, {
+		dry_run = not dry_run and false or true,
+		remove = {
+			notes = { ch = ch },
+		},
+	})
 end
 
 -- func name is ambiguous
 midi.shift_channels_above = function(take, chan_thresh, shift_amount, dry_run)
-  return midi.midi_take_filter_transform(take, {
-    dry_run = not dry_run and false or true,
-    filter = {
-      notes = {
-        ch = function(note)
-          return chan_thresh < note.ch
-        end,
-      },
-    },
-    transform = { notes = { ch = shift_amount } },
-  })
+	return midi.midi_take_filter_transform(take, {
+		dry_run = not dry_run and false or true,
+		filter = {
+			notes = {
+				ch = function(note)
+					return chan_thresh < note.ch
+				end,
+			},
+		},
+		transform = { notes = { ch = shift_amount } },
+	})
 end
 
 midi.shift_pitches_above_including = function(take, pitch_thresh, shift_amount, dry_run)
-  local tr = reaper.GetMediaItemTake_Track(take)
-  local index = reaper.GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER") - 1
-  local n1 = reaper.GetTrackMIDINoteName(index, pitch_thresh, 0)
+	local tr = reaper.GetMediaItemTake_Track(take)
+	local index = reaper.GetMediaTrackInfo_Value(tr, "IP_TRACKNUMBER") - 1
+	local n1 = reaper.GetTrackMIDINoteName(index, pitch_thresh, 0)
 
-  log.user(string.format("shift_pitches_above_including: %s (%s)", pitch_thresh, n1))
+	log.user(string.format("shift_pitches_above_including: %s (%s)", pitch_thresh, n1))
 
-  require("library.midi").midi_take_filter_transform(take, {
-    dry_run = dry_run,
-    filter = {
-      notes = {
-        pitch = function(note)
-          return pitch_thresh <= note.pitch
-        end,
-      },
-    },
-    transform = { notes = { pitch = shift_amount } },
-  })
+	require("library.midi").midi_take_filter_transform(take, {
+		dry_run = dry_run,
+		filter = {
+			notes = {
+				pitch = function(note)
+					return pitch_thresh <= note.pitch
+				end,
+			},
+		},
+		transform = { notes = { pitch = shift_amount } },
+	})
 end
 
 midi.shift_insert_notes = function(take, item_data, shift_amount, dry_run)
-  midi.midi_take_filter_transform(take, {
-    dry_run = dry_run,
-    insert = item_data, -- do i need to pass midi data, or can I check inside midi transform?
-    transform = {
-      notes = { pitch = shift_amount },
-    },
-  })
+	midi.midi_take_filter_transform(take, {
+		dry_run = dry_run,
+		insert = item_data, -- do i need to pass midi data, or can I check inside midi transform?
+		transform = {
+			notes = { pitch = shift_amount },
+		},
+	})
 end
 
 midi.insert_notes_force_chan = function(take, force_ch, item_data, dry_run)
-  midi.midi_take_filter_transform(take, {
-    dry_run = not dry_run and false or true,
-    insert = item_data,
-    transform = {
-      notes = { ch = { force_ch, "force" } },
-    },
-  })
+	midi.midi_take_filter_transform(take, {
+		dry_run = not dry_run and false or true,
+		insert = item_data,
+		transform = {
+			notes = { ch = { force_ch, "force" } },
+		},
+	})
 end
 
 midi.set_note_row = function(ME, pitch)
-  reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", pitch)
+	reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", pitch)
 end
 
 -- Used as a pitch motion so recieves Meta.
 midi.get_or_jump_current_note_row = function(amount, set_note_row)
--- midi.get_or_jump_current_note_row = function(amount, move_cursor)
-  local midi_editor = require("library.midi_editor")
+	-- midi.get_or_jump_current_note_row = function(amount, move_cursor)
+	local midi_editor = require("library.midi_editor")
 
-  -- log.user("meta = ", format.block(meta), "opts = ", format.block(opts))
+	-- log.user("meta = ", format.block(meta), "opts = ", format.block(opts))
 
-  local ME_EXISTS, ME = midi_editor.getMidiValidContext()
-  if not ME_EXISTS then
-    log.debug("ME did not exist in `get_or_jump_current_note_row")
-    return
-  end
+	local ME_EXISTS, ME = midi_editor.getMidiValidContext()
+	if not ME_EXISTS then
+		log.debug("ME did not exist in `get_or_jump_current_note_row")
+		return
+	end
 
-  -- 1. if `move_with_motions`
-  --       move cursor/row with motions
-  -- 2.
+	-- 1. if `move_with_motions`
+	--       move cursor/row with motions
+	-- 2.
 
-  local follow_motions = state_interface.getKey("ME_follow_motions")
+	local follow_motions = state_interface.getKey("ME_follow_motions")
 
-  -- log.user("follow_motions:", follow_motions)
+	-- log.user("follow_motions:", follow_motions)
 
-  if set_note_row then
-    local row = reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")
-    -- midi.set_note_row(ME, pitch)
+	if set_note_row then
+		local row = reaper.MIDIEditor_GetSetting_int(ME.editor, "active_note_row")
+		-- midi.set_note_row(ME, pitch)
 
-    reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", row + amount)
-  end
+		reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", row + amount)
+	end
 end
 -- integer reaper.MIDIEditor_GetSetting_int(HWND midieditor, string setting_desc)
 -- Get settings from a MIDI editor. setting_desc can be:
