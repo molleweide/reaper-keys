@@ -10,19 +10,47 @@ local tbl = require("utils.table")
 --
 
 -- TODO: look at chordgun for good midi library functions
+--
+
+-- /////////////////////////////////
 
 local function wait(seconds)
 	local start_time = os.clock()
 	while os.clock() - start_time < seconds do
-		-- Wait until the desired time has passed
 	end
 end
+
+-- local function wait2(secs, callback, ...)
+--   local target_time = reaper.time_precise() + secs
+--   local args = {...}
+--   local function poll_time()
+--     if reaper.time_precise() >= target_time then
+--       callback(table.unpack(args))
+--     else
+--       reaper.defer(poll_time)
+--     end
+--   end
+--   reaper.defer(poll_time)
+-- end
+-- -- wait(1, function() reaper.MB('Welcome to the future!', 'My script', 0) end)
+
+-- /////////////////////////////////
+
+-- NOTE: For midi preview to work IAC virtual midi bus has to be engaged for
+-- both input and output.
+
+-- NOTE: reaper.StuffMIDIMessage( mode, msg1, msg2, msg3 )
+-- Stuffs a 3 byte MIDI message into either the Virtual MIDI Keyboard queue, or
+-- the MIDI-as-control input queue, or sends to a MIDI hardware output. mode=0 for
+-- VKB, 1 for control (actions map etc), 2 for VKB-on-current-channel; 16 for
+-- external MIDI device 0, 17 for external MIDI device 1, etc; see
+
 
 -- // MIDI HELPER VARIABLE
 -- WAS_FILTERED = 1024;  // array for storing which notes are filtered
 -- PASS_THRU_CC = 0;
 
-local MODE = 0
+local MODE = 0 -- send notes to VKB
 
 -- TYPE_MASK=0xF0;
 -- CHANNEL_MASK=0x0F;
@@ -415,6 +443,8 @@ local easy_read = [[
 function midi.insertMidiNoteChunk(meta, opts)
 	opts = opts or {}
 
+	log.debug("insertMidiNoteChunk opts", format.block(opts))
+
 	-- move this to action?
 	local exists, midi_step_state = midi.get_midi_step_state()
 
@@ -438,8 +468,15 @@ function midi.insertMidiNoteChunk(meta, opts)
 	local sixteen_note_len = 0.25 / 2
 	local step_len = sixteen_note_len
 	local note_end_gap = 0.005
-	local note_duration = sixteen_note_len - note_end_gap
+	local duration_final
+	local note_duration = sixteen_note_len - note_end_gap -- only used if midi step
+
+
+  -- This should be done inside of the action IDs themselves, and then they're
+  -- passed as params to this func.
 	local direction_mult = midi_step_state.direction and 1 or -1
+
+
 	local octave_add = midi_step_state.octave_next and (midi_step_state.octave_next * 12) or 0
 
 	if opts.move_cursor then
@@ -481,49 +518,56 @@ function midi.insertMidiNoteChunk(meta, opts)
 		active_note_row + octave_add + (opts.chord[2][1] - 1) * direction_mult
 	)
 
-	-- build notes - assign note durations
+	-- compute note duration
+	local note_start_pos, note_end_pos
+	if meta.action_type == "timeline_operator" then
+		note_start_pos = meta.start_pos
+		note_end_pos = meta.end_pos
+	else
+		note_start_pos = cursor_pos
+		if meta.action_type:match("command$") then
+			note_end_pos = cursor_pos + note_duration
+		elseif opts.note_duration then
+			note_end_pos = cursor_pos + opts.note_duration
+		else
+			log.debug("No duration for insertMidiNoteChunk could be computed!")
+			return
+		end
+	end
+	duration_final = note_end_pos - note_start_pos
+
+	-- build notes
 	for i in ipairs(t_note_pitches) do
 		local t_new_note = {}
 		t_new_note.pitch = t_note_pitches[i]
-
-		-- if timeline operator, then
-		--     take the provided start/end params.
-		-- else
-		--    no passed params
-		--        use the step mode state variables.
-		--    else
-		--        use passed params.
-		--
-		if meta.action_type == "timeline_operator" then
-			t_new_note.time_pos_start = meta.start_pos
-			t_new_note.time_pos_end = meta.end_pos
-		elseif meta.action_type:match("command$") then
-			t_new_note.time_pos_start = cursor_pos
-			t_new_note.time_pos_end = cursor_pos + note_duration
-		end
+		t_new_note.time_pos_start = note_start_pos
+		t_new_note.time_pos_end = note_end_pos
 		table.insert(t_midi_notes, t_new_note)
 	end
 
-	log.user("###", format.block(t_midi_notes))
+	-- log.user("timeline end - start:", )
+
+	log.user("[ insertMidiNoteChunk ]: t_midi_notes =", format.block(t_midi_notes))
 
 	midi.insert_notes({
 		take = ctxm.take,
 		notes = t_midi_notes,
 	})
 
-  -- update state
+	-- update state
 	midi_step_state.octave_next = nil
-	-- use rk state interface?
+	-- FIX: use rk state interface?
 	project_state.overwrite("mode_state", "midi_step", midi_step_state)
 
+	-- log.user("DURATION_FINAL:", duration_final)
 	if opts.playback then
-		-- for all notes send ON
-		-- reaper.StuffMIDIMessage(MODE, NOTE_ON, note_num, VEL)
-
-		-- wait(0.5)
-
-		-- for all notes send OFF
-		-- reaper.StuffMIDIMessage(MODE, NOTE_OFF, note_num, VEL)
+		for _, note in ipairs(t_midi_notes) do
+			reaper.StuffMIDIMessage(MODE, NOTE_ON, note.pitch, VEL)
+		end
+		wait(0.5)
+		for _, note in ipairs(t_midi_notes) do
+			reaper.StuffMIDIMessage(MODE, NOTE_OFF, note.pitch, VEL)
+		end
 	end
 end
 
@@ -1003,5 +1047,26 @@ end
 -- scale_root: returns 0-12 (0=C)
 -- list_cnt: if viewing list view, returns event count
 -- if setting_desc is unsupported, the function returns -1.
+
+midi.jump_to_position_and_insert_by_string = function()
+	-- TODO:
+	-- This function shall serve as the fastest method for reaching any position
+	-- in a currently open ME.
+	-- Needs to specify:
+	--   ~ note row
+	--   ~ timeline position
+	--   ~ insert note
+	--
+	-- Later, i can combine this with:
+	--   ~ chords
+	--   ~ note duration
+	--   ~ rhythm pattern.
+	--
+	-- When combining strings i only have to come up with a smart prefix OR
+	-- divider, eg. `//` so that I know that anything that comes after is eg.
+	-- a pattern string.
+	--
+	-- position -> pitches/chord -> pattern
+end
 
 return midi

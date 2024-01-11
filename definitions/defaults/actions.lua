@@ -843,6 +843,8 @@ return {
     "TODO: region/marks picker -> tracks picker -> jump-to-position-in-main",
   },
 
+  -- FIX: it seems that next found midi item is selected, even though it is
+  -- not at cursor position.
   Midi_ChangeActiveSelection = commands.MIDI_ChangeActiveSelection,
   MIDI_EditMidiAtCurPosForTrack = commands.MIDI_EditMidiAtCurPosForTrack,
   Midi_EditMidiForRegionsMarksAndSelectTrack = commands.Midi_EditMidiForRegionsMarksAndSelectTrack,

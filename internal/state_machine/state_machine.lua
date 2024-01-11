@@ -102,7 +102,7 @@ local function input(key_press)
 	-- log.debug("tci -> ".. tci)
 	-- -- log end
 
-	local state_log_level = reaper_state.get("logging", "log_level")
+	local state_log_level = reaper_state.get("reaper_keys_logging", "log_level")
 	log.info("state log level: " .. format.block(state_log_level))
 
 	local state = state_interface.get()

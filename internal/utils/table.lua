@@ -21,6 +21,31 @@ function tbl.shallow_copy(t)
 	return t2
 end
 
+function tbl.copy(orig) --http://lua-users.org/wiki/CopyTable
+	local orig_type = type(orig)
+	local copy
+	if orig_type == "table" then
+		copy = {}
+		for orig_key, orig_value in next, orig, nil do
+			copy[tbl.copy(orig_key)] = tbl.copy(orig_value)
+		end
+		setmetatable(copy, tbl.copy(getmetatable(orig)))
+	else -- number, string, boolean, etc
+		copy = orig
+	end
+	return copy
+end
+
+-- create a new table by copying and adding together.
+function tbl.copy_add(orig, tbl_add)
+  local copy = tbl.copy(orig)
+  -- extend with
+  for k, v in pairs(tbl_add) do
+    copy[k] = v
+  end
+  return copy
+end
+
 tbl.filter = function(t, condition, debug)
 	local result = {}
 	for i, item in ipairs(t) do

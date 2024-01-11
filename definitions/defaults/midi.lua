@@ -378,7 +378,7 @@ return {
     -- ["v"] = "",
     -- ["b"] = "",
 
-    -- NOTE: small letters should ascend and capital should descend.
+    -- NOTE: A. use toggle to switch direction
 
     ["n"] = "InsertMidiStep_P1",
     ["m"] = "InsertMidiStep_m2",
@@ -395,6 +395,21 @@ return {
     ["i"] = "InsertMidiStep_m7",
     ["o"] = "InsertMidiStep_M7",
     ["p"] = "InsertMidiStep_P8",
+
+    -- NOTE: B. Use small/big letters to determine direction.
+
+    -- small / ascending
+
+    -- big / descending.
+
+    -- NOTE: C. Use only pitch to get to the closest pitch and then use octave
+    -- jumps.
+
+    -- NOTE: D. Use left hand for descending and right hand for acending.
+    -- `tghy` are still left for navigation etc plus tab/enter AND space.
+
+    --------------------
+    -- thumb keys
 
     ["<TAB>"] = "ToggleMidiStepDirection",
   },
