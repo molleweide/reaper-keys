@@ -45,7 +45,6 @@ end
 -- VKB, 1 for control (actions map etc), 2 for VKB-on-current-channel; 16 for
 -- external MIDI device 0, 17 for external MIDI device 1, etc; see
 
-
 -- // MIDI HELPER VARIABLE
 -- WAS_FILTERED = 1024;  // array for storing which notes are filtered
 -- PASS_THRU_CC = 0;
@@ -445,7 +444,8 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	log.debug("insertMidiNoteChunk opts", format.block(opts))
 
-	-- move this to action?
+	-- TODO: anything pertaining to `midi_step_state`, or any state,
+	-- should be handled in the action handler
 	local exists, midi_step_state = midi.get_midi_step_state()
 
 	log.user("midi_step_state:", exists, format.block(midi_step_state))
@@ -471,11 +471,9 @@ function midi.insertMidiNoteChunk(meta, opts)
 	local duration_final
 	local note_duration = sixteen_note_len - note_end_gap -- only used if midi step
 
-
-  -- This should be done inside of the action IDs themselves, and then they're
-  -- passed as params to this func.
+	-- This should be done inside of the action IDs themselves, and then they're
+	-- passed as params to this func.
 	local direction_mult = midi_step_state.direction and 1 or -1
-
 
 	local octave_add = midi_step_state.octave_next and (midi_step_state.octave_next * 12) or 0
 
@@ -519,6 +517,8 @@ function midi.insertMidiNoteChunk(meta, opts)
 	)
 
 	-- compute note duration
+	-- can I do the action_type differentiation in the action handlers, and pass
+	-- all args via the opts table.
 	local note_start_pos, note_end_pos
 	if meta.action_type == "timeline_operator" then
 		note_start_pos = meta.start_pos
@@ -534,6 +534,7 @@ function midi.insertMidiNoteChunk(meta, opts)
 			return
 		end
 	end
+
 	duration_final = note_end_pos - note_start_pos
 
 	-- build notes

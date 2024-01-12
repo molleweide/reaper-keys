@@ -1,6 +1,7 @@
 local reaper_state = require("utils.reaper_state")
 local log = require("utils.log")
 local constants = require("state_machine.constants")
+local events = require("state_machine.events")
 local utils = require("command.utils")
 
 -- NOTE: This file hosts global reaper state pertaining to
@@ -10,52 +11,52 @@ local state_table_name = "state"
 
 -- map state to state key
 function state_interface.set(state)
-  reaper_state.set(state_table_name, state)
+	reaper_state.set(state_table_name, state)
 end
 
 -- get state, update key, reset state
 function state_interface.setKey(key, value)
-  local state = state_interface.get()
-  state[key] = value
-  state_interface.set(state)
+	local state = state_interface.get()
+	state[key] = value
+	state_interface.set(state)
 end
 
 -- get state and return key
 function state_interface.getKey(key)
-  local state = state_interface.get()
+	local state = state_interface.get()
 
-  -- dynamically add new keys ( during dev )
-  local val = state[key]
-  if val == nil then
-    -- log.user("getKey " .. key .. " = nil")
-    local default_val = constants.reset_state[key]
-    state_interface.setKey(key, default_val)
-    return default_val
-  else
-    -- log.user("getKey " .. key .. " exists")
-    return val
-  end
+	-- dynamically add new keys ( during dev )
+	local val = state[key]
+	if val == nil then
+		-- log.user("getKey " .. key .. " = nil")
+		local default_val = constants.reset_state[key]
+		state_interface.setKey(key, default_val)
+		return default_val
+	else
+		-- log.user("getKey " .. key .. " exists")
+		return val
+	end
 
-  -- return state[key]
+	-- return state[key]
 end
 
 -- get state; return reset state if err
 function state_interface.get()
-  local state = reaper_state.get(state_table_name)
-  if not state then
-    log.info("Could not read state data. Returning reset state.")
-    state = constants["reset_state"]
-  end
-  return state
+	local state = reaper_state.get(state_table_name)
+	if not state then
+		log.info("Could not read state data. Returning reset state.")
+		state = constants["reset_state"]
+	end
+	return state
 end
 
 function state_interface.toggleKey(key)
-  local old_val = state_interface.getKey(key)
-  if type(old_val) == "boolean" then
-    state_interface.setKey("ME_follow_motions", not old_val)
-  else
-    log.trace("[state_interface]: Cannot toggle non-boolean key.")
-  end
+	local old_val = state_interface.getKey(key)
+	if type(old_val) == "boolean" then
+		state_interface.setKey("ME_follow_motions", not old_val)
+	else
+		log.trace("[state_interface]: Cannot toggle non-boolean key.")
+	end
 end
 
 -- TODO: annotate below functions
@@ -63,77 +64,111 @@ end
 -- FIXME reduntant functions ?????
 
 function state_interface.getLastSearchedTrackNameAndDirection()
-  local state = state_interface.get()
-  return state["last_searched_track_name"], state["last_track_name_search_direction_was_forward"]
+	local state = state_interface.get()
+	return state["last_searched_track_name"], state["last_track_name_search_direction_was_forward"]
 end
 
 function state_interface.setLastSearchedTrackNameAndDirection(name, forward)
-  local new_state = state_interface.get()
-  new_state["last_searched_track_name"] = name
-  new_state["last_track_name_search_direction_was_forward"] = forward
-  state_interface.set(new_state)
+	local new_state = state_interface.get()
+	new_state["last_searched_track_name"] = name
+	new_state["last_track_name_search_direction_was_forward"] = forward
+	state_interface.set(new_state)
 end
 
 function state_interface.checkIfConsistentState(state)
-  local current_state = state_interface.get()
-  for k, value in pairs(current_state) do
-    if k == "last_command" then
-      if not utils.checkIfCommandsAreEqual(state.last_command, current_state.last_command) then
-        return false
-      end
-    elseif value ~= state[k] then
-      return false
-    end
-  end
-  return true
+	local current_state = state_interface.get()
+	for k, value in pairs(current_state) do
+		if k == "last_command" then
+			if not utils.checkIfCommandsAreEqual(state.last_command, current_state.last_command) then
+				return false
+			end
+		elseif value ~= state[k] then
+			return false
+		end
+	end
+	return true
 end
 
 function state_interface.setVisualTrackPivotIndex(visual_track_pivot_i)
-  local state = state_interface.get()
-  state["visual_track_pivot_i"] = visual_track_pivot_i
-  state_interface.set(state)
+	local state = state_interface.get()
+	state["visual_track_pivot_i"] = visual_track_pivot_i
+	state_interface.set(state)
 end
 
 function state_interface.getVisualTrackPivotIndex()
-  local state = state_interface.get()
-  local visual_track_pivot_i = state["visual_track_pivot_i"]
-  return visual_track_pivot_i
+	local state = state_interface.get()
+	local visual_track_pivot_i = state["visual_track_pivot_i"]
+	return visual_track_pivot_i
 end
 
 function state_interface.setTimelineSelectionSide(left_or_right)
-  local state = state_interface.get()
-  state["timeline_selection_side"] = left_or_right
-  state_interface.set(state)
+	local state = state_interface.get()
+	state["timeline_selection_side"] = left_or_right
+	state_interface.set(state)
 end
 
 function state_interface.getTimelineSelectionSide()
-  local state = state_interface.get()
-  return state["timeline_selection_side"]
+	local state = state_interface.get()
+	return state["timeline_selection_side"]
 end
 
 function state_interface.getMode()
-  local state = state_interface.get()
-  return state.mode
+	local state = state_interface.get()
+	return state.mode
 end
 
+-- TODO: attach `prev_mode` variable to RK state table and set it to nil as
+-- default
 function state_interface.setMode(mode)
-  local state = state_interface.get()
-  state.mode = mode
-  state_interface.set(state)
+  log.user("[state_interface.setMode] START =================")
+	local state = state_interface.get()
+	local old_mode = state.mode
+	state.mode = mode
+  events.on_mode_exit(old_mode, state)
+  events.on_mode_enter(state)
+	state_interface.set(state)
+  log.user("[state_interface.setMode] END ===================")
 end
 
+-- why is there a need for this additional function to set normal mode, when
+-- one already exists in lib.state?
 function state_interface.setModeToNormal()
-  local state = state_interface.get()
-  state["key_sequence"] = ""
-  state["context"] = "main"
-  state["mode"] = "normal"
-  state["timeline_selection_side"] = "left"
-  state_interface.set(state)
+	local state = state_interface.get()
+	state["key_sequence"] = ""
+	state["context"] = "main"
+	state["mode"] = "normal"
+	state["timeline_selection_side"] = "left"
+	state_interface.set(state)
 end
+
+-- local function reset_midi_step_vars(state, new_mode)
+-- 	state.mode = new_mode
+-- 	state.midi_step_state = constants.reset_state["midi_step_state"]
+-- end
+--
+-- function state_interface.getMidiStepState()
+-- 	return state_interface.getKey("midi_step_state")
+-- end
+--
+-- function state_interface.setModeToMidiStep_R()
+-- 	local state = state_interface.get()
+-- 	reset_midi_step_vars(state, "midi_step")
+-- 	state_interface.set(state)
+-- end
+--
+-- -- TODO:
+-- -- function state_interface.setModeToMidiStep_L()
+-- --   local state = state_interface.get()
+-- --   state_interface.set(state)
+-- -- end
+-- -- function state_interface.setModeToMidiStep_Both()
+-- --   local state = state_interface.get()
+-- --   state_interface.set(state)
+-- -- end
 
 state_interface.getContext = function()
-  local state = state_interface.get()
-  return state.context
+	local state = state_interface.get()
+	return state.context
 end
 
 return state_interface

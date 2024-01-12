@@ -21,6 +21,12 @@ local constants = {
       }
     },
     ME_follow_motions = false,
+    midi_step_state = {
+			silent = false,
+			direction = true,
+			-- can be either `nil` or a list of GUIDs
+			guids_track_active = nil,
+    }
   }
 }
 

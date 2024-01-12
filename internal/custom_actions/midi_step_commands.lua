@@ -149,79 +149,79 @@ midi_step_commands.insert_step_unison = function(meta)
 end
 
 -- ascending
-midi_step_commands.insert_step_asc_minor_2 = function(meta)
+midi_step_commands.insert_step_asc_min_2 = function(meta)
   helper_insert_step(meta, true, 2)
 end
-midi_step_commands.insert_step_asc_major_2 = function(meta)
+midi_step_commands.insert_step_asc_maj_2 = function(meta)
   helper_insert_step(meta, true, 3)
 end
-midi_step_commands.insert_step_asc_minor_3 = function(meta)
+midi_step_commands.insert_step_asc_min_3 = function(meta)
   helper_insert_step(meta, true, 4)
 end
-midi_step_commands.insert_step_asc_major_3 = function(meta)
+midi_step_commands.insert_step_asc_maj_3 = function(meta)
   helper_insert_step(meta, true, 5)
 end
-midi_step_commands.insert_step_asc_perfect_4 = function(meta)
+midi_step_commands.insert_step_asc_prf_4 = function(meta)
   helper_insert_step(meta, true, 6)
 end
-midi_step_commands.insert_step_asc_flat_5 = function(meta)
+midi_step_commands.insert_step_asc_flt_5 = function(meta)
   helper_insert_step(meta, true, 7)
 end
-midi_step_commands.insert_step_asc_perfect_5 = function(meta)
+midi_step_commands.insert_step_asc_prf_5 = function(meta)
   helper_insert_step(meta, true, 8)
 end
-midi_step_commands.insert_step_asc_minor_6 = function(meta)
+midi_step_commands.insert_step_asc_min_6 = function(meta)
   helper_insert_step(meta, true, 9)
 end
-midi_step_commands.insert_step_asc_major_6 = function(meta)
+midi_step_commands.insert_step_asc_maj_6 = function(meta)
   helper_insert_step(meta, true, 10)
 end
-midi_step_commands.insert_step_asc_minor_7 = function(meta)
+midi_step_commands.insert_step_asc_min_7 = function(meta)
   helper_insert_step(meta, true, 11)
 end
-midi_step_commands.insert_step_asc_major_7 = function(meta)
+midi_step_commands.insert_step_asc_maj_7 = function(meta)
   helper_insert_step(meta, true, 12)
 end
-midi_step_commands.insert_step_asc_perfect_8 = function(meta)
+midi_step_commands.insert_step_asc_prf_8 = function(meta)
   helper_insert_step(meta, true, 13)
 end
 
 -- descending
-midi_step_commands.insert_step_desc_minor_2 = function(meta)
-  helper_insert_step(meta, true, 2)
+midi_step_commands.insert_step_desc_min_2 = function(meta)
+  helper_insert_step(meta, false, 2)
 end
-midi_step_commands.insert_step_desc_major_2 = function(meta)
-  helper_insert_step(meta, true, 3)
+midi_step_commands.insert_step_desc_maj_2 = function(meta)
+  helper_insert_step(meta, false, 3)
 end
-midi_step_commands.insert_step_desc_minor_3 = function(meta)
-  helper_insert_step(meta, true, 4)
+midi_step_commands.insert_step_desc_min_3 = function(meta)
+  helper_insert_step(meta, false, 4)
 end
-midi_step_commands.insert_step_desc_major_3 = function(meta)
-  helper_insert_step(meta, true, 5)
+midi_step_commands.insert_step_desc_maj_3 = function(meta)
+  helper_insert_step(meta, false, 5)
 end
-midi_step_commands.insert_step_desc_perfect_4 = function(meta)
-  helper_insert_step(meta, true, 6)
+midi_step_commands.insert_step_desc_prf_4 = function(meta)
+  helper_insert_step(meta, false, 6)
 end
-midi_step_commands.insert_step_desc_flat_5 = function(meta)
-  helper_insert_step(meta, true, 7)
+midi_step_commands.insert_step_desc_flt_5 = function(meta)
+  helper_insert_step(meta, false, 7)
 end
-midi_step_commands.insert_step_desc_perfect_5 = function(meta)
-  helper_insert_step(meta, true, 8)
+midi_step_commands.insert_step_desc_prf_5 = function(meta)
+  helper_insert_step(meta, false, 8)
 end
-midi_step_commands.insert_step_desc_minor_6 = function(meta)
-  helper_insert_step(meta, true, 9)
+midi_step_commands.insert_step_desc_min_6 = function(meta)
+  helper_insert_step(meta, false, 9)
 end
-midi_step_commands.insert_step_desc_major_6 = function(meta)
-  helper_insert_step(meta, true, 10)
+midi_step_commands.insert_step_desc_maj_6 = function(meta)
+  helper_insert_step(meta, false, 10)
 end
-midi_step_commands.insert_step_desc_minor_7 = function(meta)
-  helper_insert_step(meta, true, 11)
+midi_step_commands.insert_step_desc_min_7 = function(meta)
+  helper_insert_step(meta, false, 11)
 end
-midi_step_commands.insert_step_desc_major_7 = function(meta)
-  helper_insert_step(meta, true, 12)
+midi_step_commands.insert_step_desc_maj_7 = function(meta)
+  helper_insert_step(meta, false, 12)
 end
-midi_step_commands.insert_step_desc_perfect_8 = function(meta)
-  helper_insert_step(meta, true, 13)
+midi_step_commands.insert_step_desc_prf_8 = function(meta)
+  helper_insert_step(meta, false, 13)
 end
 
 -------------------------------------------------------------------------------
