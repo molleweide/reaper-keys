@@ -24,6 +24,7 @@ local constants = {
     midi_step_state = {
 			silent = false,
 			direction = true,
+			octave_next = nil,
 			-- can be either `nil` or a list of GUIDs
 			guids_track_active = nil,
     }

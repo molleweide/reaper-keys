@@ -558,6 +558,8 @@ function midi.insertMidiNoteChunk(meta, opts)
 	-- update state
 	midi_step_state.octave_next = nil
 	-- FIX: use rk state interface?
+	--
+	-- use state_events.setKey here instead.
 	project_state.overwrite("mode_state", "midi_step", midi_step_state)
 
 	-- log.user("DURATION_FINAL:", duration_final)
@@ -577,10 +579,13 @@ end
 
 -- TODO: migrate this to RK state interface and keep everything in the
 -- main state table.
+--
+-- i need to do this so that everything can be reset when running the
+-- goToNormal command
 
-midi.set_step_state = function(state)
-	project_state.overwrite("mode_state", "midi_step", state)
-end
+-- midi.set_step_state = function(state)
+-- 	project_state.overwrite("mode_state", "midi_step", state)
+-- end
 
 midi.get_midi_step_state = function()
 	local did_exist, midi_step_state = project_state.get("mode_state", "midi_step")

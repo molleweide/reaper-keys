@@ -3,6 +3,8 @@ local format = require("utils.format")
 
 local tbl = require("utils.table")
 
+
+local state_interface = require("state_machine.state_interface")
 local project_state = require("utils.project_state")
 
 local midi = require("library.midi")
@@ -235,6 +237,9 @@ end
 --
 -- refactor all these functions into module so that I can configure these inside
 -- actions instead
+--
+--
+-- FIX: use state_interface here instead.
 
 midi_step_commands.midiStepToggleDirection = function(meta, opts)
 	local _, midi_step_state = midi.get_midi_step_state()
