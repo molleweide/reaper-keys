@@ -930,6 +930,8 @@ return {
 
   ToggleFollowMotions = custom.toggle_follow_motions,
 
+MIDIStep_SilentNoteQN = midi_step_commands.insert_silent_QN,
+
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,
   n69 = lib.midi.sendMidiNote_69,

@@ -288,4 +288,16 @@ midi_step_commands.midiStepSelectNoteDuration = function(meta, opts)
 	local ret = state_interface.set(state)
 end
 
+--
+-- QUICK INSERT PAUSES
+--
+
+local helper_insert_pause = function(meta, duration)
+	midi.insertMidiNoteChunk(meta, { silent = true, duration = duration })
+end
+
+midi_step_commands.insert_silent_QN = function(meta, opts)
+  helper_insert_pause(meta, 1)
+end
+
 return midi_step_commands
