@@ -15,6 +15,11 @@ function state_interface.set(state)
 end
 
 -- get state, update key, reset state
+--
+-- TODO: use ... varargs
+-- In `setKey` use vararg and assume the last arg is the value to be set,
+-- so that I can set keys at variable depth.
+--
 function state_interface.setKey(key, value)
 	local state = state_interface.get()
 	state[key] = value

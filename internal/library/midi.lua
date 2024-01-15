@@ -446,9 +446,11 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	-- TODO: anything pertaining to `midi_step_state`, or any state,
 	-- should be handled in the action handler
-	local exists, midi_step_state = midi.get_midi_step_state()
+	-- local exists, midi_step_state = midi.get_midi_step_state()
 
-	log.user("midi_step_state:", exists, format.block(midi_step_state))
+	local state = state_interface.get()
+
+	log.user("midi_step_state:", format.block(state.midi_step_state))
 
 	-- could this also be passed as an arg?
 	local ret, ctxm = require("library.midi_editor").getMidiValidContext()
@@ -473,16 +475,16 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	-- This should be done inside of the action IDs themselves, and then they're
 	-- passed as params to this func.
-	local direction_mult = midi_step_state.direction and 1 or -1
+	local direction_mult = state.midi_step_state.direction and 1 or -1
 
-	local octave_add = midi_step_state.octave_next and (midi_step_state.octave_next * 12) or 0
+	local octave_add = state.midi_step_state.octave_next and (state.midi_step_state.octave_next * 12) or 0
 
 	if opts.move_cursor then
 		local new_pos = meta.end_pos and meta.endpos or reaper.GetCursorPosition() + step_len
 		reaper.SetEditCurPos(new_pos, false, false)
 	end
 
-	if midi_step_state.silent then
+	if state.midi_step_state.silent then
 		return
 	end
 
@@ -556,11 +558,12 @@ function midi.insertMidiNoteChunk(meta, opts)
 	})
 
 	-- update state
-	midi_step_state.octave_next = nil
+	state.midi_step_state.octave_next = nil
 	-- FIX: use rk state interface?
 	--
 	-- use state_events.setKey here instead.
-	project_state.overwrite("mode_state", "midi_step", midi_step_state)
+	-- project_state.overwrite("mode_state", "midi_step", midi_step_state)
+	state_interface.set(state)
 
 	-- log.user("DURATION_FINAL:", duration_final)
 	if opts.playback then

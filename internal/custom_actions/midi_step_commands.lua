@@ -3,7 +3,6 @@ local format = require("utils.format")
 
 local tbl = require("utils.table")
 
-
 local state_interface = require("state_machine.state_interface")
 local project_state = require("utils.project_state")
 
@@ -147,122 +146,146 @@ end
 
 -- unison
 midi_step_commands.insert_step_unison = function(meta)
-  helper_insert_step(meta, _, 1) -- asc/desc does not matter here..
+	helper_insert_step(meta, _, 1) -- asc/desc does not matter here..
 end
 
 -- ascending
 midi_step_commands.insert_step_asc_min_2 = function(meta)
-  helper_insert_step(meta, true, 2)
+	helper_insert_step(meta, true, 2)
 end
 midi_step_commands.insert_step_asc_maj_2 = function(meta)
-  helper_insert_step(meta, true, 3)
+	helper_insert_step(meta, true, 3)
 end
 midi_step_commands.insert_step_asc_min_3 = function(meta)
-  helper_insert_step(meta, true, 4)
+	helper_insert_step(meta, true, 4)
 end
 midi_step_commands.insert_step_asc_maj_3 = function(meta)
-  helper_insert_step(meta, true, 5)
+	helper_insert_step(meta, true, 5)
 end
 midi_step_commands.insert_step_asc_prf_4 = function(meta)
-  helper_insert_step(meta, true, 6)
+	helper_insert_step(meta, true, 6)
 end
 midi_step_commands.insert_step_asc_flt_5 = function(meta)
-  helper_insert_step(meta, true, 7)
+	helper_insert_step(meta, true, 7)
 end
 midi_step_commands.insert_step_asc_prf_5 = function(meta)
-  helper_insert_step(meta, true, 8)
+	helper_insert_step(meta, true, 8)
 end
 midi_step_commands.insert_step_asc_min_6 = function(meta)
-  helper_insert_step(meta, true, 9)
+	helper_insert_step(meta, true, 9)
 end
 midi_step_commands.insert_step_asc_maj_6 = function(meta)
-  helper_insert_step(meta, true, 10)
+	helper_insert_step(meta, true, 10)
 end
 midi_step_commands.insert_step_asc_min_7 = function(meta)
-  helper_insert_step(meta, true, 11)
+	helper_insert_step(meta, true, 11)
 end
 midi_step_commands.insert_step_asc_maj_7 = function(meta)
-  helper_insert_step(meta, true, 12)
+	helper_insert_step(meta, true, 12)
 end
 midi_step_commands.insert_step_asc_prf_8 = function(meta)
-  helper_insert_step(meta, true, 13)
+	helper_insert_step(meta, true, 13)
 end
 
 -- descending
 midi_step_commands.insert_step_desc_min_2 = function(meta)
-  helper_insert_step(meta, false, 2)
+	helper_insert_step(meta, false, 2)
 end
 midi_step_commands.insert_step_desc_maj_2 = function(meta)
-  helper_insert_step(meta, false, 3)
+	helper_insert_step(meta, false, 3)
 end
 midi_step_commands.insert_step_desc_min_3 = function(meta)
-  helper_insert_step(meta, false, 4)
+	helper_insert_step(meta, false, 4)
 end
 midi_step_commands.insert_step_desc_maj_3 = function(meta)
-  helper_insert_step(meta, false, 5)
+	helper_insert_step(meta, false, 5)
 end
 midi_step_commands.insert_step_desc_prf_4 = function(meta)
-  helper_insert_step(meta, false, 6)
+	helper_insert_step(meta, false, 6)
 end
 midi_step_commands.insert_step_desc_flt_5 = function(meta)
-  helper_insert_step(meta, false, 7)
+	helper_insert_step(meta, false, 7)
 end
 midi_step_commands.insert_step_desc_prf_5 = function(meta)
-  helper_insert_step(meta, false, 8)
+	helper_insert_step(meta, false, 8)
 end
 midi_step_commands.insert_step_desc_min_6 = function(meta)
-  helper_insert_step(meta, false, 9)
+	helper_insert_step(meta, false, 9)
 end
 midi_step_commands.insert_step_desc_maj_6 = function(meta)
-  helper_insert_step(meta, false, 10)
+	helper_insert_step(meta, false, 10)
 end
 midi_step_commands.insert_step_desc_min_7 = function(meta)
-  helper_insert_step(meta, false, 11)
+	helper_insert_step(meta, false, 11)
 end
 midi_step_commands.insert_step_desc_maj_7 = function(meta)
-  helper_insert_step(meta, false, 12)
+	helper_insert_step(meta, false, 12)
 end
 midi_step_commands.insert_step_desc_prf_8 = function(meta)
-  helper_insert_step(meta, false, 13)
+	helper_insert_step(meta, false, 13)
 end
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
---
--- FIX: refactor both these. it should be possible to toggle things easier.
---      >>> project_state > toggle state value
---      >>> reaper_state > toggle state value
---
--- refactor all these functions into module so that I can configure these inside
--- actions instead
---
---
--- FIX: use state_interface here instead.
-
 midi_step_commands.midiStepToggleDirection = function(meta, opts)
-	local _, midi_step_state = midi.get_midi_step_state()
-	midi_step_state.direction = not midi_step_state.direction
-	project_state.overwrite("mode_state", "midi_step", midi_step_state)
+	local state = state_interface.get()
+	state.midi_step_state.direction = not state.midi_step_state.direction
+	local ret = state_interface.set(state)
 end
 
 midi_step_commands.midiStepToggleSilent = function(meta, opts)
-	local _, midi_step_state = midi.get_midi_step_state()
-	midi_step_state.silent = not midi_step_state.silent
-	project_state.overwrite("mode_state", "midi_step", midi_step_state)
+	local state = state_interface.get()
+	state.midi_step_state.silent = not state.midi_step_state.silent
+	local ret = state_interface.set(state)
 end
 
 midi_step_commands.midiStepSetOctaveNextUp = function(meta, opts)
-	local midi_step_state = midi.get_midi_step_state()
-	midi_step_state.octave_next = 1
-	project_state.overwrite("mode_state", "midi_step", midi_step_state)
+	local state = state_interface.get()
+	state.midi_step_state.octave_next = 1
+	local ret = state_interface.set(state)
 end
 
 midi_step_commands.midiStepSetOctaveNextDown = function(meta, opts)
-	local midi_step_state = midi.get_midi_step_state()
-	midi_step_state.octave_next = -1
-	project_state.overwrite("mode_state", "midi_step", midi_step_state)
+	local state = state_interface.get()
+	state.midi_step_state.octave_next = -1
+	local ret = state_interface.set(state)
+end
+
+-- TODO: i can impl this as a toggle first, and then layer on the picker..
+-- then use leader key later for selection durations quickly.
+
+midi_step_commands.midiStepSelectNoteDuration = function(meta, opts)
+	local state = state_interface.get()
+	-- make a picker that allows for selecting between a list of
+	-- durations, eg:
+	-- QN / 1/4
+	-- 1/8
+	-- 1/16
+	-- 2QN / 2/4
+	-- 1/24
+	-- 1/32
+
+	-- -- save selection to state.
+	-- local exists, midi_step_state = project_state.get("mode_state", "midi_step")
+	-- local new_midi_step_state
+	-- if not exists then
+	-- 	new_midi_step_state = {
+	-- 		silent = false,
+	-- 		direction = true,
+	-- 	}
+	-- else
+
+	-- new_midi_step_state = midi_step_state
+	-- new_midi_step_state.silent = not new_midi_step_state.silent
+
+	state.midi_step_state.silent = not state.midi_step_state.silent
+
+	-- end
+	-- log.user(exists, midi_step_state, format.block(new_midi_step_state))
+	-- project_state.overwrite("mode_state", "midi_step", new_midi_step_state)
+	local ret = state_interface.set(state)
 end
 
 return midi_step_commands
