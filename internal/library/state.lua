@@ -2,7 +2,7 @@ local log = require("utils.log")
 local state_interface = require("state_machine.state_interface")
 local config = require("definitions.config")
 
--- shouldn't this be moved to the main state interface?
+-- NOTE: Couldn't some of this be moved into mode_events enter/exit?
 
 local state = {}
 

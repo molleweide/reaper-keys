@@ -141,31 +141,6 @@ function state_interface.setModeToNormal()
 	state_interface.set(state)
 end
 
--- local function reset_midi_step_vars(state, new_mode)
--- 	state.mode = new_mode
--- 	state.midi_step_state = constants.reset_state["midi_step_state"]
--- end
---
--- function state_interface.getMidiStepState()
--- 	return state_interface.getKey("midi_step_state")
--- end
---
--- function state_interface.setModeToMidiStep_R()
--- 	local state = state_interface.get()
--- 	reset_midi_step_vars(state, "midi_step")
--- 	state_interface.set(state)
--- end
---
--- -- TODO:
--- -- function state_interface.setModeToMidiStep_L()
--- --   local state = state_interface.get()
--- --   state_interface.set(state)
--- -- end
--- -- function state_interface.setModeToMidiStep_Both()
--- --   local state = state_interface.get()
--- --   state_interface.set(state)
--- -- end
-
 state_interface.getContext = function()
 	local state = state_interface.get()
 	return state.context

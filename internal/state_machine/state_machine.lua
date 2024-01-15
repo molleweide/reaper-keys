@@ -85,16 +85,21 @@ local function step(state, key_press)
 	return new_state
 end
 
---- Get state, compare to new state.
----@param key_press table eg. {['key'] = '<C-h>', ['context'] = 'main'}
-local function input(key_press)
-	log.info("\n+++++++++++++++++++++++++++++++++++++++++++\ninput: " .. format.line(key_press))
-	feedback.clear()
-
+local function ensure_dependencies()
 	-- if not reaper.JS_Window_Find then
 	-- 	reaper.MB("Please install js_ReaScriptAPI extension", "Error", 0)
 	-- 	return
 	-- end
+end
+
+local function rk_input_seq_debug_start(key_press, state)
+	-- debugging
+	if state.key_sequence == "" then
+		log.info(string.format([[################################ NEW SEQ START ################################]]))
+	end
+	log.info("+++++++++++++++++++++++++++++++++++++++++++\ninput: " .. format.line(key_press))
+	local state_log_level = reaper_state.get("reaper_keys_logging", "log_level")
+	-- log.info("state log level: " .. format.block(state_log_level))
 
 	-- -- log start
 	--     local tr = reaper.GetSelectedTrack(0,0)
@@ -102,22 +107,33 @@ local function input(key_press)
 	-- log.debug("tci -> ".. tci)
 	-- -- log end
 
-	local state_log_level = reaper_state.get("reaper_keys_logging", "log_level")
-	log.info("state log level: " .. format.block(state_log_level))
+	-- debugging ends
+end
 
+local function rk_input_seq_debug_end(new_state)
+	log.info("new state: " .. format.block(new_state))
+	-- why am i printing at the end??
+	log.info("===========================================\n\n")
+end
+
+--- Get state, compare to new state.
+---@param key_press table eg. {['key'] = '<C-h>', ['context'] = 'main'}
+local function input(key_press)
+	feedback.clear()
+	ensure_dependencies()
 	local state = state_interface.get()
+
+	rk_input_seq_debug_start(key_press, state)
+
 	local new_state = step(state, key_press)
 	state_interface.set(new_state)
 
 	-- NOTE: new state is passed to the display func which means that we can
 	-- just add variables to the rk state
-
 	feedback.displayState(new_state)
 	feedback.update()
 
-	log.info("new state: " .. format.block(new_state))
-	-- why am i printing at the end??
-	log.info("\n===========================================\n\n")
+	rk_input_seq_debug_end(new_state)
 end
 
 return input

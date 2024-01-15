@@ -1,4 +1,4 @@
-local midi_step_commands = ("definitions.defaults.midi_step_mode_layouts.right-hand-only")
+local midi_step_commands = ("definitions.defaults.midi_step_mode_layouts.right_hand_only")
 -- TODOS:
 --
 --  ~ fix: move active note row with w/b
