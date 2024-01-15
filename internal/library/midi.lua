@@ -1,6 +1,8 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
+local s = require("utils.string")
+
 local state_interface = require("state_machine.state_interface")
 local project_state = require("utils.project_state")
 local tbl = require("utils.table")
@@ -478,11 +480,11 @@ function midi.insertMidiNoteChunk(meta, opts)
 	local direction_mult
 
 	if opts.ascending ~= nil then
-	  log.user("opts.ascending!!!!")
-	  direction_mult = opts.ascending and 1 or -1
+		log.user("opts.ascending!!!!")
+		direction_mult = opts.ascending and 1 or -1
 	else
-	  log.user("opts.direction!!!! ")
-	  direction_mult = state.midi_step_state.direction and 1 or -1
+		log.user("opts.direction!!!! ")
+		direction_mult = state.midi_step_state.direction and 1 or -1
 	end
 
 	local octave_add = state.midi_step_state.octave_next and (state.midi_step_state.octave_next * 12) or 0
@@ -1052,45 +1054,38 @@ midi.get_or_jump_current_note_row = function(amount, set_note_row)
 		reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", row + amount)
 	end
 end
--- integer reaper.MIDIEditor_GetSetting_int(HWND midieditor, string setting_desc)
--- Get settings from a MIDI editor. setting_desc can be:
--- snap_enabled: returns 0 or 1
--- active_note_row: returns 0-127
--- last_clicked_cc_lane: returns 0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity, 0x201=pitch, 0x202=program, 0x203=channel pressure, 0x204=bank/program select, 0x205=text, 0x206=sysex, 0x207=off velocity, 0x208=notation events, 0x210=media item lane
--- default_note_vel: returns 0-127
--- default_note_chan: returns 0-15
--- default_note_len: returns default length in MIDI ticks
--- scale_enabled: returns 0-1
--- scale_root: returns 0-12 (0=C)
--- list_cnt: if viewing list view, returns event count
--- if setting_desc is unsupported, the function returns -1.
 
-local PATTERN_SPEC = {
-	user_input = {
-		title = "ME go -> insert:",
-		num_inputs = 1,
-		placeholder = "?", -- what would be the smartest place holder??
-		input_field_width = "extrawidth=350",
-		retvals_csv = "",
-	},
-	pattern_sep = " ", -- whitespace
-}
-PATTERN_SPEC.user_input.caption_csv =
-	string.format("%s,%s", PATTERN_SPEC.user_input.placeholder, PATTERN_SPEC.user_input.input_field_width)
-
+-- JUMP TO MIDI GRID POSITION
+--
+-- FIX: use while loop -> so that user doesn't send empty string...
+--
+-- FIX: use while loop so that user can modify their erroneous promt
+-- if it doesn't validate.
+--
+-- TODO: refactor and improve
+--
 midi.jump_to_position_and_insert_by_string = function()
 	opts = opts or {}
-	local ret, t_midi_context = require("library.midi_editor").getMidiValidContext()
+
+	local ret, ME_CONTEXT = require("library.midi_editor").getMidiValidContext()
 	if not ret then
 		return
 	end
 
-	local str_pat_input = opts.pattern or nil
+	local PATTERN_SPEC = {
+		user_input = {
+			title = "ME go -> insert:",
+			num_inputs = 1,
+			placeholder = "?", -- what would be the smartest place holder??
+			input_field_width = "extrawidth=350",
+			retvals_csv = "",
+		},
+		pattern_sep = ";", -- whitespace
+	}
+	PATTERN_SPEC.user_input.caption_csv =
+		string.format("%s,%s", PATTERN_SPEC.user_input.placeholder, PATTERN_SPEC.user_input.input_field_width)
 
-	-- FIX: use while loop -> so that user doesn't send empty string...
-	--
-	-- FIX: use while loop so that user can modify their erroneous promt
-	-- if it doesn't validate.
+	local str_pat_input = opts.pattern or nil
 
 	if not str_pat_input then
 		_, str_pat_input = reaper.GetUserInputs(
@@ -1119,7 +1114,96 @@ midi.jump_to_position_and_insert_by_string = function()
 	-- a pattern string.
 	--
 	-- position -> pitches/chord -> pattern
-	log.user("[ MIDI EDITOR GO INSERT ] -> ", str_pat_input)
+
+	local t_segments = s.split(str_pat_input, PATTERN_SPEC.pattern_sep)
+
+	local s_go_to_position = t_segments[1]
+
+	local note_row_regex = "[abcdefg][sx]?%d"
+	local timeline_regex = "%d%d"
+
+	-- look for note row
+	local row_start, row_end = string.find(s_go_to_position, note_row_regex)
+	local row_match
+	if row_start then
+		row_match = string.sub(s_go_to_position, row_start, row_end)
+		s_go_to_position = string.gsub(s_go_to_position, note_row_regex, "", 1)
+	end
+
+	-- look for timeline_operator
+	local tl_start, tl_end = string.find(s_go_to_position, timeline_regex)
+	local tl_match
+	if tl_start then
+		tl_match = string.sub(s_go_to_position, tl_start, tl_end)
+	end
+
+	log.user(row_match, tl_match)
+
+	local function decode_pitch_step(s)
+		local natural_step = string.sub(s, 1, 1)
+		local accidental
+		if #s > 1 then
+			accidental = string.sub(s, 2, 2)
+		end
+
+		local natural_num
+
+		if natural_step == "c" then
+			natural_num = 1
+		end
+		if natural_step == "d" then
+			natural_num = 3
+		end
+		if natural_step == "e" then
+			natural_num = 5
+		end
+		if natural_step == "f" then
+			natural_num = 6
+		end
+		if natural_step == "g" then
+			natural_num = 8
+		end
+		if natural_step == "a" then
+			natural_num = 10
+		end
+		if natural_step == "b" then
+			natural_num = 12
+		end
+
+		if accidental then
+			if accidental == "s" then
+				natural_num = natural_num + 1
+			end
+			if accidental == "x" then
+				natural_num = natural_num - 1
+			end
+		end
+
+		return natural_num
+	end
+
+	local cursor_info = require("library.timeline").get_cursor_info()
+	log.user(format.block(cursor_info))
+
+	local t_results = {}
+
+	if row_start then
+		t_results.row_octave = tonumber(string.sub(row_match, #row_match, #row_match))
+		t_results.row_pitch = decode_pitch_step(string.sub(row_match, 1, #row_match - 1))
+		local row_final = (t_results.row_octave * 12) + t_results.row_pitch - 1
+		reaper.MIDIEditor_SetSetting_int(ME_CONTEXT.editor, "active_note_row", row_final)
+	end
+
+	if tl_start then
+		t_results.tl_beat = cursor_info.msr.qn_start + (tonumber(string.sub(tl_match, 1, 1) - 1))
+		t_results.tl_division = 1 / 4 * (tonumber(string.sub(tl_match, 2, 2)) - 1)
+		local tl_pos_qn = t_results.tl_beat + t_results.tl_division
+		local tl_pos_time = reaper.TimeMap2_QNToTime(0, tl_pos_qn)
+
+		reaper.SetEditCurPos(tl_pos_time, true, false)
+	end
+
+	log.user(format.block(t_results))
 end
 
 return midi
