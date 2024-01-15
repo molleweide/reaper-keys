@@ -257,4 +257,16 @@ reaper_utils.delete_node = function(node)
 	reaper.DeleteTrack(reaper_utils.getTrackByGUID(node.guid))
 end
 
+
+----
+
+reaper_utils.track_record_arm_enable = function(tr)
+ reaper.SetMediaTrackInfo_Value( tr, "I_RECARM", 1 )
+end
+
+reaper_utils.track_record_arm_disable = function(tr)
+ reaper.SetMediaTrackInfo_Value( tr, "I_RECARM", 0 )
+end
+
+
 return reaper_utils
