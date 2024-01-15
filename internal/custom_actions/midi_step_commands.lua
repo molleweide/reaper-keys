@@ -139,7 +139,7 @@ local helper_insert_step = function(meta, ascending, interval)
 		meta,
 		tbl.copy_add(
 			insert_note_from_state_opts,
-			{ ascending = true, chord = { "midi_step_rel_pitch_chord_name", { 1 } } }
+			{ ascending = ascending, chord = { "midi_step_rel_pitch_chord_name", { interval } } }
 		)
 	)
 end

@@ -1,4 +1,6 @@
-local midi_step_commands = ("definitions.defaults.midi_step_mode_layouts.right_hand_only")
+-- local midi_step_commands = require("definitions.defaults.midi_step_mode_layouts.right_hand_only")
+local midi_step_commands = require("definitions.defaults.step_mode_layout__right_hand_only")
+
 -- TODOS:
 --
 --  ~ fix: move active note row with w/b
@@ -369,6 +371,7 @@ return {
 			"+midi_step/go",
 			{
 				["o"] = "MidiStepGoBack", -- Why not just use `Undo`??
+				["w"] = "MidiEditor_go_insert"
 			},
 		}, --
 		-- TODO: reuse the motion function here and call it as a command, similar to insert note chunk fn.
@@ -379,60 +382,68 @@ return {
 		-- ["v"] = "",
 		-- ["b"] = "",
 
-		-- NOTE: A. use toggle to switch direction
+		--
+		-- NOTE: A. These binds use midi_step_state.diretion to determine asc/desc.
+		--
 
-		["n"] = "InsertMidiStep_P1",
-		["m"] = "InsertMidiStep_m2",
-		[","] = "InsertMidiStep_M2",
-		["."] = "InsertMidiStep_m3",
-		["/"] = "InsertMidiStep_M3",
-		["h"] = "",
-		["j"] = "InsertMidiStep_P4",
-		["k"] = "InsertMidiStep_b5",
-		["l"] = "InsertMidiStep_P5",
-		[";"] = "InsertMidiStep_m6",
-		["y"] = "",
-		["u"] = "InsertMidiStep_M6",
-		["i"] = "InsertMidiStep_m7",
-		["o"] = "InsertMidiStep_M7",
-		["p"] = "InsertMidiStep_P8",
+		-- ["n"] = "InsertMidiStep_P1",
+		-- ["m"] = "InsertMidiStep_m2",
+		-- [","] = "InsertMidiStep_M2",
+		-- ["."] = "InsertMidiStep_m3",
+		-- ["/"] = "InsertMidiStep_M3",
+		-- ["h"] = "",
+		-- ["j"] = "InsertMidiStep_P4",
+		-- ["k"] = "InsertMidiStep_b5",
+		-- ["l"] = "InsertMidiStep_P5",
+		-- [";"] = "InsertMidiStep_m6",
+		-- ["y"] = "",
+		-- ["u"] = "InsertMidiStep_M6",
+		-- ["i"] = "InsertMidiStep_m7",
+		-- ["o"] = "InsertMidiStep_M7",
+		-- ["p"] = "InsertMidiStep_P8",
 
-		-- NOTE: B. Use small/big letters to determine direction.
+		--
+		-- NOTE: B. Use small/shifted keys to determine direction.
+		--
 
-		-- small / ascending
+		["n"] = "InsertMidiStep_unison",
 
-		-- big / descending.
-		-- InsertMidiStep_unison
-		-- InsertMidiStep_asc_min_2
-		-- InsertMidiStep_asc_maj_2
-		-- InsertMidiStep_asc_min_3
-		-- InsertMidiStep_asc_maj_3
-		-- InsertMidiStep_asc_prf_4
-		-- InsertMidiStep_asc_flt_5
-		-- InsertMidiStep_asc_prf_5
-		-- InsertMidiStep_asc_min_6
-		-- InsertMidiStep_asc_maj_6
-		-- InsertMidiStep_asc_min_7
-		-- InsertMidiStep_asc_maj_7
-		-- InsertMidiStep_asc_prf_8
-		-- InsertMidiStep_desc_min_2
-		-- InsertMidiStep_desc_maj_2
-		-- InsertMidiStep_desc_min_3
-		-- InsertMidiStep_desc_maj_3
-		-- InsertMidiStep_desc_prf_4
-		-- InsertMidiStep_desc_flt_5
-		-- InsertMidiStep_desc_prf_5
-		-- InsertMidiStep_desc_min_6
-		-- InsertMidiStep_desc_maj_6
-		-- InsertMidiStep_desc_min_7
-		-- InsertMidiStep_desc_maj_7
-		-- InsertMidiStep_desc_prf_8
+		["m"] = "InsertMidiStep_asc_min_2",
+		["M"] = "InsertMidiStep_desc_min_2",
+		[","] = "InsertMidiStep_asc_maj_2",
+		["<"] = "InsertMidiStep_desc_maj_2",
+		["."] = "InsertMidiStep_asc_min_3",
+		[">"] = "InsertMidiStep_desc_min_3",
+		["/"] = "InsertMidiStep_asc_maj_3",
+		["?"] = "InsertMidiStep_desc_maj_3",
 
+		["j"] = "InsertMidiStep_asc_prf_4",
+		["J"] = "InsertMidiStep_desc_prf_4",
+		["k"] = "InsertMidiStep_asc_flt_5",
+		["K"] = "InsertMidiStep_desc_flt_5",
+		["l"] = "InsertMidiStep_asc_prf_5",
+		["L"] = "InsertMidiStep_desc_prf_5",
+		[";"] = "InsertMidiStep_asc_min_6",
+		[":"] = "InsertMidiStep_desc_min_6",
+
+		["u"] = "InsertMidiStep_asc_maj_6",
+		["U"] = "InsertMidiStep_desc_maj_6",
+		["i"] = "InsertMidiStep_asc_min_7",
+		["I"] = "InsertMidiStep_desc_min_7",
+		["o"] = "InsertMidiStep_asc_maj_7",
+		["O"] = "InsertMidiStep_desc_maj_7",
+		["p"] = "InsertMidiStep_asc_prf_8",
+		["P"] = "InsertMidiStep_desc_prf_8",
+
+		--
 		-- NOTE: C. Use only pitch to get to the closest pitch and then use octave
 		-- jumps.
+		--
 
+		--
 		-- NOTE: D. Use left hand for descending and right hand for acending.
 		-- `tghy` are still left for navigation etc plus tab/enter AND space.
+		--
 
 		--------------------
 		-- thumb keys

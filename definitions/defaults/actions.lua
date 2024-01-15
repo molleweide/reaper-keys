@@ -881,6 +881,8 @@ return {
   },
   Midi_JumpBackToPrevActiveMidiItem = { "TODO: keep history of last N jumps" },
 
+  MidiEditor_go_insert = commands.MidiEditor_go_insert,
+
   Items_DuplicateCountTimes = {
     require("library.items").repeat_items,
     opts = {},

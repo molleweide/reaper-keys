@@ -89,4 +89,8 @@ commands.Midi_EditMidiForRegionsMarksAndSelectTrack = function(meta, opts)
 	})
 end
 
+commands.MidiEditor_go_insert = function(meta, opts)
+	midi.jump_to_position_and_insert_by_string()
+end
+
 return commands

@@ -437,7 +437,7 @@ local easy_read = [[
 -- insertMidiNoteChunk func - then i can just chek if meta.mode == midi_step,
 -- and then also only retrieve the state if the correct mode
 --
--- rename: buildNoteChunkForInsertion()
+-- rename: buildNoteChunkForInsertion()??
 --
 function midi.insertMidiNoteChunk(meta, opts)
 	opts = opts or {}
@@ -475,7 +475,15 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	-- This should be done inside of the action IDs themselves, and then they're
 	-- passed as params to this func.
-	local direction_mult = state.midi_step_state.direction and 1 or -1
+	local direction_mult
+
+	if opts.ascending ~= nil then
+	  log.user("opts.ascending!!!!")
+	  direction_mult = opts.ascending and 1 or -1
+	else
+	  log.user("opts.direction!!!! ")
+	  direction_mult = state.midi_step_state.direction and 1 or -1
+	end
 
 	local octave_add = state.midi_step_state.octave_next and (state.midi_step_state.octave_next * 12) or 0
 
@@ -1057,7 +1065,42 @@ end
 -- list_cnt: if viewing list view, returns event count
 -- if setting_desc is unsupported, the function returns -1.
 
+local PATTERN_SPEC = {
+	user_input = {
+		title = "ME go -> insert:",
+		num_inputs = 1,
+		placeholder = "?", -- what would be the smartest place holder??
+		input_field_width = "extrawidth=350",
+		retvals_csv = "",
+	},
+	pattern_sep = " ", -- whitespace
+}
+PATTERN_SPEC.user_input.caption_csv =
+	string.format("%s,%s", PATTERN_SPEC.user_input.placeholder, PATTERN_SPEC.user_input.input_field_width)
+
 midi.jump_to_position_and_insert_by_string = function()
+	opts = opts or {}
+	local ret, t_midi_context = require("library.midi_editor").getMidiValidContext()
+	if not ret then
+		return
+	end
+
+	local str_pat_input = opts.pattern or nil
+
+	-- FIX: use while loop -> so that user doesn't send empty string...
+	--
+	-- FIX: use while loop so that user can modify their erroneous promt
+	-- if it doesn't validate.
+
+	if not str_pat_input then
+		_, str_pat_input = reaper.GetUserInputs(
+			PATTERN_SPEC.user_input.title,
+			PATTERN_SPEC.user_input.num_inputs,
+			PATTERN_SPEC.user_input.caption_csv,
+			PATTERN_SPEC.user_input.retvals_csv
+		)
+	end
+
 	-- TODO:
 	-- This function shall serve as the fastest method for reaching any position
 	-- in a currently open ME.
@@ -1076,6 +1119,7 @@ midi.jump_to_position_and_insert_by_string = function()
 	-- a pattern string.
 	--
 	-- position -> pitches/chord -> pattern
+	log.user("[ MIDI EDITOR GO INSERT ] -> ", str_pat_input)
 end
 
 return midi
