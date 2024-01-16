@@ -16,7 +16,7 @@ tl.get_cursor_info = function(pos)
 	-- measure. Return the time in seconds of the measure start.
 	local msr_start_time, qn_start, qn_end, timesig_num, timesig_denom = reaper.TimeMap_GetMeasureInfo(0, measures)
 	return {
-	  cursor_pos = cursor_pos,
+	  cursor_pos = pos,
 		msr_num = measures, -- measures up until cursor
 		cml = cml,
 		fullbeats = fullbeats,

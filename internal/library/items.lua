@@ -250,16 +250,29 @@ lib_items.get_take_info = function(take)
   }
 end
 
--- get_track_items_in_range_time
+-- TODO: next two functions could be refactored into one smarter func api,
+-- maybe it should go into the get_transform_items API??
+
+--- Get items with in a specific time range on track X
+---@param track
+---@param range_start
+---@param range_end
+---@return
 lib_items.get_track_items_in_range_time_w_data = function(track, range_start, range_end)
   local item_cnt = reaper.GetTrackNumMediaItems(track)
   local items_found = {}
+
+  local function check_if_item_spans_cursor_position_measure()
+    -- item.start less than cursor pos
+    -- item._end greater than cursor pos
+  end
+
   for i = 0, item_cnt - 1 do
     local item_ref = reaper.GetTrackMediaItem(track, i)
     local item_info = lib_items.get_item_info(item_ref)
 
-    -- NOTE: the commented out part ._end makes func ignore ites that span wider..
-    if item_info.start >= range_start then -- and item_info._end <= range_end then
+    -- NOTE: the commented out part ._end makes func ignore items that span wider..
+    if item_info.start >= range_start and item_info._end <= range_end then
       table.insert(items_found, {
         ref = item_ref,
         info = item_info,
@@ -268,6 +281,25 @@ lib_items.get_track_items_in_range_time_w_data = function(track, range_start, ra
   end
   return #items_found > 0 and items_found or false
 end
+
+lib_items.get_track_items_that_span_cursor_pos = function(track, range_start, range_end)
+  local item_cnt = reaper.GetTrackNumMediaItems(track)
+  local items_found = {}
+
+  for i = 0, item_cnt - 1 do
+    local item_ref = reaper.GetTrackMediaItem(track, i)
+    local item_info = lib_items.get_item_info(item_ref)
+
+    if item_info.start <= range_start and item_info._end >= range_end then
+      table.insert(items_found, {
+        ref = item_ref,
+        info = item_info,
+      })
+    end
+  end
+  return #items_found > 0 and items_found or false
+end
+
 
 lib_items.unselect_items = function(t_indices)
   if not t_indices then

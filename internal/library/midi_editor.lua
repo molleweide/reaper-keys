@@ -597,6 +597,9 @@ end
 -- TODO: this function when used with fzf should always prefix tracks with
 -- their respective group node names
 --
+	-- TODO: if track is midi split child -> then enter parent track
+	-- and set midi channel for insertion
+
 --- FIX: Should find item if it starts
 --
 --- NOTE: why am i passing `meta` as parm?
@@ -611,9 +614,6 @@ midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new
 	local cursor_info = tl.get_cursor_info()
 	local g_obj, _, _ = sx_utils.get_track_object_group(sx.getVerifiedTree(), track_obj)
 
-	-- TODO: if track is midi split child -> then enter parent track
-	-- and set midi channel for insertion
-
 	local target_tr, items_found, note_row
 
 	local check_start_pos = new_item_start or cursor_info.msr.start
@@ -625,7 +625,8 @@ midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new
 
 	if sx_utils.trackObjHasOption(g_obj, "m") then -- drum lanes
 		target_tr = g_obj.tr
-		items_found = containers.get_track_items_in_range_time_w_data(g_obj.tr, check_start_pos, check_end_pos)
+		-- items_found = containers.get_track_items_in_range_time_w_data(g_obj.tr, check_start_pos, check_end_pos)
+		items_found = containers.get_track_items_that_span_cursor_pos(g_obj.tr, check_start_pos, check_end_pos)
 		note_row = sx_utils.get_drum_lane_indices(g_obj, track_obj)
 
 	-- TODO: midi channelsplitters -> set channel splitter master and set active midi channel in ME
@@ -639,7 +640,8 @@ midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new
 	--   )
 	else -- regular
 		target_tr = track_obj.tr
-		items_found = containers.get_track_items_in_range_time_w_data(track_obj.tr, check_start_pos, check_end_pos)
+		-- items_found = containers.get_track_items_in_range_time_w_data(track_obj.tr, check_start_pos, check_end_pos)
+		items_found = containers.get_track_items_that_span_cursor_pos(track_obj.tr, check_start_pos, check_end_pos)
 	end
 
 	containers.unselect_items()
