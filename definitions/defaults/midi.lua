@@ -333,23 +333,23 @@ return {
 		-- ["t"] = "", --
 		["a"] = "SetModeNormal", -- set pause/silent
 		["s"] = "ToggleMidiStepSilent",
-		["S"] = {
+		["W"] = {
 			"+silent step",
 			{
 				-- TODO:
-				["t"] = "SilentNote32th",
-				["f"] = "SilentNote24th",
-				["s"] = "SilentNote16th",
-				["d"] = "SilentNote16th_dot",
-				["e"] = "SilentNote8th",
-				["E"] = "SilentNote8th_dot",
-				["i"] = "SilentNoteQN_div3",
+				["t"] = "MIDIStep_SilentNote32th",
+				["f"] = "MIDIStep_SilentNote24th",
+				["s"] = "MIDIStep_SilentNote16th",
+				["d"] = "MIDIStep_SilentNote16th_dot",
+				["e"] = "MIDIStep_SilentNote8th",
+				["E"] = "MIDIStep_SilentNote8th_dot",
+				["i"] = "MIDIStep_SilentNoteQN_div3",
 				--
-				["q"] = "SilentNoteQN",
+				["Q"] = "MIDIStep_SilentNoteQN",
 				--
-				["w"] = "SilentNoteQN_dot",
-				["c"] = "SilentNoteQN_2x",
-				["x"] = "SilentNoteQN_3x",
+				["w"] = "MIDIStep_SilentNoteQN_dot",
+				["c"] = "MIDIStep_SilentNoteQN_2x",
+				["x"] = "MIDIStep_SilentNoteQN_3x",
 			},
 		},
 		["d"] = {

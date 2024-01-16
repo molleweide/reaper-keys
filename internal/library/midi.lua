@@ -469,9 +469,11 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	local t_note_pitches = {}
 	local t_midi_notes = {}
+
+	local note_end_gap = 0.005
+
 	local sixteen_note_len = 0.25 / 2
 	local step_len = sixteen_note_len
-	local note_end_gap = 0.005
 	local duration_final
 	local note_duration = sixteen_note_len - note_end_gap -- only used if midi step
 
@@ -491,10 +493,18 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	if opts.move_cursor then
 		local new_pos = meta.end_pos and meta.endpos or reaper.GetCursorPosition() + step_len
+		if meta.end_pos then
+			new_pos = meta.end_pos
+		elseif opts.note_duration then
+			new_pos = reaper.GetCursorPosition() + reaper.TimeMap_QNToTime_abs( 0, opts.note_duration )
+			-- log.user("DUR:", reaper.GetCursorPosition(), opts.note_duration, new_pos)
+		else
+			new_pos = reaper.GetCursorPosition() + step_len
+		end
 		reaper.SetEditCurPos(new_pos, false, false)
 	end
 
-	if state.midi_step_state.silent then
+	if opts.silent or state.midi_step_state.silent then
 		return
 	end
 
@@ -537,10 +547,10 @@ function midi.insertMidiNoteChunk(meta, opts)
 		note_end_pos = meta.end_pos
 	else
 		note_start_pos = cursor_pos
-		if meta.action_type:match("command$") then
-			note_end_pos = cursor_pos + note_duration
-		elseif opts.note_duration then
+		if opts.note_duration then
 			note_end_pos = cursor_pos + opts.note_duration
+		elseif meta.action_type:match("command$") then
+			note_end_pos = cursor_pos + note_duration
 		else
 			log.debug("No duration for insertMidiNoteChunk could be computed!")
 			return
@@ -549,7 +559,12 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	duration_final = note_end_pos - note_start_pos
 
-	-- build notes
+	-- MOVE CURSOR / ROW
+
+	--
+	-- BUILD / INSERT NOTES
+	--
+
 	for i in ipairs(t_note_pitches) do
 		local t_new_note = {}
 		t_new_note.pitch = t_note_pitches[i]
@@ -557,11 +572,7 @@ function midi.insertMidiNoteChunk(meta, opts)
 		t_new_note.time_pos_end = note_end_pos
 		table.insert(t_midi_notes, t_new_note)
 	end
-
-	-- log.user("timeline end - start:", )
-
 	log.user("[ insertMidiNoteChunk ]: t_midi_notes =", format.block(t_midi_notes))
-
 	midi.insert_notes({
 		take = ctxm.take,
 		notes = t_midi_notes,

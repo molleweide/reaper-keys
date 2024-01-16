@@ -292,12 +292,41 @@ end
 -- QUICK INSERT PAUSES
 --
 
-local helper_insert_pause = function(meta, duration)
-	midi.insertMidiNoteChunk(meta, { silent = true, duration = duration })
+local helper_pause = function(meta, duration)
+	midi.insertMidiNoteChunk(meta, { move_cursor = true, silent = true, note_duration = duration })
 end
 
-midi_step_commands.insert_silent_QN = function(meta, opts)
-  helper_insert_pause(meta, 1)
+midi_step_commands.insert_silent_QN = function(meta)
+	helper_pause(meta, 1)
+end
+-- under QN
+midi_step_commands.insert_silent_8th = function(meta)
+	helper_pause(meta, 1 / 2)
+end
+midi_step_commands.insert_silent_8th_dot = function(meta)
+	helper_pause(meta, 1 / 4 * 3)
+end
+midi_step_commands.insert_silent_16th = function(meta)
+	helper_pause(meta, 1 / 4)
+end
+midi_step_commands.insert_silent_24th = function(meta)
+	helper_pause(meta, 1 / 6)
+end
+midi_step_commands.insert_silent_32th = function(meta)
+	helper_pause(meta, 1 / 8)
+end
+midi_step_commands.insert_silent_QN_div3 = function(meta)
+	helper_pause(meta, 1 / 3)
+end
+-- over QN
+midi_step_commands.insert_silent_QN_dot = function(meta)
+	helper_pause(meta, 1.5)
+end
+midi_step_commands.insert_silent_QN_2x = function(meta)
+	helper_pause(meta, 2)
+end
+midi_step_commands.insert_silent_QN_3x = function(meta)
+	helper_pause(meta, 3)
 end
 
 return midi_step_commands
