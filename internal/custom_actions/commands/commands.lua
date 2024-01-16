@@ -104,7 +104,7 @@ commands.picker_first_eq_on_focused_track = function()
 
 	-- Add EQ if doesn't exist.
 	if eq_instance then
-		pickers.track_fx_params(tr_node.tr, eq_instance.idx)
+		pickers.track_fx_params({ node = tr_node, fx_index = eq_instance.idx })
 	end
 end
 commands.picker_first_comp_on_focused_track = function()
@@ -113,7 +113,7 @@ commands.picker_first_comp_on_focused_track = function()
 	local comp_instance = fxu.get_fx_objs_by_name_string(tr_node.guid, "ReaComp")
 	log.user("EQ INSTANCE:", format.block(comp_instance))
 	if comp_instance then
-	pickers.track_fx_params(tr_node.tr, comp_instance.idx)
+		pickers.track_fx_params({ node = tr_node, fx_index = comp_instance.idx })
 	end
 end
 

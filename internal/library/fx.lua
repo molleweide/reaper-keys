@@ -425,10 +425,21 @@ fx_util.get_track_fx_info = function(tr, fx_idx)
 	}
 
 	for i = 0, parm_cnt - 1 do
-		local retval, parm_name = reaper.TrackFX_GetParamName(tr, fx_idx, i, "")
+		local _, parm_name = reaper.TrackFX_GetParamName(tr, fx_idx, i, "")
+		local val = reaper.TrackFX_GetParamNormalized(tr, fx_idx, i)
+
+    local vs = tostring(val)
+
+    log.user(vs, #vs)
+
+
+		local _, valf = reaper.TrackFX_GetFormattedParamValue(tr, fx_idx, i, "")
+
 		table.insert(t_track_fx_info.parameters, {
 			index = i,
 			name = parm_name,
+			val = val,
+			valf = valf
 		})
 	end
 	return t_track_fx_info

@@ -194,15 +194,43 @@ end
 
 ---@param tr userdata
 ---@param fx_idx number
-pickers.track_fx_params = function(tr, fx_idx)
-	local t_fx_params = fx_util.get_track_fx_info(tr, fx_idx)
+pickers.track_fx_params = function(opts)
+	if not opts.node or not opts.fx_index then
+		log.debug("[pickers.track_fx_params]: Requires both a track node and target fx_index!")
+		return
+	end
+
+	local node = opts.node
+
+	local t_fx_params = fx_util.get_track_fx_info(node.tr, opts.fx_index)
 
 	log.user(format.block(t_fx_params))
 
+	-- TODO: ( REFACTOR ): this whole thing could be moved into lib_tr or sx so that I easilly
+	-- can reuse this way of flattening out a specific track node string.
+	local tr_node_header_string = ""
+	if node.zone then
+		local part = "Z:" .. node.zone.name
+		tr_node_header_string = tr_node_header_string .. part .. "> "
+	end
+	if node.group then
+		local part = "G:" .. node.group.name
+		tr_node_header_string = tr_node_header_string .. part .. "> "
+	end
+	tr_node_header_string = tr_node_header_string .. ":: " .. node.name
+	--------
+
 	fzf.init({
 		env = RK_FZF_ENV,
-		title = "Fx params for <fx_name> on track <track_name>",
-		results = {},
+		title = string.format("FXparams: NODE(%s) -> FX(%s)", tr_node_header_string, t_fx_params.name),
+		width = 800,
+		height = 700,
+		x = 400,
+		y = 1100,
+		results = t_fx_params.parameters,
+		sort_comp = "name",
+		-- entry_maker = { "index", "name", "val", "valf" },
+		entry_maker = require("pickers.entry_makers.fx_parameters"),
 	})
 end
 
