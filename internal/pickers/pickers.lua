@@ -176,9 +176,9 @@ pickers.track_fx = function()
 
 			for i, t in ipairs(t_results_data) do
 				if t.name and t.name ~= '""' and t.name:lower():find(sPattern) then
-						add(i, t)
+					add(i, t)
 				elseif t.pname and t.pname:lower():find(sPattern) then
-						add(i, t)
+					add(i, t)
 				end
 				if iMaxResults then
 					if #t_ret >= iMaxResults then -- check if we already have enough results
@@ -195,7 +195,10 @@ end
 ---@param tr userdata
 ---@param fx_idx number
 pickers.track_fx_params = function(tr, fx_idx)
-	local t_fx_params
+	local t_fx_params = fx_util.get_track_fx_info(tr, fx_idx)
+
+	log.user(format.block(t_fx_params))
+
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = "Fx params for <fx_name> on track <track_name>",

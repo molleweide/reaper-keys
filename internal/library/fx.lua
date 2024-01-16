@@ -364,12 +364,12 @@ end
 ---@param tr userdata
 ---@param fx_state string
 fx_util.set_single_tracks_fx_state_chunk = function(tobj, fx_state)
-  local tr, tr_i = r.getTrackByGUID(tobj.guid)
+	local tr, tr_i = r.getTrackByGUID(tobj.guid)
 	local retval, s_track_state_chunk = r.get_single_track_state_chunk(tr)
 	dofile(reaper.GetResourcePath() .. "/UserPlugins/ultraschall_api.lua")
 	local retval, s_altered_track_state_chunk = ultraschall.SetFXStateChunk(s_track_state_chunk, fx_state)
 
-  r.set_single_track_state_chunk(tr, state)
+	r.set_single_track_state_chunk(tr, state)
 end
 --
 --
@@ -390,7 +390,7 @@ end
 -- fix: pass tobj or tr?
 --
 fx_util.get_track_fx_chain_info = function()
-	local t_track_fx = {}
+	local t_track_fx_chain = {}
 	local tr = reaper.GetSelectedTrack(0, 0)
 	local tc = reaper.TrackFX_GetCount(tr)
 
@@ -406,9 +406,32 @@ fx_util.get_track_fx_chain_info = function()
 			name = current_name,
 			pname = plugin_name,
 		}
-		table.insert(t_track_fx, fx_obj)
+		table.insert(t_track_fx_chain, fx_obj)
 	end
-	return t_track_fx
+	return t_track_fx_chain
+end
+
+fx_util.get_track_fx_info = function(tr, fx_idx)
+	local parm_cnt = reaper.TrackFX_GetNumParams(tr, fx_idx)
+	local _, name = reaper.TrackFX_GetFXName(tr, fx_idx, "")
+
+	-- local special_name =
+	local _, special_name = reaper.TrackFX_GetFXName(tr, fx_idx)
+
+	local t_track_fx_info = {
+		name = name,
+		name_special = special_name,
+		parameters = {},
+	}
+
+	for i = 0, parm_cnt - 1 do
+		local retval, parm_name = reaper.TrackFX_GetParamName(tr, fx_idx, i, "")
+		table.insert(t_track_fx_info.parameters, {
+			index = i,
+			name = parm_name,
+		})
+	end
+	return t_track_fx_info
 end
 
 -- --

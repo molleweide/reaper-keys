@@ -1,6 +1,9 @@
 local log = require("utils.log")
 local format = require("utils.format")
 local pickers = require("pickers.pickers")
+local lib_tr = require("library.tracks")
+
+local fxu = require("library.fx")
 
 local project_state = require("utils.project_state")
 
@@ -22,7 +25,6 @@ end
 commands.MIDI_EditMidiAtCurPosForTrack = function()
 	local log = require("utils.log")
 	local format = require("utils.format")
-	local lib_tr = require("library.tracks")
 
 	-- this function could be renamed to `get_rk_context()` and return all possible
 	-- useful information.
@@ -93,16 +95,26 @@ commands.MidiEditor_go_insert = function(meta, opts)
 	midi.jump_to_position_and_insert_by_string()
 end
 
-
 commands.picker_first_eq_on_focused_track = function()
-  -- 1. get focused track.
-  -- 2. get first EQ if exists.
-  -- (3). Add EQ if doesn't exist.
-  pickers.track_fx_params(tr, fx_idx)
+	local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+	local tr_node = focused_track_objects[1]
+	local eq_instance = fxu.get_fx_objs_by_name_string(tr_node.guid, "ReaEQ")
+
+	log.user("EQ INSTANCE:", format.block(tr_node.tr), format.block(eq_instance))
+
+	-- Add EQ if doesn't exist.
+	if eq_instance then
+		pickers.track_fx_params(tr_node.tr, eq_instance.idx)
+	end
 end
 commands.picker_first_comp_on_focused_track = function()
-  pickers.track_fx_params(tr, fx_idx)
+	local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+	local tr_node = focused_track_objects[1]
+	local comp_instance = fxu.get_fx_objs_by_name_string(tr_node.guid, "ReaComp")
+	log.user("EQ INSTANCE:", format.block(comp_instance))
+	if comp_instance then
+	pickers.track_fx_params(tr_node.tr, comp_instance.idx)
+	end
 end
-
 
 return commands

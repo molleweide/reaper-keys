@@ -2,6 +2,8 @@ local lib_fx = require("library.fx")
 local cust_util = require("custom_actions.utils")
 local dev = {}
 
+-- FIX: replace all `getting` of fx names/params with `lib.fx` api
+
 function prepareGetFocusedFX()
   local retval, tracknumber, itemnumber, fxnumber = reaper.GetFocusedFX()
 
@@ -36,7 +38,7 @@ function dev.logLastTouchedFxParams()
       local _, name = reaper.TrackFX_GetFXName(track, fxnumber, "")
 
       -- local special_name =
-      -- local _, special_name = reaper.TrackFX_GetFXName(track, fxnumber)
+      local _, special_name = reaper.TrackFX_GetFXName(track, fxnumber)
       -- -- lib_fx.getSetTrackFxNameByFxChainIndex(cust_util.getGUIDByTrack(track), fxnumber, false)
 
       reaper.ShowConsoleMsg("\n" .. name .. "("..special_name..")" .. " parameter id numbers\n\n")

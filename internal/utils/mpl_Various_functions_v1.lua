@@ -214,21 +214,21 @@ end
 
 ---------------------------------------------------
 -- move to utils/table.lua
-function CopyTable(orig) --http://lua-users.org/wiki/CopyTable
-	local orig_type = type(orig)
-	local copy
-	if orig_type == "table" then
-		copy = {}
-		for orig_key, orig_value in next, orig, nil do
-			copy[CopyTable(orig_key)] = CopyTable(orig_value)
-		end
-		setmetatable(copy, CopyTable(getmetatable(orig)))
-	else -- number, string, boolean, etc
-		copy = orig
-	end
-	return copy
-end
-
+-- function CopyTable(orig) --http://lua-users.org/wiki/CopyTable
+-- 	local orig_type = type(orig)
+-- 	local copy
+-- 	if orig_type == "table" then
+-- 		copy = {}
+-- 		for orig_key, orig_value in next, orig, nil do
+-- 			copy[CopyTable(orig_key)] = CopyTable(orig_value)
+-- 		end
+-- 		setmetatable(copy, CopyTable(getmetatable(orig)))
+-- 	else -- number, string, boolean, etc
+-- 		copy = orig
+-- 	end
+-- 	return copy
+-- end
+--
 ------------------------------------------------------------------------------------------------------
 -- utils/wdl.lua
 function WDL_DB2VAL(x)

@@ -259,35 +259,6 @@ custom_actions.jumpToRegionAndLoop = function(opts)
   })
 end
 
--- TODO: i can impl this as a toggle first, and then layer on the picker..
--- then use leader key later for selection durations quickly.
-
-custom_actions.midiStepSelectNoteDuration = function(meta, opts)
-  -- make a picker that allows for selecting between a list of
-  -- durations, eg:
-  -- QN / 1/4
-  -- 1/8
-  -- 1/16
-  -- 2QN / 2/4
-  -- 1/24
-  -- 1/32
-
-  -- save selection to state.
-  local exists, midi_step_state = project_state.get("mode_state", "midi_step")
-  local new_midi_step_state
-  if not exists then
-    new_midi_step_state = {
-      silent = false,
-      direction = true,
-    }
-  else
-    new_midi_step_state = midi_step_state
-    new_midi_step_state.silent = not new_midi_step_state.silent
-  end
-  log.user(exists, midi_step_state, format.block(new_midi_step_state))
-  project_state.overwrite("mode_state", "midi_step", new_midi_step_state)
-end
-
 custom_actions.midi_patterns_insert_at_measure = function(meta, opts)
   require("library.midi_patterns").insertPatternFromString(meta, {
     start_at_measure = true,
