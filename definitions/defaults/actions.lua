@@ -941,6 +941,9 @@ return {
 	MIDIStep_SilentNote32th = midi_step_commands.insert_silent_32th,
 	MIDIStep_SilentNoteQN_div3 = midi_step_commands.insert_silent_QN_div3,
 
+	PickerFirstEQ_focused_track = commands.picker_first_eq_on_focused_track,
+	PickerFirstComp_focused_track = commands.picker_first_comp_on_focused_track,
+
 	n71 = lib.midi.sendMidiNote_61,
 	n70 = lib.midi.sendMidiNote_70,
 	n69 = lib.midi.sendMidiNote_69,

@@ -355,8 +355,8 @@ return {
             ["m"] = {
               "+track mixer",
               {
-                ["e"] = "PickerFirstEQ",
-                ["c"] = "PickerFirstComp",
+                ["e"] = "PickerFirstEQ_focused_track",
+                ["c"] = "PickerFirstComp_focused_track",
                 ["u"] = "TrackMixerUI",
               },
             },

@@ -93,4 +93,16 @@ commands.MidiEditor_go_insert = function(meta, opts)
 	midi.jump_to_position_and_insert_by_string()
 end
 
+
+commands.picker_first_eq_on_focused_track = function()
+  -- 1. get focused track.
+  -- 2. get first EQ if exists.
+  -- (3). Add EQ if doesn't exist.
+  pickers.track_fx_params(tr, fx_idx)
+end
+commands.picker_first_comp_on_focused_track = function()
+  pickers.track_fx_params(tr, fx_idx)
+end
+
+
 return commands
