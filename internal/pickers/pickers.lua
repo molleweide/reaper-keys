@@ -225,7 +225,7 @@ pickers.track_fx_params = function(opts)
     title = string.format("FXparams: NODE(%s) -> FX(%s)", tr_node_header_string, t_fx_params.name),
     width = 800,
     height = 700,
-    x = 400,
+    x = 0,
     y = 1100,
     results = t_fx_params.parameters,
     sort_comp = "name",
@@ -233,19 +233,46 @@ pickers.track_fx_params = function(opts)
     entry_maker = require("pickers.entry_makers.fx_parameters"),
     attach_mappings = function(gui, key, i)
       local selection = gui.t_search_results[i]
-      if key == gui.kb.control_j then
-        log.user("<C-j>")
-      end
-      if key == gui.kb.control_k then
-        log.user("<C-k>")
+
+      if not selection then
+        return
       end
 
       log.user("selection = ", format.block(selection))
-      log.user(string.format([["NODE
-      name = %s
-      guid = %s
-      ]], node.name, node.guid))
+      -- log.user(string.format(
+      --   [["NODE
+      -- name = %s
+      -- guid = %s
+      -- ]] ,
+      --   node.name,
+      --   node.guid
+      -- ))
 
+      local function update_fx_parameter(amount)
+        log.user("amount:", amount)
+        local ret = reaper.TrackFX_SetParam(node.tr, opts.fx_index, selection.index, selection.val + amount)
+      end
+
+      log.user(type(selection.val), type(selection.valf))
+
+      local update_value = 0.2
+
+      -- if selection.valf:match("^0%.") then
+      --   log.user("???")
+      --   update_value = 0.1
+      -- else
+      --   log.user("!!!")
+      --   update_value = 10
+      -- end
+
+
+      if key == gui.kb.control_j then
+        update_fx_parameter(-update_value)
+      end
+
+      if key == gui.kb.control_k then
+        update_fx_parameter(update_value)
+      end
     end,
   })
 end
