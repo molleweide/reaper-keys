@@ -20,6 +20,9 @@ return {
     -- how do i change the grid??
     ["h"] = "LeftGridDivision",
     ["l"] = "RightGridDivision",
+
+    -- NOTE: The following moves by measure length,
+    -- -> I need motions that move to the next/prev measureStart
     ["H"] = "PrevMeasure",
     ["L"] = "NextMeasure",
     ["<C-i>"] = "MoveRedo",
@@ -53,7 +56,8 @@ return {
         ["p"] = "ProjectTimeline",
         ["w"] = "Item",
         ["W"] = "BigItem",
-        -- ["m"] = "Measure", -- TODO:
+        -- TODO:
+        -- ["m"] = "Measure",
       },
     },
   },
