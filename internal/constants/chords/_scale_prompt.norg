@@ -1,0 +1,25 @@
+@document.meta
+title: _chord_prompt
+description:
+authors: hjalmarjakobsson
+categories:
+created: 2024-01-17T03:29:06-0500
+updated: 2024-01-17T03:29:06-0500
+version: 1.1.1
+@end
+
+this is a scale template in lua:
+
+@code lua
+
+local chord_template = {
+  name_long = "",
+  name_short = "",
+  type = "",
+  notes = { } -- note steps are zero based.
+}
+@end
+
+The interval numbers are relative steps - not absolute pitches.
+
+Can you give me a table of as many musical scales possible with their respective names.
