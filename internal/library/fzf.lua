@@ -267,6 +267,10 @@ local function gui_create_main_text_box(gui, on_enter)
     label_padding = 3,
   })
 
+  function text_input:onKeyboard(key)
+    log.user("key: ", key, self.kb.enter, self.kb.tab)
+  end
+
   function text_input:onEnter()
 
     -- test: trying to remove  prev pickers controls here, wo/sucess
@@ -488,6 +492,7 @@ local function build_picker(opts, on_enter)
   table.sort(GUI.t_results_data, GUI.sort_comp)
 
   GUI:controlAdd(gui_create_main_text_box(GUI, on_enter))
+
   GUI:controlAdd(create_control_label_stats(GUI))
   BUTTON_Y_START = GUI.gui_size * 1.5 + 15
   -- createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, BUTTON_Y_START)

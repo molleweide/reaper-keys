@@ -1,0 +1,16 @@
+@document.meta
+title: prompt
+description:
+authors: hjalmarjakobsson
+categories:
+created: 2024-01-17T07:41:01-0500
+updated: 2024-01-17T07:41:01-0500
+version: 1.1.1
+@end
+
+Test if I can use chatGpt to generate basic rhythm blocks for me so that I can
+have good standard rhythms to choose from.
+
+@code lua
+
+@end
