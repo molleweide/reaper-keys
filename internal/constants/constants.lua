@@ -27,21 +27,50 @@ constants.midi_helpers = {
 	-- //OUT_SD=0x02;
 }
 
--- look at my old pitch machine theory table and reuse it here.
--- NOTE: this should go into a defunintions/chords instead.
-constants.t_chords = {
-	-- basic intervals
-
-	-- triads
-	{
-		"major",
-		{ 1, 5, 8 },
-	},
-	{
-		"minor",
-		{ 1, 4, 8 },
-	},
-}
+-- -- look at my old pitch machine theory table and reuse it here.
+-- -- NOTE: this should go into a defunintions/chords instead.
+-- constants.t_chords = {
+-- 	-- basic intervals
+-- 	{
+-- 		"minor second",
+-- 		{ 1, 5, 8 },
+-- 	},
+-- 	{
+-- 		"minor second",
+-- 		{ 1, 5, 8 },
+-- 	},
+--
+-- 	{
+-- 		"minor second",
+-- 		{ 1, 5, 8 },
+-- 	},
+--
+-- 	{
+-- 		"minor second",
+-- 		{ 1, 5, 8 },
+-- 	},
+--
+-- 	{
+-- 		"minor second",
+-- 		{ 1, 5, 8 },
+-- 	},
+--
+-- 	{
+-- 		"minor second",
+-- 		{ 1, 5, 8 },
+-- 	},
+--
+--
+-- 	-- triads
+-- 	{
+-- 		"major",
+-- 		{ 1, 5, 8 },
+-- 	},
+-- 	{
+-- 		"minor",
+-- 		{ 1, 4, 8 },
+-- 	},
+-- }
 
 constants.patterns = {
  extension_wav = "%.[wW][aA][vV]$"

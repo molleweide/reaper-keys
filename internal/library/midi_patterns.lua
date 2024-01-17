@@ -239,6 +239,8 @@ midi_patterns.insertPatternFromString = function(meta, opts)
 	-- could be reused in other of my custom action commands.
 	local t_patterns_state = {
 		input_units = s.split(str_pat_input, PATTERN_SPEC.pattern_sep),
+
+		-- NOTE: (AAA) pattern start!!
 		note_start = opts.start_at_measure and (tl.get_cursor_info()).msr.start or t_midi_context.cursor_pos,
 	}
 
@@ -265,6 +267,10 @@ midi_patterns.insertPatternFromString = function(meta, opts)
 			]])
 		end
 	end
+
+	-- TODO: (BBB) get pattern length here!!
+
+	log.user("t pattern state", format.block(t_patterns_state), format.block(t_midi_notes))
 
 	midi.remove_notes(t_midi_context.take, t_midi_context.events, t_midi_context.note_row)
 
