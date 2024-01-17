@@ -1,0 +1,156 @@
+local two_note_intervals = {
+  {
+    name_long = "Unison",
+    name_short = "P1",
+    type = "interval",
+    notes = {0, 0}
+  },
+  {
+    name_long = "Minor Second",
+    name_short = "m2",
+    type = "interval",
+    notes = {0, 1}
+  },
+  {
+    name_long = "Major Second",
+    name_short = "M2",
+    type = "interval",
+    notes = {0, 2}
+  },
+  {
+    name_long = "Minor Third",
+    name_short = "m3",
+    type = "interval",
+    notes = {0, 3}
+  },
+  {
+    name_long = "Major Third",
+    name_short = "M3",
+    type = "interval",
+    notes = {0, 4}
+  },
+  {
+    name_long = "Perfect Fourth",
+    name_short = "P4",
+    type = "interval",
+    notes = {0, 5}
+  },
+  {
+    name_long = "Augmented Fourth",
+    name_short = "Aug4",
+    type = "interval",
+    notes = {0, 6}
+  },
+  {
+    name_long = "Perfect Fifth",
+    name_short = "P5",
+    type = "interval",
+    notes = {0, 7}
+  },
+  {
+    name_long = "Minor Sixth",
+    name_short = "m6",
+    type = "interval",
+    notes = {0, 8}
+  },
+  {
+    name_long = "Major Sixth",
+    name_short = "M6",
+    type = "interval",
+    notes = {0, 9}
+  },
+  {
+    name_long = "Minor Seventh",
+    name_short = "m7",
+    type = "interval",
+    notes = {0, 10}
+  },
+  {
+    name_long = "Major Seventh",
+    name_short = "M7",
+    type = "interval",
+    notes = {0, 11}
+  },
+  {
+    name_long = "Octave",
+    name_short = "P8",
+    type = "interval",
+    notes = {0, 12}
+  },
+  {
+    name_long = "Minor Ninth",
+    name_short = "m9",
+    type = "interval",
+    notes = {0, 13}
+  },
+  {
+    name_long = "Major Ninth",
+    name_short = "M9",
+    type = "interval",
+    notes = {0, 14}
+  },
+  {
+    name_long = "Minor Tenth",
+    name_short = "m10",
+    type = "interval",
+    notes = {0, 15}
+  },
+  {
+    name_long = "Major Tenth",
+    name_short = "M10",
+    type = "interval",
+    notes = {0, 16}
+  },
+  {
+    name_long = "Perfect Eleventh",
+    name_short = "P11",
+    type = "interval",
+    notes = {0, 17}
+  },
+  {
+    name_long = "Augmented Eleventh",
+    name_short = "Aug11",
+    type = "interval",
+    notes = {0, 18}
+  },
+  {
+    name_long = "Perfect Twelfth",
+    name_short = "P12",
+    type = "interval",
+    notes = {0, 19}
+  },
+  {
+    name_long = "Minor Thirteenth",
+    name_short = "m13",
+    type = "interval",
+    notes = {0, 20}
+  },
+  {
+    name_long = "Major Thirteenth",
+    name_short = "M13",
+    type = "interval",
+    notes = {0, 21}
+  },
+  {
+    name_long = "Minor Fourteenth",
+    name_short = "m14",
+    type = "interval",
+    notes = {0, 22}
+  },
+  {
+    name_long = "Major Fourteenth",
+    name_short = "M14",
+    type = "interval",
+    notes = {0, 23}
+  },
+  {
+    name_long = "Double Octave",
+    name_short = "P15",
+    type = "interval",
+    notes = {0, 24}
+  }
+}
+
+-- You can continue to add more two-note intervals as needed
+
+

@@ -1,0 +1,27 @@
+@document.meta
+title: _chord_prompt
+description:
+authors: hjalmarjakobsson
+categories:
+created: 2024-01-17T03:29:06-0500
+updated: 2024-01-17T03:29:06-0500
+version: 1.1.1
+@end
+
+this is a chord template in lua:
+
+@code lua
+
+local chord_template = {
+  name_long = "",
+  name_short = "",
+  type = "", -- eg. triad
+  number_of_notes = number, eg. 4 if the chord has 0, 3, 7, 11
+  notes = { } -- list of notes starting from zero, major chord = [0, 4, 7]
+}
+@end
+
+The interval numbers are relative steps - not absolute pitches.
+
+Can you give me a table of all possible triads following this pattern.
+Only reply with the code output.
