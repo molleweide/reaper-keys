@@ -268,7 +268,8 @@ local function gui_create_main_text_box(gui, on_enter)
   })
 
   function text_input:onKeyboard(key)
-    log.user("key: ", key, self.kb.enter, self.kb.tab)
+    -- add custom bindings here.
+    gui.attach_mappings(gui, key, 1)
   end
 
   function text_input:onEnter()
