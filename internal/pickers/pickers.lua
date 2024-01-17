@@ -433,18 +433,13 @@ pickers.chord_progression = function()
 end
 
 pickers.chord = function(meta, opts)
-
   local all_chords = require("constants.chords.chords")()
-
   log.debug(format.block(all_chords))
-
 	fzf.init({
-		env = RK_FZF_ENV,
 		title = string.format("%s: chord", meta.action_type),
 		results = all_chords,
 		on_select_func = function(self, i)
 			local chord = self.t_search_results[i]
-
 			if opts.next then
 				opts.next(meta, {
 					chord = chord,
@@ -454,11 +449,34 @@ pickers.chord = function(meta, opts)
 		end,
 		results_filter = "name_long",
 		sort_comp = "name_short",
-
 		-- chords picker should also display the step-array last in a nice manner.
 		entry_maker ={ "type", "name_long", "name_short" }
 	})
 end
+
+pickers.scales = function(meta, opts)
+  local all_scales = require("constants.scales.scales")()
+  log.debug(format.block(all_scales))
+	fzf.init({
+		title = string.format("%s: scale picker", meta.action_type),
+		results = all_scales,
+		on_select_func = function(self, i)
+			local scale = self.t_search_results[i]
+			if opts.next then
+				opts.next(meta, {
+					scale = scale,
+					move_cursor = opts.move_cursor,
+				})
+			end
+		end,
+		results_filter = "name_long",
+		sort_comp = "name_short",
+
+		-- scale picker should also display the step-array last in a nice manner.
+		entry_maker ={ "type", "name_long", "name_short" }
+	})
+end
+
 
 pickers.envelope_template = function()
 	local t_env_templates = {}
