@@ -2,68 +2,40 @@
 -- FIX: zero-based
 --
 return {
-  --
-  -- TRIADS
-  --
-
   {
-    "major",
-    type = "triad",
-    { 1, 5, 8 },
+    name_long = "Major",
+    name_short = "Maj",
+    type = "Triad",
+    notes = { 0, 4, 7 },
   },
   {
-    "minor",
-    type = "triad",
-    { 1, 4, 8 },
+    name_long = "Minor",
+    name_short = "Min",
+    type = "Triad",
+    notes = { 0, 3, 7 },
   },
   {
-    "sus2",
-    type = "triad",
-    { 1, 4, 8 },
+    name_long = "Diminished",
+    name_short = "Dim",
+    type = "Triad",
+    notes = { 0, 3, 6 },
   },
   {
-    "add9",
-    type = "triad",
-    { 1, 4, 8 },
+    name_long = "Augmented",
+    name_short = "Aug",
+    type = "Triad",
+    notes = { 0, 4, 8 },
   },
   {
-    "sus4",
-    type = "triad",
-    { 1, 4, 8 },
+    name_long = "Sus2",
+    name_short = "Sus2",
+    type = "Triad",
+    notes = { 0, 2, 7 },
   },
   {
-    "dim",
-    type = "triad",
-    { 1, 4, 8 },
-  },
-  {
-    "minor",
-    type = "triad",
-    { 1, 4, 8 },
-  },
-  {
-    "minor",
-    type = "triad",
-    { 1, 4, 8 },
-  },
-  {
-    "minor",
-    type = "triad",
-    { 1, 4, 8 },
-  },
-  {
-    "quartal | Q", -- double fourths
-    type = "triad",
-    { 1, 4, 8 },
-  },
-  {
-    "quartal | Q-", -- tritone + fourth
-    type = "triad",
-    { 1, 4, 8 },
-  },
-  {
-    "quartal | Q+", -- fourth + tritone.
-    type = "triad",
-    { 1, 4, 8 },
+    name_long = "Sus4",
+    name_short = "Sus4",
+    type = "Triad",
+    notes = { 0, 5, 7 },
   },
 }

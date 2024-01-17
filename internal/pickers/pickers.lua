@@ -433,9 +433,15 @@ pickers.chord_progression = function()
 end
 
 pickers.chord = function(meta, opts)
+
+  local all_chords = require("constants.chords.chords")()
+
+  log.debug(format.block(all_chords))
+
 	fzf.init({
 		env = RK_FZF_ENV,
 		title = string.format("%s: chord", meta.action_type),
+		results = all_chords,
 		on_select_func = function(self, i)
 			local chord = self.t_search_results[i]
 
@@ -446,11 +452,11 @@ pickers.chord = function(meta, opts)
 				})
 			end
 		end,
-		results = require("definitions.chords"),
-		results_filter = 1,
-		sort_comp = 1,
-		-- RENAME: vstTable...
-		entry_maker = 1,
+		results_filter = "name_long",
+		sort_comp = "name_short",
+
+		-- chords picker should also display the step-array last in a nice manner.
+		entry_maker ={ "type", "name_long", "name_short" }
 	})
 end
 
