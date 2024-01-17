@@ -238,24 +238,66 @@ pickers.track_fx_params = function(opts)
         return
       end
 
-      log.user("selection = ", format.block(selection))
-      -- log.user(string.format(
-      --   [["NODE
-      -- name = %s
-      -- guid = %s
-      -- ]] ,
-      --   node.name,
-      --   node.guid
-      -- ))
+      log.user("#################################", key)
+
+      -- log.user("selection = ", format.block(selection))
+      local retval, step, smallstep, largestep, istoggle =
+      reaper.TrackFX_GetParameterStepSizes(node.tr, opts.fx_index, selection.index)
+      local retval, minval, maxval = reaper.TrackFX_GetParam(node.tr, opts.fx_index, selection.index)
+
+      local full_range = maxval - minval
 
       local function update_fx_parameter(amount)
         log.user("amount:", amount)
-        local ret = reaper.TrackFX_SetParam(node.tr, opts.fx_index, selection.index, selection.val + amount)
+
+        local amount_new
+        if istoggle then
+          amount_new = amount > 0 and 1 or 0
+        else
+          amount_new = selection.val + amount
+
+          if amount_new <= minval then
+            amount_new = minval
+          elseif amount_new >= maxval then
+            amount_new = maxval
+          end
+        end
+
+        log.user(string.format(
+          [[
+      FX PARAM INFO
+      step:      %s
+      smallstep: %s
+      largestep: %s
+      istoggle:  %s
+      min: %s
+      max: %s
+      full_range:  %s
+      amount_new: %s
+      ]]   ,
+          step,
+          smallstep,
+          largestep,
+          istoggle,
+          minval,
+          maxval,
+          full_range,
+          amount_new
+        ))
+
+        -- set plugin value
+        local ret = reaper.TrackFX_SetParam(node.tr, opts.fx_index, selection.index, amount_new)
+
+        -- get values so that we can update the table entry in the picker
+        local num = reaper.TrackFX_GetParamNormalized(node.tr, opts.fx_index, selection.index)
+
+        local ret, numf = reaper.TrackFX_GetFormattedParamValue(node.tr, opts.fx_index, selection.index)
+        selection.val = num
+        selection.valf = numf
+        UPDATE_RESULTS = true
       end
 
       log.user(type(selection.val), type(selection.valf))
-
-      local update_value = 0.2
 
       -- if selection.valf:match("^0%.") then
       --   log.user("???")
@@ -265,14 +307,26 @@ pickers.track_fx_params = function(opts)
       --   update_value = 10
       -- end
 
-
-      if key == gui.kb.control_j then
-        update_fx_parameter(-update_value)
+      local function make_incr_decr_mapping_pair(mod, down, up, divider)
+        local val = full_range / divider
+        if key == gui.kb[mod .. "_" .. down] then
+          update_fx_parameter(-val)
+        end
+        if key == gui.kb[mod .. "_" .. up] then
+          update_fx_parameter(val)
+        end
       end
 
-      if key == gui.kb.control_k then
-        update_fx_parameter(update_value)
-      end
+      -- XS
+      make_incr_decr_mapping_pair("control", "d", "f", 200)
+      -- -- S
+      make_incr_decr_mapping_pair("control", "j", "k", 100)
+      -- M
+      make_incr_decr_mapping_pair("control", "j", "k", 100)
+      -- -- L
+      make_incr_decr_mapping_pair("control", "j", "k", 100)
+      -- XL
+      make_incr_decr_mapping_pair("control", "n", "p", 10)
     end,
   })
 end

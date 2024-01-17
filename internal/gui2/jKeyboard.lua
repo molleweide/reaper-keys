@@ -2,8 +2,19 @@
 
 local jKeyboard = {
   control_c = 3,
+  control_d = 4,
+  control_f = 6,
+  control_g = 7,
+  control_h = 8,
+  control_i = 11,
   control_j = 10,
   control_k = 11,
+  control_l = 12,
+  control_n = 14,
+  control_p = 16,
+  control_s = 19,
+  control_u = 11,
+  control_period = 46,
 
   backspace = 8,
   tab = 9,
