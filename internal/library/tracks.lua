@@ -122,11 +122,16 @@ tracks.get_focused_track_objects = function()
   if context == "midi" then
     local ME_ACTIVE, ME = midi_editor.getMidiValidContext(hwnd)
     if ME_ACTIVE then
+      local take = reaper.MIDIEditor_GetTake(ME.editor)
+      local active_midi_take_track = reaper.GetMediaItemTake_Track(take)
+      local tr_guid = r.getGUIDByTrack(active_midi_take_track)
 
-      -- ~ get corresponding track
-      -- ~ get corresponding item
-       -- reaper.MIDIEditor_EnumTakes( ME, 0, editable_only )
-
+      -- TODO: handle drumkit and channelsplitters here
+      for _, node in ipairs(vtt.track_list) do
+        if node.guid == tr_guid then
+          table.insert(focused_track_objects, node)
+        end
+      end
     end
   elseif context == "main" then
     local t_sel_trk_indices = cust_util.getSelectedTrackIndices()

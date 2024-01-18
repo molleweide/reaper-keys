@@ -387,6 +387,7 @@ return {
               "+routing",
               {
                 ["x"] = "RouteUpdate",
+                ["f"] = "OpenRouteUI",
                 ["q"] = "RouteRemoveAllSends",
                 ["Q"] = "RouteRemoveAllRecieves",
                 ["l"] = "RouteLogSelection",

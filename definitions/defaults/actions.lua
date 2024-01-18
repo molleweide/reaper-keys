@@ -944,6 +944,8 @@ return {
 	PickerFirstEQ_focused_track = commands.picker_first_eq_on_focused_track,
 	PickerFirstComp_focused_track = commands.picker_first_comp_on_focused_track,
 
+	OpenRouteUI = commands.open_route_ui,
+
 	n71 = lib.midi.sendMidiNote_61,
 	n70 = lib.midi.sendMidiNote_70,
 	n69 = lib.midi.sendMidiNote_69,

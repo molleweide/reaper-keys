@@ -117,4 +117,7 @@ commands.picker_first_comp_on_focused_track = function()
 	end
 end
 
+commands.open_route_ui = function(meta, opts)
+end
+
 return commands
