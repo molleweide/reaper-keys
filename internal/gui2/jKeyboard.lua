@@ -1,6 +1,7 @@
 -- @noindex
 
 local jKeyboard = {
+  control_b = 2,
   control_c = 3,
   control_d = 4,
   control_f = 6,
@@ -14,12 +15,13 @@ local jKeyboard = {
   control_p = 16,
   control_s = 19,
   control_u = 11,
+  control_v = 22,
+  control_w = 23,
   control_period = 46,
 
   backspace = 8,
   tab = 9,
   enter = 13, -- Or CTRL + M !
-  control_v = 22,
 
   escape = 27,
   delete = 6579564,

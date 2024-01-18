@@ -77,7 +77,7 @@ require("gui2.JGui")
 -- TODO: remove this msg function -> replace all instances with `log.<level>`
 
 function msg(m)
-  return reaper.ShowConsoleMsg(tostring(m) .. "\n")
+	return reaper.ShowConsoleMsg(tostring(m) .. "\n")
 end
 
 local fzf = {}
@@ -91,10 +91,10 @@ local fzf = {}
 --          this needs to be passed to the picker as an option cb..
 
 fzf.reset_variables = function()
-  UPDATE_RATINGS = false
-  UPDATE_RESULTS = false
-  SCROLL_RESULTS = 0
-  RESULT_COUNT = 0
+	UPDATE_RATINGS = false
+	UPDATE_RESULTS = false
+	SCROLL_RESULTS = 0
+	RESULT_COUNT = 0
 end
 
 --
@@ -102,15 +102,15 @@ end
 --
 
 function _jScroll(amount)
-  SCROLL_RESULTS = SCROLL_RESULTS + amount
-  local maxScroll = RESULT_COUNT - RESULTS_PER_PAGE
-  if SCROLL_RESULTS > maxScroll then
-    SCROLL_RESULTS = maxScroll
-  end
-  if SCROLL_RESULTS < 0 then
-    SCROLL_RESULTS = 0
-  end
-  UPDATE_RESULTS = true
+	SCROLL_RESULTS = SCROLL_RESULTS + amount
+	local maxScroll = RESULT_COUNT - RESULTS_PER_PAGE
+	if SCROLL_RESULTS > maxScroll then
+		SCROLL_RESULTS = maxScroll
+	end
+	if SCROLL_RESULTS < 0 then
+		SCROLL_RESULTS = 0
+	end
+	UPDATE_RESULTS = true
 end
 
 --
@@ -120,34 +120,34 @@ end
 jGuiHighlightControl = jGuiControl:new({ highlight = {}, color_highlight = { 1, 0.9, 0, 0.2 } })
 
 function jGuiHighlightControl:_drawLabel()
-  -- msg(self.label)
+	-- msg(self.label)
 
-  gfx.setfont(1, self.label_font, self.label_fontsize)
-  self:__setLabelXY()
+	gfx.setfont(1, self.label_font, self.label_fontsize)
+	self:__setLabelXY()
 
-  if self.highlight and #self.highlight > 0 then
-    for _, word in pairs(self.highlight) do
-      if word and word ~= "" then
-        local parts, r = sf.jStringExplode(self.label, word, true)
-        local totalX = 0
-        if #parts > 1 then
-          local highLightW, highLightH = gfx.measurestr(word)
-          for i = 1, #parts - 1 do -- do all but the last
-            local noLightW, noLightH = gfx.measurestr(parts[i])
-            -- Draw highlight
-            self:__setGfxColor(self.color_highlight)
-            gfx.rect(gfx.x + totalX + noLightW, gfx.y, highLightW + 1, highLightH, 1)
+	if self.highlight and #self.highlight > 0 then
+		for _, word in pairs(self.highlight) do
+			if word and word ~= "" then
+				local parts, r = sf.jStringExplode(self.label, word, true)
+				local totalX = 0
+				if #parts > 1 then
+					local highLightW, highLightH = gfx.measurestr(word)
+					for i = 1, #parts - 1 do -- do all but the last
+						local noLightW, noLightH = gfx.measurestr(parts[i])
+						-- Draw highlight
+						self:__setGfxColor(self.color_highlight)
+						gfx.rect(gfx.x + totalX + noLightW, gfx.y, highLightW + 1, highLightH, 1)
 
-            totalX = totalX + noLightW + highLightW
-          end
-          -- tablePrint(parts)
-        end
-      end
-    end
-  end
+						totalX = totalX + noLightW + highLightW
+					end
+					-- tablePrint(parts)
+				end
+			end
+		end
+	end
 
-  self:_setStateColor()
-  gfx.drawstr(tostring(self.label))
+	self:_setStateColor()
+	gfx.drawstr(tostring(self.label))
 end
 
 --
@@ -156,160 +156,168 @@ end
 --
 
 local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
-  local height = gui.gui_size
-  local x_start = 10
-  local y_space = 0
-  local n_to_remove = 0
+	local height = gui.gui_size
+	local x_start = 10
+	local y_space = 0
+	local n_to_remove = 0
 
-  for i = 1, math.max(#tControls, iResultsPerPage) do
-    if i > #tControls and i <= iResultsPerPage then
-      local ResultsEntryControl = jGuiHighlightControl:new({
-        height = height,
-        label_fontsize = height - 2,
-        label_align = "l",
-        label_font = "Calibri",
-        border = false,
-        focus_index = i + 1, --gui:getFocusIndex()
-        border_focus = true,
-        x = x_start,
-        y = y_start + (i - 1) * (height + y_space),
-      })
+	for i = 1, math.max(#tControls, iResultsPerPage) do
+		if i > #tControls and i <= iResultsPerPage then
+			local ResultsEntryControl = jGuiHighlightControl:new({
+				height = height,
+				label_fontsize = height - 2,
+				label_align = "l",
+				label_font = "Calibri",
+				border = false,
+				focus_index = i + 1, --gui:getFocusIndex()
+				border_focus = true,
+				x = x_start,
+				y = y_start + (i - 1) * (height + y_space),
+			})
 
-      local ResultsEntryInfo = jGuiText:new({
-        width = 40,
-        height = height,
-        label_fontsize = math.tointeger((height - 2) / 2 + 3),
-        label_align = "r",
-        label_valign = "m",
-        border = false,
-        y = ResultsEntryControl.y,
-      })
+			local ResultsEntryInfo = jGuiText:new({
+				width = 40,
+				height = height,
+				label_fontsize = math.tointeger((height - 2) / 2 + 3),
+				label_align = "r",
+				label_valign = "m",
+				border = false,
+				y = ResultsEntryControl.y,
+			})
 
-      function ResultsEntryControl:onMouseClick()
-        gui.on_select_func(gui, i + SCROLL_RESULTS)
-        gui:setFocus(textBox)
-        UPDATE_RESULTS = true
-        if not gui.kb.shift() then
-          -- this allows the picker to keep running for the next picker.
-          if not gui.next_is_picker then
-            self.parentGui:exit()
-          end
-        end
-      end
+			if gui.attach_mappings then
+				function ResultsEntryControl:onKeyboard(key)
+					-- add custom bindings here.
+					gui.attach_mappings(gui, key, i + SCROLL_RESULTS)
+				end
+			end
 
-      function ResultsEntryControl:onMouseWheel(mw) -- it looks like SCROLL_RESULTS can be a value between 0 and 1, should be a whole number?
-        _jScroll(mw / 120 * -1)
-      end
+			function ResultsEntryControl:onMouseClick()
+				gui.on_select_func(gui, i + SCROLL_RESULTS)
+				gui:setFocus(textBox)
+				UPDATE_RESULTS = true
+				if not gui.kb.shift() then
+					-- this allows the picker to keep running for the next picker.
+					if not gui.next_is_picker then
+						self.parentGui:exit()
+					end
+				end
+			end
 
-      function ResultsEntryControl:onArrowDown()
-        return ResultsEntryControl:onTab()
-      end
+			function ResultsEntryControl:onMouseWheel(mw) -- it looks like SCROLL_RESULTS can be a value between 0 and 1, should be a whole number?
+				_jScroll(mw / 120 * -1)
+			end
 
-      function ResultsEntryControl:onArrowUp()
-        return ResultsEntryControl:onShiftTab()
-      end
+			function ResultsEntryControl:onArrowDown()
+				return ResultsEntryControl:onTab()
+			end
 
-      function ResultsEntryControl:onShiftTab()
-        if i == 1 and SCROLL_RESULTS ~= 0 then
-          _jScroll(-1)
-          return false
-        end
-        return true -- else
-      end
+			function ResultsEntryControl:onArrowUp()
+				return ResultsEntryControl:onShiftTab()
+			end
 
-      function ResultsEntryControl:onTab()
-        if i == #tControls then
-          _jScroll(1)
-          return false
-        end
-        return true -- else
-      end
+			function ResultsEntryControl:onShiftTab()
+				if i == 1 and SCROLL_RESULTS ~= 0 then
+					_jScroll(-1)
+					return false
+				end
+				return true -- else
+			end
 
-      gui:controlAdd(ResultsEntryControl)
-      gui:controlAdd(ResultsEntryInfo)
-      tControls[i] = { ResultsEntryControl, ResultsEntryInfo }
+			function ResultsEntryControl:onTab()
+				if i == #tControls then
+					_jScroll(1)
+					return false
+				end
+				return true -- else
+			end
 
-      -- ENDS: if i > #tControls and i <= iResultsPerPage then
-    elseif i > iResultsPerPage then
-      local b = tControls[i][1]
-      local ResultsEntryInfo = tControls[i][2]
-      gui:controlDelete(b)
-      gui:controlDelete(ResultsEntryInfo)
-      n_to_remove = n_to_remove + 1
-    end
+			gui:controlAdd(ResultsEntryControl)
+			gui:controlAdd(ResultsEntryInfo)
+			tControls[i] = { ResultsEntryControl, ResultsEntryInfo }
 
-    if i <= #tControls and i <= iResultsPerPage then
-      local b = tControls[i][1]
-      local ResultsEntryInfo = tControls[i][2]
+		-- ENDS: if i > #tControls and i <= iResultsPerPage then
+		elseif i > iResultsPerPage then
+			local b = tControls[i][1]
+			local ResultsEntryInfo = tControls[i][2]
+			gui:controlDelete(b)
+			gui:controlDelete(ResultsEntryInfo)
+			n_to_remove = n_to_remove + 1
+		end
 
-      b.width = gui.width - 20
-      ResultsEntryInfo.x = 10 + b.width - ResultsEntryInfo.width
-    end
-  end
+		if i <= #tControls and i <= iResultsPerPage then
+			local b = tControls[i][1]
+			local ResultsEntryInfo = tControls[i][2]
 
-  for i = 1, n_to_remove do
-    table.remove(tControls, #tControls)
-  end
+			b.width = gui.width - 20
+			ResultsEntryInfo.x = 10 + b.width - ResultsEntryInfo.width
+		end
+	end
 
-  -- log.user("# tControls after creation:", #tControls)
+	for i = 1, n_to_remove do
+		table.remove(tControls, #tControls)
+	end
+
+	-- log.user("# tControls after creation:", #tControls)
 end
 
 local function gui_create_main_text_box(gui, on_enter)
-  local text_input = jGuiTextInput:new({
-    x = 10,
-    y = 10,
-    width = 480,
-    height = math.tointeger(gui.gui_size * 1.5),
-    label_fontsize = math.tointeger(gui.gui_size * 1.5),
-    label_align = "l",
-    label_font = "Calibri",
-    focus_index = gui:getFocusIndex(),
-    label_padding = 3,
-  })
+	local text_input = jGuiTextInput:new({
+		x = 10,
+		y = 10,
+		width = 480,
+		height = math.tointeger(gui.gui_size * 1.5),
+		label_fontsize = math.tointeger(gui.gui_size * 1.5),
+		label_align = "l",
+		label_font = "Calibri",
+		focus_index = gui:getFocusIndex(),
+		label_padding = 3,
+	})
 
-  function text_input:onKeyboard(key)
-    -- add custom bindings here.
-    gui.attach_mappings(gui, key, 1)
-  end
+	if gui.attach_mappings then
+		function text_input:onKeyboard(key)
+			-- add custom bindings here.
+			gui.attach_mappings(gui, key, 1)
+		end
+	end
 
-  function text_input:onEnter()
+	function text_input:onEnter()
+		-- test: trying to remove  prev pickers controls here, wo/sucess
+		if gui.next_is_picker then
+			log.user("# tResultButtons", #tResultButtons)
+			for i = 1, #tResultButtons do
+				table.remove(tResultButtons, #tResultButtons)
+			end
+			gui:controlDeleteAll()
+		end
 
-    -- test: trying to remove  prev pickers controls here, wo/sucess
-    if gui.next_is_picker then
-        log.user("# tResultButtons", #tResultButtons)
-      for i = 1, #tResultButtons do
-        table.remove(tResultButtons, #tResultButtons)
-      end
-      gui:controlDeleteAll()
-    end
+		if gui.on_select_func(gui, 1) then
+			-- this allows the picker to keep running for the next picker.
+			if not gui.next_is_picker then
+				gui:exit()
+			else
+				-- log.user("controlDeleteAll")
+			end
+		end
 
-    if gui.on_select_func(gui, 1) then
-      -- this allows the picker to keep running for the next picker.
-      if not gui.next_is_picker then
-        gui:exit()
-      else
-        -- log.user("controlDeleteAll")
-      end
-    end
+		textBox.value = ""
+	end
 
-    textBox.value = ""
-  end
-
-  textBox = text_input
-  return textBox
+	textBox = text_input
+	return textBox
 end
 
 local function create_control_label_stats(gui)
-  local ls = jGuiControl:new({
-    width = 50,
-    x = gui.width - 11, --ls.width - 12,
-    y = 10,
-    label_fontsize = math.tointeger(gui.gui_size * 0.75),
-    label_align = "r",
-    border = false,
-  })
-  LABEL_STATS = ls
-  return LABEL_STATS
+	local ls = jGuiControl:new({
+		width = 50,
+		x = gui.width - 11, --ls.width - 12,
+		y = 10,
+		label_fontsize = math.tointeger(gui.gui_size * 0.75),
+		label_align = "r",
+		border = false,
+	})
+	LABEL_STATS = ls
+	return LABEL_STATS
 end
 
 --
@@ -317,53 +325,53 @@ end
 --
 
 local function gui_default_on_resize(self)
-  textBox.width = self.width - 20
-  LABEL_STATS.x = GUI.width - LABEL_STATS.width - 12
-  local buttonsSpaceH = GUI.height - BUTTON_Y_START - 4
+	textBox.width = self.width - 20
+	LABEL_STATS.x = GUI.width - LABEL_STATS.width - 12
+	local buttonsSpaceH = GUI.height - BUTTON_Y_START - 4
 
-  -- NOTE: this is where the results list is created.
-  -- Doesn't it make sense to add these types of option to the
-  -- GUI object so that I can always access settings via the GUI
-  -- name.
+	-- NOTE: this is where the results list is created.
+	-- Doesn't it make sense to add these types of option to the
+	-- GUI object so that I can always access settings via the GUI
+	-- name.
 
-  RESULTS_PER_PAGE = math.tointeger(buttonsSpaceH // self.gui_size)
+	RESULTS_PER_PAGE = math.tointeger(buttonsSpaceH // self.gui_size)
 
-  -- msg(buttonsSpaceN)
-  createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, BUTTON_Y_START)
-  UPDATE_RESULTS = true
-  self:controlInitAll()
+	-- msg(buttonsSpaceN)
+	createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, BUTTON_Y_START)
+	UPDATE_RESULTS = true
+	self:controlInitAll()
 end
 
 local function gui_default_update(self)
-  if lastSearch ~= textBox.value then
-    SCROLL_RESULTS = 0 -- reset scrollbar on search update
-  end
-  if lastSearch ~= textBox.value or UPDATE_RESULTS then
-    -- search changed, update results
-    UPDATE_RESULTS = false
+	if lastSearch ~= textBox.value then
+		SCROLL_RESULTS = 0 -- reset scrollbar on search update
+	end
+	if lastSearch ~= textBox.value or UPDATE_RESULTS then
+		-- search changed, update results
+		UPDATE_RESULTS = false
 
-    table.sort(self.t_results_data, self.sort_comp)
+		table.sort(self.t_results_data, self.sort_comp)
 
-    if lastSearch ~= textBox.value then -- only search again when input changes, not on scroll
-      --
-      -- TODO: attach results_filter as a method on GUI inside init()
-      -- so that I can call GUI.make_filter_results()
-      --
+		if lastSearch ~= textBox.value then -- only search again when input changes, not on scroll
+			--
+			-- TODO: attach results_filter as a method on GUI inside init()
+			-- so that I can call GUI.make_filter_results()
+			--
 
-      self.t_search_results = self.results_filter(self.t_results_data, textBox.value, self.max_results, false)
+			self.t_search_results = self.results_filter(self.t_results_data, textBox.value, self.max_results, false)
 
-      log.user("#search_results", #self.t_search_results)
+			log.user("#search_results", #self.t_search_results)
 
-      lastSearch = textBox.value
-    end
-    RESULT_COUNT = #self.t_search_results
+			lastSearch = textBox.value
+		end
+		RESULT_COUNT = #self.t_search_results
 
-    --
-    -- TODO: attach as method on GUI named `make_display_results`
-    --
+		--
+		-- TODO: attach as method on GUI named `make_display_results`
+		--
 
-    self.entry_maker(tResultButtons, self.t_search_results)
-  end
+		self.entry_maker(tResultButtons, self.t_search_results)
+	end
 end
 
 -- in gui_default_on_exit the SETTINGS_INI_FILe is referenced which
@@ -371,67 +379,67 @@ end
 -- of the load plugins data func, and then pass them into the func.
 
 local function gui_default_on_exit(self)
-  -- log.user("GUI ON DEFAULT EXIT")
+	-- log.user("GUI ON DEFAULT EXIT")
 
-  if type(self.onExitUserCallback) == "function" then
-    -- because func is not created inside jGui, i need to pass self..
-    self.onExitUserCallback(self)
-  end
-  if self.window_save_state then
-    local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
-    local dockstr = string.format("%d", dockstate)
+	if type(self.onExitUserCallback) == "function" then
+		-- because func is not created inside jGui, i need to pass self..
+		self.onExitUserCallback(self)
+	end
+	if self.window_save_state then
+		local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
+		local dockstr = string.format("%d", dockstate)
 
-    -- TODO: is this a good location for this??..
-    --
-    -- maybe i should have custom save state for each picker by name/key?
+		-- TODO: is this a good location for this??..
+		--
+		-- maybe i should have custom save state for each picker by name/key?
 
-    if self.env then
-      settings.jSettingsWriteToFileMultiple(self.env.SETTINGS_INI_FILE, {
-        { "gui", "window_x", math.tointeger(wx) },
-        { "gui", "window_y", math.tointeger(wy) },
-        { "gui", "window_width", math.tointeger(ww) },
-        { "gui", "window_height", math.tointeger(wh) },
-        { "gui", "window_dock_state", dockstr },
-      }, true)
-    end
-  end
+		if self.env then
+			settings.jSettingsWriteToFileMultiple(self.env.SETTINGS_INI_FILE, {
+				{ "gui", "window_x", math.tointeger(wx) },
+				{ "gui", "window_y", math.tointeger(wy) },
+				{ "gui", "window_width", math.tointeger(ww) },
+				{ "gui", "window_height", math.tointeger(wh) },
+				{ "gui", "window_dock_state", dockstr },
+			}, true)
+		end
+	end
 end
 
 -- RESOURCES:
 --     reateam > amagalma_Toggle show editing guide line on item under mouse cursor in Main Window or in MIDI Editor.lua
 --
 local function get_xy_intersection()
-  local windows = require("library.windows")
-  local mtracks = require("library.tracks")
-  local tl = require("library.timeline")
+	local windows = require("library.windows")
+	local mtracks = require("library.tracks")
+	local tl = require("library.timeline")
 
-  local cursor_info = tl.get_cursor_info()
+	local cursor_info = tl.get_cursor_info()
 
-  local function get_active_window()
-    reaper.JS_Window_GetFocus()
+	local function get_active_window()
+		reaper.JS_Window_GetFocus()
 
-    -- MidiWindow = reaper.MIDIEditor_GetActive()
-    -- midiview = MidiWindow and reaper.JS_Window_FindChildByID(MidiWindow, 0x3E9)
-    -- 		reaper.JS_Window_GetClientSize(reaper.JS_Window_FindChildByID(reaper.GetMainHwnd(), 0x3E8))
+		-- MidiWindow = reaper.MIDIEditor_GetActive()
+		-- midiview = MidiWindow and reaper.JS_Window_FindChildByID(MidiWindow, 0x3E9)
+		-- 		reaper.JS_Window_GetClientSize(reaper.JS_Window_FindChildByID(reaper.GetMainHwnd(), 0x3E8))
 
-    --     local cur_view = set_window == 0 and midiview or trackview
-    -- local _, scrollposv = reaper.JS_Window_GetScrollInfo( cur_view, "v" )
-    -- local _, scrollposh = reaper.JS_Window_GetScrollInfo( cur_view, "h" )
-  end
+		--     local cur_view = set_window == 0 and midiview or trackview
+		-- local _, scrollposv = reaper.JS_Window_GetScrollInfo( cur_view, "v" )
+		-- local _, scrollposh = reaper.JS_Window_GetScrollInfo( cur_view, "h" )
+	end
 
-  local active_window_type = get_active_window()
+	local active_window_type = get_active_window()
 
-  if active_window_type == "midi" then
-    -- note_row
-    -- cursor
-  elseif active_window_type == "main" then
-    -- track
-    local t_tr_dim = mtracks.get_dimensions_for(track)
+	if active_window_type == "midi" then
+	-- note_row
+	-- cursor
+	elseif active_window_type == "main" then
+		-- track
+		local t_tr_dim = mtracks.get_dimensions_for(track)
 
-    -- cursor
-  end
+		-- cursor
+	end
 
-  return x, y
+	return x, y
 end
 
 --
@@ -447,68 +455,68 @@ end
 --
 
 local function build_picker(opts, on_enter)
-  -- FIX: use these for x and y coordinates instead..
-  local x, y = get_xy_intersection()
+	-- FIX: use these for x and y coordinates instead..
+	local x, y = get_xy_intersection()
 
-  -- reaper.ClearConsole()
-  local DEFAULT_OPTS = {
-    -- max_results = 50,
-    width = 500,
-    height = 250,
-    x = 400,
-    y = 1400,
-    window_save_state = true,
-    window_dock_state = 0,
-    gui_size = 20,
-  }
+	-- reaper.ClearConsole()
+	local DEFAULT_OPTS = {
+		-- max_results = 50,
+		width = 500,
+		height = 250,
+		x = 400,
+		y = 1400,
+		window_save_state = true,
+		window_dock_state = 0,
+		gui_size = 20,
+	}
 
-  -- apply defaults if not given
-  for k, v in pairs(DEFAULT_OPTS) do
-    local use_default = "n"
-    -- log.user("opts[k]", k, opts[k])
-    if opts[k] == nil then
-      opts[k] = v
-      use_default = "y"
-    end
-    -- log.user(string.format("Option [%s] (%s): %s", k, use_default, opts[k]))
-  end
+	-- apply defaults if not given
+	for k, v in pairs(DEFAULT_OPTS) do
+		local use_default = "n"
+		-- log.user("opts[k]", k, opts[k])
+		if opts[k] == nil then
+			opts[k] = v
+			use_default = "y"
+		end
+		-- log.user(string.format("Option [%s] (%s): %s", k, use_default, opts[k]))
+	end
 
-  tResultButtons = {}
+	tResultButtons = {}
 
-  -- get default functions if necessary
-  opts.on_select_func = require("pickers.selectors.default")(opts.on_select_func)
-  opts.results_filter = require("pickers.results_filter.default")(opts.results_filter)
-  opts.sort_comp = require("pickers.sorters.default")(opts.sort_comp)
-  opts.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
+	-- get default functions if necessary
+	opts.on_select_func = require("pickers.selectors.default")(opts.on_select_func)
+	opts.results_filter = require("pickers.results_filter.default")(opts.results_filter)
+	opts.sort_comp = require("pickers.sorters.default")(opts.sort_comp)
+	opts.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
 
-  GUI = jGui:new(opts)
+	GUI = jGui:new(opts)
 
-  -- needs to be attached to GUI somehow, so that I can access them inside
-  -- of eg. on_select_func
-  GUI.t_results_data = opts.results
+	-- needs to be attached to GUI somehow, so that I can access them inside
+	-- of eg. on_select_func
+	GUI.t_results_data = opts.results
 
-  log.user("Pickers [" .. opts.title .. "]", #GUI.t_results_data) -- opts.next_is_picker,
+	log.user("Pickers [" .. opts.title .. "]", #GUI.t_results_data) -- opts.next_is_picker,
 
-  -- todo: if sort_comp = false, then don't sort, ie. don't use default sort comparator
-  table.sort(GUI.t_results_data, GUI.sort_comp)
+	-- todo: if sort_comp = false, then don't sort, ie. don't use default sort comparator
+	table.sort(GUI.t_results_data, GUI.sort_comp)
 
-  GUI:controlAdd(gui_create_main_text_box(GUI, on_enter))
+	GUI:controlAdd(gui_create_main_text_box(GUI, on_enter))
 
-  GUI:controlAdd(create_control_label_stats(GUI))
-  BUTTON_Y_START = GUI.gui_size * 1.5 + 15
-  -- createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, BUTTON_Y_START)
-  GUI:setFocus(textBox)
+	GUI:controlAdd(create_control_label_stats(GUI))
+	BUTTON_Y_START = GUI.gui_size * 1.5 + 15
+	-- createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, BUTTON_Y_START)
+	GUI:setFocus(textBox)
 
-  -- add methods
-  GUI.onResize = gui_default_on_resize
-  GUI.update = gui_default_update
-  if type(opts.on_exit_callback) == "function" then
-    GUI.onExitUserCallback = opts.on_exit_callback
-  end
-  GUI.onExit = gui_default_on_exit
+	-- add methods
+	GUI.onResize = gui_default_on_resize
+	GUI.update = gui_default_update
+	if type(opts.on_exit_callback) == "function" then
+		GUI.onExitUserCallback = opts.on_exit_callback
+	end
+	GUI.onExit = gui_default_on_exit
 
-  GUI:init()
-  return true
+	GUI:init()
+	return true
 end
 
 -- NOTE: - read up on what the defer function does??
@@ -516,27 +524,27 @@ end
 --         created with gfx??
 
 local function loop()
-  if GUI:loop() then
-    reaper.defer(loop)
-  else
-    gfx.quit()
-    -- log.user("title after gfx quit():", GUI.title)
-    -- GUI.on_select_func(GUI, 1)
-  end
+	if GUI:loop() then
+		reaper.defer(loop)
+	else
+		gfx.quit()
+		-- log.user("title after gfx quit():", GUI.title)
+		-- GUI.on_select_func(GUI, 1)
+	end
 end
 
 fzf.init = function(opts, onenter)
-  -- p is currently only accessed in picker definitions in [ internals/pickers ]
-  --
-  -- TODO: rename this variable
+	-- p is currently only accessed in picker definitions in [ internals/pickers ]
+	--
+	-- TODO: rename this variable
 
-  J_PROJECT_DATA = JProject:new()
-  fzf.reset_variables()
+	J_PROJECT_DATA = JProject:new()
+	fzf.reset_variables()
 
-  if build_picker(opts, onenter) then
-    GUI:setReaperFocus()
-    loop()
-  end
+	if build_picker(opts, onenter) then
+		GUI:setReaperFocus()
+		loop()
+	end
 end
 
 return fzf

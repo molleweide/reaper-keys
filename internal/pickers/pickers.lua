@@ -299,14 +299,6 @@ pickers.track_fx_params = function(opts)
 
       log.user(type(selection.val), type(selection.valf))
 
-      -- if selection.valf:match("^0%.") then
-      --   log.user("???")
-      --   update_value = 0.1
-      -- else
-      --   log.user("!!!")
-      --   update_value = 10
-      -- end
-
       local function make_incr_decr_mapping_pair(mod, down, up, divider)
         local val = full_range / divider
         if key == gui.kb[mod .. "_" .. down] then
@@ -317,16 +309,11 @@ pickers.track_fx_params = function(opts)
         end
       end
 
-      -- XS
-      make_incr_decr_mapping_pair("control", "d", "f", 200)
-      -- -- S
-      make_incr_decr_mapping_pair("control", "j", "k", 100)
-      -- M
-      make_incr_decr_mapping_pair("control", "j", "k", 100)
-      -- -- L
-      make_incr_decr_mapping_pair("control", "j", "k", 100)
-      -- XL
-      make_incr_decr_mapping_pair("control", "n", "p", 10)
+      make_incr_decr_mapping_pair("control", "w", "b", 350)
+      make_incr_decr_mapping_pair("control", "d", "f", 100)
+      make_incr_decr_mapping_pair("control", "s", "g", 50)
+      make_incr_decr_mapping_pair("control", "j", "k", 10)
+      make_incr_decr_mapping_pair("control", "n", "p", 5)
     end,
   })
 end
