@@ -28,6 +28,7 @@ local constants = {
       -- can be either `nil` or a list of GUIDs
       guids_track_active = nil,
       note_duration_default_QN_fraction = 1 / 4,
+      staccatto = false,
       next_note_rhythms = {},
     },
   },

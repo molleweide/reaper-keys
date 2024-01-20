@@ -23,6 +23,8 @@ local function render_next_step(meta, opts)
     state.midi_step_state.next_note_rhythms = {}
   end
 
+  opts.staccatto = state.midi_step_state.staccatto
+
   -- prepare insert note chunk opts by state
   opts.silent = state.midi_step_state.silent
   opts.direction = state.midi_step_state.direction and 1 or -1
@@ -464,6 +466,24 @@ end
 --
 -- VARIOUS
 --
+
+midi_step_commands.toggle_staccatto = function()
+  local state = state_interface.get()
+  -- log.user(format.block(state.midi_step_state))
+  -- table.insert(state.midi_step_state.next_note_rhythms, frac)
+
+  if state.midi_step_state.staccatto ~= nil then
+    if state.midi_step_state.staccatto then
+      state.midi_step_state.staccatto = false
+    else
+      state.midi_step_state.staccatto = true
+    end
+  else
+    state.midi_step_state.staccatto = false
+  end
+
+  state_interface.set(state)
+end
 
 midi_step_commands.user_input_next_note_rhythms = function() end
 

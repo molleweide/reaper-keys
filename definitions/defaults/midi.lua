@@ -386,7 +386,8 @@ return {
           },
         },
         ["I"] = "MIDIStep_UserInput_NextNotes",
-        ["X"] = "MIDIStep_Reset_NextNoteRhythms"
+        ["X"] = "MIDIStep_Reset_NextNoteRhythms",
+        ["S"] = "MIDIStep_ToggleStaccatto",
       },
     },
     ["d"] = {

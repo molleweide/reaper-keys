@@ -954,6 +954,7 @@ return {
   MIDIStep_AddNextNoteRhythm_8th = midi_step_commands.add_next_note_rhythm_8th,
   MIDIStep_AddNextNoteRhythm_QN = midi_step_commands.add_next_note_rhythm_QN,
   --
+  MIDIStep_ToggleStaccatto = midi_step_commands.toggle_staccatto,
   MIDIStep_UserInput_NextNotes = midi_step_commands.user_input_next_note_rhythms,
   MIDIStep_Reset_NextNoteRhythms = midi_step_commands.reset_next_note_rhytms,
 

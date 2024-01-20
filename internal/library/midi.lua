@@ -462,15 +462,17 @@ function midi.insertMidiNoteChunk(meta, opts)
   local t_note_pitches = {}
   local t_midi_notes = {}
 
-  local note_end_gap = 0.005
-
   local sixteen_note_len = 0.25 / 2
 
   --
 
   local step_len = opts.note_duration ~= nil and opts.note_duration or sixteen_note_len
+  local step_len_time_abs = reaper.TimeMap_QNToTime_abs(0, step_len)
+
+  local note_end_gap = opts.staccatto and step_len * 0.50 or step_len * 0.005
+
   local note_duration = step_len - note_end_gap -- only used if midi step
-  local note_duration_time_abs = reaper.TimeMap_QNToTime_abs(0, step_len)
+  local note_duration_time_abs = reaper.TimeMap_QNToTime_abs(0, note_duration)
 
   -- This should be done inside of the action IDs themselves, and then they're
   -- passed as params to this func.
@@ -489,7 +491,7 @@ function midi.insertMidiNoteChunk(meta, opts)
       new_pos = meta.end_pos
     elseif opts.note_duration then
       -- log.user("... opts.note_duration")
-      new_pos = reaper.GetCursorPosition() + note_duration_time_abs
+      new_pos = reaper.GetCursorPosition() + step_len_time_abs
       -- log.user("DUR:", reaper.GetCursorPosition(), opts.note_duration, new_pos)
     else
       -- log.user("opts.move_cursor else...")
