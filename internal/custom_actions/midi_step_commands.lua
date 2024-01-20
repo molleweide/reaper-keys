@@ -487,6 +487,10 @@ end
 
 midi_step_commands.user_input_next_note_rhythms = function() end
 
-midi_step_commands.reset_next_note_rhytms = function() end
+midi_step_commands.reset_next_note_rhytms = function()
+  local state = state_interface.get()
+  state.midi_step_state.next_note_rhythms = {}
+  state_interface.set(state)
+end
 
 return midi_step_commands
