@@ -336,7 +336,6 @@ return {
 		["W"] = {
 			"+silent step",
 			{
-				-- TODO:
 				["t"] = "MIDIStep_SilentNote32th",
 				["f"] = "MIDIStep_SilentNote24th",
 				["s"] = "MIDIStep_SilentNote16th",
@@ -350,6 +349,28 @@ return {
 				["w"] = "MIDIStep_SilentNoteQN_dot",
 				["c"] = "MIDIStep_SilentNoteQN_2x",
 				["x"] = "MIDIStep_SilentNoteQN_3x",
+			},
+			-- ["W"] = {
+			--
+			-- }
+		},
+		["H"] = {
+			"+set main rhythm",
+			{
+				-- TODO:
+				-- ["t"] = "MIDIStep_SilentNote32th",
+				-- ["f"] = "MIDIStep_SilentNote24th",
+				-- ["s"] = "MIDIStep_SilentNote16th",
+				-- ["d"] = "MIDIStep_SilentNote16th_dot",
+				-- ["e"] = "MIDIStep_SilentNote8th",
+				-- ["E"] = "MIDIStep_SilentNote8th_dot",
+				-- ["i"] = "MIDIStep_SilentNoteQN_div3",
+				--
+				["Q"] = "MIDIStep_SetMainRhythmTo_QN",
+				--
+				-- ["w"] = "MIDIStep_SilentNoteQN_dot",
+				-- ["c"] = "MIDIStep_SilentNoteQN_2x",
+				-- ["x"] = "MIDIStep_SilentNoteQN_3x",
 			},
 		},
 		["d"] = {

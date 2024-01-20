@@ -24,23 +24,19 @@ local function render_next_step(meta, opts)
   end
 
   -- prepare insert note chunk opts by state
-  --
   opts.silent = state.midi_step_state.silent
   opts.direction = state.midi_step_state.direction and 1 or -1
   opts.octave_next = state.midi_step_state.octave_next
 
   if #state.midi_step_state.next_note_rhythms == 0 then
-    log.debug("render step: use default rhythm")
     -- use default rhythm step size.
     midi.insertMidiNoteChunk(meta, opts)
   else
-    log.debug("render step: use `next_note_rhythms` rhythm")
     -- use next_note_rhythms AND remove first index.
   end
 
   -- reset specific state
   state.midi_step_state.octave_next = nil
-
   state_interface.set(state)
 end
 
