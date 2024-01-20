@@ -568,6 +568,9 @@ function midi.insertMidiNoteChunk(meta, opts)
     table.insert(t_midi_notes, t_new_note)
   end
   log.user("[ insertMidiNoteChunk ]: t_midi_notes =", format.block(t_midi_notes))
+
+  -- FIX: use midi.take_transform instead and return the indices of inserted pitches,
+  -- so that user can get back to most recently inserted notes.
   midi.insert_notes({
     take = ctxm.take,
     notes = t_midi_notes,
@@ -582,6 +585,8 @@ function midi.insertMidiNoteChunk(meta, opts)
       reaper.StuffMIDIMessage(MODE, NOTE_OFF, note.pitch, VEL)
     end
   end
+
+  return opts, t_midi_notes
 end
 
 -------------------------------------------------------

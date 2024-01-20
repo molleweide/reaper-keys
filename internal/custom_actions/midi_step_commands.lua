@@ -4,11 +4,15 @@ local format = require("utils.format")
 local tbl = require("utils.table")
 
 local state_interface = require("state_machine.state_interface")
-local project_state = require("utils.project_state")
+local reaper_state = require("utils.reaper_state")
+
+local ns = require("constants.namespaces")
 
 local midi = require("library.midi")
 
 -- TODO: rename this to just `midi_commands.lua`.
+
+local namespace_prev_step_insertion_data = "prev_step_insertion_data"
 
 local midi_step_commands = {}
 
@@ -39,10 +43,23 @@ local function render_next_step(meta, opts)
     table.remove(state.midi_step_state.next_note_rhythms, 1)
   end
 
-  midi.insertMidiNoteChunk(meta, opts)
-
   -- reset specific state
   state_interface.set(state)
+
+  local prev_opts, prev_midi_data= midi.insertMidiNoteChunk(meta, opts)
+
+  -- add insertion data to
+
+	local state_prev_step_insertion = reaper_state.get(ns.namespace_prev_step_insertion_data)
+	if type(state_prev_step_insertion) ~= "table" then
+	  state_prev_step_insertion = {}
+	end
+	table.insert(state_prev_step_insertion, {
+	  opts = prev_opts, prev_midi_notes = prev_midi_data
+	})
+  reaper_state.set(ns.namespace_prev_step_insertion_data, state_prev_step_insertion)
+
+  log.debug("PREV STEP INSERTION DATA:", format.block(state_prev_step_insertion))
 end
 
 -------------------------------------------------------------------------------

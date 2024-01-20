@@ -2,7 +2,9 @@
 -- local format = require("utils.format")
 local serpent = require("serpent")
 
--- todo: merge `saved.lua`
+-- TODO: rename to `global_state.lua`
+
+-- TODO: merge `saved.lua`
 
 -- NOTE: Reaper state uses `ExtState` to manage data.
 --  AVAILABLE APIS:
@@ -73,7 +75,7 @@ function reaper_state.delete(table_name)
 end
 
 --- Set / overwrite a reaper-keys table.
----@param table_name table
+---@param table_name string
 ---@param lua_table table
 function reaper_state.set(table_name, lua_table)
 	local lua_table_string = serpent.dump(lua_table, { comment = false })
@@ -85,7 +87,7 @@ function reaper_state.overwriteAll(name, data)
 end
 
 --- Get a reaper-keys table by name.
----@param table_name table
+---@param table_name string
 ---@return nil
 function reaper_state.get(table_name)
 	local string_value = reaper.GetExtState(namespace, table_name)

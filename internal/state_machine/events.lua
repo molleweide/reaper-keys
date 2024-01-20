@@ -1,5 +1,9 @@
+local reaper_state = require("utils.reaper_state")
 local log = require("utils.log")
 local format = require("utils.format")
+
+local ns = require("constants.namespaces")
+
 
 local midi_editor = require("library.midi_editor")
 local r = require("utils.reaper")
@@ -36,6 +40,9 @@ state_events.on_mode_exit = function(old_mode, state)
 
 		r.track_record_arm_disable(r.getTrackByGUID(ME.track_guid))
 		state.midi_step_state.guids_track_active = nil
+
+		  reaper_state.set(ns.namespace_prev_step_insertion_data, {})
+
 	end
 end
 
