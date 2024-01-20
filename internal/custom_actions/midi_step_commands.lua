@@ -26,17 +26,20 @@ local function render_next_step(meta, opts)
   -- prepare insert note chunk opts by state
   opts.silent = state.midi_step_state.silent
   opts.direction = state.midi_step_state.direction and 1 or -1
+  --
   opts.octave_next = state.midi_step_state.octave_next
+  state.midi_step_state.octave_next = nil
 
   if #state.midi_step_state.next_note_rhythms == 0 then
-    -- use default rhythm step size.
-    midi.insertMidiNoteChunk(meta, opts)
+    opts.note_duration = state.midi_step_state.note_duration_default_QN_fraction
   else
-    -- use next_note_rhythms AND remove first index.
+    opts.note_duration = state.midi_step_state.next_note_rhythms[1]
+    table.remove(state.midi_step_state.next_note_rhythms, 1)
   end
 
+  midi.insertMidiNoteChunk(meta, opts)
+
   -- reset specific state
-  state.midi_step_state.octave_next = nil
   state_interface.set(state)
 end
 
@@ -336,7 +339,6 @@ end
 
 local helper_pause = function(meta, duration)
   midi.insertMidiNoteChunk(meta, { move_cursor = true, silent = true, note_duration = duration })
-  -- TODO: use render_next_step(meta, { ... })
 end
 
 midi_step_commands.insert_silent_QN = function(meta)
@@ -371,5 +373,100 @@ end
 midi_step_commands.insert_silent_QN_3x = function(meta)
   helper_pause(meta, 3)
 end
+
+--
+-- SET MAIN RHYTHM
+--
+
+local helper_set_main_rhythm = function(meta, frac)
+  local state = state_interface.get()
+  state.midi_step_state.note_duration_default_QN_fraction = frac
+  state_interface.set(state)
+end
+
+midi_step_commands.set_main_rhythm_to_QN = function(meta)
+  helper_set_main_rhythm(meta, 1)
+end
+-- under QN
+midi_step_commands.set_main_rhythm_to_8th = function(meta)
+  helper_set_main_rhythm(meta, 1 / 2)
+end
+midi_step_commands.set_main_rhythm_to_8th_dot = function(meta)
+  helper_set_main_rhythm(meta, 1 / 4 * 3)
+end
+midi_step_commands.set_main_rhythm_to_16th = function(meta)
+  helper_set_main_rhythm(meta, 1 / 4)
+end
+midi_step_commands.set_main_rhythm_to_24th = function(meta)
+  helper_set_main_rhythm(meta, 1 / 6)
+end
+midi_step_commands.set_main_rhythm_to_32th = function(meta)
+  helper_set_main_rhythm(meta, 1 / 8)
+end
+midi_step_commands.set_main_rhythm_to_QN_div3 = function(meta)
+  helper_set_main_rhythm(meta, 1 / 3)
+end
+-- over QN
+midi_step_commands.set_main_rhythm_to_QN_dot = function(meta)
+  helper_set_main_rhythm(meta, 1.5)
+end
+midi_step_commands.set_main_rhythm_to_QN_2x = function(meta)
+  helper_set_main_rhythm(meta, 2)
+end
+midi_step_commands.set_main_rhythm_to_QN_3x = function(meta)
+  helper_set_main_rhythm(meta, 3)
+end
+
+--
+-- ADD NEXT NOTE RHYTHMS
+--
+
+local helper_add_next_note_rhythm = function(meta, frac)
+  local state = state_interface.get()
+  -- log.user(format.block(state.midi_step_state))
+  table.insert(state.midi_step_state.next_note_rhythms, frac)
+  state_interface.set(state)
+end
+
+midi_step_commands.add_next_note_rhythm_QN = function(meta)
+  helper_add_next_note_rhythm(meta, 1)
+end
+-- under QN
+midi_step_commands.add_next_note_rhythm_8th = function(meta)
+  helper_add_next_note_rhythm(meta, 1 / 2)
+end
+midi_step_commands.add_next_note_rhythm_8th_dot = function(meta)
+  helper_add_next_note_rhythm(meta, 1 / 4 * 3)
+end
+midi_step_commands.add_next_note_rhythm_16th = function(meta)
+  helper_add_next_note_rhythm(meta, 1 / 4)
+end
+midi_step_commands.add_next_note_rhythm_24th = function(meta)
+  helper_add_next_note_rhythm(meta, 1 / 6)
+end
+midi_step_commands.add_next_note_rhythm_32th = function(meta)
+  helper_add_next_note_rhythm(meta, 1 / 8)
+end
+midi_step_commands.add_next_note_rhythm_QN_div3 = function(meta)
+  helper_add_next_note_rhythm(meta, 1 / 3)
+end
+-- over QN
+midi_step_commands.add_next_note_rhythm_QN_dot = function(meta)
+  helper_add_next_note_rhythm(meta, 1.5)
+end
+midi_step_commands.add_next_note_rhythm_QN_2x = function(meta)
+  helper_add_next_note_rhythm(meta, 2)
+end
+midi_step_commands.add_next_note_rhythm_QN_3x = function(meta)
+  helper_add_next_note_rhythm(meta, 3)
+end
+
+--
+-- VARIOUS
+--
+
+midi_step_commands.user_input_next_note_rhythms = function() end
+
+midi_step_commands.reset_next_note_rhytms = function() end
 
 return midi_step_commands

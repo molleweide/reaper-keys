@@ -52,423 +52,439 @@ local midi_step_commands = require("definitions.defaults.step_mode_layout__right
 -- up. MAYBE the direction should be changed if octae direction is being set?
 
 return {
-	midi_selector = {
-		-- [""] = "ME_UpperLeft",
-		-- [""] = "ME_UpperRight",
-		-- [""] = "ME_LowerLeft",
-		-- [""] = "ME_LowerRight",
-		["i"] = {
-			"+inner",
-			{
-				["a"] = "MidiInnerActiveTake",
-				["U"] = "MidiInnerActiveTakeAbove",
-				["D"] = "MidiInnerActiveTakeBelow",
+  midi_selector = {
+    -- [""] = "ME_UpperLeft",
+    -- [""] = "ME_UpperRight",
+    -- [""] = "ME_LowerLeft",
+    -- [""] = "ME_LowerRight",
+    ["i"] = {
+      "+inner",
+      {
+        ["a"] = "MidiInnerActiveTake",
+        ["U"] = "MidiInnerActiveTakeAbove",
+        ["D"] = "MidiInnerActiveTakeBelow",
 
-				["h"] = "NoteChunkHorz", -- select all notes at cursor that are X distance apart in time
-				-- [""] = "Measure",
-				-- [""] = "xxx", -- 16th notes apart.
-				-- [""] = "xxx" -- eight notes
-				-- [""] = "xxx" -- beat
-				-- [""] = "xxx"
-				-- [""] = "xxx"
-				["n"] = "UserInput_FilterNotesByString", --
-				-- ["p"]
-				-- select notes in
-				-- octave
-				-- two octaves up
-				-- N notes up / down
-				-- N notes up AND down.
-				-- Eg. select 16th notes within current octave.
-				--
-				-- Select notes above pitch
-			},
-		},
-	},
-	midi_operator = {
-		["U"] = "MidiCut", -- MidiCutNotes
-		["M"] = "SelectNoteRows",
-	},
-	-- RENAME: to note_row_motion
-	pitch_motion = {
-		["k"] = "NextPitch", -- move pitch row up
-		["j"] = "PrevPitch", -- move pitch row down
-		[""] = "NextNotesBig",
-		[""] = "PrevNotesBig",
-	},
-	-- these motions both work on note row and timeline together, so that
-	-- you can eg target rectangular areas of midi data.
-	midi_motion = {},
-	timeline_selector = {
-		["s"] = "SelectedNotes",
-	},
-	timeline_operator = {
-		["d"] = "CutNotes", -- TODO: make custom
-		["y"] = "CopyNotes", -- TODO: make custom
-		["c"] = "FitNotes",
-		["a"] = "InsertNote",
-		["A"] = "InsertNoteBlock", -- Use this instead of build in
-		["Q"] = {
-			"+pattern/pickers",
-			{
-				["Q"] = "InsertMidiBlockPickerOperator", -- NOTE: test connect picker to motion
-			},
-		},
-		["g"] = "JoinNotes",
-		["s"] = "SelectNotes",
-		["z"] = "MidiZoomTimeSelection",
-	},
-	-- NOTE: midi time line motions only move the edit cursor.
-	-- >> This makes it impossible to discern which note is moved to
-	-- in thick clusters of notes. Therefore I need custom next/prev note
-	-- commands that move BOTH edit cursor AND note row.
-	timeline_motion = {
-		["l"] = "RightMidiGridDivision",
-		["h"] = "LeftMidiGridDivision",
-		["("] = "MidiTimeSelectionStart",
-		[")"] = "MidiTimeSelectionEnd",
-		["w"] = "NextNoteStart", -- horizontal, ie. iterates pitch indices.
-		["W"] = "NextNoteStartHorizontal", -- TODO:
-		["b"] = "PrevNoteStart",
-		["B"] = "PrevNoteSamePitchStart", -- TODO: replace this with prev note horizontal
-		["e"] = "EventSelectionEnd",
-		-- [""] = "PrevItemStart", -- TODO:
-		-- [""] = "NextItemStart", -- TODO:
-		-- [""] = "Prev/Next Vertical", -- chord...
-	},
-	command = {
-		["Q"] = {
-			"+pattern/pickers",
-			{
-				["i"] = "InsertNoteBlockCommand", -- FIX: doesn't work...... bc the func is using meta or opts now..
-				["I"] = "InsertMidiBlockPicker",
-				["W"] = "NoteRowPattern",
+        ["h"] = "NoteChunkHorz", -- select all notes at cursor that are X distance apart in time
+        -- [""] = "Measure",
+        -- [""] = "xxx", -- 16th notes apart.
+        -- [""] = "xxx" -- eight notes
+        -- [""] = "xxx" -- beat
+        -- [""] = "xxx"
+        -- [""] = "xxx"
+        ["n"] = "UserInput_FilterNotesByString", --
+        -- ["p"]
+        -- select notes in
+        -- octave
+        -- two octaves up
+        -- N notes up / down
+        -- N notes up AND down.
+        -- Eg. select 16th notes within current octave.
+        --
+        -- Select notes above pitch
+      },
+    },
+  },
+  midi_operator = {
+    ["U"] = "MidiCut", -- MidiCutNotes
+    ["M"] = "SelectNoteRows",
+  },
+  -- RENAME: to note_row_motion
+  pitch_motion = {
+    ["k"] = "NextPitch", -- move pitch row up
+    ["j"] = "PrevPitch", -- move pitch row down
+    [""] = "NextNotesBig",
+    [""] = "PrevNotesBig",
+  },
+  -- these motions both work on note row and timeline together, so that
+  -- you can eg target rectangular areas of midi data.
+  midi_motion = {},
+  timeline_selector = {
+    ["s"] = "SelectedNotes",
+  },
+  timeline_operator = {
+    ["d"] = "CutNotes", -- TODO: make custom
+    ["y"] = "CopyNotes", -- TODO: make custom
+    ["c"] = "FitNotes",
+    ["a"] = "InsertNote",
+    ["A"] = "InsertNoteBlock", -- Use this instead of build in
+    ["Q"] = {
+      "+pattern/pickers",
+      {
+        ["Q"] = "InsertMidiBlockPickerOperator", -- NOTE: test connect picker to motion
+      },
+    },
+    ["g"] = "JoinNotes",
+    ["s"] = "SelectNotes",
+    ["z"] = "MidiZoomTimeSelection",
+  },
+  -- NOTE: midi time line motions only move the edit cursor.
+  -- >> This makes it impossible to discern which note is moved to
+  -- in thick clusters of notes. Therefore I need custom next/prev note
+  -- commands that move BOTH edit cursor AND note row.
+  timeline_motion = {
+    ["l"] = "RightMidiGridDivision",
+    ["h"] = "LeftMidiGridDivision",
+    ["("] = "MidiTimeSelectionStart",
+    [")"] = "MidiTimeSelectionEnd",
+    ["w"] = "NextNoteStart", -- horizontal, ie. iterates pitch indices.
+    ["W"] = "NextNoteStartHorizontal", -- TODO:
+    ["b"] = "PrevNoteStart",
+    ["B"] = "PrevNoteSamePitchStart", -- TODO: replace this with prev note horizontal
+    ["e"] = "EventSelectionEnd",
+    -- [""] = "PrevItemStart", -- TODO:
+    -- [""] = "NextItemStart", -- TODO:
+    -- [""] = "Prev/Next Vertical", -- chord...
+  },
+  command = {
+    ["Q"] = {
+      "+pattern/pickers",
+      {
+        ["i"] = "InsertNoteBlockCommand", -- FIX: doesn't work...... bc the func is using meta or opts now..
+        ["I"] = "InsertMidiBlockPicker",
+        ["W"] = "NoteRowPattern",
 
-				["E"] = "MidiPattern_InsertFromString_at_cursor",
-				["e"] = "MidiPattern_InsertFromString_at_current_measure",
+        ["E"] = "MidiPattern_InsertFromString_at_cursor",
+        ["e"] = "MidiPattern_InsertFromString_at_current_measure",
 
-				["R"] = "MidiPattern_InsertRandom16thNotes_fill_bar",
-				["F"] = "Midi_ChangeActiveSelection",
+        ["R"] = "MidiPattern_InsertRandom16thNotes_fill_bar",
+        ["F"] = "Midi_ChangeActiveSelection",
 
-				["J"] = "PickerTracksWithMidiItemsAtSameTime", -- switch midi item to another track in the same time/region/position.
-				["M"] = "PickerExistingMidiItemsAtSameTime",
-				-- TODO: midi pattern string
-				-- 1 and move
-				-- 2 at beginning of measure
-				-- 3 at beginning of midi take
-				--
-				-- TODO: merge pattern and chord.
-				--
-				-- TODO: randomize pitches over rhythm pattern from scale/chord in key.
-				-- TODO: arpeggiate
-				-- pass opts via fzf gui input. so that I can.
-			},
-		},
-		["C"] = "InsertNoteBlockCommand", -- TODO: move this to a leader
-		["G"] = "InsertMidiBlockPicker", -- TODO: move to leader
-		--  [""] = "SelectChord",   -- test and see how midi note selections can be improved.
-		--  [""] = "SelectNotesFromScale",
-		--  [""] = "SelectNotes_NextVertical", -- use a threshold variabe to select evts that are close in time.
-		--  [""] = "SelectNotes_PrevVertical",
-		--  [""] = "CycleChords", -- if not notes then select nearest chord or vertical selection
-		["n"] = "AddNextNoteToSelection",
-		["N"] = "AddPrevNoteToSelection",
+        ["J"] = "PickerTracksWithMidiItemsAtSameTime", -- switch midi item to another track in the same time/region/position.
+        ["M"] = "PickerExistingMidiItemsAtSameTime",
+        -- TODO: midi pattern string
+        -- 1 and move
+        -- 2 at beginning of measure
+        -- 3 at beginning of midi take
+        --
+        -- TODO: merge pattern and chord.
+        --
+        -- TODO: randomize pitches over rhythm pattern from scale/chord in key.
+        -- TODO: arpeggiate
+        -- pass opts via fzf gui input. so that I can.
+      },
+    },
+    ["C"] = "InsertNoteBlockCommand", -- TODO: move this to a leader
+    ["G"] = "InsertMidiBlockPicker", -- TODO: move to leader
+    --  [""] = "SelectChord",   -- test and see how midi note selections can be improved.
+    --  [""] = "SelectNotesFromScale",
+    --  [""] = "SelectNotes_NextVertical", -- use a threshold variabe to select evts that are close in time.
+    --  [""] = "SelectNotes_PrevVertical",
+    --  [""] = "CycleChords", -- if not notes then select nearest chord or vertical selection
+    ["n"] = "AddNextNoteToSelection",
+    ["N"] = "AddPrevNoteToSelection",
 
-		-- TODO: Zoom mode, that senses if you're in ME/main.
+    -- TODO: Zoom mode, that senses if you're in ME/main.
 
-		["zp"] = "MidiZoomContent",
-		["+"] = "MidiZoomInHoriz",
-		["-"] = "MidiZoomOutHoriz",
-		["<C-+>"] = "MidiZoomInVert", -- FIX: bigger increment steps.
-		["<C-->"] = "MidiZoomOutVert", -- FIX: bigger increment steps.
+    ["zp"] = "MidiZoomContent",
+    ["+"] = "MidiZoomInHoriz",
+    ["-"] = "MidiZoomOutHoriz",
+    ["<C-+>"] = "MidiZoomInVert", -- FIX: bigger increment steps.
+    ["<C-->"] = "MidiZoomOutVert", -- FIX: bigger increment steps.
 
-		-- NOTE: migrate these to motions.
-		["g"] = {
-			"+midi_go",
-			{
-				["g"] = "TopNote",
-				["s"] = "MoveCurrentNoteRowToClosestSeleced",
-				-- if you come from the right, then it should jump to the end of the
-				-- last selected note, and to the start of first selected if coming
-				-- from the left.
-				["S"] = "MoveCursorToSelection",
-				-- ["h"] = "LeftMostNote",
-				-- ["j"] = "TopNote",
-				-- ["k"] = "BottomNote",
-				-- ["l"] = "RightMostNote",
-				-- ["u"] = "TopLeftMostNote",
-				-- ["i"] = "TopRightMostNote",
-				-- ["m"] = "BottomLeftMostNote",
-				-- [","] = "BottomRightMostNote",
-			},
-		},
-		-- TODO: move to motion
-		-- ~ add prefix count to specify which pitch row to jump to.
-		["G"] = "BottomNote",
-		["Z"] = {
-			"+me_window",
-			{
-				["Z"] = "CloseWindow",
-				["E"] = "JumpToMain",
-			},
-		},
+    -- NOTE: migrate these to motions.
+    ["g"] = {
+      "+midi_go",
+      {
+        ["g"] = "TopNote",
+        ["s"] = "MoveCurrentNoteRowToClosestSeleced",
+        -- if you come from the right, then it should jump to the end of the
+        -- last selected note, and to the start of first selected if coming
+        -- from the left.
+        ["S"] = "MoveCursorToSelection",
+        -- ["h"] = "LeftMostNote",
+        -- ["j"] = "TopNote",
+        -- ["k"] = "BottomNote",
+        -- ["l"] = "RightMostNote",
+        -- ["u"] = "TopLeftMostNote",
+        -- ["i"] = "TopRightMostNote",
+        -- ["m"] = "BottomLeftMostNote",
+        -- [","] = "BottomRightMostNote",
+      },
+    },
+    -- TODO: move to motion
+    -- ~ add prefix count to specify which pitch row to jump to.
+    ["G"] = "BottomNote",
+    ["Z"] = {
+      "+me_window",
+      {
+        ["Z"] = "CloseWindow",
+        ["E"] = "JumpToMain",
+      },
+    },
 
-		["p"] = "MidiPaste", -- TODO: make custom
-		["P"] = "NoteRowPattern",
-		["S"] = "UnselectAllEvents",
-		["Y"] = "CopySelectedEvents",
+    ["p"] = "MidiPaste", -- TODO: make custom
+    ["P"] = "NoteRowPattern",
+    ["S"] = "UnselectAllEvents",
+    ["Y"] = "CopySelectedEvents",
 
-		["D"] = {
-			"+cut",
-			{
-				["D"] = "CutSelectedEvents",
-				-- NOTE: these should maybe become `midi_selector`
-				["A"] = "NotesAfter",
-				-- [""] = "NotesBefore",
-				-- [""] = "TopLeftNotes",
-				-- [""] = "BottomLeftNotes",
-				-- [""] = "TopRightNotes",
-				-- [""] = "BottomRightNotes",
-			},
-		},
+    ["D"] = {
+      "+cut",
+      {
+        ["D"] = "CutSelectedEvents",
+        -- NOTE: these should maybe become `midi_selector`
+        ["A"] = "NotesAfter",
+        -- [""] = "NotesBefore",
+        -- [""] = "TopLeftNotes",
+        -- [""] = "BottomLeftNotes",
+        -- [""] = "TopRightNotes",
+        -- [""] = "BottomRightNotes",
+      },
+    },
 
-		-- [""] = "CutNotesAfterCursorOfSamePitch", -- TODO:
-		-- [""] = "CutNotesBeforeCursorOfSamePitch", -- TODO:
+    -- [""] = "CutNotesAfterCursorOfSamePitch", -- TODO:
+    -- [""] = "CutNotesBeforeCursorOfSamePitch", -- TODO:
 
-		["k"] = "PitchUp",
-		["j"] = "PitchDown",
+    ["k"] = "PitchUp",
+    ["j"] = "PitchDown",
 
-		["K"] = "PitchUpOctave", -- rewrite this as repeat running pitch_motions.
+    ["K"] = "PitchUpOctave", -- rewrite this as repeat running pitch_motions.
 
-		-- [";"] = "MoveNotesToEditCursor", -- !!!!!!!!!!
-		["J"] = "PitchDownOctave",
+    -- [";"] = "MoveNotesToEditCursor", -- !!!!!!!!!!
+    ["J"] = "PitchDownOctave",
 
-		-- NOTE: Need commands AND oper/motion - maybe `fit` does it.
-		--
-		-- [""] = "ExtendNotesToNextClosestGrid",
-		-- [""] = "ExtendNotesToNextClosestBeat",
-		-- [""] = "ExtendNotesToNextClosestMeasure",
-		-- [""] = "MakeNotesLegato",
-		-- [""] = "ForceNotesToLength_UI", -- use fzf window -> specify custom length or select predefined.
+    -- NOTE: Need commands AND oper/motion - maybe `fit` does it.
+    --
+    -- [""] = "ExtendNotesToNextClosestGrid",
+    -- [""] = "ExtendNotesToNextClosestBeat",
+    -- [""] = "ExtendNotesToNextClosestMeasure",
+    -- [""] = "MakeNotesLegato",
+    -- [""] = "ForceNotesToLength_UI", -- use fzf window -> specify custom length or select predefined.
 
-		-- NOTE: Say that I select a note, then i want to be able to extend my selection
-		-- in various directions, up down, left and right.
-		-- Maybe, there should be a dedicated mode for visually selecting notes?
-		--
-		-- [""] = "ExtendNoteSelectionToNoteRowAbove",
-		-- [""] = "...NoteRowAbove"
+    -- NOTE: Say that I select a note, then i want to be able to extend my selection
+    -- in various directions, up down, left and right.
+    -- Maybe, there should be a dedicated mode for visually selecting notes?
+    --
+    -- [""] = "ExtendNoteSelectionToNoteRowAbove",
+    -- [""] = "...NoteRowAbove"
 
-		["<C-b>"] = "PitchUpOctave",
-		["<C-f>"] = "PitchDownOctave",
-		["<C-u>"] = "PitchUp7",
-		["<C-d>"] = "PitchDown7",
-		["V"] = "SelectAllNotesAtPitch",
-		["<M-k>"] = "MoveNoteUpSemitone",
-		["<M-j>"] = "MoveNoteDownSemitone",
-		["<M-K>"] = "MoveNoteUpOctave",
-		["<M-J>"] = "MoveNoteDownOctave",
-		["<M-l>"] = "MoveNoteRight", -- move edit cursos only | needs to be fixed!!
-		["<M-h>"] = "MoveNoteLeft", -- move edit cursor only
-		-- ["<M-L>"] = "MoveNoteRight", -- move note selection
-		-- ["<M-H>"] = "MoveNoteLeft",  -- move note selection
-		["<SPC>"] = {
-			"+leader commands",
-			{
-				["m"] = {
-					"+midi",
-					{
-						["w"] = "SetModeMidiStep",
-						-- todo: ext state -> do this and see where it goes...
-						-- [""] = "Toggle_MoveCursorWith_Motions",
-					},
-				},
-			},
-		},
-	},
+    ["<C-b>"] = "PitchUpOctave",
+    ["<C-f>"] = "PitchDownOctave",
+    ["<C-u>"] = "PitchUp7",
+    ["<C-d>"] = "PitchDown7",
+    ["V"] = "SelectAllNotesAtPitch",
+    ["<M-k>"] = "MoveNoteUpSemitone",
+    ["<M-j>"] = "MoveNoteDownSemitone",
+    ["<M-K>"] = "MoveNoteUpOctave",
+    ["<M-J>"] = "MoveNoteDownOctave",
+    ["<M-l>"] = "MoveNoteRight", -- move edit cursos only | needs to be fixed!!
+    ["<M-h>"] = "MoveNoteLeft", -- move edit cursor only
+    -- ["<M-L>"] = "MoveNoteRight", -- move note selection
+    -- ["<M-H>"] = "MoveNoteLeft",  -- move note selection
+    ["<SPC>"] = {
+      "+leader commands",
+      {
+        ["m"] = {
+          "+midi",
+          {
+            ["w"] = "SetModeMidiStep",
+            -- todo: ext state -> do this and see where it goes...
+            -- [""] = "Toggle_MoveCursorWith_Motions",
+          },
+        },
+      },
+    },
+  },
 
-	-- midi_step_commands = midi_step_commands,
-	midi_step_command = {
-		-- TODO: easy actions
-		-- ~ Toggle playback
-		-- ~ Insert a pattern string.
-		-- ~ Select rhyhtm pattern string AND use this as template for stepping forward.
-		-- ~ Left hand -> repeat last right hand insert.
-		--
-		-- TODO: advanced / new modes
-		-- ~ Set left and right handed mode for inserting pitches.
-		--
-		["Q"] = {
-			"+SetStepSize",
-			{
-				-- TODO:
-				["g"] = "StepSizeGrid",
-				["t"] = "32th",
-				["s"] = "16th",
-				["e"] = "8th",
-				["E"] = "8th_dot",
-				["q"] = "QN",
-				["w"] = "QN_dot",
-				["c"] = "2xQN",
-				["x"] = "3xQN",
-				-- [""] = "4xQN",
-				-- [""] = "Step_Measure",
-			},
-		},
-		["T"] = {
-			"+polyphonic",
-			{
-				["t"] = "TogglyMidiStepPolyhonic",
-				-- Eg.
-				-- ~ Use scale 3rds or sixths.
-				-- ~ Use jazz chords.
-				["s"] = "SetMidiStepPolyphonic_HarmonyType",
-				-- Eg. only use perfect fifths
-				["x"] = "MidiStepModePolyphonic_SetStaticChord",
-			},
-		},
+  -- midi_step_commands = midi_step_commands,
+  midi_step_command = {
+    -- TODO: easy actions
+    -- ~ Toggle playback
+    -- ~ Insert a pattern string.
+    -- ~ Select rhyhtm pattern string AND use this as template for stepping forward.
+    -- ~ Left hand -> repeat last right hand insert.
+    --
+    -- TODO: advanced / new modes
+    -- ~ Set left and right handed mode for inserting pitches.
+    --
+    ["Q"] = {
+      "+SetStepSize",
+      {
+        -- TODO:
+        ["g"] = "StepSizeGrid",
+        ["t"] = "32th",
+        ["s"] = "16th",
+        ["e"] = "8th",
+        ["E"] = "8th_dot",
+        ["q"] = "QN",
+        ["w"] = "QN_dot",
+        ["c"] = "2xQN",
+        ["x"] = "3xQN",
+        -- [""] = "4xQN",
+        -- [""] = "Step_Measure",
+      },
+    },
+    ["T"] = {
+      "+polyphonic",
+      {
+        ["t"] = "TogglyMidiStepPolyhonic",
+        -- Eg.
+        -- ~ Use scale 3rds or sixths.
+        -- ~ Use jazz chords.
+        ["s"] = "SetMidiStepPolyphonic_HarmonyType",
+        -- Eg. only use perfect fifths
+        ["x"] = "MidiStepModePolyphonic_SetStaticChord",
+      },
+    },
 
-		-- [""] = "", -- jump forward by predefined (*) length
-		-- ["w"] = "", -- (*) set predefined length.
-		-- ["e"] = "",
-		-- ["r"] = "",
-		-- ["t"] = "", --
-		["a"] = "SetModeNormal", -- set pause/silent
-		["s"] = "ToggleMidiStepSilent",
-		["W"] = {
-			"+silent step",
-			{
-				["t"] = "MIDIStep_SilentNote32th",
-				["f"] = "MIDIStep_SilentNote24th",
-				["s"] = "MIDIStep_SilentNote16th",
-				["d"] = "MIDIStep_SilentNote16th_dot",
-				["e"] = "MIDIStep_SilentNote8th",
-				["E"] = "MIDIStep_SilentNote8th_dot",
-				["i"] = "MIDIStep_SilentNoteQN_div3",
-				--
-				["Q"] = "MIDIStep_SilentNoteQN",
-				--
-				["w"] = "MIDIStep_SilentNoteQN_dot",
-				["c"] = "MIDIStep_SilentNoteQN_2x",
-				["x"] = "MIDIStep_SilentNoteQN_3x",
-			},
-			-- ["W"] = {
-			--
-			-- }
-		},
-		["H"] = {
-			"+set main rhythm",
-			{
-				-- TODO:
-				-- ["t"] = "MIDIStep_SilentNote32th",
-				-- ["f"] = "MIDIStep_SilentNote24th",
-				-- ["s"] = "MIDIStep_SilentNote16th",
-				-- ["d"] = "MIDIStep_SilentNote16th_dot",
-				-- ["e"] = "MIDIStep_SilentNote8th",
-				-- ["E"] = "MIDIStep_SilentNote8th_dot",
-				-- ["i"] = "MIDIStep_SilentNoteQN_div3",
-				--
-				["Q"] = "MIDIStep_SetMainRhythmTo_QN",
-				--
-				-- ["w"] = "MIDIStep_SilentNoteQN_dot",
-				-- ["c"] = "MIDIStep_SilentNoteQN_2x",
-				-- ["x"] = "MIDIStep_SilentNoteQN_3x",
-			},
-		},
-		["d"] = {
-			"+setNextOctave",
-			{
-				["d"] = "ToggleMidiStepDirection",
-				-- set dir up
-				-- set dir down
-			},
-		},
-		["f"] = {
-			"+setNextOctave",
-			{
-				["u"] = "MidiStepSetNextOctaveUp",
-				["d"] = "MidiStepSetNextOctaveDown",
-			},
-		},
-		["g"] = {
-			"+midi_step/go",
-			{
-				["o"] = "MidiStepGoBack", -- Why not just use `Undo`??
-				["w"] = "MidiEditor_go_insert"
-			},
-		}, --
-		-- TODO: reuse the motion function here and call it as a command, similar to insert note chunk fn.
-		["G"] = "JumpToNote",
-		-- ["z"] = "",
-		-- ["x"] = "",
-		-- ["c"] = "",
-		-- ["v"] = "",
-		-- ["b"] = "",
+    -- [""] = "", -- jump forward by predefined (*) length
+    -- ["w"] = "", -- (*) set predefined length.
+    -- ["e"] = "",
+    -- ["r"] = "",
+    -- ["t"] = "", --
+    ["a"] = "SetModeNormal", -- set pause/silent
+    ["s"] = "ToggleMidiStepSilent",
+    ["W"] = {
+      "+silent step",
+      {
+        ["t"] = "MIDIStep_SilentNote32th",
+        ["f"] = "MIDIStep_SilentNote24th",
+        ["s"] = "MIDIStep_SilentNote16th",
+        ["d"] = "MIDIStep_SilentNote16th_dot",
+        ["e"] = "MIDIStep_SilentNote8th",
+        ["E"] = "MIDIStep_SilentNote8th_dot",
+        ["i"] = "MIDIStep_SilentNoteQN_div3",
+        --
+        ["Q"] = "MIDIStep_SilentNoteQN",
+        --
+        ["w"] = "MIDIStep_SilentNoteQN_dot",
+        ["c"] = "MIDIStep_SilentNoteQN_2x",
+        ["x"] = "MIDIStep_SilentNoteQN_3x",
+      },
+      -- ["W"] = {
+      --
+      -- }
+    },
+    ["H"] = {
+      "+set main rhythm",
+      {
+        -- ["t"] = "MIDIStep_SetMainRhythmTo_32th",
+        -- ["f"] = "MIDIStep_SetMainRhythmTo_24th",
+        ["s"] = "MIDIStep_SetMainRhythmTo_16th",
+        -- ["d"] = "MIDIStep_SetMainRhythmTo_16th_dot",
+        ["e"] = "MIDIStep_SetMainRhythmTo_8th",
+        -- ["E"] = "MIDIStep_SetMainRhythmTo_8th_dot",
+        -- ["i"] = "MIDIStep_SetMainRhythmTo_QN_div3",
+        ["Q"] = "MIDIStep_SetMainRhythmTo_QN",
+        -- ["w"] = "MIDIStep_SetMainRhythmTo_QN_dot",
+        -- ["c"] = "MIDIStep_SetMainRhythmTo_QN_2x",
+        -- ["x"] = "MIDIStep_SetMainRhythmTo_QN_3x",
+        --
+        ["H"] = {
+          "+set next note rhythm",
+          {
+            -- ["t"] = "MIDIStep_AddNextNoteRhythm_32th",
+            -- ["f"] = "MIDIStep_AddNextNoteRhythm_24th",
+            ["s"] = "MIDIStep_AddNextNoteRhythm_16th",
+            -- ["d"] = "MIDIStep_AddNextNoteRhythm_16th_dot",
+            ["e"] = "MIDIStep_AddNextNoteRhythm_8th",
+            -- ["E"] = "MIDIStep_AddNextNoteRhythm_8th_dot",
+            -- ["i"] = "MIDIStep_AddNextNoteRhythm_QN_div3",
+            ["Q"] = "MIDIStep_AddNextNoteRhythm_QN",
+            -- ["w"] = "MIDIStep_AddNextNoteRhythm_QN_dot",
+            -- ["c"] = "MIDIStep_AddNextNoteRhythm_QN_2x",
+            -- ["x"] = "MIDIStep_AddNextNoteRhythm_QN_3x",
+          },
+        },
+        ["I"] = "MIDIStep_UserInput_NextNotes",
+        ["X"] = "MIDIStep_Reset_NextNoteRhythms"
+      },
+    },
+    ["d"] = {
+      "+setNextOctave",
+      {
+        ["d"] = "ToggleMidiStepDirection",
+        -- set dir up
+        -- set dir down
+      },
+    },
+    ["f"] = {
+      "+setNextOctave",
+      {
+        ["u"] = "MidiStepSetNextOctaveUp",
+        ["d"] = "MidiStepSetNextOctaveDown",
+      },
+    },
+    ["g"] = {
+      "+midi_step/go",
+      {
+        ["o"] = "MidiStepGoBack", -- Why not just use `Undo`??
+        ["w"] = "MidiEditor_go_insert",
+      },
+    }, --
+    -- TODO: reuse the motion function here and call it as a command, similar to insert note chunk fn.
+    ["G"] = "JumpToNote",
+    -- ["z"] = "",
+    -- ["x"] = "",
+    -- ["c"] = "",
+    -- ["v"] = "",
+    -- ["b"] = "",
 
-		--
-		-- NOTE: A. These binds use midi_step_state.diretion to determine asc/desc.
-		--
+    --
+    -- NOTE: A. These binds use midi_step_state.diretion to determine asc/desc.
+    --
 
-		-- ["n"] = "InsertMidiStep_P1",
-		-- ["m"] = "InsertMidiStep_m2",
-		-- [","] = "InsertMidiStep_M2",
-		-- ["."] = "InsertMidiStep_m3",
-		-- ["/"] = "InsertMidiStep_M3",
-		-- ["h"] = "",
-		-- ["j"] = "InsertMidiStep_P4",
-		-- ["k"] = "InsertMidiStep_b5",
-		-- ["l"] = "InsertMidiStep_P5",
-		-- [";"] = "InsertMidiStep_m6",
-		-- ["y"] = "",
-		-- ["u"] = "InsertMidiStep_M6",
-		-- ["i"] = "InsertMidiStep_m7",
-		-- ["o"] = "InsertMidiStep_M7",
-		-- ["p"] = "InsertMidiStep_P8",
+    -- ["n"] = "InsertMidiStep_P1",
+    -- ["m"] = "InsertMidiStep_m2",
+    -- [","] = "InsertMidiStep_M2",
+    -- ["."] = "InsertMidiStep_m3",
+    -- ["/"] = "InsertMidiStep_M3",
+    -- ["h"] = "",
+    -- ["j"] = "InsertMidiStep_P4",
+    -- ["k"] = "InsertMidiStep_b5",
+    -- ["l"] = "InsertMidiStep_P5",
+    -- [";"] = "InsertMidiStep_m6",
+    -- ["y"] = "",
+    -- ["u"] = "InsertMidiStep_M6",
+    -- ["i"] = "InsertMidiStep_m7",
+    -- ["o"] = "InsertMidiStep_M7",
+    -- ["p"] = "InsertMidiStep_P8",
 
-		--
-		-- NOTE: B. Use small/shifted keys to determine direction.
-		--
+    --
+    -- NOTE: B. Use small/shifted keys to determine direction.
+    --
 
-		["n"] = "InsertMidiStep_unison",
+    ["n"] = "InsertMidiStep_unison",
 
-		["m"] = "InsertMidiStep_asc_min_2",
-		["M"] = "InsertMidiStep_desc_min_2",
-		[","] = "InsertMidiStep_asc_maj_2",
-		["<"] = "InsertMidiStep_desc_maj_2",
-		["."] = "InsertMidiStep_asc_min_3",
-		[">"] = "InsertMidiStep_desc_min_3",
-		["/"] = "InsertMidiStep_asc_maj_3",
-		["?"] = "InsertMidiStep_desc_maj_3",
+    ["m"] = "InsertMidiStep_asc_min_2",
+    ["M"] = "InsertMidiStep_desc_min_2",
+    [","] = "InsertMidiStep_asc_maj_2",
+    ["<"] = "InsertMidiStep_desc_maj_2",
+    ["."] = "InsertMidiStep_asc_min_3",
+    [">"] = "InsertMidiStep_desc_min_3",
+    ["/"] = "InsertMidiStep_asc_maj_3",
+    ["?"] = "InsertMidiStep_desc_maj_3",
 
-		["j"] = "InsertMidiStep_asc_prf_4",
-		["J"] = "InsertMidiStep_desc_prf_4",
-		["k"] = "InsertMidiStep_asc_flt_5",
-		["K"] = "InsertMidiStep_desc_flt_5",
-		["l"] = "InsertMidiStep_asc_prf_5",
-		["L"] = "InsertMidiStep_desc_prf_5",
-		[";"] = "InsertMidiStep_asc_min_6",
-		[":"] = "InsertMidiStep_desc_min_6",
+    ["j"] = "InsertMidiStep_asc_prf_4",
+    ["J"] = "InsertMidiStep_desc_prf_4",
+    ["k"] = "InsertMidiStep_asc_flt_5",
+    ["K"] = "InsertMidiStep_desc_flt_5",
+    ["l"] = "InsertMidiStep_asc_prf_5",
+    ["L"] = "InsertMidiStep_desc_prf_5",
+    [";"] = "InsertMidiStep_asc_min_6",
+    [":"] = "InsertMidiStep_desc_min_6",
 
-		["u"] = "InsertMidiStep_asc_maj_6",
-		["U"] = "InsertMidiStep_desc_maj_6",
-		["i"] = "InsertMidiStep_asc_min_7",
-		["I"] = "InsertMidiStep_desc_min_7",
-		["o"] = "InsertMidiStep_asc_maj_7",
-		["O"] = "InsertMidiStep_desc_maj_7",
-		["p"] = "InsertMidiStep_asc_prf_8",
-		["P"] = "InsertMidiStep_desc_prf_8",
+    ["u"] = "InsertMidiStep_asc_maj_6",
+    ["U"] = "InsertMidiStep_desc_maj_6",
+    ["i"] = "InsertMidiStep_asc_min_7",
+    ["I"] = "InsertMidiStep_desc_min_7",
+    ["o"] = "InsertMidiStep_asc_maj_7",
+    ["O"] = "InsertMidiStep_desc_maj_7",
+    ["p"] = "InsertMidiStep_asc_prf_8",
+    ["P"] = "InsertMidiStep_desc_prf_8",
 
-		--
-		-- NOTE: C. Use only pitch to get to the closest pitch and then use octave
-		-- jumps.
-		--
+    --
+    -- NOTE: C. Use only pitch to get to the closest pitch and then use octave
+    -- jumps.
+    --
 
-		--
-		-- NOTE: D. Use left hand for descending and right hand for acending.
-		-- `tghy` are still left for navigation etc plus tab/enter AND space.
-		--
+    --
+    -- NOTE: D. Use left hand for descending and right hand for acending.
+    -- `tghy` are still left for navigation etc plus tab/enter AND space.
+    --
 
-		--------------------
-		-- thumb keys
+    --------------------
+    -- thumb keys
 
-		["<TAB>"] = "ToggleMidiStepDirection",
-	},
+    ["<TAB>"] = "ToggleMidiStepDirection",
+  },
 }
