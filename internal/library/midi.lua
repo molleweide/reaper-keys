@@ -520,10 +520,10 @@ function midi.insertMidiNoteChunk(meta, opts)
 	-- Or should there be a possible to insert a chord and also move the
 	-- active center pitch all at once?
 
-	if opts.chord then
-		for _, chord_rel_pitch in ipairs(opts.chord[2]) do
+	if opts.note_chunk then
+		for _, chord_rel_pitch in ipairs(opts.note_chunk.relative_pitches) do
 			-- TODO: ADD OCTAVE
-			local new_pitch = active_note_row + octave_add + (chord_rel_pitch - 1) * direction_mult
+			local new_pitch = active_note_row + octave_add + chord_rel_pitch * direction_mult
 
 			table.insert(t_note_pitches, new_pitch)
 		end
@@ -535,7 +535,7 @@ function midi.insertMidiNoteChunk(meta, opts)
 	reaper.MIDIEditor_SetSetting_int(
 		ctxm.editor,
 		"active_note_row",
-		active_note_row + octave_add + (opts.chord[2][1] - 1) * direction_mult
+		active_note_row + octave_add + opts.note_chunk.relative_pitches[1] * direction_mult
 	)
 
 	-- compute note duration
@@ -685,6 +685,8 @@ midi.remove_notes = function(take, t_midi_events, active_note_row, filter_indice
 		local note_idx = i - 1
 		local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx)
 		if pitch == active_note_row then
+
+
 			reaper.MIDI_DeleteNote(take, note_idx)
 		end
 	end

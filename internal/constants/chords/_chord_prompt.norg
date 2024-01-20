@@ -17,7 +17,7 @@ local chord_template = {
   name_short = "",
   type = "", -- eg. triad
   number_of_notes = number, eg. 4 if the chord has 0, 3, 7, 11
-  notes = { } -- list of notes starting from zero, major chord = [0, 4, 7]
+  relative_pitches = { } -- list of notes starting from zero, major chord = [0, 4, 7]
 }
 @end
 

@@ -27,6 +27,7 @@ local constants = {
 			octave_next = nil,
 			-- can be either `nil` or a list of GUIDs
 			guids_track_active = nil,
+			next_note_rhythms = {},
     }
   }
 }
