@@ -233,29 +233,30 @@ pickers.track_fx_params = function(opts)
     entry_maker = require("pickers.entry_makers.fx_parameters"),
     attach_mappings = function(gui, key, i)
       local selection = gui.t_search_results[i]
-
       if not selection then
         return
       end
-
       log.user("#################################", key)
 
-      -- log.user("selection = ", format.block(selection))
-      local retval, step, smallstep, largestep, istoggle =
+      local _, step, smallstep, largestep, istoggle =
       reaper.TrackFX_GetParameterStepSizes(node.tr, opts.fx_index, selection.index)
-      local retval, minval, maxval = reaper.TrackFX_GetParam(node.tr, opts.fx_index, selection.index)
-
+      local _, minval, maxval = reaper.TrackFX_GetParam(node.tr, opts.fx_index, selection.index)
       local full_range = maxval - minval
 
-      local function update_fx_parameter(amount)
-        log.user("amount:", amount)
+      -- move to utils.math
+      function round(number, decimalPlaces)
+        local multiplier = 10 ^ (decimalPlaces or 0)
+        return math.floor(number * multiplier + 0.5) / multiplier
+      end
 
+      local function update_fx_parameter(amount)
         local amount_new
         if istoggle then
           amount_new = amount > 0 and 1 or 0
         else
+          log.user(type(selection.val))
+          log.user("???:", selection.val, amount, selection.val + amount)
           amount_new = selection.val + amount
-
           if amount_new <= minval then
             amount_new = minval
           elseif amount_new >= maxval then
@@ -263,38 +264,33 @@ pickers.track_fx_params = function(opts)
           end
         end
 
-        log.user(string.format(
-          [[
-      FX PARAM INFO
-      step:      %s
-      smallstep: %s
-      largestep: %s
-      istoggle:  %s
-      min: %s
-      max: %s
-      full_range:  %s
-      amount_new: %s
-      ]]   ,
-          step,
-          smallstep,
-          largestep,
-          istoggle,
-          minval,
-          maxval,
-          full_range,
-          amount_new
-        ))
+        -- amount_new = round(amount_new, 3)
 
         -- set plugin value
-        local ret = reaper.TrackFX_SetParam(node.tr, opts.fx_index, selection.index, amount_new)
+        local ret = reaper.TrackFX_SetParamNormalized(node.tr, opts.fx_index, selection.index, amount_new)
 
         -- get values so that we can update the table entry in the picker
         local num = reaper.TrackFX_GetParamNormalized(node.tr, opts.fx_index, selection.index)
 
-        local ret, numf = reaper.TrackFX_GetFormattedParamValue(node.tr, opts.fx_index, selection.index)
+        local _, numf = reaper.TrackFX_GetFormattedParamValue(node.tr, opts.fx_index, selection.index)
         selection.val = num
         selection.valf = numf
         UPDATE_RESULTS = true
+
+        -- log.user(string.format(
+        --   [[
+        -- ---
+        -- amount in:     %s
+        -- prev val:      %s
+        -- new val:       %s (amount new)
+        -- after getting: %s
+        -- ---
+        -- ]] ,
+        --   amount,
+        --   selection.val,
+        --   amount_new,
+        --   num
+        -- ))
       end
 
       log.user(type(selection.val), type(selection.valf))
