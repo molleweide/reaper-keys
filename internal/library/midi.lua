@@ -446,14 +446,6 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	log.debug("insertMidiNoteChunk opts", format.block(opts))
 
-	-- TODO: anything pertaining to `midi_step_state`, or any state,
-	-- should be handled in the action handler
-	-- local exists, midi_step_state = midi.get_midi_step_state()
-
-	local state = state_interface.get()
-
-	log.user("midi_step_state:", format.block(state.midi_step_state))
-
 	-- could this also be passed as an arg?
 	local ret, ctxm = require("library.midi_editor").getMidiValidContext()
 	if not ret then
@@ -479,17 +471,14 @@ function midi.insertMidiNoteChunk(meta, opts)
 
 	-- This should be done inside of the action IDs themselves, and then they're
 	-- passed as params to this func.
-	local direction_mult
-
+	local direction_mult = 1
 	if opts.ascending ~= nil then
-		log.user("opts.ascending!!!!")
 		direction_mult = opts.ascending and 1 or -1
-	else
-		log.user("opts.direction!!!! ")
-		direction_mult = state.midi_step_state.direction and 1 or -1
+	elseif opts.direction ~= nil then
+		direction_mult = opts.direction
 	end
 
-	local octave_add = state.midi_step_state.octave_next and (state.midi_step_state.octave_next * 12) or 0
+	local octave_add = type(opts.octave_next) == "number" and (opts.octave_next * 12) or 0
 
 	if opts.move_cursor then
 		local new_pos = meta.end_pos and meta.endpos or reaper.GetCursorPosition() + step_len
@@ -504,7 +493,7 @@ function midi.insertMidiNoteChunk(meta, opts)
 		reaper.SetEditCurPos(new_pos, false, false)
 	end
 
-	if opts.silent or state.midi_step_state.silent then
+	if opts.silent then
 		return
 	end
 
@@ -521,7 +510,7 @@ function midi.insertMidiNoteChunk(meta, opts)
 	-- active center pitch all at once?
 
 	if opts.note_chunk then
-		for _, chord_rel_pitch in ipairs(opts.note_chunk.relative_pitches) do
+		for _, chord_rel_pitch in ipairs(opts.note_chunk.relative_intervals) do
 			-- TODO: ADD OCTAVE
 			local new_pitch = active_note_row + octave_add + chord_rel_pitch * direction_mult
 
@@ -535,7 +524,7 @@ function midi.insertMidiNoteChunk(meta, opts)
 	reaper.MIDIEditor_SetSetting_int(
 		ctxm.editor,
 		"active_note_row",
-		active_note_row + octave_add + opts.note_chunk.relative_pitches[1] * direction_mult
+		active_note_row + octave_add + opts.note_chunk.relative_intervals[1] * direction_mult
 	)
 
 	-- compute note duration
@@ -577,14 +566,6 @@ function midi.insertMidiNoteChunk(meta, opts)
 		take = ctxm.take,
 		notes = t_midi_notes,
 	})
-
-	-- update state
-	state.midi_step_state.octave_next = nil
-	-- FIX: use rk state interface?
-	--
-	-- use state_events.setKey here instead.
-	-- project_state.overwrite("mode_state", "midi_step", midi_step_state)
-	state_interface.set(state)
 
 	-- log.user("DURATION_FINAL:", duration_final)
 	if opts.playback then

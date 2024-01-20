@@ -23,6 +23,12 @@ local function render_next_step(meta, opts)
     state.midi_step_state.next_note_rhythms = {}
   end
 
+  -- prepare insert note chunk opts by state
+  --
+  opts.silent = state.midi_step_state.silent
+  opts.direction = state.midi_step_state.direction and 1 or -1
+  opts.octave_next = state.midi_step_state.octave_next
+
   if #state.midi_step_state.next_note_rhythms == 0 then
     log.debug("render step: use default rhythm")
     -- use default rhythm step size.
@@ -31,6 +37,9 @@ local function render_next_step(meta, opts)
     log.debug("render step: use `next_note_rhythms` rhythm")
     -- use next_note_rhythms AND remove first index.
   end
+
+  -- reset specific state
+  state.midi_step_state.octave_next = nil
 
   state_interface.set(state)
 end
@@ -54,140 +63,104 @@ local insert_note_from_state_opts = {
 
 midi_step_commands.midiStepRel_P1 = function(meta)
   local opts = tbl.copy(insert_note_from_state_opts)
-  opts.note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 0 } }
+  opts.note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 0 } }
   midi.insertMidiNoteChunk(meta, opts)
 end
 
 midi_step_commands.midiStepRel_m2 = function(meta, opts)
-  midi.insertMidiNoteChunk(
-    meta,
-    {
-      move_cursor = true,
-      playback = true,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 1 } },
-    }
-  )
+  midi.insertMidiNoteChunk(meta, {
+    move_cursor = true,
+    playback = true,
+    note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 1 } },
+  })
 end
 
 midi_step_commands.midiStepRel_M2 = function(meta, opts)
-  midi.insertMidiNoteChunk(
-    meta,
-    {
-      move_cursor = true,
-      playback = true,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 2 } },
-    }
-  )
+  midi.insertMidiNoteChunk(meta, {
+    move_cursor = true,
+    playback = true,
+    note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 2 } },
+  })
 end
 
 midi_step_commands.midiStepRel_m3 = function(meta)
-  midi.insertMidiNoteChunk(
-    meta,
-    {
-      move_cursor = true,
-      playback = true,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 3 } },
-    }
-  )
+  midi.insertMidiNoteChunk(meta, {
+    move_cursor = true,
+    playback = true,
+    note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 3 } },
+  })
 end
 
 midi_step_commands.midiStepRel_M3 = function(meta, opts)
-  midi.insertMidiNoteChunk(
-    meta,
-    {
-      move_cursor = true,
-      playback = true,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 4 } },
-    }
-  )
+  midi.insertMidiNoteChunk(meta, {
+    move_cursor = true,
+    playback = true,
+    note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 4 } },
+  })
 end
 
 midi_step_commands.midiStepRel_P4 = function(meta, opts)
-  midi.insertMidiNoteChunk(
-    meta,
-    {
-      move_cursor = true,
-      playback = true,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 5 } },
-    }
-  )
+  midi.insertMidiNoteChunk(meta, {
+    move_cursor = true,
+    playback = true,
+    note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 5 } },
+  })
 end
 
 midi_step_commands.midiStepRel_b5 = function(meta, opts)
-  midi.insertMidiNoteChunk(
-    meta,
-    {
-      move_cursor = true,
-      playback = true,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 6 } },
-    }
-  )
+  midi.insertMidiNoteChunk(meta, {
+    move_cursor = true,
+    playback = true,
+    note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 6 } },
+  })
 end
 
 midi_step_commands.midiStepRel_P5 = function(meta, opts)
-  midi.insertMidiNoteChunk(
-    meta,
-    {
-      move_cursor = true,
-      playback = true,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 7 } },
-    }
-  )
+  midi.insertMidiNoteChunk(meta, {
+    move_cursor = true,
+    playback = true,
+    note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 7 } },
+  })
 end
 
 midi_step_commands.midiStepRel_m6 = function(meta, opts)
-  midi.insertMidiNoteChunk(
-    meta,
-    {
-      move_cursor = true,
-      playback = true,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 8 } },
-    }
-  )
+  midi.insertMidiNoteChunk(meta, {
+    move_cursor = true,
+    playback = true,
+    note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 8 } },
+  })
 end
 
 midi_step_commands.midiStepRel_M6 = function(meta, opts)
-  midi.insertMidiNoteChunk(
-    meta,
-    {
-      move_cursor = true,
-      playback = true,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 9 } },
-    }
-  )
+  midi.insertMidiNoteChunk(meta, {
+    move_cursor = true,
+    playback = true,
+    note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 9 } },
+  })
 end
 
 midi_step_commands.midiStepRel_m7 = function(meta, opts)
-  midi.insertMidiNoteChunk(
-    meta,
-    {
-      move_cursor = true,
-      playback = true,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 10 } },
-    }
-  )
+  midi.insertMidiNoteChunk(meta, {
+    move_cursor = true,
+    playback = true,
+    note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 10 } },
+  })
 end
 
 midi_step_commands.midiStepRel_M7 = function(meta, opts)
-  midi.insertMidiNoteChunk(
-    meta,
-    {
-      move_cursor = true,
-      playback = true,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 11 } },
-    }
-  )
+  midi.insertMidiNoteChunk(meta, {
+    move_cursor = true,
+    playback = true,
+    note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 11 } },
+  })
 end
 
 midi_step_commands.midiStepRel_P8 = function(meta, opts)
-  midi.insertMidiNoteChunk(
-    meta,
-    {
-      move_cursor = true,
-      playback = true,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { 12 } },
-    }
-  )
+  midi.insertMidiNoteChunk(meta, {
+    move_cursor = true,
+    playback = true,
+    note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { 12 } },
+  })
 end
 
 -------------------------------------------------------------------------------
@@ -205,14 +178,14 @@ local helper_insert_step = function(meta, ascending, interval)
   --   meta,
   --   tbl.copy_add(
   --     insert_note_from_state_opts,
-  --     { ascending = ascending, note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { interval } } }
+  --     { ascending = ascending, note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { interval } } }
   --   )
   -- )
   render_next_step(
     meta,
     tbl.copy_add(insert_note_from_state_opts, {
       ascending = ascending,
-      note_chunk = { "midi_step_rel_pitch_chord_name", relative_pitches = { interval } },
+      note_chunk = { "midi_step_rel_pitch_chord_name", relative_intervals = { interval } },
     })
   )
 end
