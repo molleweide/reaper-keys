@@ -957,6 +957,9 @@ return {
   MIDIStep_ToggleStaccatto = midi_step_commands.toggle_staccatto,
   MIDIStep_UserInput_NextNotes = midi_step_commands.user_input_next_note_rhythms,
   MIDIStep_Reset_NextNoteRhythms = midi_step_commands.reset_next_note_rhytms,
+  --
+  MIDIStep_MakePrevStep_16th = midi_step_commands.make_prev_step_16th,
+  MIDIStep_MakePrevStep_QN = midi_step_commands.make_prev_step_QN,
 
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,

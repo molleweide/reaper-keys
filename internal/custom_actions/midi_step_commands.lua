@@ -1,14 +1,11 @@
+local ns = require("constants.namespaces")
 local log = require("utils.log")
 local format = require("utils.format")
-
 local tbl = require("utils.table")
-
 local state_interface = require("state_machine.state_interface")
 local reaper_state = require("utils.reaper_state")
-
-local ns = require("constants.namespaces")
-
 local midi = require("library.midi")
+local midi_editor = require("library.midi_editor")
 
 -- TODO: rename this to just `midi_commands.lua`.
 
@@ -46,17 +43,17 @@ local function render_next_step(meta, opts)
   -- reset specific state
   state_interface.set(state)
 
-  local prev_opts, prev_midi_data= midi.insertMidiNoteChunk(meta, opts)
+  local prev_opts, prev_midi_data = midi.insertMidiNoteChunk(meta, opts)
 
   -- add insertion data to
-
-	local state_prev_step_insertion = reaper_state.get(ns.namespace_prev_step_insertion_data)
-	if type(state_prev_step_insertion) ~= "table" then
-	  state_prev_step_insertion = {}
-	end
-	table.insert(state_prev_step_insertion, {
-	  opts = prev_opts, prev_midi_notes = prev_midi_data
-	})
+  local state_prev_step_insertion = reaper_state.get(ns.namespace_prev_step_insertion_data)
+  if type(state_prev_step_insertion) ~= "table" then
+    state_prev_step_insertion = {}
+  end
+  table.insert(state_prev_step_insertion, {
+    opts = prev_opts,
+    prev_midi_notes = prev_midi_data,
+  })
   reaper_state.set(ns.namespace_prev_step_insertion_data, state_prev_step_insertion)
 
   log.debug("PREV STEP INSERTION DATA:", format.block(state_prev_step_insertion))
@@ -478,6 +475,49 @@ midi_step_commands.add_next_note_rhythm_QN_2x = function(meta)
 end
 midi_step_commands.add_next_note_rhythm_QN_3x = function(meta)
   helper_add_next_note_rhythm(meta, 3)
+end
+
+--
+-- MAKE PREV NOTE == DURATION X
+--
+
+local helper_find_prev_step_and_update = function(meta, frac)
+  local state_psi = reaper_state.get(ns.namespace_prev_step_insertion_data)
+  log.user("STATEPSI:", format.block(state_psi))
+
+  if type(state_psi) ~= "table" or #state_psi == 0 then
+    log.debug(
+      "[helper_find_prev_step_and_update]: Prev step table non existent or # == 0. Cannot find prev step..."
+    )
+    return
+  end
+  local ret, ME = midi_editor.getMidiValidContext()
+  if not ret then
+    log.debug("[helper_find_prev_step_and_update]: cannot get ME context")
+    return
+  end
+  local prev_ins = state_psi[#state_psi]
+  local prev_pitch = prev_ins.prev_midi_notes[1].pitch
+  local prev_start_ppq = reaper.MIDI_GetPPQPosFromProjTime(ME.take, prev_ins.prev_midi_notes[1].time_pos_start)
+  local prev_end_ppq = reaper.MIDI_GetPPQPosFromProjTime(ME.take, prev_ins.prev_midi_notes[1].time_pos_end)
+  midi.midi_take_filter_transform(ME.take, {
+    filter = {
+      notes = {
+        pitch = function(note)
+          return note.pitch == prev_pitch and (prev_start_ppq <= note.ppq_s and note.ppq_e <= prev_end_ppq)
+        end,
+      },
+    },
+    transform = { notes = { sel = true } },
+  })
+end
+
+midi_step_commands.make_prev_step_16th = function(meta)
+  helper_find_prev_step_and_update(meta, 3)
+end
+
+midi_step_commands.make_prev_step_QN = function(meta)
+  helper_find_prev_step_and_update(meta, 3)
 end
 
 --

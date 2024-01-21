@@ -14,6 +14,8 @@ local tbl = require("utils.table")
 -- TODO: look at chordgun for good midi library functions
 --
 
+-- TODO: remove all the old midi stuff functions
+
 -- /////////////////////////////////
 
 local function wait(seconds)
@@ -46,6 +48,8 @@ end
 -- the MIDI-as-control input queue, or sends to a MIDI hardware output. mode=0 for
 -- VKB, 1 for control (actions map etc), 2 for VKB-on-current-channel; 16 for
 -- external MIDI device 0, 17 for external MIDI device 1, etc; see
+--
+-- TODO: move midi constants to own file
 
 -- // MIDI HELPER VARIABLE
 -- WAS_FILTERED = 1024;  // array for storing which notes are filtered
