@@ -960,6 +960,9 @@ return {
   --
   MIDIStep_MakePrevStep_16th = midi_step_commands.make_prev_step_16th,
   MIDIStep_MakePrevStep_QN = midi_step_commands.make_prev_step_QN,
+  --
+  --
+  Nodes_Add_UserInput = commands.add_track_nodes_ui,
 
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,

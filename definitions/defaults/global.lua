@@ -387,7 +387,7 @@ return {
               "+routing",
               {
                 ["x"] = "RouteUpdate",
-                ["f"] = "OpenRouteUI",
+                ["f"] = "OpenRoutingUI",
                 ["q"] = "RouteRemoveAllSends",
                 ["Q"] = "RouteRemoveAllRecieves",
                 ["l"] = "RouteLogSelection",
@@ -576,6 +576,12 @@ return {
           "+project",
           {
             [","] = "ShowProjectSettings",
+            ["a"] = {
+              "+nodes (add)",
+              {
+                ["n"] = "Nodes_Add_UserInput"
+              }
+            },
             ["n"] = "NextTab",
             ["p"] = "PrevTab",
             ["s"] = "SaveProject",

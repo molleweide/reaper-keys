@@ -12,7 +12,7 @@ this is a scale template in lua:
 
 @code lua
 
-local chord_template = {
+local scale_template = {
   name_long = "",
   name_short = "",
   type = "",

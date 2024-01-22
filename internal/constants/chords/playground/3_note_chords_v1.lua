@@ -36,12 +36,3 @@ local triads = {
     notes = {0, 5, 7}
   }
 }
-
--- Print the table for all possible triads
-for _, triad in ipairs(triads) do
-  print("Triad Name (Long): " .. triad.name_long)
-  print("Triad Name (Short): " .. triad.name_short)
-  print("Triad Type: " .. triad.type)
-  print("Triad Notes: " .. table.concat(triad.notes, ", "))
-  print("\n")
-end
