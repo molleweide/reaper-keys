@@ -167,6 +167,9 @@ commands.regions_manager_fuzzy_ui = function(meta, opts)
   --
   -- there is something about the undo works.
 
+  -- TEST: delete region -> if region contains item data -> user will be prompted
+  -- "Region contains item data - Are you sure you want to proceed? (Y/n)"
+
 end
 
 commands.show_hide_track_ui = function()

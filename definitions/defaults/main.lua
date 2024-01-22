@@ -159,7 +159,7 @@ return {
     ["<CM-->"] = "ZoomOutTrackVert",
     ["+"] = "ZoomInHoriz",
     ["-"] = "ZoomOutHoriz",
-    [";"] = "MoveItemToEditCursor",
+    [";"] = "MoveItemToEditCursor", -- put this at <leader>;
     ["dd"] = "CutTrack",
     ["d"] = {
       "+delete",
