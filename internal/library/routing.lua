@@ -62,6 +62,8 @@ function routing.updateState(route_str, coded_sources, coded_dests)
 	--  This is really wierd. Anyways, luckilly it works by setting it here
 	rp.remove_routes = false -- ??
 
+	log.user("!!!!!!!!", route_str)
+
 	-- route_str is passed explicitly to the function if
 	-- you are embeddig this function. If nil, then user
 	-- will be prompted to input a string manually.

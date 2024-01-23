@@ -236,5 +236,13 @@ return {
     ["<CM-K>"] = "ShiftEnvelopePointsUp",
     ["<M-S>"] = "SelectItemsUnderEditCursor",
     ["'"] = "MarkedTracks",
+
+    -- TODO: select all items that are adjacent.
+    -- This is a bit experimental,
+    -- Select all items that can be reached by touching
+    -- subsequent items. >> Start with the first item that is positionned
+    -- at track/cursor intersection.
+    -- ["?"] = "SelectAdjacentItems",
+
   },
 }

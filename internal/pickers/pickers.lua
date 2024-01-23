@@ -522,7 +522,7 @@ pickers.chord = function(meta, opts)
       local chord = self.t_search_results[i]
       if opts.next then
         opts.next(meta, {
-          chord = chord,
+          note_chunk = chord,
           move_cursor = opts.move_cursor,
         })
       end

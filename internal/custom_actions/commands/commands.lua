@@ -95,6 +95,11 @@ commands.MidiEditor_go_insert = function(meta, opts)
   midi.jump_to_position_and_insert_by_string()
 end
 
+-- TODO: when running fx_picker on a CHANNESPLITTER, then I should first
+-- be prompted to select which S subtrack, etc, etc. so that I can mix/modify
+-- all subtracks, from within, eg, ME when editing a larger screenset of
+-- MC tracks within a group.
+
 commands.picker_first_eq_on_focused_track = function()
   local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
   local tr_node = focused_track_objects[1]
@@ -184,6 +189,25 @@ commands.show_hide_track_ui = function()
   -- FIX: Need action/command to un-hide all tracks easy
   --
   -- NOTE: THIS SHOULD PROLLY GO INTO THE TRACK_NODE_UI ABOVE?!
+end
+
+-- TEST: Later, this should be modified to create a MIDI edit SCREENSET from
+-- the group selection screenset.
+commands.MIDI_picker_edit_tracks_CHAIN_region_and_group = function()
+
+  -- 1. first select region.
+  -- 2. then, select which Group,
+  -- 3. then, select track.
+end
+
+commands.MIDI_picker_tracks_edit_existing_items_at_cursor = function()
+end
+
+commands.routing_user_string = function()
+
+  local route = require("library.routing")
+
+  route.updateState()
 end
 
 return commands
