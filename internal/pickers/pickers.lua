@@ -154,14 +154,33 @@ pickers.browse_reaper_preferences = function()
   })
 end
 
-pickers.track_fx = function()
+pickers.track_fx = function(meta, opts)
+  opts = opts or {}
+  -- if not opts.node or not opts.fx_index then
+  --   log.debug("[pickers.track_fx]: Requires both a track node and target fx_index!")
+  --   return
+  -- end
+
   local fx_results = fx_util.get_track_fx_chain_info()
 
-  log.user(format.block(fx_results))
+  log.user(opts.title, format.block(fx_results))
 
   fzf.init({
-    title = "Browse track FX list",
-    results = fx_results,
+    title = opts.title or "Browse track FX list",
+    results = opts.results or fx_results,
+    on_select_func = function(self, i)
+      log.user("!!!!!!!!!!!!")
+      local selection = self.t_search_results[i]
+      if opts then
+        if opts.next then
+          opts.next(meta, {
+            selection = selection,
+          })
+        end
+      end
+      return true
+    end,
+    next_is_picker = opts.next_is_picker or false,
     sort_comp = "idx",
     entry_maker = { "idx", "name", "pname" },
     results_filter = function(t_results_data, sPattern, iMaxResults)
@@ -194,7 +213,8 @@ end
 
 ---@param tr userdata
 ---@param fx_idx number
-pickers.track_fx_params = function(opts)
+pickers.track_fx_params = function(meta, opts)
+  opts = opts or {}
   if not opts.node or not opts.fx_index then
     log.debug("[pickers.track_fx_params]: Requires both a track node and target fx_index!")
     return
@@ -222,7 +242,7 @@ pickers.track_fx_params = function(opts)
 
   fzf.init({
     env = RK_FZF_ENV,
-    title = string.format("FXparams: NODE(%s) -> FX(%s)", tr_node_header_string, t_fx_params.name),
+    title = opts.title or string.format("FXparams: NODE(%s) -> FX(%s)", tr_node_header_string, t_fx_params.name),
     width = 800,
     height = 700,
     x = 0,

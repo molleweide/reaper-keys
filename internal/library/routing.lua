@@ -53,16 +53,16 @@ function routing.updateState(route_str, coded_sources, coded_dests)
 	-- log.clear()
 
 	-- get default route configs
-	local t_current_route_config = rc
+	local t_route_opts = rc
 	local _
 
-	-- TODO: attach route_str to t_current_route_config
+	-- TODO: attach route_str to t_route_opts
 
 	--  I set remove_routes explicitly here. Why?
 	--  Because on my second laptop this prop gets converted
 	--  to true even though i never set it to true. I don't understad why.
 	--  This is really wierd. Anyways, luckilly it works by setting it here
-	t_current_route_config.remove_routes = false -- ??
+	t_route_opts.remove_routes = false -- ??
 
 	log.user("!!!!!!!!", route_str)
 
@@ -71,20 +71,20 @@ function routing.updateState(route_str, coded_sources, coded_dests)
 	-- will be prompted to input a string manually.
 	-- kind of like command mode in vim.
 	if route_str == nil then
-		t_current_route_config.user_input = true
+		t_route_opts.user_input = true
 		_, route_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
 		if not _ then
 			return
 		end
 	end
 
-	t_current_route_config.state_string = route_str
+	t_route_opts.state_string = route_str
 
 	-- look at the route string and extract the parameters
 	-- needed for updating to new route state below.
 	-- returns a table of all parameters.
 	local ret
-	ret, t_current_route_config = rlib_string.extractParamsFromString(t_current_route_config, route_str)
+	ret, t_route_opts = rlib_string.extractParamsFromString(t_route_opts, route_str)
 	if not ret then
 		return
 	end -- something went wrong
@@ -97,12 +97,12 @@ function routing.updateState(route_str, coded_sources, coded_dests)
 	-- table of name strings, guid, or tr_num
 	-- i am not sure why i included tr_num??
 	if coded_sources ~= nil then
-		t_current_route_config.coded_targets = true
-		ret, t_current_route_config = rlib_targets.setRouteTargetGuids(t_current_route_config, "src_guids", coded_sources)
+		t_route_opts.coded_targets = true
+		ret, t_route_opts = rlib_targets.setRouteTargetGuids(t_route_opts, "src_guids", coded_sources)
 	end
 	if coded_dests ~= nil then
-		t_current_route_config.coded_targets = true
-		ret, t_current_route_config = rlib_targets.setRouteTargetGuids(t_current_route_config, "dst_guids", coded_dests)
+		t_route_opts.coded_targets = true
+		ret, t_route_opts = rlib_targets.setRouteTargetGuids(t_route_opts, "dst_guids", coded_dests)
 	end
 
 	-- execute and update route state. Either remove routes,
@@ -111,16 +111,16 @@ function routing.updateState(route_str, coded_sources, coded_dests)
 	-- TODO
 	--
 	-- update action type (add/rm/log)
-	-- if t_current_route_config.action_next == "log" >> log...
-	-- elseif t_current_route_config.action_next == "rm"
-	-- elseif t_current_route_config.action_next == "add"
-	if t_current_route_config.remove_routes then
-		rlib.handleRemoval(t_current_route_config)
-	elseif not t_current_route_config.user_input then
+	-- if t_route_opts.action_next == "log" >> log...
+	-- elseif t_route_opts.action_next == "rm"
+	-- elseif t_route_opts.action_next == "add"
+	if t_route_opts.remove_routes then
+		rlib.handleRemoval(t_route_opts)
+	elseif not t_route_opts.user_input then
 		-- NOTE: this means that we called api
-		rlib.targetLoop(t_current_route_config)
-	elseif rlib.confirmRouteCreation(t_current_route_config) then
-		rlib.targetLoop(t_current_route_config)
+		rlib.targetLoop(t_route_opts)
+	elseif rlib.confirmRouteCreation(t_route_opts) then
+		rlib.targetLoop(t_route_opts)
 	else
 		log.debug("<ROUTE COMMAND ABORTED>")
 	end

@@ -964,6 +964,10 @@ return {
   --
   Nodes_Add_UserInput = commands.add_track_nodes_ui,
 
+  Regions_UI_string = commands.regions_manager_fuzzy_ui,
+
+  FocusedTrack_FX_UI = commands.track_fx_ui,
+
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,
   n69 = lib.midi.sendMidiNote_69,

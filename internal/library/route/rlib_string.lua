@@ -184,10 +184,6 @@ function rlib_string.extractParamsFromString(t_route_opts, str)
   local ret, src_tr_data, dst_tr_data, str = str_util.extract_parenthesis(str) -- extractParenthesisTargets(str)
   rlib_string.ensure_src_dst_nodes(t_route_opts, str, src_tr_data, dst_tr_data)
 
-  -- TODO: improve this logic
-  -- 1. Can i send only one channel? How are defaults assinged?
-  -- 2. Rename the variables to something more explanatory!
-
   -- what is b ??
   local str, bSrc, bDst = extract_channel_info(str, "[]", t_route_opts.meta.channel_data_separator, 0, 6)
   local str, cSrc, cDst = extract_channel_info(str, "{}", t_route_opts.meta.channel_data_separator, 0, 16)

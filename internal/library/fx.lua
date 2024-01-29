@@ -389,9 +389,10 @@ end
 --
 -- fix: pass tobj or tr?
 --
-fx_util.get_track_fx_chain_info = function()
+fx_util.get_track_fx_chain_info = function(tr)
+	tr = tr or reaper.GetSelectedTrack(0, 0)
+
 	local t_track_fx_chain = {}
-	local tr = reaper.GetSelectedTrack(0, 0)
 	local tc = reaper.TrackFX_GetCount(tr)
 
 	local GUID = reaper.GetTrackGUID(tr)
