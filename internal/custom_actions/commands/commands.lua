@@ -5,6 +5,7 @@ local lib_tr = require("library.tracks")
 local s = require("utils.string")
 
 local fxu = require("library.fx")
+local tbl = require("utils.table")
 
 local project_state = require("utils.project_state")
 
@@ -268,53 +269,43 @@ commands.track_fx_ui = function(meta, opts)
 		next_is_picker = true,
 		next = function(meta, data, self)
 			local fx_selected = data.selection
-			-- log.user("selected fx:", format.block(fx_selected.idx))
-
 			log.user("self.title:", self.title)
 
 			-- self.next_is_picker = false
 
 			local t_fx_params = fxu.get_track_fx_info(tr_node.tr, fx_selected.idx)
-			self.t_results_data = t_fx_params.parameters
 
-			self.meta = {}
-			self.meta.node = tr_node
-			self.meta.fx_index = fx_selected.idx
+			-- self.t_results_data = t_fx_params.parameters
+			--
+			-- self.meta = {}
+			-- self.meta.node = tr_node
+			-- self.meta.fx_index = fx_selected.idx
+			--
+			-- self.sort_comp = require("pickers.sorters.default")("name")
+			-- self.entry_maker = require("pickers.entry_makers.fx_parameters")
+			--
+			-- self.title = string.format("FXparams: NODE(%s) -> FX(%s)", "xxx", t_fx_params.name)
+			--
+			-- self.attach_mappings = require("pickers.attach_mappings.fx_parameters")
+			--
+			-- local gui = self
+			--
+			-- local _, main_input = tbl.findIndexOf(self.controls, "title", "main_input")
+			-- if main_input then
+			-- 	function main_input:onKeyboard(key)
+			-- 		gui.attach_mappings(gui, key, 1)
+			-- 	end
+			-- end
 
-			self.sort_comp = require("pickers.sorters.default")("name")
-			self.entry_maker = require("pickers.entry_makers.fx_parameters")
-
-			self.title = string.format("FXparams: NODE(%s) -> FX(%s)", "xxx", t_fx_params.name)
-
-			self.attach_mappings = require("pickers.attach_mappings.fx_parameters")
-
-			local gui = self
-
-			for _, value in ipairs(self.controls) do
-				if value.title == "main_input" then
-					log.user("found:", value.title, value.onKeyboard)
-					function value:onKeyboard(key)
-						-- add custom bindings here.
-						gui.attach_mappings(gui, key, 1)
-						-- require("pickers.attach_mappings.fx_parameters")(self, key, 1)
-					end
-				end
-			end
-
-			-- log()
-
-			-- entry_maker = require("pickers.entry_makers.fx_parameters"),
-
-			-- self.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
-
-			-- return
-
-			-- pickers.track_fx_params(meta2, {
-			-- 	title = "TRACK FX UI | fx params for: (plugin name)",
-			-- 	node = tr_node,
-			-- 	fx_index = fx_selected.idx,
-			-- 	next_is_picker = false,
-			-- })
+			pickers.track_fx_params(_, {
+				node = tr_node,
+				fx_index = fx_selected.idx,
+				title = "TRACK FX UI | fx list",
+				results = t_fx_params.parameters,
+				sort_comp = require("pickers.sorters.default")("name"),
+				entry_maker = require("pickers.entry_makers.fx_parameters"),
+				attach_mappings = require("pickers.attach_mappings.fx_parameters")
+			})
 		end,
 	})
 end

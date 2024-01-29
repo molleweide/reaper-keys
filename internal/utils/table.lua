@@ -59,7 +59,7 @@ tbl.filter = function(t, condition, debug)
 	return result
 end
 
-tbl.findIndexOf = function(t, search_value, compare_key)
+tbl.findIndexOf = function(t, compare_key, search_value)
 	for i, val in ipairs(t) do
 		if compare_key then
 			if val[compare_key] == search_value then

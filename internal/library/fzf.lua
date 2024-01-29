@@ -66,6 +66,8 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
+local tbl = require("utils.table")
+
 local sf = require("utils.j_string_functions")
 local settings = require("utils.j_settings_functions")
 
@@ -264,7 +266,7 @@ end
 
 local function gui_create_main_text_box(gui, on_enter)
 	local text_input = jGuiTextInput:new({
-	  title = "main_input",
+		title = "main_input",
 		x = 10,
 		y = 10,
 		width = 480,
@@ -476,22 +478,23 @@ end
 --  ~ on_select func ??
 --
 
+local DEFAULT_OPTS = {
+	-- max_results = 50,
+	width = 500,
+	height = 250,
+	x = 400,
+	y = 1400,
+	window_save_state = true,
+	window_dock_state = 0,
+	gui_size = 20,
+	meta = {},
+}
+
 local function build_picker(opts, on_enter)
 	-- FIX: use these for x and y coordinates instead..
 	local x, y = get_xy_intersection()
 
 	-- reaper.ClearConsole()
-	local DEFAULT_OPTS = {
-		-- max_results = 50,
-		width = 500,
-		height = 250,
-		x = 400,
-		y = 1400,
-		window_save_state = true,
-		window_dock_state = 0,
-		gui_size = 20,
-	}
-
 	-- apply defaults if not given
 	for k, v in pairs(DEFAULT_OPTS) do
 		local use_default = "n"
@@ -541,6 +544,31 @@ local function build_picker(opts, on_enter)
 	return true
 end
 
+local function reset_new_picker(opts)
+	for k, v in pairs(DEFAULT_OPTS) do
+		GUI[k] = opts[k] and opts[k] or v
+	end
+
+	log.user(format.block(opts.meta))
+
+	-- get default functions if necessary
+	GUI.on_select_func = require("pickers.selectors.default")(opts.on_select_func)
+	GUI.results_filter = require("pickers.results_filter.default")(opts.results_filter)
+	GUI.sort_comp = require("pickers.sorters.default")(opts.sort_comp)
+	GUI.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
+	GUI.attach_mappings = opts.attach_mappings and opts.attach_mappings or nil
+
+	local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
+	if main_input then
+		function main_input:onKeyboard(key)
+			GUI.attach_mappings(GUI, key, 1)
+		end
+	end
+
+	GUI.t_results_data = opts.results
+	table.sort(GUI.t_results_data, GUI.sort_comp)
+end
+
 -- NOTE: - read up on what the defer function does??
 --       - what is gfx here?? does quit remove any and all instances of an object
 --         created with gfx??
@@ -556,16 +584,22 @@ local function loop()
 end
 
 fzf.init = function(opts, onenter)
-	-- p is currently only accessed in picker definitions in [ internals/pickers ]
-	--
-	-- TODO: rename this variable
+	if GUI then
+		log.user("GUI exists! -> don't do anything..")
+		reset_new_picker(opts)
+	else
+		log.user("GUI does NOT exist.")
+		-- p is currently only accessed in picker definitions in [ internals/pickers ]
+		--
+		-- TODO: rename this variable
 
-	J_PROJECT_DATA = JProject:new()
-	fzf.reset_variables()
+		J_PROJECT_DATA = JProject:new()
+		fzf.reset_variables()
 
-	if build_picker(opts, onenter) then
-		GUI:setReaperFocus()
-		loop()
+		if build_picker(opts, onenter) then
+			GUI:setReaperFocus()
+			loop()
+		end
 	end
 end
 

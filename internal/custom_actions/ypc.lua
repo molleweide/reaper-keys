@@ -12,6 +12,7 @@ local libit = require("library.items")
 local sxa = require("syntax.actions")
 local sxu = require("syntax.utils")
 
+local tbl = require("utils.table")
 --
 --
 -- THIS MODULE CREATES ACTIONS FOR MANAGING MIDI NODES
@@ -105,7 +106,7 @@ local function prepare_item_data_objs_for_yanking(tobj)
             notes = {
               -- pass function that filters single channel
               chan = function(note)
-                return note.ch == tbl.findIndexOf(tobj.channel_splitter.children, tobj.guid, "guid")
+                return note.ch == tbl.findIndexOf(tobj.channel_splitter.children,  "guid", tobj.guid)
               end,
             },
           },
