@@ -168,14 +168,14 @@ pickers.track_fx = function(meta, opts)
   fzf.init({
     title = opts.title or "Browse track FX list",
     results = opts.results or fx_results,
-    on_select_func = function(self, i)
+    on_select_func = opts.on_select_func or function(self, i)
       log.user("!!!!!!!!!!!!")
       local selection = self.t_search_results[i]
       if opts then
         if opts.next then
           opts.next(meta, {
             selection = selection,
-          })
+          }, self)
         end
       end
       return true
@@ -183,31 +183,9 @@ pickers.track_fx = function(meta, opts)
     next_is_picker = opts.next_is_picker or false,
     sort_comp = "idx",
     entry_maker = { "idx", "name", "pname" },
-    results_filter = function(t_results_data, sPattern, iMaxResults)
-      local t_ret = {}
-      local iCount = 0
 
-      local function add(i, t)
-        iCount = iCount + 1
-        t.id = i -- keep track of position in main table
-        t_ret[#t_ret + 1] = t
-      end
-
-      for i, t in ipairs(t_results_data) do
-        if t.name and t.name ~= '""' and t.name:lower():find(sPattern) then
-          add(i, t)
-        elseif t.pname and t.pname:lower():find(sPattern) then
-          add(i, t)
-        end
-        if iMaxResults then
-          if #t_ret >= iMaxResults then -- check if we already have enough results
-            log.user(format.block(t_ret))
-            return t_ret
-          end
-        end
-      end -- for
-      return t_ret
-    end,
+    -- refactor
+    results_filter = require("pickers.results_filter.track_fx"),
   })
 end
 

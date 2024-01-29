@@ -259,38 +259,40 @@ commands.track_fx_ui = function(meta, opts)
 
 	log.user(tr_node.name, format.block(fx_results))
 
-	-- initiate base picker
+	-- wrap this in a function that can be called on going back from the FX
+	-- pickers.
+
 	pickers.track_fx(_, {
 		title = "TRACK FX UI | fx list",
 		results = fx_results,
 		next_is_picker = true,
-		next = function(meta, data)
+		next = function(meta, data, self)
 			local fx_selected = data.selection
-			log.user("selected fx:", format.block(selected_fx_found))
+			-- log.user("selected fx:", format.block(fx_selected.idx))
 
-			pickers.track_fx_params(meta2, {
-				title = "TRACK FX UI | fx params for: (plugin name)",
-				-- filter = "MCS",
-				node = tr_node,
-				fx_index = fx_selected.idx,
-				next_is_picker = false,
-				-- next = function(meta2, data2)
-				-- 	log.user("selection data2", format.block(data2), "sel mark->", format.block(data))
-				-- 	require("library.midi_editor").createEditMidiItemAtPositionForTrack(
-				-- 		_,
-				-- 		data2.selection,
-				-- 		mark_sel.left,
-				-- 		mark_sel.right
-				-- 	)
-				-- 	-- move edit cursor
-				-- 	-- note: i dunno if this is the best place to put the move command.
-				-- 	reaper.SetEditCurPos(mark_sel.left, false, false)
-				-- end,
-			})
+			log.user("self.title:", self.title)
 
-			-- pickers.all_tracks
-			--     >>> next = reuse next from above
-			--        >>>> first - move it into library.
+			-- self.next_is_picker = false
+
+			local t_fx_params = fxu.get_track_fx_info(tr_node.tr, fx_selected.idx)
+			self.t_results_data = t_fx_params.parameters
+
+				self.sort_comp = require("pickers.sorters.default")("name")
+    self.entry_maker = require("pickers.entry_makers.fx_parameters")
+
+			    -- entry_maker = require("pickers.entry_makers.fx_parameters"),
+
+	-- self.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
+
+
+			-- return
+
+			-- pickers.track_fx_params(meta2, {
+			-- 	title = "TRACK FX UI | fx params for: (plugin name)",
+			-- 	node = tr_node,
+			-- 	fx_index = fx_selected.idx,
+			-- 	next_is_picker = false,
+			-- })
 		end,
 	})
 end
