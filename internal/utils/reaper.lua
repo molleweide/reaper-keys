@@ -83,6 +83,16 @@ function reaper_utils.getTrackByGUID(search_guid)
 	return false
 end
 
+function reaper_utils.getSelectedTracksGUIDs()
+  local t = {}
+  for i = 1, reaper.CountSelectedTracks(0) do
+    local tr = reaper.GetSelectedTrack(0, i - 1)
+    local _, current_name = reaper.GetTrackName(tr)
+    t[#t + 1] = { name = current_name, guid = reaper.GetTrackGUID(tr) }
+  end
+  return t
+end
+
 -- from MPL
 -- function VF_GetTrackByGUID(giv_guid, reaproj)
 -- 	if not (giv_guid and giv_guid:gsub("%p+", "")) then

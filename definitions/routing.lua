@@ -131,6 +131,7 @@ return {
   state_string = nil,
 
   meta = {
+    user_input_target_sep = "|",
     channel_data_separator = "|"
   },
 
