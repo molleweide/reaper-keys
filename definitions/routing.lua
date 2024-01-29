@@ -128,6 +128,12 @@ local TRACK_INFO_CATEGORY_HARDWARE = 1 -- send
 
 return {
 
+  state_string = nil,
+
+  meta = {
+    channel_data_separator = "|"
+  },
+
 	--  /////////////////////////////////////////////////////////////////////
 	--  ROUTING MACROS
 	--  ////////////////
@@ -186,8 +192,18 @@ return {
 
 	default_params = {
 
-    -- NOTE: `amd` parameters have been implemented - the ones below commented
-    -- out have not yet been impl.
+		-- NOTE: `amd` parameters have been implemented - the ones below commented
+		-- out have not yet been impl.
+
+		-- TODO: add shorthands/abbrevs for certain patterns
+		-- NOTE: This documents how secondary params are configured / matched with
+		-- the regex.
+		-- 1. Either of these first `!?`
+		-- 2. Target `character`, eg. "a"
+		-- 3. num ?dot ?num ?num ?num ?num
+
+		-- NOTE: Values configured here will be defaults unless ohterwise specified
+		-- in the supplied route config string??
 
 		-- ////////////////////////////////////////////////////////////////////
 		-- WHICH TYPE

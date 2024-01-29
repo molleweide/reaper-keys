@@ -144,6 +144,9 @@ commands.fuzzy_track_node_ui = function(meta, opts)
   --
   --      HACK: this can then be reused for the route_ui previewer above.
 
+  -- TODO: refactor string funcs from route lib that extracts parenthesis
+  -- into utils/strings, so that I can reuse the caturing mechanism here.
+
 
   -- TEST: ~ SYNTAX BASED HIDING -> picker all tracks > manage track_params
   --   eg. show/hide/solo/mute/volume/phase/

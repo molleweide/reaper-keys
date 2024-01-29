@@ -43,4 +43,46 @@ string_util.split = function(str, sep)
 	return parts
 end
 
+string_util.remove_brackets_of_type = function(str, bracket_type)
+	for r in str:gmatch("%b" .. bracket_type) do
+		str = str:gsub("%(" .. r .. "%)", "")
+	end
+	return str
+end
+
+string_util.extract_string_inside_brackets = function(str, encl)
+	local data
+	for p in str:gmatch("%b" .. encl) do
+		data = str.sub(p, 2, str.len(p) - 1)
+	end
+	str = string_util.remove_brackets_of_type(str, encl)
+	return data, str
+end
+
+-- TODO: option to trim off each bracket found.
+--- NOTE: currently only works with two bracket pairs found
+-- FIX: throw error if found more brackets than requested.
+-- >> pass mult args: str, expected_num
+--
+--- Extract sequentially found brackets in a string.
+---@param str
+---@return
+string_util.extract_parenthesis = function(str)
+	local pcount = 0
+	local pDest, pSrc
+	for p in str:gmatch("%b()") do
+		pcount = pcount + 1
+		if pcount == 1 then
+			pDest = str.sub(p, 2, str.len(p) - 1)
+		end
+		if pcount == 2 then
+			pSrc = pDest
+			pDest = str.sub(p, 2, str.len(p) - 1)
+			break
+		end
+	end
+	str = string_util.remove_brackets_of_type(str, "()")
+	return retval, pSrc, pDest, str
+end
+
 return string_util
