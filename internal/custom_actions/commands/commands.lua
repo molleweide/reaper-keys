@@ -277,13 +277,35 @@ commands.track_fx_ui = function(meta, opts)
 			local t_fx_params = fxu.get_track_fx_info(tr_node.tr, fx_selected.idx)
 			self.t_results_data = t_fx_params.parameters
 
-				self.sort_comp = require("pickers.sorters.default")("name")
-    self.entry_maker = require("pickers.entry_makers.fx_parameters")
+			self.meta = {}
+			self.meta.node = tr_node
+			self.meta.fx_index = fx_selected.idx
 
-			    -- entry_maker = require("pickers.entry_makers.fx_parameters"),
+			self.sort_comp = require("pickers.sorters.default")("name")
+			self.entry_maker = require("pickers.entry_makers.fx_parameters")
 
-	-- self.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
+			self.title = string.format("FXparams: NODE(%s) -> FX(%s)", "xxx", t_fx_params.name)
 
+			self.attach_mappings = require("pickers.attach_mappings.fx_parameters")
+
+			local gui = self
+
+			for _, value in ipairs(self.controls) do
+				if value.title == "main_input" then
+					log.user("found:", value.title, value.onKeyboard)
+					function value:onKeyboard(key)
+						-- add custom bindings here.
+						gui.attach_mappings(gui, key, 1)
+						-- require("pickers.attach_mappings.fx_parameters")(self, key, 1)
+					end
+				end
+			end
+
+			-- log()
+
+			-- entry_maker = require("pickers.entry_makers.fx_parameters"),
+
+			-- self.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
 
 			-- return
 

@@ -196,6 +196,7 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 				gui.on_select_func(gui, i + SCROLL_RESULTS)
 				gui:setFocus(textBox)
 				UPDATE_RESULTS = true
+
 				if not gui.kb.shift() then
 					-- this allows the picker to keep running for the next picker.
 					if not gui.next_is_picker then
@@ -263,6 +264,7 @@ end
 
 local function gui_create_main_text_box(gui, on_enter)
 	local text_input = jGuiTextInput:new({
+	  title = "main_input",
 		x = 10,
 		y = 10,
 		width = 480,
@@ -274,6 +276,8 @@ local function gui_create_main_text_box(gui, on_enter)
 		label_padding = 3,
 	})
 
+	log.user(gui.attach_mappings)
+
 	if gui.attach_mappings then
 		function text_input:onKeyboard(key)
 			-- add custom bindings here.
@@ -283,13 +287,31 @@ local function gui_create_main_text_box(gui, on_enter)
 
 	function text_input:onEnter()
 		-- test: trying to remove  prev pickers controls here, wo/sucess
-		if gui.next_is_picker then
-			log.user("# tResultButtons", #tResultButtons)
-			for i = 1, #tResultButtons do
-				table.remove(tResultButtons, #tResultButtons)
-			end
-			gui:controlDeleteAll()
-		end
+
+		-- if gui.next_is_picker then
+		-- 	log.user("# tResultButtons", #tResultButtons)
+		-- 	for i = 1, #tResultButtons do
+		-- 		table.remove(tResultButtons, #tResultButtons)
+		-- 	end
+		-- 	gui:controlDeleteAll()
+		-- end
+
+		-- NOTE: i believe on select and next is picker come in the wrong order
+
+		-- if gui.next_is_picker then
+		-- 	gui:exit()
+		--
+		-- 	function sleep(seconds)
+		-- 		local start = os.clock()
+		-- 		while os.clock() - start < seconds do
+		-- 		end
+		-- 	end
+		--
+		-- 	-- Call the sleep function to wait for five seconds
+		-- 	sleep(3)
+		-- 	log.user("? ? ? ?")
+		-- 	gui.on_select_func(gui, 1)
+		-- end
 
 		if gui.on_select_func(gui, 1) then
 			-- this allows the picker to keep running for the next picker.
@@ -495,7 +517,7 @@ local function build_picker(opts, on_enter)
 	-- of eg. on_select_func
 	GUI.t_results_data = opts.results
 
-	log.user("Pickers [" .. opts.title .. "]", #GUI.t_results_data) -- opts.next_is_picker,
+	log.user("fzf build_picker() [" .. opts.title .. "]", #GUI.t_results_data)
 
 	-- todo: if sort_comp = false, then don't sort, ie. don't use default sort comparator
 	table.sort(GUI.t_results_data, GUI.sort_comp)
