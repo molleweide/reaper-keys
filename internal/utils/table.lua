@@ -74,4 +74,17 @@ tbl.findIndexOf = function(t, compare_key, search_value)
 	return false
 end
 
+tbl.deep_extend = function(destination, ...)
+    for _, source in ipairs({...}) do
+        for key, value in pairs(source) do
+            if type(value) == "table" and type(destination[key]) == "table" then
+                destination[key] = tbl.deep_extend(destination[key], value)
+            else
+                destination[key] = value
+            end
+        end
+    end
+    return destination
+end
+
 return tbl

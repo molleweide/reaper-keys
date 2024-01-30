@@ -156,21 +156,14 @@ end
 
 pickers.track_fx = function(meta, opts)
 	opts = opts or {}
-	-- if not opts.node or not opts.fx_index then
-	--   log.debug("[pickers.track_fx]: Requires both a track node and target fx_index!")
-	--   return
-	-- end
-
 	local fx_results = fx_util.get_track_fx_chain_info()
-
 	-- log.user(opts.title, format.block(fx_results))
-
-	fzf.init({
-		title = opts.title or "Browse track FX list",
-		width = opts.width or 600,
-		height = opts.height or 600,
-		x = opts.x or 0,
-		y = opts.y or 1100,
+	fzf.init(tbl.deep_extend({
+		title = "Browse track FX list",
+		width = 600,
+		height = 600,
+		x = 0,
+		y = 1100,
 		results = opts.results or fx_results,
 		on_select_func = opts.on_select_func or function(self, i)
 			local selection = self.t_search_results[i]
@@ -186,10 +179,8 @@ pickers.track_fx = function(meta, opts)
 		next_is_picker = opts.next_is_picker or false,
 		sort_comp = "idx",
 		entry_maker = { "idx", "name", "pname" },
-
-		-- refactor
 		results_filter = require("pickers.results_filter.track_fx"),
-	})
+	}, opts))
 end
 
 ---@param tr userdata
@@ -207,118 +198,47 @@ pickers.track_fx_params = function(meta, opts)
 
 	-- log.user(format.block(t_fx_params))
 
-	-- TODO: ( REFACTOR ): this whole thing could be moved into lib_tr or sx so that I easilly
-	-- can reuse this way of flattening out a specific track node string.
-	local tr_node_header_string = ""
-	if node.zone then
-		local part = "Z:" .. node.zone.name
-		tr_node_header_string = tr_node_header_string .. part .. "> "
-	end
-	if node.group then
-		local part = "G:" .. node.group.name
-		tr_node_header_string = tr_node_header_string .. part .. "> "
-	end
-	tr_node_header_string = tr_node_header_string .. ":: " .. node.name
-	--------
+	-- -- TODO: ( REFACTOR ): this whole thing could be moved into lib_tr or sx so that I easilly
+	-- -- can reuse this way of flattening out a specific track node string.
+	-- local tr_node_header_string = ""
+	-- if node.zone then
+	-- 	local part = "Z:" .. node.zone.name
+	-- 	tr_node_header_string = tr_node_header_string .. part .. "> "
+	-- end
+	-- if node.group then
+	-- 	local part = "G:" .. node.group.name
+	-- 	tr_node_header_string = tr_node_header_string .. part .. "> "
+	-- end
+	-- tr_node_header_string = tr_node_header_string .. ":: " .. node.name
+	-- --------
 
-	fzf.init({
-		meta = {
-			node = node,
-			fx_index = opts.fx_index,
-		},
-		env = RK_FZF_ENV,
-		title = opts.title or string.format("FXparams: NODE(%s) -> FX(%s)", tr_node_header_string, t_fx_params.name),
-		width = 900,
-		height = 700,
-		x = 0,
-		y = 1100,
-		results = t_fx_params.parameters,
-		sort_comp = "name",
-		-- entry_maker = { "index", "name", "val", "valf" },
-		entry_maker = require("pickers.entry_makers.fx_parameters"),
-		attach_mappings = require("pickers.attach_mappings.fx_parameters"),
-		extended_mappings = opts.extended_mappings or nil,
-		-- attach_mappings = function(gui, key, i)
-		--   local selection = gui.t_search_results[i]
-		--   if not selection then
-		--     return
-		--   end
-		--   log.user("#################################", key)
+	fzf.init(
 		--
-		--   local _, step, smallstep, largestep, istoggle =
-		--   reaper.TrackFX_GetParameterStepSizes(node.tr, opts.fx_index, selection.index)
-		--   local _, minval, maxval = reaper.TrackFX_GetParam(node.tr, opts.fx_index, selection.index)
-		--   local full_range = maxval - minval
-		--
-		--   -- move to utils.math
-		--   function round(number, decimalPlaces)
-		--     local multiplier = 10 ^ (decimalPlaces or 0)
-		--     return math.floor(number * multiplier + 0.5) / multiplier
-		--   end
-		--
-		--   local function update_fx_parameter(amount)
-		--     local amount_new
-		--     if istoggle then
-		--       amount_new = amount > 0 and 1 or 0
-		--     else
-		--       log.user(type(selection.val))
-		--       log.user("???:", selection.val, amount, selection.val + amount)
-		--       amount_new = selection.val + amount
-		--       if amount_new <= minval then
-		--         amount_new = minval
-		--       elseif amount_new >= maxval then
-		--         amount_new = maxval
-		--       end
-		--     end
-		--
-		--     -- amount_new = round(amount_new, 3)
-		--
-		--     -- set plugin value
-		--     local ret = reaper.TrackFX_SetParamNormalized(node.tr, opts.fx_index, selection.index, amount_new)
-		--
-		--     -- get values so that we can update the table entry in the picker
-		--     local num = reaper.TrackFX_GetParamNormalized(node.tr, opts.fx_index, selection.index)
-		--
-		--     local _, numf = reaper.TrackFX_GetFormattedParamValue(node.tr, opts.fx_index, selection.index)
-		--     selection.val = num
-		--     selection.valf = numf
-		--     UPDATE_RESULTS = true
-		--
-		--     -- log.user(string.format(
-		--     --   [[
-		--     -- ---
-		--     -- amount in:     %s
-		--     -- prev val:      %s
-		--     -- new val:       %s (amount new)
-		--     -- after getting: %s
-		--     -- ---
-		--     -- ]] ,
-		--     --   amount,
-		--     --   selection.val,
-		--     --   amount_new,
-		--     --   num
-		--     -- ))
-		--   end
-		--
-		--   log.user(type(selection.val), type(selection.valf))
-		--
-		--   local function make_incr_decr_mapping_pair(mod, down, up, divider)
-		--     local val = full_range / divider
-		--     if key == gui.kb[mod .. "_" .. down] then
-		--       update_fx_parameter(-val)
-		--     end
-		--     if key == gui.kb[mod .. "_" .. up] then
-		--       update_fx_parameter(val)
-		--     end
-		--   end
-		--
-		--   make_incr_decr_mapping_pair("control", "w", "b", 350)
-		--   make_incr_decr_mapping_pair("control", "d", "f", 100)
-		--   make_incr_decr_mapping_pair("control", "s", "g", 50)
-		--   make_incr_decr_mapping_pair("control", "j", "k", 10)
-		--   make_incr_decr_mapping_pair("control", "n", "p", 5)
-		-- end,
-	})
+		tbl.deep_extend( --
+			{
+				meta = {
+					node = node,
+					fx_index = opts.fx_index,
+				},
+				env = RK_FZF_ENV,
+
+				-- title = string.format("FXparams: NODE(%s) -> FX(%s)", tr_node_header_string, t_fx_params.name),
+				title = require("pickers.title_makers.track_node")(node, t_fx_params),
+
+				width = 900,
+				height = 700,
+				x = 0,
+				y = 1100,
+				results = t_fx_params.parameters,
+				sort_comp = "name",
+				-- entry_maker = { "index", "name", "val", "valf" },
+				entry_maker = require("pickers.entry_makers.fx_parameters"),
+				attach_mappings = require("pickers.attach_mappings.fx_parameters"),
+				extended_mappings = opts.extended_mappings or nil,
+			}, --
+			opts
+		) --
+	)
 end
 
 -- ~ create list of relevant track params
