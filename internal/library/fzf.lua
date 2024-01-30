@@ -97,6 +97,7 @@ fzf.reset_variables = function()
 	UPDATE_RESULTS = false
 	SCROLL_RESULTS = 0
 	RESULT_COUNT = 0
+	NEW_PICKER_VIEW = false
 end
 
 --
@@ -163,9 +164,23 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 	local y_space = 0
 	local n_to_remove = 0
 
+	log.user(string.format(
+		[[[lib.fzf#createResultButtons()]: #tctrl=%s ires=%s ------
+	-- NEW_PICKER_VIEW=%s
+	-----------------------------------------------
+	]],
+		#tControls,
+		iResultsPerPage,
+		NEW_PICKER_VIEW
+	))
+
+	-- TODO: NEW_PICKER_VIEW_attached_mappings ??
+
 	for i = 1, math.max(#tControls, iResultsPerPage) do
 		if i > #tControls and i <= iResultsPerPage then
+			log.user("entered buttons attach mappings")
 			local ResultsEntryControl = jGuiHighlightControl:new({
+				title = "results_entry_control",
 				height = height,
 				label_fontsize = height - 2,
 				label_align = "l",
@@ -178,6 +193,7 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 			})
 
 			local ResultsEntryInfo = jGuiText:new({
+				title = "results_entry_info",
 				width = 40,
 				height = height,
 				label_fontsize = math.tointeger((height - 2) / 2 + 3),
@@ -188,8 +204,8 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 			})
 
 			if gui.attach_mappings then
+				log.user("CREATE RESULT BUTTONS -> attach mappings")
 				function ResultsEntryControl:onKeyboard(key)
-					-- add custom bindings here.
 					gui.attach_mappings(gui, key, i + SCROLL_RESULTS)
 				end
 			end
@@ -246,12 +262,20 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 			gui:controlDelete(b)
 			gui:controlDelete(ResultsEntryInfo)
 			n_to_remove = n_to_remove + 1
+		elseif NEW_PICKER_VIEW then
+			local b = tControls[i][1]
+		  log.user(b.title)
+			if gui.attach_mappings then
+				log.user("CREATE RESULT BUTTONS -> attach mappings")
+				function b:onKeyboard(key)
+					gui.attach_mappings(gui, key, i + SCROLL_RESULTS)
+				end
+			end
 		end
 
 		if i <= #tControls and i <= iResultsPerPage then
 			local b = tControls[i][1]
 			local ResultsEntryInfo = tControls[i][2]
-
 			b.width = gui.width - 20
 			ResultsEntryInfo.x = 10 + b.width - ResultsEntryInfo.width
 		end
@@ -259,6 +283,10 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 
 	for i = 1, n_to_remove do
 		table.remove(tControls, #tControls)
+	end
+
+	if NEW_PICKER_VIEW then
+		NEW_PICKER_VIEW = false
 	end
 
 	-- log.user("# tControls after creation:", #tControls)
@@ -349,6 +377,7 @@ end
 --
 
 local function gui_default_on_resize(self)
+	log.user("GUI_DEFAULT_ON_RESIZE")
 	textBox.width = self.width - 20
 	LABEL_STATS.x = GUI.width - LABEL_STATS.width - 12
 	local buttonsSpaceH = GUI.height - BUTTON_Y_START - 4
@@ -508,19 +537,17 @@ local function build_picker(opts, on_enter)
 
 	tResultButtons = {}
 
-	-- get default functions if necessary
 	opts.on_select_func = require("pickers.selectors.default")(opts.on_select_func)
 	opts.results_filter = require("pickers.results_filter.default")(opts.results_filter)
 	opts.sort_comp = require("pickers.sorters.default")(opts.sort_comp)
 	opts.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
+	opts.attach_mappings = opts.attach_mappings and opts.attach_mappings or nil
 
 	GUI = jGui:new(opts)
 
-	-- needs to be attached to GUI somehow, so that I can access them inside
-	-- of eg. on_select_func
 	GUI.t_results_data = opts.results
 
-	log.user("fzf build_picker() [" .. opts.title .. "]", #GUI.t_results_data)
+	-- log.user("fzf build_picker() [" .. opts.title .. "]", #GUI.t_results_data)
 
 	-- todo: if sort_comp = false, then don't sort, ie. don't use default sort comparator
 	table.sort(GUI.t_results_data, GUI.sort_comp)
@@ -541,6 +568,7 @@ local function build_picker(opts, on_enter)
 	GUI.onExit = gui_default_on_exit
 
 	GUI:init()
+
 	return true
 end
 
@@ -548,16 +576,11 @@ local function reset_new_picker(opts)
 	for k, v in pairs(DEFAULT_OPTS) do
 		GUI[k] = opts[k] and opts[k] or v
 	end
-
-	log.user(format.block(opts.meta))
-
-	-- get default functions if necessary
 	GUI.on_select_func = require("pickers.selectors.default")(opts.on_select_func)
 	GUI.results_filter = require("pickers.results_filter.default")(opts.results_filter)
 	GUI.sort_comp = require("pickers.sorters.default")(opts.sort_comp)
 	GUI.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
 	GUI.attach_mappings = opts.attach_mappings and opts.attach_mappings or nil
-
 	local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
 	if main_input then
 		function main_input:onKeyboard(key)
@@ -565,34 +588,41 @@ local function reset_new_picker(opts)
 		end
 	end
 
+	-- TODO: I need to iterate all result buttons and update attach_mappings
+	-- for each.
+
+	-- GUI:onResize()
+
+	-- for _, control in ipairs(tResultButtons) do
+	-- log.user("control[1].title:", control[1].title)
+	-- end
+
+	-- log.user(">>>?",format.block(tResultButtons[1].onKeyboard))
+
+	-- for i = 1, math.max(#tControls, iResultsPerPage) do
+	-- end
+
 	GUI.t_results_data = opts.results
 	table.sort(GUI.t_results_data, GUI.sort_comp)
 end
 
--- NOTE: - read up on what the defer function does??
---       - what is gfx here?? does quit remove any and all instances of an object
---         created with gfx??
+-----
 
 local function loop()
 	if GUI:loop() then
 		reaper.defer(loop)
 	else
 		gfx.quit()
-		-- log.user("title after gfx quit():", GUI.title)
-		-- GUI.on_select_func(GUI, 1)
 	end
 end
 
 fzf.init = function(opts, onenter)
+	log.user(" ----- NEW PICKER VIEW:", opts.title, "-----")
+
 	if GUI then
-		log.user("GUI exists! -> don't do anything..")
+		NEW_PICKER_VIEW = true
 		reset_new_picker(opts)
 	else
-		log.user("GUI does NOT exist.")
-		-- p is currently only accessed in picker definitions in [ internals/pickers ]
-		--
-		-- TODO: rename this variable
-
 		J_PROJECT_DATA = JProject:new()
 		fzf.reset_variables()
 

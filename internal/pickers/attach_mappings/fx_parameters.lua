@@ -6,13 +6,12 @@ local format = require("utils.format")
 -- FX and other data inside of the program.
 
 return function(gui, key, i)
-  log.user("attack mappings refactored")
 
 	local selection = gui.t_search_results[i]
 	if not selection then
 		return
 	end
-	log.user("#################################", key)
+	log.user("attack mappings refactored, key =", key)
 
 	local _, step, smallstep, largestep, istoggle =
 		reaper.TrackFX_GetParameterStepSizes(gui.meta.node.tr, gui.meta.fx_index, selection.index)
@@ -81,9 +80,69 @@ return function(gui, key, i)
 		end
 	end
 
+	local function apply_value(divider)
+		local val = full_range / divider
+		update_fx_parameter(val)
+	end
+
 	make_incr_decr_mapping_pair("control", "w", "b", 350)
 	make_incr_decr_mapping_pair("control", "d", "f", 100)
 	make_incr_decr_mapping_pair("control", "s", "g", 50)
 	make_incr_decr_mapping_pair("control", "j", "k", 10)
 	make_incr_decr_mapping_pair("control", "n", "p", 5)
+
+	local mappings = {
+		["C-w"] = function()
+			apply_value(350)
+		end,
+		["C-b"] = function()
+			apply_value(-350)
+		end,
+		["C-d"] = function()
+			apply_value(100)
+		end,
+		["C-f"] = function()
+			apply_value(-100)
+		end,
+		["C-s"] = function()
+			apply_value(50)
+		end,
+		["C-g"] = function()
+			apply_value(-50)
+		end,
+		["C-j"] = function()
+			apply_value(-10)
+		end,
+		["C-k"] = function()
+			apply_value(10)
+		end,
+		["C-n"] = function()
+			apply_value(-5)
+		end,
+		["C-p"] = function()
+			apply_value(5)
+		end,
+		["M-p"] = function()
+			apply_value()
+		end,
+	}
+
+	local res = {}
+	for k, v in pairs(mappings) do
+		if k:match("^C%-") then
+			local temp = "control_" .. k:sub(3, 3)
+			local new_key = gui.kb[temp]
+			res[tostring(new_key)] = v
+		elseif k:match("^M%-") then
+			local temp = "meta_" .. k:sub(3, 3)
+			local new_key = gui.kb[temp]
+			res[tostring(new_key)] = v
+		end
+	end
+
+	-- for k, v in pairs(res) do
+	-- 	log.user("res", k, v)
+	-- end
+
+	-- log.user("mappings:",format.block(mappings))
 end

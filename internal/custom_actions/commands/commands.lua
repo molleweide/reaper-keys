@@ -250,53 +250,22 @@ commands.routing_user_string = function()
 	route.updateState()
 end
 
--- TODO: i need to figure out how I can make it possible to go back to previous
--- picker so that I can select which FX i want again
---
 commands.track_fx_ui = function(meta, opts)
 	local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
 	local tr_node = focused_track_objects[1]
 	local fx_results = fxu.get_track_fx_chain_info(tr_node.tr)
-
-	log.user(tr_node.name, format.block(fx_results))
-
-	-- wrap this in a function that can be called on going back from the FX
-	-- pickers.
-
+	-- log.user(tr_node.name, format.block(fx_results))
 	pickers.track_fx(_, {
 		title = "TRACK FX UI | fx list",
+		width = 800,
+		height = 700,
+		x = 0,
+		y = 1100,
 		results = fx_results,
 		next_is_picker = true,
 		next = function(meta, data, self)
 			local fx_selected = data.selection
-			log.user("self.title:", self.title)
-
-			-- self.next_is_picker = false
-
 			local t_fx_params = fxu.get_track_fx_info(tr_node.tr, fx_selected.idx)
-
-			-- self.t_results_data = t_fx_params.parameters
-			--
-			-- self.meta = {}
-			-- self.meta.node = tr_node
-			-- self.meta.fx_index = fx_selected.idx
-			--
-			-- self.sort_comp = require("pickers.sorters.default")("name")
-			-- self.entry_maker = require("pickers.entry_makers.fx_parameters")
-			--
-			-- self.title = string.format("FXparams: NODE(%s) -> FX(%s)", "xxx", t_fx_params.name)
-			--
-			-- self.attach_mappings = require("pickers.attach_mappings.fx_parameters")
-			--
-			-- local gui = self
-			--
-			-- local _, main_input = tbl.findIndexOf(self.controls, "title", "main_input")
-			-- if main_input then
-			-- 	function main_input:onKeyboard(key)
-			-- 		gui.attach_mappings(gui, key, 1)
-			-- 	end
-			-- end
-
 			pickers.track_fx_params(_, {
 				node = tr_node,
 				fx_index = fx_selected.idx,
@@ -304,7 +273,9 @@ commands.track_fx_ui = function(meta, opts)
 				results = t_fx_params.parameters,
 				sort_comp = require("pickers.sorters.default")("name"),
 				entry_maker = require("pickers.entry_makers.fx_parameters"),
+				-- rename to default mappings?
 				attach_mappings = require("pickers.attach_mappings.fx_parameters")
+				-- then, use an `extended_mappings =`
 			})
 		end,
 	})

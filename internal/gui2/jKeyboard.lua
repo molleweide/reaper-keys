@@ -1,9 +1,11 @@
 -- @noindex
 
 local jKeyboard = {
+  -- control_a = ,
   control_b = 2,
   control_c = 3,
   control_d = 4,
+  -- control_e = ,
   control_f = 6,
   control_g = 7,
   control_h = 8,
@@ -18,6 +20,9 @@ local jKeyboard = {
   control_v = 22,
   control_w = 23,
   control_period = 46,
+
+  -- meta_a = ,
+  -- meta_b = ,
 
   backspace = 8,
   tab = 9,

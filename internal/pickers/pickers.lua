@@ -163,13 +163,16 @@ pickers.track_fx = function(meta, opts)
 
 	local fx_results = fx_util.get_track_fx_chain_info()
 
-	log.user(opts.title, format.block(fx_results))
+	-- log.user(opts.title, format.block(fx_results))
 
 	fzf.init({
 		title = opts.title or "Browse track FX list",
+		width = opts.width or 600,
+		height = opts.height or 600,
+		x = opts.x or 0,
+		y = opts.y or 1100,
 		results = opts.results or fx_results,
 		on_select_func = opts.on_select_func or function(self, i)
-			log.user("!!!!!!!!!!!!")
 			local selection = self.t_search_results[i]
 			if opts then
 				if opts.next then
@@ -202,7 +205,7 @@ pickers.track_fx_params = function(meta, opts)
 
 	local t_fx_params = fx_util.get_track_fx_info(node.tr, opts.fx_index)
 
-	log.user(format.block(t_fx_params))
+	-- log.user(format.block(t_fx_params))
 
 	-- TODO: ( REFACTOR ): this whole thing could be moved into lib_tr or sx so that I easilly
 	-- can reuse this way of flattening out a specific track node string.
@@ -225,7 +228,7 @@ pickers.track_fx_params = function(meta, opts)
 		},
 		env = RK_FZF_ENV,
 		title = opts.title or string.format("FXparams: NODE(%s) -> FX(%s)", tr_node_header_string, t_fx_params.name),
-		width = 800,
+		width = 900,
 		height = 700,
 		x = 0,
 		y = 1100,
