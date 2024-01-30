@@ -237,6 +237,7 @@ pickers.track_fx_params = function(meta, opts)
 		-- entry_maker = { "index", "name", "val", "valf" },
 		entry_maker = require("pickers.entry_makers.fx_parameters"),
 		attach_mappings = require("pickers.attach_mappings.fx_parameters"),
+		extended_mappings = opts.extended_mappings or nil,
 		-- attach_mappings = function(gui, key, i)
 		--   local selection = gui.t_search_results[i]
 		--   if not selection then

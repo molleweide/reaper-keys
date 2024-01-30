@@ -19,6 +19,7 @@ local jKeyboard = {
   control_u = 11,
   control_v = 22,
   control_w = 23,
+  control_z = 26,
   control_period = 46,
 
   -- meta_a = ,

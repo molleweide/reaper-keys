@@ -255,30 +255,41 @@ commands.track_fx_ui = function(meta, opts)
 	local tr_node = focused_track_objects[1]
 	local fx_results = fxu.get_track_fx_chain_info(tr_node.tr)
 	-- log.user(tr_node.name, format.block(fx_results))
-	pickers.track_fx(_, {
-		title = "TRACK FX UI | fx list",
-		width = 800,
-		height = 700,
-		x = 0,
-		y = 1100,
-		results = fx_results,
-		next_is_picker = true,
-		next = function(meta, data, self)
-			local fx_selected = data.selection
-			local t_fx_params = fxu.get_track_fx_info(tr_node.tr, fx_selected.idx)
-			pickers.track_fx_params(_, {
-				node = tr_node,
-				fx_index = fx_selected.idx,
-				title = "TRACK FX UI | fx list",
-				results = t_fx_params.parameters,
-				sort_comp = require("pickers.sorters.default")("name"),
-				entry_maker = require("pickers.entry_makers.fx_parameters"),
-				-- rename to default mappings?
-				attach_mappings = require("pickers.attach_mappings.fx_parameters")
-				-- then, use an `extended_mappings =`
-			})
-		end,
-	})
+	local function track_fx_ui(not_first)
+		pickers.track_fx(_, {
+			title = "TRACK FX UI | fx list",
+			width = 800,
+			height = 700,
+			x = 0,
+			y = 1100,
+			results = fx_results,
+			-- FIX: next_is_picker dosen't make any sense anymore, remove this...
+			next_is_picker = not_first and false or true,
+			next = function(meta, data, self)
+				local fx_selected = data.selection
+				local t_fx_params = fxu.get_track_fx_info(tr_node.tr, fx_selected.idx)
+				pickers.track_fx_params(_, {
+					node = tr_node,
+					fx_index = fx_selected.idx,
+					title = "TRACK FX UI | fx list",
+					results = t_fx_params.parameters,
+					sort_comp = require("pickers.sorters.default")("name"),
+					entry_maker = require("pickers.entry_makers.fx_parameters"),
+					-- rename to default mappings?
+					attach_mappings = require("pickers.attach_mappings.fx_parameters"),
+					-- TODO: allow for attaching this
+					extended_mappings = {
+						["C-z"] = function()
+							log.user("???????????? ext map")
+							track_fx_ui(true)
+						end,
+					},
+				})
+			end,
+		})
+	end
+
+	track_fx_ui()
 end
 
 return commands

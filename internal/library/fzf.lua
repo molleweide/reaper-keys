@@ -550,6 +550,7 @@ local DEFAULT_OPTS = {
 	window_dock_state = 0,
 	gui_size = 20,
 	meta = {},
+	extended_mappings = nil,
 }
 
 local function build_picker(opts, on_enter)
@@ -574,12 +575,27 @@ local function build_picker(opts, on_enter)
 	opts.results_filter = require("pickers.results_filter.default")(opts.results_filter)
 	opts.sort_comp = require("pickers.sorters.default")(opts.sort_comp)
 	opts.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
-	opts.attach_mappings = opts.attach_mappings and opts.attach_mappings or nil
+	opts.attach_mappings = opts.attach_mappings and opts.attach_mappings or {}
 
 	GUI = jGui:new(opts)
 
-	if GUI.attach_mappings then
+	if type(GUI.attach_mappings) == "function" then
 		GUI.attach_mappings = GUI.attach_mappings(GUI)
+	end
+
+	if opts.extended_mappings then
+		for k, v in pairs(opts.extended_mappings) do
+			if k:match("^C%-") then
+				local temp = "control_" .. k:sub(3, 3)
+				local new_key = GUI.kb[temp]
+				log.user("type v:", type(v))
+				GUI.attach_mappings[tostring(new_key)] = v
+			elseif k:match("^M%-") then
+				local temp = "meta_" .. k:sub(3, 3)
+				local new_key = GUI.kb[temp]
+				GUI.attach_mappings[tostring(new_key)] = v
+			end
+		end
 	end
 
 	GUI.t_results_data = opts.results
@@ -617,37 +633,50 @@ local function reset_new_picker(opts)
 	GUI.results_filter = require("pickers.results_filter.default")(opts.results_filter)
 	GUI.sort_comp = require("pickers.sorters.default")(opts.sort_comp)
 	GUI.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
-	GUI.attach_mappings = opts.attach_mappings and opts.attach_mappings(GUI) or nil
+	GUI.attach_mappings = opts.attach_mappings and opts.attach_mappings(GUI) or {}
 	-- GUI.attach_mappings = opts.attach_mappings and opts.attach_mappings(GUI) or nil
-	local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
-	if main_input then
-		function main_input:onKeyboard(key)
-			local s_key = tostring(key)
-			local lookup_str = s_key:gsub("%.0$", "")
-			local key_bind_function = GUI.attach_mappings[tostring(lookup_str)]
-			if type(key_bind_function) == "function" then
-				key_bind_function({
-					gui_ref = GUI,
-					key = key,
-					sel_idx = 1,
-				})
+	-- ow
+	-- log.user("#GUI.attach_mappings", format.block(GUI.attach_mappings))
+
+	if opts.extended_mappings then
+		log.user("add ext map")
+		for k, v in pairs(opts.extended_mappings) do
+			if k:match("^C%-") then
+				local temp = "control_" .. k:sub(3, 3)
+				local new_key = GUI.kb[temp]
+				log.user("type v:", type(v))
+				GUI.attach_mappings[tostring(new_key)] = v
+			elseif k:match("^M%-") then
+				local temp = "meta_" .. k:sub(3, 3)
+				local new_key = GUI.kb[temp]
+				GUI.attach_mappings[tostring(new_key)] = v
 			end
 		end
 	end
 
-	-- TODO: I need to iterate all result buttons and update attach_mappings
-	-- for each.
+	local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
 
-	-- GUI:onResize()
+  -- resets the text box value so that all entries are shown for the new view
+	main_input.value = ""
 
-	-- for _, control in ipairs(tResultButtons) do
-	-- log.user("control[1].title:", control[1].title)
-	-- end
-
-	-- log.user(">>>?",format.block(tResultButtons[1].onKeyboard))
-
-	-- for i = 1, math.max(#tControls, iResultsPerPage) do
-	-- end
+	if GUI.attach_mappings then
+		-- local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
+		if main_input then
+			function main_input:onKeyboard(key)
+				log.user("key =", key)
+				local s_key = tostring(key)
+				local lookup_str = s_key:gsub("%.0$", "")
+				local key_bind_function = GUI.attach_mappings[tostring(lookup_str)]
+				if type(key_bind_function) == "function" then
+					key_bind_function({
+						gui_ref = GUI,
+						key = key,
+						sel_idx = 1,
+					})
+				end
+			end
+		end
+	end
 
 	GUI.t_results_data = opts.results
 	table.sort(GUI.t_results_data, GUI.sort_comp)
