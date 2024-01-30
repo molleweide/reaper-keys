@@ -656,8 +656,9 @@ local function reset_new_picker(opts)
 
 	local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
 
-  -- resets the text box value so that all entries are shown for the new view
+	-- resets
 	main_input.value = ""
+	GUI:setFocus(textBox)
 
 	if GUI.attach_mappings then
 		-- local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
