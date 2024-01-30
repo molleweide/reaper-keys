@@ -1,29 +1,23 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
--- TODO: Add custom bindings here for handling fx_parameters when mixing.
--- This will start the era of having custom FZF bindings for modifying
--- FX and other data inside of the program.
+-- TODO: move to utils.math
+local function round(number, decimalPlaces)
+	local multiplier = 10 ^ (decimalPlaces or 0)
+	return math.floor(number * multiplier + 0.5) / multiplier
+end
 
-return function(gui, key, i)
-	local selection = gui.t_search_results[i]
-	if not selection then
-		return
-	end
-	log.user("attack mappings refactored, key =", key)
+-- return function(opts)
+return function(the_gui)
+	-- local selection = gui.t_search_results[i]
+	-- if not selection then
+	-- 	return
+	-- end
+	-- log.user("attack mappings refactored, key =", key)
 
-	local _, step, smallstep, largestep, istoggle =
-		reaper.TrackFX_GetParameterStepSizes(gui.meta.node.tr, gui.meta.fx_index, selection.index)
-	local _, minval, maxval = reaper.TrackFX_GetParam(gui.meta.node.tr, gui.meta.fx_index, selection.index)
-	local full_range = maxval - minval
+	local function update_fx_parameter(opts, amount, maxval, minval, istoggle)
+		local selection = opts.selection
 
-	-- move to utils.math
-	local function round(number, decimalPlaces)
-		local multiplier = 10 ^ (decimalPlaces or 0)
-		return math.floor(number * multiplier + 0.5) / multiplier
-	end
-
-	local function update_fx_parameter(amount)
 		local amount_new
 		if istoggle then
 			amount_new = amount > 0 and 1 or 0
@@ -37,6 +31,8 @@ return function(gui, key, i)
 				amount_new = maxval
 			end
 		end
+
+		local gui = opts.gui_ref
 
 		-- amount_new = round(amount_new, 3)
 
@@ -65,91 +61,104 @@ return function(gui, key, i)
 		--   amount_new,
 		--   num
 		-- ))
-	end
+	end -- main plugin update function
 
-	log.user(type(selection.val), type(selection.valf))
+	-- local function make_incr_decr_mapping_pair(mod, down, up, divider)
+	-- 	local _, step, smallstep, largestep, istoggle =
+	-- 		reaper.TrackFX_GetParameterStepSizes(gui.meta.node.tr, gui.meta.fx_index, selection.index)
+	-- 	local _, minval, maxval = reaper.TrackFX_GetParam(gui.meta.node.tr, gui.meta.fx_index, selection.index)
+	-- 	local full_range = maxval - minval
+	-- 	local val = full_range / divider
+	-- 	if key == gui.kb[mod .. "_" .. down] then
+	-- 		update_fx_parameter(-val, maxval, minval)
+	-- 	end
+	-- 	if key == gui.kb[mod .. "_" .. up] then
+	-- 		update_fx_parameter(val,maxval, minval, istoggle)
+	-- 	end
+	-- end
 
-	local function make_incr_decr_mapping_pair(mod, down, up, divider)
-		local val = full_range / divider
-		if key == gui.kb[mod .. "_" .. down] then
-			update_fx_parameter(-val)
+	local function apply_value(opts, divider)
+		local gui = opts.gui_ref
+
+		local selection = gui.t_search_results[opts.sel_idx]
+		if not selection then
+			return
 		end
-		if key == gui.kb[mod .. "_" .. up] then
-			update_fx_parameter(val)
-		end
-	end
 
-	local function apply_value(divider)
-		-- local selection = gui.t_search_results[i]
-		-- if not selection then
-		-- 	return
-		-- end
+		log.user(type(selection.val), type(selection.valf))
+
+		opts.selection = selection
+
+		local _, step, smallstep, largestep, istoggle =
+			reaper.TrackFX_GetParameterStepSizes(gui.meta.node.tr, gui.meta.fx_index, selection.index)
+		local _, minval, maxval = reaper.TrackFX_GetParam(gui.meta.node.tr, gui.meta.fx_index, selection.index)
+		local full_range = maxval - minval
 
 		local val = full_range / divider
-		update_fx_parameter(val)
+		update_fx_parameter(opts, val, maxval, minval, istoggle)
 	end
 
-	make_incr_decr_mapping_pair("control", "w", "b", 350)
-	make_incr_decr_mapping_pair("control", "d", "f", 100)
-	make_incr_decr_mapping_pair("control", "s", "g", 50)
-	make_incr_decr_mapping_pair("control", "j", "k", 10)
-	make_incr_decr_mapping_pair("control", "n", "p", 5)
+	-- make_incr_decr_mapping_pair("control", "w", "b", 350)
+	-- make_incr_decr_mapping_pair("control", "d", "f", 100)
+	-- make_incr_decr_mapping_pair("control", "s", "g", 50)
+	-- make_incr_decr_mapping_pair("control", "j", "k", 10)
+	-- make_incr_decr_mapping_pair("control", "n", "p", 5)
 
 	local mappings = {
-		["C-w"] = function(i)
-			apply_value(350)
+		["C-w"] = function(opts)
+			apply_value(opts, 350)
 		end,
-		["C-b"] = function(i)
-			apply_value(-350)
+		["C-b"] = function(opts)
+			apply_value(opts, -350)
 		end,
-		["C-d"] = function(i)
-			apply_value(100)
+		["C-d"] = function(opts)
+			apply_value(opts, 100)
 		end,
-		["C-f"] = function()
-			apply_value(-100)
+		["C-f"] = function(opts)
+			apply_value(opts, -100)
 		end,
-		["C-s"] = function()
-			apply_value(50)
+		["C-s"] = function(opts)
+			apply_value(opts, 50)
 		end,
-		["C-g"] = function()
-			apply_value(-50)
+		["C-g"] = function(opts)
+			apply_value(opts, -50)
 		end,
-		["C-j"] = function()
-			apply_value(-10)
+		["C-j"] = function(opts)
+			apply_value(opts, -10)
 		end,
-		["C-k"] = function()
-			apply_value(10)
+		["C-k"] = function(opts)
+			apply_value(opts, 10)
 		end,
-		["C-n"] = function()
-			apply_value(-5)
+		["C-n"] = function(opts)
+			apply_value(opts, -5)
 		end,
-		["C-p"] = function()
-			apply_value(5)
+		["C-p"] = function(opts)
+			apply_value(opts, 5)
 		end,
-		["M-p"] = function()
-			apply_value()
-		end,
+		-- ["M-p"] = function(opts)
+		-- 	apply_value(opts)
+		-- end,
 	}
 
 	local res = {}
 	for k, v in pairs(mappings) do
 		if k:match("^C%-") then
 			local temp = "control_" .. k:sub(3, 3)
-			local new_key = gui.kb[temp]
+			local new_key = the_gui.kb[temp]
+			log.user("type v:",type(v))
 			res[tostring(new_key)] = v
 		elseif k:match("^M%-") then
 			local temp = "meta_" .. k:sub(3, 3)
-			local new_key = gui.kb[temp]
+			local new_key = the_gui.kb[temp]
 			res[tostring(new_key)] = v
 		end
 	end
 
-	-- for k, v in pairs(res) do
-	-- 	log.user("res", k, v)
-	-- end
+	for k, v in pairs(res) do
+		log.user("res", k, v)
+	end
 
-	-- TODO: return the final mappings table
-	-- return res
+	return res
 
 	-- log.user("mappings:",format.block(mappings))
 end

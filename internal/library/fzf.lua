@@ -206,11 +206,18 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 			if gui.attach_mappings then
 				log.user("CREATE RESULT BUTTONS -> attach mappings")
 				function ResultsEntryControl:onKeyboard(key)
-					gui.attach_mappings(gui, key, i + SCROLL_RESULTS)
-					-- local key_bind_function = GUI.attach_mappings[key]
-					-- if type(key_bind_function) == "function" then
-					-- 	key_bind_function(i + SCROLL_RESULTS)
-					-- end
+					-- gui.attach_mappings(gui, key, i + SCROLL_RESULTS)
+					local s_key = tostring(key)
+					local lookup_str = s_key:gsub("%.0$", "")
+					local key_bind_function = GUI.attach_mappings[tostring(lookup_str)]
+					if type(key_bind_function) == "function" then
+						-- key_bind_function(gui, key, i + SCROLL_RESULTS)
+						key_bind_function({
+							gui_ref = gui,
+							key = key,
+							sel_idx = i + SCROLL_RESULTS,
+						})
+					end
 				end
 			end
 
@@ -272,11 +279,18 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 			if gui.attach_mappings then
 				-- log.user("CREATE RESULT BUTTONS -> attach mappings")
 				function b:onKeyboard(key)
-					gui.attach_mappings(gui, key, i + SCROLL_RESULTS)
-					-- local key_bind_function = GUI.attach_mappings[key]
-					-- if type(key_bind_function) == "function" then
-					-- 	key_bind_function(i + SCROLL_RESULTS)
-					-- end
+					-- gui.attach_mappings(gui, key, i + SCROLL_RESULTS)
+					local s_key = tostring(key)
+					local lookup_str = s_key:gsub("%.0$", "")
+					local key_bind_function = GUI.attach_mappings[tostring(lookup_str)]
+					if type(key_bind_function) == "function" then
+						-- key_bind_function(gui, key, i + SCROLL_RESULTS)
+						key_bind_function({
+							gui_ref = gui,
+							key = key,
+							sel_idx = i + SCROLL_RESULTS,
+						})
+					end
 				end
 			end
 		end
@@ -318,8 +332,19 @@ local function gui_create_main_text_box(gui, on_enter)
 
 	if gui.attach_mappings then
 		function text_input:onKeyboard(key)
+			log.user("key = ", key)
 			-- add custom bindings here.
-			gui.attach_mappings(gui, key, 1)
+			-- gui.attach_mappings(gui, key, 1)
+			local s_key = tostring(key)
+			local lookup_str = s_key:gsub("%.0$", "")
+			local key_bind_function = GUI.attach_mappings[tostring(lookup_str)]
+			if type(key_bind_function) == "function" then
+				key_bind_function({
+					gui_ref = gui,
+					key = key,
+					sel_idx = 1,
+				})
+			end
 		end
 	end
 
@@ -592,16 +617,21 @@ local function reset_new_picker(opts)
 	GUI.results_filter = require("pickers.results_filter.default")(opts.results_filter)
 	GUI.sort_comp = require("pickers.sorters.default")(opts.sort_comp)
 	GUI.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
-	GUI.attach_mappings = opts.attach_mappings and opts.attach_mappings or nil
+	GUI.attach_mappings = opts.attach_mappings and opts.attach_mappings(GUI) or nil
 	-- GUI.attach_mappings = opts.attach_mappings and opts.attach_mappings(GUI) or nil
 	local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
 	if main_input then
 		function main_input:onKeyboard(key)
-			GUI.attach_mappings(GUI, key, 1)
-			-- local key_bind_function = GUI.attach_mappings[key]
-			-- if type(key_bind_function) == "function" then
-			-- 	key_bind_function(1)
-			-- end
+			local s_key = tostring(key)
+			local lookup_str = s_key:gsub("%.0$", "")
+			local key_bind_function = GUI.attach_mappings[tostring(lookup_str)]
+			if type(key_bind_function) == "function" then
+				key_bind_function({
+					gui_ref = GUI,
+					key = key,
+					sel_idx = 1,
+				})
+			end
 		end
 	end
 
