@@ -207,6 +207,10 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 				log.user("CREATE RESULT BUTTONS -> attach mappings")
 				function ResultsEntryControl:onKeyboard(key)
 					gui.attach_mappings(gui, key, i + SCROLL_RESULTS)
+					-- local key_bind_function = GUI.attach_mappings[key]
+					-- if type(key_bind_function) == "function" then
+					-- 	key_bind_function(i + SCROLL_RESULTS)
+					-- end
 				end
 			end
 
@@ -264,11 +268,15 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 			n_to_remove = n_to_remove + 1
 		elseif NEW_PICKER_VIEW then
 			local b = tControls[i][1]
-		  log.user(b.title)
+			log.user(b.title)
 			if gui.attach_mappings then
-				log.user("CREATE RESULT BUTTONS -> attach mappings")
+				-- log.user("CREATE RESULT BUTTONS -> attach mappings")
 				function b:onKeyboard(key)
 					gui.attach_mappings(gui, key, i + SCROLL_RESULTS)
+					-- local key_bind_function = GUI.attach_mappings[key]
+					-- if type(key_bind_function) == "function" then
+					-- 	key_bind_function(i + SCROLL_RESULTS)
+					-- end
 				end
 			end
 		end
@@ -545,6 +553,10 @@ local function build_picker(opts, on_enter)
 
 	GUI = jGui:new(opts)
 
+	if GUI.attach_mappings then
+		GUI.attach_mappings = GUI.attach_mappings(GUI)
+	end
+
 	GUI.t_results_data = opts.results
 
 	-- log.user("fzf build_picker() [" .. opts.title .. "]", #GUI.t_results_data)
@@ -581,10 +593,15 @@ local function reset_new_picker(opts)
 	GUI.sort_comp = require("pickers.sorters.default")(opts.sort_comp)
 	GUI.entry_maker = require("pickers.entry_makers.default")(opts.entry_maker)
 	GUI.attach_mappings = opts.attach_mappings and opts.attach_mappings or nil
+	-- GUI.attach_mappings = opts.attach_mappings and opts.attach_mappings(GUI) or nil
 	local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
 	if main_input then
 		function main_input:onKeyboard(key)
 			GUI.attach_mappings(GUI, key, 1)
+			-- local key_bind_function = GUI.attach_mappings[key]
+			-- if type(key_bind_function) == "function" then
+			-- 	key_bind_function(1)
+			-- end
 		end
 	end
 

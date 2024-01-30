@@ -6,7 +6,6 @@ local format = require("utils.format")
 -- FX and other data inside of the program.
 
 return function(gui, key, i)
-
 	local selection = gui.t_search_results[i]
 	if not selection then
 		return
@@ -81,6 +80,11 @@ return function(gui, key, i)
 	end
 
 	local function apply_value(divider)
+		-- local selection = gui.t_search_results[i]
+		-- if not selection then
+		-- 	return
+		-- end
+
 		local val = full_range / divider
 		update_fx_parameter(val)
 	end
@@ -92,13 +96,13 @@ return function(gui, key, i)
 	make_incr_decr_mapping_pair("control", "n", "p", 5)
 
 	local mappings = {
-		["C-w"] = function()
+		["C-w"] = function(i)
 			apply_value(350)
 		end,
-		["C-b"] = function()
+		["C-b"] = function(i)
 			apply_value(-350)
 		end,
-		["C-d"] = function()
+		["C-d"] = function(i)
 			apply_value(100)
 		end,
 		["C-f"] = function()
@@ -143,6 +147,9 @@ return function(gui, key, i)
 	-- for k, v in pairs(res) do
 	-- 	log.user("res", k, v)
 	-- end
+
+	-- TODO: return the final mappings table
+	-- return res
 
 	-- log.user("mappings:",format.block(mappings))
 end
