@@ -160,8 +160,8 @@ pickers.track_fx = function(meta, opts)
 	-- log.user(opts.title, format.block(fx_results))
 	fzf.init(tbl.deep_extend({
 		title = "Browse track FX list",
-		width = 600,
-		height = 600,
+		width = 900,
+		height = 700,
 		x = 0,
 		y = 1100,
 		results = opts.results or fx_results,
@@ -174,7 +174,7 @@ pickers.track_fx = function(meta, opts)
 					}, self)
 				end
 			end
-			return true
+			return false
 		end,
 		next_is_picker = opts.next_is_picker or false,
 		sort_comp = "idx",
@@ -191,54 +191,27 @@ pickers.track_fx_params = function(meta, opts)
 		log.debug("[pickers.track_fx_params]: Requires both a track node and target fx_index!")
 		return
 	end
-
 	local node = opts.node
-
 	local t_fx_params = fx_util.get_track_fx_info(node.tr, opts.fx_index)
-
 	-- log.user(format.block(t_fx_params))
-
-	-- -- TODO: ( REFACTOR ): this whole thing could be moved into lib_tr or sx so that I easilly
-	-- -- can reuse this way of flattening out a specific track node string.
-	-- local tr_node_header_string = ""
-	-- if node.zone then
-	-- 	local part = "Z:" .. node.zone.name
-	-- 	tr_node_header_string = tr_node_header_string .. part .. "> "
-	-- end
-	-- if node.group then
-	-- 	local part = "G:" .. node.group.name
-	-- 	tr_node_header_string = tr_node_header_string .. part .. "> "
-	-- end
-	-- tr_node_header_string = tr_node_header_string .. ":: " .. node.name
-	-- --------
-
-	fzf.init(
-		--
-		tbl.deep_extend( --
-			{
-				meta = {
-					node = node,
-					fx_index = opts.fx_index,
-				},
-				env = RK_FZF_ENV,
-
-				-- title = string.format("FXparams: NODE(%s) -> FX(%s)", tr_node_header_string, t_fx_params.name),
-				title = require("pickers.title_makers.track_node")(node, t_fx_params),
-
-				width = 900,
-				height = 700,
-				x = 0,
-				y = 1100,
-				results = t_fx_params.parameters,
-				sort_comp = "name",
-				-- entry_maker = { "index", "name", "val", "valf" },
-				entry_maker = require("pickers.entry_makers.fx_parameters"),
-				attach_mappings = require("pickers.attach_mappings.fx_parameters"),
-				extended_mappings = opts.extended_mappings or nil,
-			}, --
-			opts
-		) --
-	)
+	fzf.init(tbl.deep_extend({
+		meta = {
+			node = node,
+			fx_index = opts.fx_index,
+		},
+		env = RK_FZF_ENV,
+		title = require("pickers.title_makers.track_node")(node, t_fx_params),
+		width = 900,
+		height = 700,
+		x = 0,
+		y = 1100,
+		results = t_fx_params.parameters,
+		on_select_func = false,
+		sort_comp = "name",
+		entry_maker = require("pickers.entry_makers.fx_parameters"),
+		attach_mappings = require("pickers.attach_mappings.fx_parameters"),
+		extended_mappings = opts.extended_mappings or nil,
+	}, opts))
 end
 
 -- ~ create list of relevant track params

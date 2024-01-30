@@ -250,33 +250,32 @@ commands.routing_user_string = function()
 	route.updateState()
 end
 
-commands.track_fx_ui = function(meta, opts)
+local function get_focus_track_with_fx_chain_info()
 	local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
 	local tr_node = focused_track_objects[1]
 	local fx_results = fxu.get_track_fx_chain_info(tr_node.tr)
-	-- log.user(tr_node.name, format.block(fx_results))
+	return tr_node, fx_results
+end
+
+commands.track_fx_ui = function(meta, opts)
+	local tr_node, fx_results = get_focus_track_with_fx_chain_info()
+
 	local function track_fx_ui(not_first)
 		pickers.track_fx(_, {
-		  -- TODO: i can update the window name with ` reaper.JS_Window_SetTitle( windowHWND, title )`
-		  -- This should go into the jGui class file.
-		  master_title = "TRACK FX UI", -- TODO: i could prepend each view title with this.
+			master_title = "TRACK FX UI",
 			results = fx_results,
-			-- FIX: next_is_picker dosen't make any sense anymore, remove this...
 			next_is_picker = not_first and false or true,
 			next = function(meta, data, self)
-				local fx_selected = data.selection
-				local t_fx_params = fxu.get_track_fx_info(tr_node.tr, fx_selected.idx)
+				local t_fx_params = fxu.get_track_fx_info(tr_node.tr, data.selection.idx)
+
 				pickers.track_fx_params(_, {
 					node = tr_node,
-					fx_index = fx_selected.idx,
+					fx_index = data.selection.idx,
 					results = t_fx_params.parameters,
 					sort_comp = require("pickers.sorters.default")("name"),
 					entry_maker = require("pickers.entry_makers.fx_parameters"),
-					-- rename to default mappings?
-					attach_mappings = require("pickers.attach_mappings.fx_parameters"),
 					extended_mappings = {
 						["C-z"] = function()
-							log.user("???????????? ext map")
 							track_fx_ui(true)
 						end,
 					},

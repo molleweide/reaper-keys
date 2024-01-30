@@ -8,7 +8,13 @@
 	--
 	-- TODO: start using pluginsData
 
-	A little window that allows for quick searching of FX (can be VST, templates or fxrack).
+-- TODO: Add a master title for the current picker when initiating the
+-- UI, then i create a jGui class function that can update the window title.
+-- --
+-- I can update the window name with ` reaper.JS_Window_SetTitle( windowHWND, title )`
+-- This should go into the jGui class file.
+
+  A little window that allows for quick searching of FX (can be VST, templates or fxrack).
 
 	The script stores how often you select a certain FX and orders the list by how many times something is used.
 @version 0.7.27
@@ -228,9 +234,9 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 
 				if not gui.kb.shift() then
 					-- this allows the picker to keep running for the next picker.
-					if not gui.next_is_picker then
+					-- if not gui.next_is_picker then
 						self.parentGui:exit()
-					end
+					-- end
 				end
 			end
 
@@ -349,40 +355,18 @@ local function gui_create_main_text_box(gui, on_enter)
 	end
 
 	function text_input:onEnter()
-		-- test: trying to remove  prev pickers controls here, wo/sucess
-
-		-- if gui.next_is_picker then
-		-- 	log.user("# tResultButtons", #tResultButtons)
-		-- 	for i = 1, #tResultButtons do
-		-- 		table.remove(tResultButtons, #tResultButtons)
-		-- 	end
-		-- 	gui:controlDeleteAll()
-		-- end
-
-		-- NOTE: i believe on select and next is picker come in the wrong order
-
-		-- if gui.next_is_picker then
-		-- 	gui:exit()
-		--
-		-- 	function sleep(seconds)
-		-- 		local start = os.clock()
-		-- 		while os.clock() - start < seconds do
-		-- 		end
-		-- 	end
-		--
-		-- 	-- Call the sleep function to wait for five seconds
-		-- 	sleep(3)
-		-- 	log.user("? ? ? ?")
-		-- 	gui.on_select_func(gui, 1)
-		-- end
+		-- FIX: n ext_is_picker dosen't make any sense anymore, remove this...
+		-- --
+		-- If `on_select_func` returns true, that should be interpreted as you
+		-- are expecting the GUI to exit.
 
 		if gui.on_select_func(gui, 1) then
 			-- this allows the picker to keep running for the next picker.
-			if not gui.next_is_picker then
+			-- if not gui.next_is_picker then
 				gui:exit()
-			else
+			-- else
 				-- log.user("controlDeleteAll")
-			end
+			-- end
 		end
 
 		textBox.value = ""
@@ -552,6 +536,8 @@ local DEFAULT_OPTS = {
 	meta = {},
 	extended_mappings = nil,
 }
+
+-- TODO: update master title for every new picker view
 
 local function build_picker(opts, on_enter)
 	-- FIX: use these for x and y coordinates instead..
