@@ -157,6 +157,8 @@ return {
 				-- can always get back to an action even though you have forgotten what
 				-- it is called.
 				["X"] = "PickerAllStandaloneActions",
+				["k"] = "RK_MASTER_MENU",
+				["F"] = "RK_SAMPLE_LIB_BROWSER",
 				["w"] = "SetModeVKB", -- FIX: delete this...
 				["d"] = {
 					"+development",
@@ -243,6 +245,7 @@ return {
 						["g"] = "SetAutomationModeLatchAndArm",
 						["p"] = "SetAutomationModeLatchPreview",
 						["t"] = "SetAutomationModeTouch",
+						["u"] = "AUTOMATION_UI",
 						["w"] = "SetAutomationModeWrite",
 					},
 				},

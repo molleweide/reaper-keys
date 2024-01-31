@@ -4,6 +4,8 @@ local pickers = require("pickers.pickers")
 local lib_tr = require("library.tracks")
 local s = require("utils.string")
 
+local fzf = require("library.fzf")
+
 local fxu = require("library.fx")
 local tbl = require("utils.table")
 
@@ -285,6 +287,88 @@ commands.track_fx_ui = function(meta, opts)
 	end
 
 	track_fx_ui()
+end
+
+commands.rk_master_menu = function()
+	local fzf = require("library.fzf")
+
+	local rk_main_menu = {
+		{ name = "preferences" },
+		{ name = "tracks" },
+		{ name = "regions" },
+		{ name = "automation" },
+		{ name = "tempo" },
+		{ name = "samples" },
+		{ name = "audio_file_loops" },
+	}
+
+	fzf.init({
+		title = "RK MAIN MENU",
+		width = 500,
+		height = 700,
+		x = 0,
+		y = 1100,
+		results = rk_main_menu,
+		on_select_func = false,
+		sort_comp = "name",
+		entry_maker = "name",
+		-- attach_mappings = require("pickers.attach_mappings.fx_parameters"),
+		-- extended_mappings = opts.extended_mappings or nil,
+	})
+end
+
+commands.automation_ui = function()
+	local rk_main_menu = {
+		{ name = "ramp up" },
+		{ name = "ramp down" },
+		{ name = "flat bar" },
+	}
+
+	fzf.init({
+		title = "AUTOMATION UI",
+		width = 500,
+		height = 700,
+		x = 0,
+		y = 1100,
+		results = rk_main_menu,
+		on_select_func = false,
+		sort_comp = "name",
+		entry_maker = "name",
+		-- attach_mappings = require("pickers.attach_mappings.fx_parameters"),
+		-- extended_mappings = opts.extended_mappings or nil,
+	})
+end
+
+commands.sample_library_file_browser = function()
+
+  -- TODO:
+  -- 1. add sample library dir to def/config
+  -- 2. on selection -> recursive call picker with the selected dir.
+  -----
+  -- On C-z, if previous dir is beyond base sample dir, don't do anything,
+  -- else move back one step.
+  -----
+  -- C-f, preview sample,
+  --      Hit C-f again to stop current preview, eg. if file is a loop.
+  -----
+  -- C-t, toggle play selected sample on change.
+
+
+	fzf.init({
+		title = "SAMPLE LIBRARY BROWSER",
+		width = 1000,
+		height = 800,
+		x = 0,
+		y = 1100,
+		-- results = rk_main_menu,
+		on_select_func = false,
+		sort_comp = "name",
+		entry_maker = "name",
+		-- attach_mappings = require("pickers.attach_mappings.fx_parameters"),
+		-- extended_mappings = opts.extended_mappings or nil,
+	})
+
+
 end
 
 return commands

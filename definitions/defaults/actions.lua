@@ -968,6 +968,12 @@ return {
 
   FocusedTrack_FX_UI = commands.track_fx_ui,
 
+  RK_MASTER_MENU = commands.rk_master_menu,
+
+  AUTOMATION_UI = commands.automation_ui,
+
+  RK_SAMPLE_LIB_BROWSER = commands.sample_library_file_browser,
+
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,
   n69 = lib.midi.sendMidiNote_69,
