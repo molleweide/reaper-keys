@@ -33,7 +33,7 @@ jGuiControl = {
 	-- NOTE: I don't feel like changing values here has any effect.
 
 	label_fontsize = 15,
-	label_font = "Arial",
+	label_font = "Courier",
 	label_align = "c",
 	label_valign = "t",
 	label_padding = 0,

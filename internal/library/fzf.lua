@@ -190,7 +190,7 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 				height = height,
 				label_fontsize = height - 2,
 				label_align = "l",
-				label_font = "Calibri",
+				label_font = "Courier",
 				border = false,
 				focus_index = i + 1, --gui:getFocusIndex()
 				border_focus = true,
@@ -329,7 +329,7 @@ local function gui_create_main_text_box(gui, on_enter)
 		height = math.tointeger(gui.gui_size * 1.5),
 		label_fontsize = math.tointeger(gui.gui_size * 1.5),
 		label_align = "l",
-		label_font = "Calibri",
+		label_font = "Courier",
 		focus_index = gui:getFocusIndex(),
 		label_padding = 3,
 	})

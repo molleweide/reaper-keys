@@ -44,7 +44,7 @@ jGui = {
 
 	settings = {
 		fontsize = 10,
-		font = "Arial",
+		font = "Courier",
 		mouse_double_click_speed = 0.10,
 		font_color = { 1, 1, 1, 1 },
 	},
