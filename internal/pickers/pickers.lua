@@ -48,7 +48,7 @@ pickers.add_track_fx = function(meta)
 		return false
 	end
 
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		env = RK_FZF_ENV,
 		title = "Fast FX Finder",
 		width = 1000,
@@ -75,7 +75,7 @@ pickers.add_track_fx = function(meta)
 				log.user("Updated ratings file!!")
 			end
 		end,
-	})
+	}, opts))
 end
 
 pickers.test_picker = function()
@@ -127,7 +127,7 @@ pickers.all_tracks = function(meta, opts)
 
 		-- TODO: add zone/group name before each track name
 		entry_maker = require("pickers.entry_makers.track_nodes"),
-	},opts))
+	}, opts))
 end
 
 pickers.browse_reaper_preferences = function()
@@ -147,11 +147,11 @@ pickers.browse_reaper_preferences = function()
 	-- settings.jSettingsCreate(SETTINGS_INI_FILE, SETTINGS_DEFAULT_FILE)
 	-- SETTINGS = assert(settings.jSettingsReadFromFile(SETTINGS_INI_FILE), "Could not open settings file.")
 
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		env = RK_FZF_ENV,
 		title = "Reaper preferences",
 		results = {},
-	})
+	}, opts))
 end
 
 pickers.track_fx = function(meta, opts)
@@ -229,11 +229,11 @@ pickers.track_channel_mix_params = function()
 		-- fx = next > fx menu
 		-- routing
 	}
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		env = RK_FZF_ENV,
 		title = "Track params for track: <trackname>",
 		results = {},
-	})
+	}, opts))
 end
 
 pickers.track_attributes = function()
@@ -262,11 +262,11 @@ end
 -- get all routes for track
 -- reuse my track logging function but here instead.
 pickers.track_routing = function()
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		env = RK_FZF_ENV,
 		title = "Routing @track: <trackname>",
 		results = {},
-	})
+	}, opts))
 end
 
 pickers.midi_editor_take_screensets = function()
@@ -282,11 +282,11 @@ pickers.projects = function()
 	-- maybe i just need to do a bash script to collect all projects from
 	-- my projects dir.
 
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		env = RK_FZF_ENV,
 		title = "Projects listing",
 		results = {},
-	})
+	}, opts))
 end
 
 -- 	FIX: make vtt into a class
@@ -334,25 +334,25 @@ end
 pickers.marks = function()
 	local t_marks = marks.get_all(false)
 
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		env = RK_FZF_ENV,
 		title = "project marks",
 		results = t_marks,
 		sort_comp = "pos",
 		entry_maker = { "isrgn", "mark_region_idx", "name", "pos" },
-	})
+	}, opts))
 end
 
 pickers.regions = function()
 	local t_regions = marks.get_all(true)
 
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		env = RK_FZF_ENV,
 		title = "project regions",
 		results = t_regions,
 		sort_comp = "pos",
 		entry_maker = { "mark_region_idx", "name", "pos" },
-	})
+	}, opts))
 end
 
 pickers.marks_and_regions = function(meta, opts)
@@ -378,11 +378,11 @@ end
 -- get patterns from the midi patterns config file
 -- definitions/midi_patterns.lua
 pickers.midi_patterns = function()
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		env = RK_FZF_ENV,
 		title = "midi patterns",
 		results = {},
-	})
+	}, opts))
 end
 
 -- start building out basic atomic (very important) progressions
@@ -399,7 +399,7 @@ end
 pickers.chord = function(meta, opts)
 	local all_chords = require("constants.chords.chords")()
 	log.debug(format.block(all_chords))
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		title = string.format("%s: chord", meta.action_type),
 		results = all_chords,
 		on_select_func = function(self, i)
@@ -415,13 +415,13 @@ pickers.chord = function(meta, opts)
 		sort_comp = "name_short",
 		-- chords picker should also display the step-array last in a nice manner.
 		entry_maker = { "type", "name_long", "name_short" },
-	})
+	}, opts))
 end
 
 pickers.scales = function(meta, opts)
 	local all_scales = require("constants.scales.scales")()
 	log.debug(format.block(all_scales))
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		title = string.format("%s: scale picker", meta.action_type),
 		results = all_scales,
 		on_select_func = function(self, i)
@@ -438,7 +438,7 @@ pickers.scales = function(meta, opts)
 
 		-- scale picker should also display the step-array last in a nice manner.
 		entry_maker = { "type", "name_long", "name_short" },
-	})
+	}, opts))
 end
 
 pickers.envelope_template = function()
@@ -460,13 +460,13 @@ pickers.all_items = function()
 	local t_track_objects = syntax.get_list_of_track_objects()
 	local t_all_items = lib_items.get_items_in_track_objects(t_track_objects)
 	log.user(format.block(t_all_items))
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		env = RK_FZF_ENV,
 		title = "all items",
 		results = t_all_items,
 		sort_comp = "name",
 		entry_maker = "name",
-	})
+	}, opts))
 end
 
 pickers.all_visible_items = function()
@@ -517,11 +517,11 @@ pickers.all_visible_items = function()
 	reaper.PreventUIRefresh(-1)
 	reaper.UpdateArrange()
 
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		env = RK_FZF_ENV,
 		title = "visible items (lightspeed)",
 		results = {},
-	})
+	}, opts))
 end
 
 pickers.item_parameters = function()
@@ -563,11 +563,11 @@ pickers.item_parameters = function()
 		-- P_TRACK : MediaTrack * : (read-only)
 	}
 
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		env = RK_FZF_ENV,
 		title = "item params for: <item>",
 		results = {},
-	})
+	}, opts))
 end
 
 pickers.take_parameters = function()
