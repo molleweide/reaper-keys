@@ -13,6 +13,10 @@
 -- --
 -- I can update the window name with ` reaper.JS_Window_SetTitle( windowHWND, title )`
 -- This should go into the jGui class file.
+--
+-- FIX: user control over whether or not to reset the text input if the on_select_func
+-- returns false. Eg. this is not wanted when writing add track node strings,
+-- since we might just want to correct a minor typo.
 
   A little window that allows for quick searching of FX (can be VST, templates or fxrack).
 

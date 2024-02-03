@@ -153,24 +153,114 @@ commands.add_track_nodes_ui = function(meta, opts)
 	--
 	-- It will be very interesting to see how the previewing of this will work
 	-- so that one can select from a list of matching combinations.
-
-	local input_placeholder = ""
-	local route_help_str = "add nodes:"
-
-	local _, add_nodes_str = reaper.GetUserInputs("ADD NEW NODES:", 1, route_help_str, input_placeholder)
-
-	local input_units = s.split(add_nodes_str, "/")
-
-	-- TODO: get branch class ZGS opts
-	-- split string at each of `ZGS`
-
-	-- TODO: get leaf node opts
-	-- split each by comma
-
-	log.user(format.block(input_units))
-
+	--
 	-- TEST: ~ SYNTAX BASED HIDING -> picker all tracks > manage track_params
 	--   eg. show/hide/solo/mute/volume/phase/
+
+	local main_divider = "/"
+	local name_divider = ","
+
+	-- local input_placeholder = ""
+	-- local route_help_str = "add nodes:"
+	-- local _, add_nodes_str = reaper.GetUserInputs("ADD NEW NODES:", 1, route_help_str, input_placeholder)
+	local function handle_add_nodes_string(add_nodes_str)
+		local valid = true
+		local input_units = s.split(add_nodes_str, main_divider)
+
+		log.user("length # input_units:", #input_units)
+
+		-- zs will also pass with this
+		local zgs_match
+		local names_index
+
+		if #input_units == 1 then
+			names_index = 1
+		else
+			zgs_match = input_units[1]:match("^z?g?s?$")
+			if zgs_match == "zs" then
+				zgs_match = false
+			end
+			names_index = 2
+		end
+
+		local add_to_current_parrent = not zgs_match
+
+		local names_match = s.split(input_units[names_index], name_divider)
+
+		log.user("zgs_match:", zgs_match, add_to_current_parrent)
+		log.user("names:", format.block(names_match))
+
+		local name_idx_counter = 1
+
+		local function incr()
+			name_idx_counter = name_idx_counter + 1
+		end
+
+		local t_tracks_to_create = {}
+
+		if zgs_match then
+			if zgs_match:find("z") then
+				table.insert(t_tracks_to_create, {
+					class = "z",
+					name = names_match[name_idx_counter],
+				})
+				incr()
+			end
+
+			if zgs_match:find("g") then
+				table.insert(t_tracks_to_create, {
+					class = "g",
+					name = names_match[name_idx_counter],
+				})
+				incr()
+			end
+
+			if zgs_match:find("s") then
+				table.insert(t_tracks_to_create, {
+					class = "s",
+					name = names_match[name_idx_counter],
+				})
+				incr()
+			end
+		end
+
+		function containsOnlyAlphanumericAndPeriod(str)
+			return not string.match(str, "[^%w%.]")
+		end
+
+		local t_leaf_tracks_to_create = {}
+
+		for i = name_idx_counter, #names_match, 1 do
+			local name = names_match[i]
+
+			if not containsOnlyAlphanumericAndPeriod(name) then
+				valid = false
+			end
+			table.insert(t_leaf_tracks_to_create, {
+				name = names_match[name_idx_counter],
+			})
+		end
+
+		log.user(format.block(t_tracks_to_create), format.block(t_leaf_tracks_to_create))
+
+		return valid, data
+	end
+
+	fzf.init({
+		title = "Add track nodes",
+		x = 200,
+		width = 1100,
+		height = 200,
+		on_select_func = function(self)
+			local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
+			if main_input then
+				log.user("ADD NODES STRING:", main_input.value)
+				local ret, data = handle_add_nodes_string(main_input.value)
+				return ret
+			end
+			return true
+		end,
+	})
 end
 
 commands.regions_manager_fuzzy_ui = function(meta, opts)
