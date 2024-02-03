@@ -535,6 +535,8 @@ local DEFAULT_OPTS = {
 	gui_size = 20,
 	meta = {},
 	extended_mappings = nil,
+	next = nil, -- next picker func should default to nil ie close prev picker.
+	calling_command_meta = nil
 }
 
 -- TODO: update master title for every new picker view
@@ -625,12 +627,12 @@ local function reset_new_picker(opts)
 	-- log.user("#GUI.attach_mappings", format.block(GUI.attach_mappings))
 
 	if opts.extended_mappings then
-		log.user("add ext map")
+		-- log.user("add ext map")
 		for k, v in pairs(opts.extended_mappings) do
 			if k:match("^C%-") then
 				local temp = "control_" .. k:sub(3, 3)
 				local new_key = GUI.kb[temp]
-				log.user("type v:", type(v))
+				-- log.user("type v:", type(v))
 				GUI.attach_mappings[tostring(new_key)] = v
 			elseif k:match("^M%-") then
 				local temp = "meta_" .. k:sub(3, 3)

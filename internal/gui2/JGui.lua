@@ -69,7 +69,9 @@ end
 
 function jGui:init()
 	gfx.init(self.title, self.width, self.height, self.dockstate, self.x, self.y)
+	-- log.user("jGui font:", self.settings.font)
 	gfx.setfont(1, self.settings.font, self.settings.fontsize)
+	-- log.user("jGui get font:", gfx.getfont())
 
 	gfx.clear = 3355443
 	self:_resize() -- call once to do initial drawing

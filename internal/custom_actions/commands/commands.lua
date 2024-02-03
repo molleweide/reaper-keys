@@ -42,57 +42,37 @@ commands.MIDI_EditMidiAtCurPosForTrack = function()
 end
 
 commands.Midi_EditMidiForRegionsMarksAndSelectTrack = function(meta, opts)
-	pickers.marks_and_regions(_, {
-		filter = "MCS",
-		next_is_picker = true,
-		next = function(meta, data)
-			local log = require("utils.log")
-			local format = require("utils.format")
-			log.user("selection data", format.block(data))
-			local mark_sel = data.selection
+	local function me_select_reg_and_edit_track(not_first)
+		pickers.marks_and_regions(_, {
+			title = "ME: 1. select regions/marks; 2. select track edit",
+			filter = "MCS",
+			next = function(_, data)
+				-- log.user("selection data", format.block(data))
+				local mark_sel = data.selection
+				pickers.all_tracks(meta, {
+					filter = "MCS",
+					-- FIX: use on_select_func instead here
+					next = function(_, data2)
+						-- log.user("selection data2", format.block(data2), "sel mark->", format.block(data))
+						require("library.midi_editor").createEditMidiItemAtPositionForTrack(
+							_,
+							data2.selection,
+							mark_sel.left,
+							mark_sel.right
+						)
+						reaper.SetEditCurPos(mark_sel.left, false, false)
+					end,
+					extended_mappings = {
+						["C-z"] = function()
+							me_select_reg_and_edit_track(true)
+						end,
+					},
+				})
+			end,
+		})
+	end
 
-			-- # tResultButtons 10.0
-			-- selection data {
-			--   selection = {
-			--     id = 1,
-			--     index = 1,
-			--     left = 8.0,
-			--     name = "testing",
-			--     position = 10.0,
-			--     register = "r",
-			--     right = 16.0,
-			--     time = 1699895229,
-			--     track_position = 169.0,
-			--     track_selection = {
-			--       169.0
-			--     },
-			--     type = "region"
-			--   }
-			-- }
-
-			pickers.all_tracks(meta, {
-				title = "Choose track for editing @ region = [" .. data.selection.name .. "]",
-				filter = "MCS",
-				next_is_picker = false,
-				next = function(meta2, data2)
-					log.user("selection data2", format.block(data2), "sel mark->", format.block(data))
-					require("library.midi_editor").createEditMidiItemAtPositionForTrack(
-						_,
-						data2.selection,
-						mark_sel.left,
-						mark_sel.right
-					)
-					-- move edit cursor
-					-- note: i dunno if this is the best place to put the move command.
-					reaper.SetEditCurPos(mark_sel.left, false, false)
-				end,
-			})
-
-			-- pickers.all_tracks
-			--     >>> next = reuse next from above
-			--        >>>> first - move it into library.
-		end,
-	})
+	me_select_reg_and_edit_track()
 end
 
 commands.MidiEditor_go_insert = function(meta, opts)
@@ -269,7 +249,6 @@ commands.track_fx_ui = function(meta, opts)
 			next_is_picker = not_first and false or true,
 			next = function(meta, data, self)
 				local t_fx_params = fxu.get_track_fx_info(tr_node.tr, data.selection.idx)
-
 				pickers.track_fx_params(_, {
 					node = tr_node,
 					fx_index = data.selection.idx,
@@ -289,6 +268,7 @@ commands.track_fx_ui = function(meta, opts)
 	track_fx_ui()
 end
 
+-- Move this to pickers main file later..
 commands.rk_master_menu = function()
 	local fzf = require("library.fzf")
 
@@ -300,6 +280,39 @@ commands.rk_master_menu = function()
 		{ name = "tempo" },
 		{ name = "samples" },
 		{ name = "audio_file_loops" },
+	}
+	local rk_main_prefs = {
+		"audio devices",
+		"midi devices",
+		"buffering",
+	}
+	local rk_main_tracks = {
+		"add new tracks",
+		"remove tracks",
+		"hide tracks",
+	}
+	local rk_main_regions = {
+		"add region",
+		"extend regions",
+		"rename regions",
+	}
+	local rk_main_automation = {
+		"add auto",
+		"extend auto",
+		"rename auto",
+	}
+	local rk_main_tempo = {
+		"add tempo",
+		"extend tempo",
+		"rename tempo",
+	}
+	local rk_main_samples = {
+		"open sample library",
+		"preview samples",
+	}
+	local rk_main_loops = {
+		"open loops",
+		"preview loops",
 	}
 
 	fzf.init({
@@ -340,19 +353,17 @@ commands.automation_ui = function()
 end
 
 commands.sample_library_file_browser = function()
-
-  -- TODO:
-  -- 1. add sample library dir to def/config
-  -- 2. on selection -> recursive call picker with the selected dir.
-  -----
-  -- On C-z, if previous dir is beyond base sample dir, don't do anything,
-  -- else move back one step.
-  -----
-  -- C-f, preview sample,
-  --      Hit C-f again to stop current preview, eg. if file is a loop.
-  -----
-  -- C-t, toggle play selected sample on change.
-
+	-- TODO:
+	-- 1. add sample library dir to def/config
+	-- 2. on selection -> recursive call picker with the selected dir.
+	-----
+	-- On C-z, if previous dir is beyond base sample dir, don't do anything,
+	-- else move back one step.
+	-----
+	-- C-f, preview sample,
+	--      Hit C-f again to stop current preview, eg. if file is a loop.
+	-----
+	-- C-t, toggle play selected sample on change.
 
 	fzf.init({
 		title = "SAMPLE LIBRARY BROWSER",
@@ -367,8 +378,6 @@ commands.sample_library_file_browser = function()
 		-- attach_mappings = require("pickers.attach_mappings.fx_parameters"),
 		-- extended_mappings = opts.extended_mappings or nil,
 	})
-
-
 end
 
 return commands

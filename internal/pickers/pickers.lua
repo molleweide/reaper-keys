@@ -109,7 +109,7 @@ pickers.all_tracks = function(meta, opts)
 
 	-- log.user(format.block(t_track_objects))
 
-	fzf.init({
+	fzf.init(tbl.deep_extend({
 		title = opts.title or "All Tracks (Default)",
 		results = t_picker_results,
 
@@ -127,7 +127,7 @@ pickers.all_tracks = function(meta, opts)
 
 		-- TODO: add zone/group name before each track name
 		entry_maker = require("pickers.entry_makers.track_nodes"),
-	})
+	},opts))
 end
 
 pickers.browse_reaper_preferences = function()
@@ -364,31 +364,15 @@ pickers.marks_and_regions = function(meta, opts)
 	for _, m in pairs(all_marks) do
 		table.insert(marks_final, m)
 	end
-
-	fzf.init({
+	fzf.init(tbl.deep_extend({
+		calling_command_meta = meta,
 		env = RK_FZF_ENV,
 		title = "project marks",
-
-		on_select_func = function(self, i)
-			local selection = self.t_search_results[i]
-			if opts then
-				if opts.next then
-					opts.next(meta, {
-						selection = selection,
-					})
-				end
-			end
-			return true
-		end,
-		next_is_picker = opts.next_is_picker or false,
-
 		results = marks_final,
 		results_filter = "name",
-		-- sort_comp = "pos", -- old
 		sort_comp = "position", -- rk new
-		-- entry_maker = { "isrgn", "mark_region_idx", "name", "pos" }, -- old
 		entry_maker = { "register", "type", "name", "position" }, -- rk new
-	})
+	}, opts))
 end
 
 -- get patterns from the midi patterns config file

@@ -4,7 +4,7 @@ local format = require("utils.format")
 return function(selector)
 	if selector == nil then
 		return function(self, i)
-		  log.user("on select nil")
+			log.user("on_select_func DEFAULT: ")
 			if not self.t_search_results then
 				return false
 			end
@@ -12,12 +12,20 @@ return function(selector)
 			if not selection then
 				return false
 			end
-			log.user("Picker selection:", i, format.block(selection))
-			return true
+			log.user("on_select_func DEFAULT picker selection:", i, format.block(selection))
+
+			if self.next then
+						self.next(meta, {
+							selection = selection,
+						})
+			  return false
+			else
+				return true
+			end
 		end
 	elseif type(selector) == "boolean" then
 		return function(self, i)
-		  log.user("on select boolean")
+			log.user("on select boolean")
 			if not self.t_search_results then
 				return false
 			end
