@@ -165,13 +165,24 @@ commands.add_track_nodes_ui = function(meta, opts)
 	-- local _, add_nodes_str = reaper.GetUserInputs("ADD NEW NODES:", 1, route_help_str, input_placeholder)
 	local function handle_add_nodes_string(add_nodes_str)
 		local valid = true
+
+		local initial_slash = add_nodes_str:match("^/")
+		local trailing_slash = add_nodes_str:match("/$")
+
 		local input_units = s.split(add_nodes_str, main_divider)
+
+		-- FIX: split is not smart because it misses a lot of cases.
 
 		log.user("length # input_units:", #input_units)
 
 		-- zs will also pass with this
 		local zgs_match
 		local names_index
+
+		-- if /arst
+		-- if arst/
+		-- if arst/arst
+		-- if /arst/arst/
 
 		if #input_units == 1 then
 			names_index = 1
@@ -198,11 +209,21 @@ commands.add_track_nodes_ui = function(meta, opts)
 
 		local t_tracks_to_create = {}
 
+		local function verify_name()
+			if names_match[name_idx_counter] ~= nil then
+				return names_match[name_idx_counter]
+			else
+				return false
+			end
+		end
+
+		local only_zgs
+
 		if zgs_match then
 			if zgs_match:find("z") then
 				table.insert(t_tracks_to_create, {
 					class = "z",
-					name = names_match[name_idx_counter],
+					name = verify_name(),
 				})
 				incr()
 			end
@@ -210,7 +231,7 @@ commands.add_track_nodes_ui = function(meta, opts)
 			if zgs_match:find("g") then
 				table.insert(t_tracks_to_create, {
 					class = "g",
-					name = names_match[name_idx_counter],
+					name = verify_name(),
 				})
 				incr()
 			end
@@ -224,6 +245,7 @@ commands.add_track_nodes_ui = function(meta, opts)
 			end
 		end
 
+		-- TODO:allow now whitespace
 		function containsOnlyAlphanumericAndPeriod(str)
 			return not string.match(str, "[^%w%.]")
 		end
