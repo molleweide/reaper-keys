@@ -112,35 +112,6 @@ commands.open_route_ui = function(meta, opts)
 end
 
 commands.add_track_nodes_ui = function(meta, opts)
-	-- ! string parse -> add nodes.
-
-	-- ! should behavior be different in main/midi?
-
-	-- This should allow me to easilly manage nodes.
-
-	-- If this is used with the fuzzy UI, then i can use text for any inputs to
-	-- reaper, and then see how good this window becomes for me.
-	-- In the end this could almost become as like an AI text interface to the
-	-- software, that then allows you to do some pretty fucking insane sounds.
-
-	-- TODO: 1. parse string on each input.
-	--       2. preview node(s) that will be affected.
-	--       3. on keypress
-	--              perform actions.
-	--
-	--      HACK: this can then be reused for the route_ui previewer above.
-
-	-- FIX: later i can use multi lines for this and create one specific config
-	-- for each line??
-
-	-- NOTE: cases:
-	-- 1. if no class is specified
-	--    -> add default M track to current group if possible.
-	--    (tesx) -> add `testx` midi track to current group
-	--    -
-	-- 2. G/nameX,nameY,nameZ
-	--    Adds M tracks Y and Z to group X
-	--    -
 	-- 3. ZG/xxx,yyy
 	--    Create zone `xxx` and populate it with group `yyy`
 	-- 4. G/xx,yy4
@@ -160,110 +131,128 @@ commands.add_track_nodes_ui = function(meta, opts)
 	local main_divider = "/"
 	local name_divider = ","
 
-	-- local input_placeholder = ""
-	-- local route_help_str = "add nodes:"
-	-- local _, add_nodes_str = reaper.GetUserInputs("ADD NEW NODES:", 1, route_help_str, input_placeholder)
 	local function handle_add_nodes_string(add_nodes_str)
 		local valid = true
-
 		local initial_slash = add_nodes_str:match("^/")
 		local trailing_slash = add_nodes_str:match("/$")
-
 		local input_units = s.split(add_nodes_str, main_divider)
-
-		-- FIX: split is not smart because it misses a lot of cases.
-
-		log.user("length # input_units:", #input_units)
-
-		-- zs will also pass with this
 		local zgs_match
 		local names_index
+		local name_idx_counter = 1
+		local node_creation_type
+		local t_final = {}
+		local t_branches = {}
+		local t_leaves = {}
 
-		-- if /arst
-		-- if arst/
-		-- if arst/arst
-		-- if /arst/arst/
+		log.user("length # input_units:", #input_units, format.block(input_units))
 
 		if #input_units == 1 then
 			names_index = 1
+
+			if initial_slash then
+				node_creation_type = "only_leaves" -- /arst
+			elseif trailing_slash then
+				node_creation_type = "only_branches" -- arst/
+			else
+				node_creation_type = "only_leaves" -- `arst`
+			end
 		else
+			node_creation_type = "both" -- (/)arst/arst(/...)
+			names_index = 2
+		end
+
+		if node_creation_type == "only_branches" or node_creation_type == "both" then
 			zgs_match = input_units[1]:match("^z?g?s?$")
 			if zgs_match == "zs" then
 				zgs_match = false
 			end
-			names_index = 2
 		end
 
 		local add_to_current_parrent = not zgs_match
-
 		local names_match = s.split(input_units[names_index], name_divider)
 
-		log.user("zgs_match:", zgs_match, add_to_current_parrent)
-		log.user("names:", format.block(names_match))
+		log.user(string.format(
+			[[
+		---
+		  zgs match = %s
+		  add to pas = %s
+		  name match = %s
+		  type = %s
+		  ----
+		  ]],
+			zgs_match,
+			add_to_current_parrent,
+			format.block(names_match),
+			node_creation_type
+		))
 
-		local name_idx_counter = 1
+		-- log.user("zgs_match:", zgs_match, add_to_current_parrent)
+		-- log.user("names:", format.block(names_match))
 
 		local function incr()
 			name_idx_counter = name_idx_counter + 1
 		end
 
-		local t_tracks_to_create = {}
-
 		local function verify_name()
+			if node_creation_type == "only_branches" then
+				return false
+			end
+
 			if names_match[name_idx_counter] ~= nil then
-				return names_match[name_idx_counter]
+				local name = names_match[name_idx_counter]
+				incr()
+				return name
 			else
 				return false
 			end
 		end
 
-		local only_zgs
-
 		if zgs_match then
 			if zgs_match:find("z") then
-				table.insert(t_tracks_to_create, {
+				table.insert(t_branches, {
 					class = "z",
 					name = verify_name(),
 				})
-				incr()
 			end
 
 			if zgs_match:find("g") then
-				table.insert(t_tracks_to_create, {
+				table.insert(t_branches, {
 					class = "g",
 					name = verify_name(),
 				})
-				incr()
+				-- incr()
 			end
 
 			if zgs_match:find("s") then
-				table.insert(t_tracks_to_create, {
+				table.insert(t_branches, {
 					class = "s",
-					name = names_match[name_idx_counter],
+					name = verify_name(),
 				})
-				incr()
+				-- incr()
 			end
+
+			t_final["branches"] = t_branches
 		end
 
-		-- TODO:allow now whitespace
-		function containsOnlyAlphanumericAndPeriod(str)
+		local function containsOnlyAlphanumericAndPeriod(str)
 			return not string.match(str, "[^%w%.]")
 		end
 
-		local t_leaf_tracks_to_create = {}
-
-		for i = name_idx_counter, #names_match, 1 do
-			local name = names_match[i]
-
-			if not containsOnlyAlphanumericAndPeriod(name) then
-				valid = false
+		if node_creation_type ~= "only_branches" then
+			log.user(name_idx_counter)
+			for i = name_idx_counter, #names_match, 1 do
+				local name = verify_name()
+				if not containsOnlyAlphanumericAndPeriod(name) then
+					valid = false
+				end
+				table.insert(t_leaves, {
+					name = name,
+				})
 			end
-			table.insert(t_leaf_tracks_to_create, {
-				name = names_match[name_idx_counter],
-			})
+			t_final["leaves"] = t_leaves
 		end
 
-		log.user(format.block(t_tracks_to_create), format.block(t_leaf_tracks_to_create))
+		log.user(format.block(t_final))
 
 		return valid, data
 	end
@@ -272,12 +261,54 @@ commands.add_track_nodes_ui = function(meta, opts)
 		title = "Add track nodes",
 		x = 200,
 		width = 1100,
-		height = 200,
+		height = 75,
 		on_select_func = function(self)
 			local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
 			if main_input then
-				log.user("ADD NODES STRING:", main_input.value)
+				log.user("-------- ADD NODES STRING:", main_input.value)
 				local ret, data = handle_add_nodes_string(main_input.value)
+				return ret
+			end
+			return true
+		end,
+	})
+end
+
+commands.main_insert_midi_block_from_string_UI = function()
+	local function handle_midi_string(str)
+		log.user("MIDI BLOCK STRING:", str)
+
+		-- midi pattern string returns a table of rhythm patters.
+		--
+		--
+		--
+		local t_data = {
+			pattern = {
+				subpattern_1 = {
+					--   events = ,
+					-- note_pool = ,
+					-- arp_expr = ,
+				},
+				subpattern_2 = {
+					-- ...
+				},
+			},
+			global = {
+				-- note_pool = ,
+				-- arp_expr = ,
+			},
+		}
+	end
+
+	fzf.init({
+		title = "Add MIDI blocks",
+		x = 200,
+		width = 1100,
+		height = 75,
+		on_select_func = function(self)
+			local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
+			if main_input then
+				local ret, data = handle_midi_string(main_input.value)
 				return ret
 			end
 			return true
@@ -490,6 +521,30 @@ commands.sample_library_file_browser = function()
 		-- attach_mappings = require("pickers.attach_mappings.fx_parameters"),
 		-- extended_mappings = opts.extended_mappings or nil,
 	})
+end
+
+commands.master_prompt = function()
+
+	-- text field that has basic vim bindings implemented.
+	-- maybe i could just reuse the current state machine implementation
+	-- and check if the context is main / midi / or jgui_norm
+	--
+	--
+	-- ooh if i just add a new context, then i can always access modality
+	-- from within the jgui
+	--
+	-- TODO: create a default switch command, that sets a flag inside
+	-- jgui, that determines wether `insert_mode = true`.
+	--
+	-- If `insert_mode` -> that means that we just allow all keys to pass
+	--    >>> if `esc switch` then we toggle the switch to false.
+	--
+	-- If FALSE, then we pass every key through the state_machine,
+	-- and each ASF will then operate on the gui.text_field input, and
+	-- apply all actions to the gui.text_field.
+	--
+	-- This would allow me to further refactor the core and allow the project
+	-- to be even more modular.
 end
 
 return commands
