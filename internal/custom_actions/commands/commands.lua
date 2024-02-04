@@ -111,23 +111,29 @@ commands.open_route_ui = function(meta, opts)
 	-- NOTE: what should this UI do?
 end
 
+-- ::: ADD TRACK NODES UI :::
+--
+-- 3. ZG/xxx,yyy
+--    Create zone `xxx` and populate it with group `yyy`
+--
+-- 4. G/xx,yy4
+--    The final number that I want N number of leaf tracks.
+--
+-- 5. Z/arst
+--    Only adding a Zone requires one to also add user input name for new
+--    contained group.
+--
+-- 6. feat: add class T, A, and B.
+--
+-- 7. feat: specify templates/presets/patches/etc.
+--
+-- 8.
+--
+-- Words prefixed w/ ZGS expect names, and then each following
+-- name will be a default track in that group.
+--
+--
 commands.add_track_nodes_ui = function(meta, opts)
-	-- 3. ZG/xxx,yyy
-	--    Create zone `xxx` and populate it with group `yyy`
-	-- 4. G/xx,yy4
-	--    The final number specifies that I want N num of tracks add to group.
-	-- 5. Z/arst
-	--    Only adding a Zone requires one to also add user input name for new
-	--    contained group.
-	-- TEST: In other words prefixed ZGS expect names, and then each following
-	-- name will be a default track in that group.
-	--
-	-- It will be very interesting to see how the previewing of this will work
-	-- so that one can select from a list of matching combinations.
-	--
-	-- TEST: ~ SYNTAX BASED HIDING -> picker all tracks > manage track_params
-	--   eg. show/hide/solo/mute/volume/phase/
-
 	local main_divider = "/"
 	local name_divider = ","
 
@@ -274,30 +280,45 @@ commands.add_track_nodes_ui = function(meta, opts)
 	})
 end
 
+-- NOTE:
+-- A. Initially, this should only work on the focused track selection.
+--    >>> Later, add ability to target specific tracks.
+--    --
+-- B.
+--    --
 commands.main_insert_midi_block_from_string_UI = function()
 	local function handle_midi_string(str)
 		log.user("MIDI BLOCK STRING:", str)
 
 		-- midi pattern string returns a table of rhythm patters.
 		--
-		--
-		--
-		local t_data = {
-			pattern = {
-				subpattern_1 = {
-					--   events = ,
-					-- note_pool = ,
-					-- arp_expr = ,
-				},
-				subpattern_2 = {
-					-- ...
-				},
-			},
-			global = {
-				-- note_pool = ,
-				-- arp_expr = ,
-			},
-		}
+		-- local t_data = {
+		-- 	pattern = {
+		-- 		subpattern_1 = {
+		-- 			--   events = ,
+		-- 			-- note_pool = ,
+		-- 			-- arp_expr = ,
+		-- 		},
+		-- 		subpattern_2 = {
+		-- 			-- ...
+		-- 		},
+		-- 	},
+		-- 	global = {
+		-- 		-- note_pool = ,
+		-- 		-- arp_expr = ,
+		-- 	},
+		-- }
+
+		-- NOTE: brainstorming
+		-- 1. parse string
+		--    ~ pattern
+		--    ~ note_pool (single/chord/scale)
+		-- 2. render pattern string
+		-- 3. assign note pool to each rhythm event
+		--    (if arp expr then ...)
+		-- 4. check if an item exists at [first note, last note]
+		-- 5. ensure/create new item.
+		-- 6. insert midi notes by calling `midi.insertNoteChunk({})`
 	end
 
 	fzf.init({

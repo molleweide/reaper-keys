@@ -236,6 +236,9 @@ pickers.track_channel_mix_params = function()
 	}, opts))
 end
 
+-- TEST: ~ SYNTAX BASED HIDING -> picker all tracks > manage track_params
+--   eg. show/hide/solo/mute/volume/phase/
+--
 pickers.track_attributes = function()
 	--   boolean retval, string stringNeedBig = reaper.GetSetMediaTrackInfo_String(MediaTrack tr, string parmname, string stringNeedBig, boolean setNewValue)
 	-- Get or set track string attributes.
