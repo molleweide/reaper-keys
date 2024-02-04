@@ -853,11 +853,11 @@ return {
 
   -- TODO: move these to `custom_actions/commands/midi_patterns.lua`
   NoteRowPattern = { midi_patterns.insertPatternForCurrentBarAndNoteRow, midiCommand = true },
-  MidiPattern_InsertFromString_at_cursor = midi_patterns.insertPatternFromString,
+  MidiPattern_InsertFromString_at_cursor = midi_patterns.create_insert_midi_pattern_by_string,
   MidiPattern_InsertFromString_at_current_measure = custom.midi_patterns_insert_at_measure,
   MidiPattern_InsertRandom16thNotes_fill_bar = {
     -- FIX: action deletes all midi notes including outside of target measure.
-    midi_patterns.insertPatternFromString,
+    midi_patterns.create_insert_midi_pattern_by_string,
     opts = {
       pattern = "**** **** **** ****",
       start_at_measure = true,
@@ -973,6 +973,8 @@ return {
   AUTOMATION_UI = commands.automation_ui,
 
   RK_SAMPLE_LIB_BROWSER = commands.sample_library_file_browser,
+
+  INSERT_MIDI_BLOCK = commands.main_insert_midi_block_from_string_UI,
 
   n71 = lib.midi.sendMidiNote_61,
   n70 = lib.midi.sendMidiNote_70,

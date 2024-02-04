@@ -591,6 +591,7 @@ return {
 						["s"] = "SaveProject",
 						["S"] = "SaveProjectAs",
 						["o"] = "OpenProject",
+						["m"] = "INSERT_MIDI_BLOCK",
 						["c"] = "NewProjectTab",
 						["x"] = "CloseProject",
 						["C"] = "CleanProjectDirectory",

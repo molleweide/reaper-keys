@@ -3,6 +3,7 @@ local format = require("utils.format")
 local pickers = require("pickers.pickers")
 local lib_tr = require("library.tracks")
 local s = require("utils.string")
+local midi_patterns = require("library.midi_patterns")
 
 local fzf = require("library.fzf")
 
@@ -287,8 +288,35 @@ end
 -- B.
 --    --
 commands.main_insert_midi_block_from_string_UI = function()
-	local function handle_midi_string(str)
-		log.user("MIDI BLOCK STRING:", str)
+	local function handle_midi_string(insert_midi_str)
+		log.user("MIDI BLOCK STRING:", insert_midi_str)
+
+		local function countCharInString(inputString, charToCount)
+			local count = 0
+			local prev = 0
+			local t_res = {}
+
+			for i = 1, #inputString do
+				if string.sub(inputString, i, i) == charToCount then
+					count = count + 1
+					if i - prev < 2 then
+						table.insert(t_res, "")
+					else
+						table.insert(t_res, inputString:sub(prev + 1, i - 1))
+					end
+					prev = i
+				end
+
+				if i == #inputString then
+					if i - prev < 2 then
+						table.insert(t_res, "")
+					else
+						table.insert(t_res, inputString:sub(prev + 1, i))
+					end
+				end
+			end
+			return count, t_res
+		end
 
 		-- midi pattern string returns a table of rhythm patters.
 		--
@@ -319,6 +347,36 @@ commands.main_insert_midi_block_from_string_UI = function()
 		-- 4. check if an item exists at [first note, last note]
 		-- 5. ensure/create new item.
 		-- 6. insert midi notes by calling `midi.insertNoteChunk({})`
+
+		local main_divider = "/"
+
+		local num_main_dividers, input_units = countCharInString(insert_midi_str, main_divider)
+
+		log.user("midi_block", #input_units, format.block(input_units))
+
+		local input_pattern
+		local input_note_pool
+		local input_arp_expr
+
+		if #input_units == 1 then
+			input_pattern = input_units[1]
+		elseif #input_units == 2 then
+			input_pattern = input_units[1]
+			input_note_pool = input_units[2]
+		elseif #input_units > 3 then
+			input_pattern = input_units[1]
+			input_note_pool = input_units[2]
+			input_arp_expr = input_units[3]
+		end
+
+		local t_patterns_state, t_pattern_midi_notes = midi_patterns.create_insert_midi_pattern_by_string(_, {
+			pattern = input_pattern,
+			dry_run = true, -- only return data, DON'T try insert any midi
+		})
+
+		log.user(t_patterns_state, t_pattern_midi_notes)
+
+		--
 	end
 
 	fzf.init({
@@ -566,6 +624,22 @@ commands.master_prompt = function()
 	--
 	-- This would allow me to further refactor the core and allow the project
 	-- to be even more modular.
+
+	-- TODO: IMPORTANT
+	--       There needs to be a `Proceed` prompt that clearly states what will
+	--       be done to a project, so that you know for sure what will happen
+	--       when executing the prompt.
+end
+
+commands.MIDI_AI_PROMPT = function()
+	-- TODO: play around with a base promt that ensures we get data correctly
+	-- formatted so that I can be confident that the AI always returns the
+	-- correct type of info
+	-- --
+	-- I need to create a file-spec for how each type of data information should
+	-- be formatted by the AI. This spec explanation will always be injected
+	-- before the user-prompt so that an AI prompt always will give it all necessary
+	-- details.
 end
 
 return commands
