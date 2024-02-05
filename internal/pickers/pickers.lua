@@ -261,6 +261,11 @@ pickers.track_attributes = function()
 	})
 end
 
+
+-- Each result entry table needs to contain all of the necessary info
+-- in order to be able to dynamically update it later with a single set of
+-- flexible key bindings.
+-- Handle each type [toggle|spectrum|string]
 pickers.track_attributes_and_parameters = function()
 	local t_track_params = {
 		-- volume =

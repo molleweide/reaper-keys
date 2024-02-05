@@ -142,12 +142,14 @@ local function get_note_opts_for_char(pitch, t_ps)
 		note_step_length = t_ps.current_unit.note_step,
 		pitch = pitch,
 	}
+
 	if string.match(t_ps.current_char, "[xk]") then
 		note_opts.silent = false
 	end
 	if t_ps.current_char == "*" then
 		note_opts.silent = randomBool()
 	end
+
 	return note_opts
 end
 
@@ -216,12 +218,14 @@ end
 -- TODO: use fzf picker and store pattern history
 -- only store patterns when the function is called from a picker/user_input.
 -- Note when I call this function in other actions that also pass pattern strings.
-
+--
 midi_patterns.create_insert_midi_pattern_by_string = function(meta, opts)
 	opts = opts or {}
-	local ret, t_midi_context = midi_editor.getMidiValidContext()
+	local ok, t_midi_context = midi_editor.getMidiValidContext()
 
-	if not ret and not opts.dry_run then
+	log.user(format.block(t_midi_context))
+
+	if not ok and not opts.dry_run then
 		return
 	end
 
@@ -240,13 +244,25 @@ midi_patterns.create_insert_midi_pattern_by_string = function(meta, opts)
 		)
 	end
 
+	local pattern_start_pos
+	if opts.start_at_zero then
+		pattern_start_pos = 0
+	elseif opts.start_at_measure then
+		pattern_start_pos = (tl.get_cursor_info()).msr.start
+	else
+		pattern_start_pos = t_midi_context.cursor_pos
+	end
+
 	-- maybe rename it to command state as a more general term so that this pattern
 	-- could be reused in other of my custom action commands.
 	local t_patterns_state = {
 		input_units = s.split(str_pat_input, PATTERN_SPEC.pattern_sep),
-		-- This value is incremented for each note added to the pattern.
-		note_start = opts.start_at_measure and (tl.get_cursor_info()).msr.start or t_midi_context.cursor_pos,
+		note_start = pattern_start_pos, -- This value is incremented for each note added to the pattern.
 	}
+
+	if t_midi_context.note_row == -1 then
+		t_midi_context.note_row = 80
+	end
 
 	-- if opts.dry_run then
 	-- 	t_patterns_state.note_start = 0

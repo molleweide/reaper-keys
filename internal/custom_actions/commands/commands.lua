@@ -288,7 +288,6 @@ end
 -- B. Specify how long / repetitions for a given insertion.
 --    --
 commands.main_insert_midi_block_from_string_UI = function()
-
 	-- TODO: Reuse this in order to get measure pos and existing item/take
 	-- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
 	-- if context == "main" then
@@ -327,6 +326,12 @@ commands.main_insert_midi_block_from_string_UI = function()
 			return count, t_res
 		end
 
+		local function apply_note_pool_to_pattern()
+			for _, atom in ipairs(t_pattern_midi_notes) do
+				log.user(format.block(atom))
+			end
+		end
+
 		-- NOTE: brainstorming
 		-- 1. parse string
 		--    ~ pattern
@@ -362,41 +367,56 @@ commands.main_insert_midi_block_from_string_UI = function()
 		elseif #input_units == 2 then
 			input_pattern = input_units[1]
 			input_note_pool = input_units[2]
-		elseif #input_units > 3 then
+		elseif #input_units > 2 then
 			input_pattern = input_units[1]
 			input_note_pool = input_units[2]
 			input_arp_expr = input_units[3]
 		end
 
-		-- build patterns
-		--
+		-- BUILD PATTERNS
+
+		if input_pattern == "" then
 		-- TODO: if no input_pattern, then fill the measure with a full measure note.
+		else
+			local t_patterns_state, t_pattern_midi_notes = midi_patterns.create_insert_midi_pattern_by_string(_, {
+				pattern = input_pattern,
+				dry_run = true, -- only return data, DON'T try insert any midi
+				start_at_measure = true,
+			})
+		end
 
-		local t_patterns_state, t_pattern_midi_notes = midi_patterns.create_insert_midi_pattern_by_string(_, {
-			pattern = input_pattern,
-			dry_run = true, -- only return data, DON'T try insert any midi
-			start_at_measure = true,
-		})
-		log.user(t_patterns_state, t_pattern_midi_notes)
+		-- log.user(format.block(t_patterns_state))
+		-- log.user(format.block(t_pattern_midi_notes))
 
-		-- apply note pool
-		--
-		-- for each midi pattern note
-		--     apply the note pool, eg. add chord notes for each pattern event
-		--
-		--     NOTE: here i just need to add the note pool to each atom.
-		--
-		--    if no_note_pool then default pitch
-		--
-		--
+    -- APPLY NOTE POOLS
+
+		if input_note_pool == "" then
+			log.user("note pool: > empty use default")
+			apply_note_pool_to_pattern("single pitch C")
+		elseif input_note_pool == "chord" then
+			log.user("note pool: > chord")
+			apply_note_pool_to_pattern("apply chord to each pattern atom")
+		elseif input_note_pool == "scale" then
+			log.user("note pool: > scale")
+			apply_note_pool_to_pattern("apply scale cluster to each pattern atom")
+		end
+
+		-- ARP EXPR
 
 		-- if arp_expr
 		--    compute_how_to_apply_expr??
 
-		-- INSERT NOTES
+    --
+    -- TODO: ensure/create item/take
+    --
+
+		-- TODO: INSERT NOTES
 		-- for each pattern atom
 		--    for each atom.notes
 		--       insert_notes
+		--
+		--       this is now just a matter of inserting the notes and but i first
+		--
 
 		--
 	end
@@ -415,6 +435,48 @@ commands.main_insert_midi_block_from_string_UI = function()
 			return true
 		end,
 	})
+end
+
+-- TODO:
+-- ~ Connect this with the command/parser from above `main_insert_midi_block_from_string_UI`
+-- ~ Chain pickers [ SelectRegion->Prompt ]
+--
+-- - Add ability to randomize some type of parameter change every N bars, so that
+--   the listener always percieves that "stuff" is happening.
+--
+--
+commands.MIDI_insert_fill_region = function()
+	--
+end
+
+-- Create a UI that allows me to CRUD meta/macro info for a project so
+-- that this will be used later when rendering, eg. regions from project
+-- info.
+commands.project_patterns_and_harmony_manager = function()
+
+	-- ALL THEMES
+	-- keybind -> add theme
+	--     (a theme is a set of information that can be used as base input when
+	--     rendering sections)
+	--
+	-- keybind -> add theme
+	--         -> edit theme
+	--         -> remove theme
+	--         -> enter theme (SINGLE THEME)
+	--
+	-- SINGLE THEME
+	-- keybind -> add entry
+	--         -> edit entry
+	--         -> delete entry
+	--
+	-- A theme should have
+	-- rhythm patterns
+	-- bass patterns
+	-- comp patterns
+	-- lead patterns
+	-- fx/bkg
+	-- key/center
+	-- harmony / chord progression
 end
 
 -- ::: REGION UI :::
@@ -515,10 +577,9 @@ end
 -- F. combine!! channel_mix_params && track_attributes
 --
 commands.track_manager_ui = function()
-
-  -- 1. put together all of the `result` properties.
-  --     Compile nice sub-tables with all necessary info.
-  -- 2.
+	-- 1. put together all of the `result` properties.
+	--     Compile nice sub-tables with all necessary info.
+	-- 2.
 
 	local function track_manager(not_first)
 		pickers.track_fx(_, {
@@ -543,8 +604,6 @@ commands.track_manager_ui = function()
 	end
 
 	track_manager()
-
-
 end
 
 -- Move this to pickers main file later..
