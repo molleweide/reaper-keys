@@ -285,9 +285,18 @@ end
 -- A. Initially, this should only work on the focused track selection.
 --    >>> Later, add ability to target specific tracks.
 --    --
--- B.
+-- B. Specify how long / repetitions for a given insertion.
 --    --
 commands.main_insert_midi_block_from_string_UI = function()
+
+	-- TODO: Reuse this in order to get measure pos and existing item/take
+	-- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+	-- if context == "main" then
+	-- 	local focus_track_obj = focused_track_objects[1]
+	-- 	log.user(">>>", focus_track_obj)
+	-- 	midi_editor.createEditMidiItemAtPositionForTrack(_, focus_track_obj)
+	-- end
+
 	local function handle_midi_string(insert_midi_str)
 		log.user("MIDI BLOCK STRING:", insert_midi_str)
 
@@ -318,25 +327,6 @@ commands.main_insert_midi_block_from_string_UI = function()
 			return count, t_res
 		end
 
-		-- midi pattern string returns a table of rhythm patters.
-		--
-		-- local t_data = {
-		-- 	pattern = {
-		-- 		subpattern_1 = {
-		-- 			--   events = ,
-		-- 			-- note_pool = ,
-		-- 			-- arp_expr = ,
-		-- 		},
-		-- 		subpattern_2 = {
-		-- 			-- ...
-		-- 		},
-		-- 	},
-		-- 	global = {
-		-- 		-- note_pool = ,
-		-- 		-- arp_expr = ,
-		-- 	},
-		-- }
-
 		-- NOTE: brainstorming
 		-- 1. parse string
 		--    ~ pattern
@@ -350,6 +340,10 @@ commands.main_insert_midi_block_from_string_UI = function()
 
 		local main_divider = "/"
 
+		if insert_midi_str == "" then
+			return
+		end
+
 		local num_main_dividers, input_units = countCharInString(insert_midi_str, main_divider)
 
 		log.user("midi_block", #input_units, format.block(input_units))
@@ -357,6 +351,11 @@ commands.main_insert_midi_block_from_string_UI = function()
 		local input_pattern
 		local input_note_pool
 		local input_arp_expr
+
+		-- If no pattern then use eight notes as default?
+		--
+		-- Use root note as default note pool if none is passed
+		--
 
 		if #input_units == 1 then
 			input_pattern = input_units[1]
@@ -369,12 +368,35 @@ commands.main_insert_midi_block_from_string_UI = function()
 			input_arp_expr = input_units[3]
 		end
 
+		-- build patterns
+		--
+		-- TODO: if no input_pattern, then fill the measure with a full measure note.
+
 		local t_patterns_state, t_pattern_midi_notes = midi_patterns.create_insert_midi_pattern_by_string(_, {
 			pattern = input_pattern,
 			dry_run = true, -- only return data, DON'T try insert any midi
+			start_at_measure = true,
 		})
-
 		log.user(t_patterns_state, t_pattern_midi_notes)
+
+		-- apply note pool
+		--
+		-- for each midi pattern note
+		--     apply the note pool, eg. add chord notes for each pattern event
+		--
+		--     NOTE: here i just need to add the note pool to each atom.
+		--
+		--    if no_note_pool then default pitch
+		--
+		--
+
+		-- if arp_expr
+		--    compute_how_to_apply_expr??
+
+		-- INSERT NOTES
+		-- for each pattern atom
+		--    for each atom.notes
+		--       insert_notes
 
 		--
 	end
@@ -395,6 +417,11 @@ commands.main_insert_midi_block_from_string_UI = function()
 	})
 end
 
+-- ::: REGION UI :::
+--
+-- This one is going to be fun to build, since this allows me to sketch out
+-- structure easilly and play around with copying songs.
+--
 commands.regions_manager_fuzzy_ui = function(meta, opts)
 	-- TODO: CRUD ui that allows me to manage regions easilly.
 	--
@@ -421,20 +448,6 @@ commands.regions_manager_fuzzy_ui = function(meta, opts)
 
 	-- TEST: delete region -> if region contains item data -> user will be prompted
 	-- "Region contains item data - Are you sure you want to proceed? (Y/n)"
-end
-
-commands.show_hide_track_ui = function()
-	-- TODO: create a picker of all track nodes.
-	-- 1. keybind -> attach `hide` flag to each entry.
-	-- 2. apply.
-	--
-	-- NOTE: hide tracks of class X, or if you say hide G, then all children
-	-- will also be hidden.
-	--
-	--
-	-- FIX: Need action/command to un-hide all tracks easy
-	--
-	-- NOTE: THIS SHOULD PROLLY GO INTO THE TRACK_NODE_UI ABOVE?!
 end
 
 -- TEST: Later, this should be modified to create a MIDI edit SCREENSET from
@@ -488,6 +501,50 @@ commands.track_fx_ui = function(meta, opts)
 	end
 
 	track_fx_ui()
+end
+
+-- A. Base picker it `all tracks`
+-- B. on_select -> open attributes for selected track
+-- C. If `multiple selection`, then with key binds I can batch toggle.
+--
+-- D. Eg. `hiding` on a branch-node will also hide all contained nodes.
+--
+-- E. I can pretty much reuse the FX mixing keybinds for controlling
+--      track attributes/parameters
+--
+-- F. combine!! channel_mix_params && track_attributes
+--
+commands.track_manager_ui = function()
+
+  -- 1. put together all of the `result` properties.
+  --     Compile nice sub-tables with all necessary info.
+  -- 2.
+
+	local function track_manager(not_first)
+		pickers.track_fx(_, {
+			master_title = "TRACK MANAGER: [ATTRS/PARAMS]",
+			results = {},
+			next = function(meta, data, self)
+				-- local t_fx_params = fxu.get_track_fx_info(tr_node.tr, data.selection.idx)
+				pickers.track_attributes_and_params(_, {
+					-- node = tr_node,
+					-- fx_index = data.selection.idx,
+					results = {},
+					-- sort_comp = require("pickers.sorters.default")("name"),
+					-- entry_maker = require("pickers.entry_makers.fx_parameters"),
+					extended_mappings = {
+						["C-z"] = function()
+							track_manager(true)
+						end,
+					},
+				})
+			end,
+		})
+	end
+
+	track_manager()
+
+
 end
 
 -- Move this to pickers main file later..

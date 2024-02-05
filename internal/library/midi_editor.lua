@@ -597,8 +597,11 @@ end
 -- TODO: this function when used with fzf should always prefix tracks with
 -- their respective group node names
 --
-	-- TODO: if track is midi split child -> then enter parent track
-	-- and set midi channel for insertion
+-- TODO: if track is midi split child -> then enter parent track
+-- and set midi channel for insertion
+--
+-- TODO: allow for passing any position to this function and have it render an
+-- item whereever youd like to edit ME.
 
 --- FIX: Should find item if it starts
 --

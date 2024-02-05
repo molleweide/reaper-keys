@@ -176,8 +176,9 @@ end
 local function get_prepare_unit_params(unit)
 	local multiplier, divider = get_unit_multipliers(unit)
 	local note_step = multiplier / divider
-	log.user(string.format(
+	log.debug(string.format(
 		[[
+		COMPUTE PATTERN UNIT PARAMS
 	mul = %s
 	div = %s
 	note_step = %s
@@ -220,12 +221,9 @@ midi_patterns.create_insert_midi_pattern_by_string = function(meta, opts)
 	opts = opts or {}
 	local ret, t_midi_context = midi_editor.getMidiValidContext()
 
-	log.user("????")
 	if not ret and not opts.dry_run then
 		return
 	end
-
-	log.user("???? >", opts.pattern)
 
 	-- local midi_patterns_state = reaper_state.get(state_table_name)
 	-- -- log.user("PREV PATTERN:", format.block(midi_patterns_state))
@@ -250,9 +248,9 @@ midi_patterns.create_insert_midi_pattern_by_string = function(meta, opts)
 		note_start = opts.start_at_measure and (tl.get_cursor_info()).msr.start or t_midi_context.cursor_pos,
 	}
 
-	if opts.dry_run then
-		t_patterns_state.note_start = 0
-	end
+	-- if opts.dry_run then
+	-- 	t_patterns_state.note_start = 0
+	-- end
 
 	apply_repeats(t_patterns_state)
 	apply_shorthands(t_patterns_state, SHORTHAND_CASES)
@@ -280,11 +278,10 @@ midi_patterns.create_insert_midi_pattern_by_string = function(meta, opts)
 
 	log.debug("t pattern state", format.block(t_patterns_state), format.block(t_midi_notes))
 
-	local pattern_start_ppq = reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[1].time_pos_start)
-	local pattern_end_ppq =
-		reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[#t_midi_notes].time_pos_end_without_gap)
-
 	if not opts.dry_run then
+		local pattern_start_ppq = reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[1].time_pos_start)
+		local pattern_end_ppq =
+			reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[#t_midi_notes].time_pos_end_without_gap)
 		midi.midi_take_filter_transform(t_midi_context.take, {
 			remove = {
 				notes = {

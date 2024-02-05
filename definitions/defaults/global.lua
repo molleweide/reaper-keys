@@ -354,6 +354,8 @@ return {
 				["t"] = {
 					"+track",
 					{
+					  ["H"] = "Unhide_ShowAllTracks",
+					  ["h"] = "Hide_Current_Group",
 						["n"] = "ResetTrackToNormal",
 						["R"] = "RenderTrack",
 						["r"] = "UpdateTrackName",

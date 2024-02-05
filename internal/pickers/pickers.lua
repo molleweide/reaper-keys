@@ -261,6 +261,25 @@ pickers.track_attributes = function()
 	})
 end
 
+pickers.track_attributes_and_parameters = function()
+	local t_track_params = {
+		-- volume =
+		-- pan =
+		-- phase =
+		-- solo =
+		-- mute =
+		-- active =
+		-- armed =
+		-- record_monitoring =
+		-- fx = next > fx menu
+		-- routing
+	}
+	fzf.init(tbl.deep_extend({
+		title = "Track params for track: <trackname>",
+		results = {},
+	}, opts))
+end
+
 -- revisit my route lib
 -- get all routes for track
 -- reuse my track logging function but here instead.
