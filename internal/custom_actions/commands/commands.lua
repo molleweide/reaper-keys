@@ -329,11 +329,31 @@ commands.main_insert_midi_block_from_string_UI = function()
 		local function apply_note_data_to_pattern(t_pattern_midi_notes, note_pool_str, arp_expr_str)
 			local use_expr = arp_expr_str ~= "" and true
 
+			local note_pool_found
+
+			local default_pitch = 60
+
 			-- parse note pool string
 			if note_pool_str == "" then
 				log.user("note pool: > empty use default")
 			else
 				log.user("note pool: > scale")
+
+				local the_parsed_pool = note_pool_str:match("????")
+
+				local all_note_pools = require("constants.all_note_pools")
+
+				for _, np in ipairs(all_note_pools) do
+					if np.name_short == the_parsed_pool then
+						note_pool_found = np
+					end
+				end
+			end
+
+			if note_pool_found then
+				for i, pitch in ipairs(note_pool_found.relative_intervals) do
+					note_pool_found.relative_intervals[i] = pitch + default_pitch
+				end
 			end
 
 			-- apply note pool to each pattern atom
@@ -344,6 +364,7 @@ commands.main_insert_midi_block_from_string_UI = function()
 			else
 				for _, atom in ipairs(t_pattern_midi_notes) do
 					log.user(format.block(atom))
+					atom.pitch = note_pool_str.relative_intervals
 				end
 			end
 		end
