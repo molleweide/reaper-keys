@@ -326,9 +326,25 @@ commands.main_insert_midi_block_from_string_UI = function()
 			return count, t_res
 		end
 
-		local function apply_note_pool_to_pattern()
-			for _, atom in ipairs(t_pattern_midi_notes) do
-				log.user(format.block(atom))
+		local function apply_note_data_to_pattern(t_pattern_midi_notes, note_pool_str, arp_expr_str)
+			local use_expr = arp_expr_str ~= "" and true
+
+			-- parse note pool string
+			if note_pool_str == "" then
+				log.user("note pool: > empty use default")
+			else
+				log.user("note pool: > scale")
+			end
+
+			-- apply note pool to each pattern atom
+
+			if use_expr then
+			-- parse expr
+			-- apply expr
+			else
+				for _, atom in ipairs(t_pattern_midi_notes) do
+					log.user(format.block(atom))
+				end
 			end
 		end
 
@@ -375,10 +391,12 @@ commands.main_insert_midi_block_from_string_UI = function()
 
 		-- BUILD PATTERNS
 
+		local t_pattern_midi_notes
+
 		if input_pattern == "" then
 		-- TODO: if no input_pattern, then fill the measure with a full measure note.
 		else
-			local t_patterns_state, t_pattern_midi_notes = midi_patterns.create_insert_midi_pattern_by_string(_, {
+			_, t_pattern_midi_notes = midi_patterns.create_insert_midi_pattern_by_string(_, {
 				pattern = input_pattern,
 				dry_run = true, -- only return data, DON'T try insert any midi
 				start_at_measure = true,
@@ -388,27 +406,11 @@ commands.main_insert_midi_block_from_string_UI = function()
 		-- log.user(format.block(t_patterns_state))
 		-- log.user(format.block(t_pattern_midi_notes))
 
-    -- APPLY NOTE POOLS
+		apply_note_data_to_pattern(t_pattern_midi_notes, input_note_pool, input_arp_expr)
 
-		if input_note_pool == "" then
-			log.user("note pool: > empty use default")
-			apply_note_pool_to_pattern("single pitch C")
-		elseif input_note_pool == "chord" then
-			log.user("note pool: > chord")
-			apply_note_pool_to_pattern("apply chord to each pattern atom")
-		elseif input_note_pool == "scale" then
-			log.user("note pool: > scale")
-			apply_note_pool_to_pattern("apply scale cluster to each pattern atom")
-		end
-
-		-- ARP EXPR
-
-		-- if arp_expr
-		--    compute_how_to_apply_expr??
-
-    --
-    -- TODO: ensure/create item/take
-    --
+		--
+		-- TODO: ensure/create item/take
+		--
 
 		-- TODO: INSERT NOTES
 		-- for each pattern atom
