@@ -287,17 +287,39 @@ end
 --    --
 -- B. Specify how long / repetitions for a given insertion.
 --    --
+-- C. Depending on which group is targetted, default octave change,
+--    eg. bass = 1, comp = 3, lead = 4
+--    >>> Create a file called definitions/rendering.lua/octave_map.lu where I
+--    specify information on a zone/group basis for how things should be
+--    handled when auto generating.
+--
 commands.main_insert_midi_block_from_string_UI = function()
-	-- TODO: Reuse this in order to get measure pos and existing item/take
-	-- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
-	-- if context == "main" then
-	-- 	local focus_track_obj = focused_track_objects[1]
-	-- 	log.user(">>>", focus_track_obj)
-	-- 	midi_editor.createEditMidiItemAtPositionForTrack(_, focus_track_obj)
-	-- end
+	local tl = require("library.timeline")
+	local containers = require("library.items")
+	local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+
+	if context ~= "main" then
+		return
+	end
+
+	local cursor_info = tl.get_cursor_info()
+	local focus_track_obj = focused_track_objects[1]
+
+	local check_start_pos = cursor_info.msr.start
+	local check_end_pos = cursor_info.msr._end
+
+	-- target_tr = track_obj.tr
+	-- items_found = containers.get_track_items_in_range_time_w_data(track_obj.tr, check_start_pos, check_end_pos)
+	local items_found =
+		containers.get_track_items_that_span_cursor_pos(focus_track_obj.tr, check_start_pos, check_end_pos)
+
+	-- log.user(">>>", focus_track_obj)
+	-- midi_editor.createEditMidiItemAtPositionForTrack(_, focus_track_obj)
 
 	local function handle_midi_string(insert_midi_str)
 		log.user("MIDI BLOCK STRING:", insert_midi_str)
+
+		local main_divider = "/"
 
 		local function countCharInString(inputString, charToCount)
 			local count = 0
@@ -326,26 +348,54 @@ commands.main_insert_midi_block_from_string_UI = function()
 			return count, t_res
 		end
 
-		local function apply_note_data_to_pattern(t_pattern_midi_notes, note_pool_str, arp_expr_str)
-			local use_expr = arp_expr_str ~= "" and true
+		-- TODO: if no input_pattern, then fill the measure with a full measure note.
+		local function parse_pattern(input_pattern)
+			local t_pattern_midi_notes
+			if input_pattern == "" then
+			-- todo ...
+			else
+				_, t_pattern_midi_notes = midi_patterns.create_insert_midi_pattern_by_string(_, {
+					pattern = input_pattern,
+					dry_run = true, -- only return data, DON'T try insert any midi
+					start_at_measure = true,
+				})
+			end
+			return t_pattern_midi_notes
+		end
 
-			local note_pool_found
-
+		-- ~ I need a way to specifically target chords / scale
+		-- ~ Add octave number to the initial pitch
+		local function parse_note_pool(note_pool_str)
+			local root_pitch, note_pool_found
 			local default_pitch = 60
 
-			-- parse note pool string
-			if note_pool_str == "" then
-				log.user("note pool: > empty use default")
+			if note_pool_str == nil or note_pool_str == "" then
+				return {
+					root_pitch = default_pitch,
+					note_pool = nil,
+				}
 			else
-				log.user("note pool: > scale")
+				local t_parsed_pool = s.split(note_pool_str, " ")
 
-				local the_parsed_pool = note_pool_str:match("????")
+				-- log.user("t parsed pool:", format.block(t_parsed_pool))
 
-				local all_note_pools = require("constants.all_note_pools")
+				local parsed_pool
+
+				if #t_parsed_pool == 1 then
+					root_pitch = default_pitch
+					parsed_pool = t_parsed_pool[1]
+				elseif #t_parsed_pool > 1 then
+					root_pitch = t_parsed_pool[1]
+					parsed_pool = t_parsed_pool[2]
+				end
+
+				local all_note_pools = require("constants.all_note_pools")()
+				local found_np = false
 
 				for _, np in ipairs(all_note_pools) do
-					if np.name_short == the_parsed_pool then
+					if np.name_short:lower():match(parsed_pool) then
 						note_pool_found = np
+						found_np = true
 					end
 				end
 			end
@@ -355,50 +405,21 @@ commands.main_insert_midi_block_from_string_UI = function()
 					note_pool_found.relative_intervals[i] = pitch + default_pitch
 				end
 			end
-
-			-- apply note pool to each pattern atom
-
-			if use_expr then
-			-- parse expr
-			-- apply expr
-			else
-				for _, atom in ipairs(t_pattern_midi_notes) do
-					log.user(format.block(atom))
-					atom.pitch = note_pool_str.relative_intervals
-				end
-			end
+			return {
+				root_pitch = root_pitch,
+				note_pool = note_pool_found,
+			}
 		end
 
-		-- NOTE: brainstorming
-		-- 1. parse string
-		--    ~ pattern
-		--    ~ note_pool (single/chord/scale)
-		-- 2. render pattern string
-		-- 3. assign note pool to each rhythm event
-		--    (if arp expr then ...)
-		-- 4. check if an item exists at [first note, last note]
-		-- 5. ensure/create new item.
-		-- 6. insert midi notes by calling `midi.insertNoteChunk({})`
-
-		local main_divider = "/"
+		-- 0. SPLIT INPUT && ASSIGN `PATTERN/POOL/ARP`
 
 		if insert_midi_str == "" then
 			return
 		end
-
-		local num_main_dividers, input_units = countCharInString(insert_midi_str, main_divider)
-
-		log.user("midi_block", #input_units, format.block(input_units))
-
+		local _, input_units = countCharInString(insert_midi_str, main_divider)
 		local input_pattern
 		local input_note_pool
 		local input_arp_expr
-
-		-- If no pattern then use eight notes as default?
-		--
-		-- Use root note as default note pool if none is passed
-		--
-
 		if #input_units == 1 then
 			input_pattern = input_units[1]
 		elseif #input_units == 2 then
@@ -409,37 +430,69 @@ commands.main_insert_midi_block_from_string_UI = function()
 			input_note_pool = input_units[2]
 			input_arp_expr = input_units[3]
 		end
+		local use_expr = input_arp_expr == "" and false
 
-		-- BUILD PATTERNS
+		log.user("midi_block", #input_units, format.block(input_units))
 
-		local t_pattern_midi_notes
+		-------------------------------------------------------
 
-		if input_pattern == "" then
-		-- TODO: if no input_pattern, then fill the measure with a full measure note.
-		else
-			_, t_pattern_midi_notes = midi_patterns.create_insert_midi_pattern_by_string(_, {
-				pattern = input_pattern,
-				dry_run = true, -- only return data, DON'T try insert any midi
-				start_at_measure = true,
-			})
+		local pattern = parse_pattern(input_pattern)
+		local note_pool = parse_note_pool(input_note_pool)
+
+		log.user("NOTE POOL:", format.block(note_pool))
+
+		if not pattern then
+			log.debug("Pattern returnd in [insert_midi_block] was nil.")
+			return
 		end
 
-		-- log.user(format.block(t_patterns_state))
-		-- log.user(format.block(t_pattern_midi_notes))
-
-		apply_note_data_to_pattern(t_pattern_midi_notes, input_note_pool, input_arp_expr)
-
-		--
-		-- TODO: ensure/create item/take
+		-------------------------------------------------------
+		-- Merge pattern with note pool
 		--
 
-		-- TODO: INSERT NOTES
+		local t_final_rendered_notes = {}
+
+		if note_pool then
+			if use_expr then
+			-- parse expr
+			-- apply expr
+			else
+				if note_pool.note_pool then
+					local pitches = note_pool.note_pool.relative_intervals
+
+					for _, atom in ipairs(pattern) do
+						atom.pitch = pitches
+						-- table.insert(t_final_rendered_notes, atom)
+						-- log.user("ATOM:", format.block(atom), format.block(pitches))
+					end
+				end
+			end
+		end
+
+		-------------------------------------------------------
+
+		local target_item
+		if items_found then
+			target_item = items_found[1].ref
+		else
+			target_item = containers.create_new_item(true, focus_track_obj.tr, check_start_pos, check_end_pos)
+		end
+
+		log.user(format.block(pattern))
+
+		-- E. INSERT NOTES
+		--
+		-- FIX: reuse the patterns `insert` function OR use the midi_transform API?
+		--
 		-- for each pattern atom
 		--    for each atom.notes
 		--       insert_notes
 		--
 		--       this is now just a matter of inserting the notes and but i first
 		--
+
+		-- log.user(format.block(t_patterns_state))
+		-- log.user(format.block(t_pattern_midi_notes))
 
 		--
 	end
