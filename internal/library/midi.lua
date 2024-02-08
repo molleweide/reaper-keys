@@ -625,7 +625,16 @@ midi.insert_notes = function(opts)
 		return
 	end
 	local note_defaults = require("constants.constants").midi_note_defaults
-	local take = opts.take
+
+	local take
+
+	if opts.item then
+		take = reaper.GetMediaItemTake(opts.item, 0)
+	elseif opts.take then
+		take = opts.take
+	end
+
+	-- local take = opts.take
 
 	for _, t_note in ipairs(opts.notes) do
 		if not t_note.silent then

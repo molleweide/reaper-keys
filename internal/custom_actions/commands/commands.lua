@@ -393,7 +393,7 @@ commands.main_insert_midi_block_from_string_UI = function()
 				local found_np = false
 
 				for _, np in ipairs(all_note_pools) do
-					if np.name_short:lower():match(parsed_pool) then
+					if np.name_short:lower():match("^"..parsed_pool) then
 						note_pool_found = np
 						found_np = true
 					end
@@ -480,16 +480,14 @@ commands.main_insert_midi_block_from_string_UI = function()
 
 		log.user(format.block(pattern))
 
-		-- E. INSERT NOTES
-		--
-		-- FIX: reuse the patterns `insert` function OR use the midi_transform API?
-		--
-		-- for each pattern atom
-		--    for each atom.notes
-		--       insert_notes
-		--
-		--       this is now just a matter of inserting the notes and but i first
-		--
+    -- FIX: temporarilly use this, BUT I need to use the transform api
+    -- later, which means that I can't pass a table as the pitch param,
+    -- each note has to be a distinct table.
+    --
+		midi.insert_notes({
+			item = target_item,
+			notes = pattern,
+		})
 
 		-- log.user(format.block(t_patterns_state))
 		-- log.user(format.block(t_pattern_midi_notes))
