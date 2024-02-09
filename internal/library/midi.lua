@@ -3,7 +3,8 @@ local format = require("utils.format")
 
 local s = require("utils.string")
 
--- local midi_patterns = require("library.midi_patterns")
+local midi_editor = require("library.midi_editor")
+local midi_patterns = require("library.midi_patterns")
 
 local state_interface = require("state_machine.state_interface")
 local project_state = require("utils.project_state")
@@ -1231,6 +1232,51 @@ midi.jump_to_position_and_insert_by_string = function()
 	log.user(format.block(t_results))
 end
 
+midi.create_insert_midi_pattern_by_string = function(meta, opts)
+	opts = opts or {}
+	local ok, t_midi_context = midi_editor.getMidiValidContext()
+
+	log.user(format.block(t_midi_context))
+
+	if not ok and not opts.dry_run then
+		return
+	end
+
+	-- local midi_patterns_state = reaper_state.get(state_table_name)
+	-- -- log.user("PREV PATTERN:", format.block(midi_patterns_state))
+
+	local t_patterns_state, t_midi_notes =
+		midi_patterns.parse(_, { pattern = opts.pattern, midi_context = t_midi_context })
+
+	--
+	-- FIX: Everything bellow here should go into `lib/midi.lua`
+	--
+
+	if not opts.dry_run then
+		local pattern_start_ppq = reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[1].time_pos_start)
+		local pattern_end_ppq =
+			reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[#t_midi_notes].time_pos_end_without_gap)
+		midi.midi_take_filter_transform(t_midi_context.take, {
+			remove = {
+				notes = {
+					pitch = function(note)
+						return note.pitch == t_midi_context.note_row
+							and (pattern_start_ppq <= note.ppq_s and note.ppq_e <= pattern_end_ppq)
+					end,
+				},
+			},
+		})
+
+		midi.insert_notes({
+			take = t_midi_context.take,
+			notes = t_midi_notes,
+		})
+		reaper_state.set(state_table_name, { prev_pattern_string = str_pat_input })
+	end
+
+	return t_patterns_state, t_midi_notes
+end
+
 midi.parse_and_render_midi_notes_block_from_string = function(insert_midi_str)
 	log.user("MIDI BLOCK STRING:", insert_midi_str)
 	local return_code = false
@@ -1270,7 +1316,7 @@ midi.parse_and_render_midi_notes_block_from_string = function(insert_midi_str)
 		if input_pattern == "" then
 		-- todo ...
 		else
-			_, t_pattern_midi_notes = midi_patterns.create_insert_midi_pattern_by_string(_, {
+			_, t_pattern_midi_notes = midi.create_insert_midi_pattern_by_string(_, {
 				pattern = input_pattern,
 				dry_run = true, -- only return data, DON'T try insert any midi
 				start_at_measure = true,

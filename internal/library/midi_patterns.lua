@@ -1,6 +1,6 @@
 -- local utils = require("custom_actions.utils")
-local midi = require("library.midi")
-local midi_editor = require("library.midi_editor")
+-- local midi = require("library.midi")
+-- local midi_editor = require("library.midi_editor")
 local log = require("utils.log")
 local format = require("utils.format")
 local reaper_state = require("utils.reaper_state")
@@ -219,21 +219,13 @@ end
 -- only store patterns when the function is called from a picker/user_input.
 -- Note when I call this function in other actions that also pass pattern strings.
 --
-midi_patterns.create_insert_midi_pattern_by_string = function(meta, opts)
-	opts = opts or {}
-	local ok, t_midi_context = midi_editor.getMidiValidContext()
-
-	log.user(format.block(t_midi_context))
-
-	if not ok and not opts.dry_run then
-		return
-	end
-
-	-- local midi_patterns_state = reaper_state.get(state_table_name)
-	-- -- log.user("PREV PATTERN:", format.block(midi_patterns_state))
+-- midi_patterns.create_insert_midi_pattern_by_string = function(meta, opts)
+midi_patterns.parse = function(_, opts)
 
 	local t_midi_notes = {}
 	local str_pat_input = opts.pattern or nil
+
+	local t_midi_context = opts.midi_context
 
 	if not str_pat_input then
 		_, str_pat_input = reaper.GetUserInputs(
@@ -294,27 +286,31 @@ midi_patterns.create_insert_midi_pattern_by_string = function(meta, opts)
 
 	log.debug("t pattern state", format.block(t_patterns_state), format.block(t_midi_notes))
 
-	if not opts.dry_run then
-		local pattern_start_ppq = reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[1].time_pos_start)
-		local pattern_end_ppq =
-			reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[#t_midi_notes].time_pos_end_without_gap)
-		midi.midi_take_filter_transform(t_midi_context.take, {
-			remove = {
-				notes = {
-					pitch = function(note)
-						return note.pitch == t_midi_context.note_row
-							and (pattern_start_ppq <= note.ppq_s and note.ppq_e <= pattern_end_ppq)
-					end,
-				},
-			},
-		})
+	--
+	-- FIX: Everything bellow here should go into `lib/midi.lua`
+	--
 
-		midi.insert_notes({
-			take = t_midi_context.take,
-			notes = t_midi_notes,
-		})
-		reaper_state.set(state_table_name, { prev_pattern_string = str_pat_input })
-	end
+	-- if not opts.dry_run then
+	-- 	local pattern_start_ppq = reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[1].time_pos_start)
+	-- 	local pattern_end_ppq =
+	-- 		reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[#t_midi_notes].time_pos_end_without_gap)
+	-- 	midi.midi_take_filter_transform(t_midi_context.take, {
+	-- 		remove = {
+	-- 			notes = {
+	-- 				pitch = function(note)
+	-- 					return note.pitch == t_midi_context.note_row
+	-- 						and (pattern_start_ppq <= note.ppq_s and note.ppq_e <= pattern_end_ppq)
+	-- 				end,
+	-- 			},
+	-- 		},
+	-- 	})
+	--
+	-- 	midi.insert_notes({
+	-- 		take = t_midi_context.take,
+	-- 		notes = t_midi_notes,
+	-- 	})
+	-- 	reaper_state.set(state_table_name, { prev_pattern_string = str_pat_input })
+	-- end
 
 	return t_patterns_state, t_midi_notes
 end
