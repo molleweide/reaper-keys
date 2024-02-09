@@ -3,7 +3,6 @@ local format = require("utils.format")
 local pickers = require("pickers.pickers")
 local lib_tr = require("library.tracks")
 local s = require("utils.string")
-local midi_patterns = require("library.midi_patterns")
 
 local fzf = require("library.fzf")
 
@@ -319,6 +318,9 @@ commands.main_insert_midi_block_from_string_UI = function()
 	local function handle_midi_string(insert_midi_str)
 		log.user("MIDI BLOCK STRING:", insert_midi_str)
 
+		local return_code = true
+
+		local midi_patterns = require("library.midi_patterns")
 		local main_divider = "/"
 
 		local function countCharInString(inputString, charToCount)
@@ -393,7 +395,7 @@ commands.main_insert_midi_block_from_string_UI = function()
 				local found_np = false
 
 				for _, np in ipairs(all_note_pools) do
-					if np.name_short:lower():match("^"..parsed_pool) then
+					if np.name_short:lower():match("^" .. parsed_pool) then
 						note_pool_found = np
 						found_np = true
 					end
@@ -461,13 +463,21 @@ commands.main_insert_midi_block_from_string_UI = function()
 					local pitches = note_pool.note_pool.relative_intervals
 
 					for _, atom in ipairs(pattern) do
-						atom.pitch = pitches
-						-- table.insert(t_final_rendered_notes, atom)
-						-- log.user("ATOM:", format.block(atom), format.block(pitches))
+						for _, pitch_num in ipairs(pitches) do
+							local t_new_note = tbl.copy(atom)
+							t_new_note.pitch = pitch_num
+							table.insert(t_final_rendered_notes, t_new_note)
+							-- log.user("ATOM:", format.block(atom), format.block(pitches))
+						end
 					end
 				end
 			end
 		end
+
+    -- TODO: remove everything above and use only this.
+    -- !!! This requires that lib/midi_patterns becomes independent from lib/midi
+    -- so that patterns can be imported into lib/midi
+		-- local ok, t_final_rendered_notes = midi.parse_and_render_midi_notes_block_from_string(insert_midi_str)
 
 		-------------------------------------------------------
 
@@ -480,18 +490,19 @@ commands.main_insert_midi_block_from_string_UI = function()
 
 		log.user(format.block(pattern))
 
-    -- FIX: temporarilly use this, BUT I need to use the transform api
-    -- later, which means that I can't pass a table as the pitch param,
-    -- each note has to be a distinct table.
-    --
+		-- FIX: temporarilly use this, BUT I need to use the transform api
+		-- later, which means that I can't pass a table as the pitch param,
+		-- each note has to be a distinct table.
+		--
 		midi.insert_notes({
 			item = target_item,
-			notes = pattern,
+			notes = t_final_rendered_notes,
 		})
 
 		-- log.user(format.block(t_patterns_state))
 		-- log.user(format.block(t_pattern_midi_notes))
 
+		return return_code
 		--
 	end
 
@@ -507,6 +518,18 @@ commands.main_insert_midi_block_from_string_UI = function()
 				return ret
 			end
 			return true
+		end,
+	})
+end
+
+-- TODO: refactor the above midi_parse function into midi library, and then
+-- reuse it here in this bicker
+commands.MIDI_select_track_insert_block_by_string = function(meta, opts)
+	pickers.all_tracks(_, {
+		title = "jump to track midi",
+		filter = "M", -- filter nodes
+		next = function(_, data)
+			-- midi_editor.createEditMidiItemAtPositionForTrack(_, data.selection)
 		end,
 	})
 end
