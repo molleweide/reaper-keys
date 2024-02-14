@@ -3,82 +3,91 @@ local state_interface = require("state_machine.state_interface")
 local config = require("definitions.config")
 local reaper_utils = require("custom_actions.utils")
 
+local function save_track_sel()
+	runner.runAction("SaveTrackSelection")
+end
+
+local function restore_track_sel(track_operator)
+	if type(track_operator) ~= "table" or not track_operator["setTrackSelection"] then
+		runner.runAction("RestoreTrackSelection")
+	end
+end
+
 --- NOTE: Table containing { action_sequence <-> action_function } pairs
 --        The [ action sequence ] should be handled in the way of the [ action function ]
 --        by passing the the action sequence as parameters to the action function
 return {
-  all_modes = {
-    {
-      { "track_motion" },
-      function(track_motion)
-        runner.runAction(track_motion)
-      end,
-    },
-  },
-  normal = {
-    {
-      { "track_operator", "track_motion" },
-      function(track_operator, track_motion)
-        runner.runAction("SaveTrackSelection")
-        runner.makeSelectionFromTrackMotion(track_motion, 1)
-        runner.runAction(track_operator)
-        if type(track_operator) ~= "table" or not track_operator["setTrackSelection"] then
-          runner.runAction("RestoreTrackSelection")
-        end
-      end,
-    },
-    {
-      { "track_operator", "track_selector" },
-      function(track_operator, track_selector)
-        runner.runAction("SaveTrackSelection")
-        runner.runAction(track_selector)
-        runner.runAction(track_operator)
-        if type(track_operator) ~= "table" or not track_operator["setTrackSelection"] then
-          runner.runAction("RestoreTrackSelection")
-        end
-      end,
-    },
-  },
-  visual_track = {
-    {
-      { "visual_track_command" },
-      function(visual_track_command)
-        runner.runAction(visual_track_command)
-      end,
-    },
-    {
-      { "track_operator" },
-      function(track_operator)
-        runner.runAction(track_operator)
-        state_interface.setModeToNormal()
-        if not config["persist_visual_track_selection"]
-            and (type(track_operator) ~= "table" or not track_operator["setTrackSelection"])
-        then
-          reaper_utils.unselectAllButLastTouchedTrack()
-        end
-      end,
-    },
-    {
-      { "track_selector" },
-      function(track_selector)
-        runner.runAction(track_selector)
-      end,
-    },
-    {
-      { "track_motion" },
-      function(track_motion)
-        local args = { track_motion, 1 }
-        local sel_function = runner.makeSelectionFromTrackMotion
-        runner.extendTrackSelection(sel_function, args)
-      end,
-    },
-    {
-      { "timeline_motion" },
-      function(timeline_motion)
-        if config["allow_visual_track_timeline_movement"] then
-          runner.runAction(timeline_motion)
-        end
-      end,
-    },
-  },
+	all_modes = {
+		{
+			{ "track_motion" },
+			function(track_motion)
+				runner.runAction(track_motion)
+			end,
+		},
+	},
+	normal = {
+		{
+			{ "track_operator", "track_motion" },
+			function(track_operator, track_motion)
+				save_track_sel()
+				runner.makeSelectionFromTrackMotion(track_motion, 1)
+				runner.runAction(track_operator)
+				restore_track_sel(track_operator)
+			end,
+		},
+		{
+			{ "track_operator", "track_selector" },
+			function(track_operator, track_selector)
+				runner.runAction("SaveTrackSelection")
+				runner.runAction(track_selector)
+				runner.runAction(track_operator)
+				if type(track_operator) ~= "table" or not track_operator["setTrackSelection"] then
+					runner.runAction("RestoreTrackSelection")
+				end
+			end,
+		},
+	},
+	visual_track = {
+		{
+			{ "visual_track_command" },
+			function(visual_track_command)
+				runner.runAction(visual_track_command)
+			end,
+		},
+		{
+			{ "track_operator" },
+			function(track_operator)
+				runner.runAction(track_operator)
+				state_interface.setModeToNormal()
+				if
+					not config["persist_visual_track_selection"]
+					and (type(track_operator) ~= "table" or not track_operator["setTrackSelection"])
+				then
+					reaper_utils.unselectAllButLastTouchedTrack()
+				end
+			end,
+		},
+		{
+			{ "track_selector" },
+			function(track_selector)
+				runner.runAction(track_selector)
+			end,
+		},
+		{
+			{ "track_motion" },
+			function(track_motion)
+				local args = { track_motion, 1 }
+				local sel_function = runner.makeSelectionFromTrackMotion
+				runner.extendTrackSelection(sel_function, args)
+			end,
+		},
+		{
+			{ "timeline_motion" },
+			function(timeline_motion)
+				if config["allow_visual_track_timeline_movement"] then
+					runner.runAction(timeline_motion)
+				end
+			end,
+		},
+	},
 }

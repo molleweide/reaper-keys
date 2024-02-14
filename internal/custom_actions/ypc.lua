@@ -13,6 +13,7 @@ local sxa = require("syntax.actions")
 local sxu = require("syntax.utils")
 
 local tbl = require("utils.table")
+
 --
 --
 -- THIS MODULE CREATES ACTIONS FOR MANAGING MIDI NODES

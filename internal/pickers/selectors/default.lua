@@ -13,7 +13,6 @@ return function(selector)
 				return false
 			end
 			log.user("on_select_func DEFAULT picker selection:", i, format.block(selection))
-
 			if self.next then
 						self.next(meta, {
 							selection = selection,

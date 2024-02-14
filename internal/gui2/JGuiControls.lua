@@ -533,6 +533,21 @@ function jGuiTextInput:_onFocus()
 	self._carret_blink = false
 	self:onFocus()
 end
+
+----------
+-- Input Text Field Control
+--
+-- TODO: reuse the control above and see if I can do this and add the
+-- text field control so that I can use the textfield input inside of
+-- this.
+-- HACK: I have to look into using neovim first before I do this. so that I
+-- can just send a buffer of lines to reaper.
+--
+
+----------
+-- NOTE: I can use the below to generate custom views of plugins so that I
+-- can have my own very raw UIs for plugins.
+
 ----------
 -- Slider control
 

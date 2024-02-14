@@ -145,7 +145,7 @@ return function(the_gui)
 		if k:match("^C%-") then
 			local temp = "control_" .. k:sub(3, 3)
 			local new_key = the_gui.kb[temp]
-			log.user("type v:",type(v))
+			log.user("type v:", type(v))
 			res[tostring(new_key)] = v
 		elseif k:match("^M%-") then
 			local temp = "meta_" .. k:sub(3, 3)

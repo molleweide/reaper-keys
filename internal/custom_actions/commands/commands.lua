@@ -144,53 +144,39 @@ commands.main_insert_midi_block_from_string_UI = function()
 	local tl = require("library.timeline")
 	local containers = require("library.items")
 	local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
-
 	if context ~= "main" then
 		return
 	end
-
 	local cursor_info = tl.get_cursor_info()
 	local focus_track_obj = focused_track_objects[1]
-
 	local check_start_pos = cursor_info.msr.start
 	local check_end_pos = cursor_info.msr._end
 
-	-- target_tr = track_obj.tr
-	-- items_found = containers.get_track_items_in_range_time_w_data(track_obj.tr, check_start_pos, check_end_pos)
 	local items_found =
 		containers.get_track_items_that_span_cursor_pos(focus_track_obj.tr, check_start_pos, check_end_pos)
-
 	-- log.user(">>>", focus_track_obj)
 	-- midi_editor.createEditMidiItemAtPositionForTrack(_, focus_track_obj)
-
 	local function handle_midi_string(insert_midi_str)
 		log.user("MIDI BLOCK STRING:", insert_midi_str)
 		local return_code = true
 		local ok, t_final_rendered_notes = midi.parse_and_render_midi_notes_block_from_string(insert_midi_str)
-
 		local target_item
 		if items_found then
 			target_item = items_found[1].ref
 		else
 			target_item = containers.create_new_item(true, focus_track_obj.tr, check_start_pos, check_end_pos)
 		end
-
-		-- FIX: temporarilly use this, BUT I need to use the transform api
-		-- later, which means that I can't pass a table as the pitch param,
-		-- each note has to be a distinct table.
-		--
+		-- FIX: use transform api
 		midi.insert_notes({
 			item = target_item,
 			notes = t_final_rendered_notes,
 		})
-
 		-- log.user(format.block(t_patterns_state))
 		-- log.user(format.block(t_pattern_midi_notes))
-
 		return return_code
-		--
 	end
 
+  -- TODO: move this into pickers file as `pickers.basic_text_prompt`
 	fzf.init({
 		title = "Add MIDI blocks",
 		x = 200,
@@ -209,14 +195,23 @@ end
 
 -- TODO: refactor the above midi_parse function into midi library, and then
 -- reuse it here in this bicker
-commands.MIDI_select_track_insert_block_by_string = function(meta, opts)
+--
+-- TODO: add multiple select keybind, eg C-s, or C-space
+--
+-- OLD NAME: commands.MIDI_select_tracks_insert_block_by_string = function(meta, opts)
+commands.apply_patterns_across_tracks = function(meta, opts)
+
 	pickers.all_tracks(_, {
 		title = "jump to track midi",
 		filter = "M", -- filter nodes
 		next = function(_, data)
 			-- midi_editor.createEditMidiItemAtPositionForTrack(_, data.selection)
+
 		end,
 	})
+end
+
+commands.promp_make_next_region = function()
 end
 
 -- TODO:
@@ -345,6 +340,22 @@ commands.track_fx_ui = function(meta, opts)
 	end
 
 	track_fx_ui()
+end
+
+
+--
+-- TODO: the purpose of this command is to make it easy to MIX the current
+-- region during live playback.
+--
+commands.picker_all_tracks_THAT_have_active_items_in_CURRENT_region = function()
+end
+
+--
+-- TODO: the purpose of this command is to make it easy to MIX the next
+-- region during live playback so that I can apply some crazy filters
+-- to prepare an interesting section coming up.
+--
+commands.picker_all_tracks_THAT_have_active_items_in_NEXT_region = function()
 end
 
 -- A. Base picker it `all tracks`

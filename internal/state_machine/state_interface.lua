@@ -122,6 +122,13 @@ function state_interface.getMode()
 	return state.mode
 end
 
+function state_interface.set_timeline_motion_range(t_range)
+	local state = state_interface.get()
+	state["last_timeline_motion_range"] = t_range
+	state_interface.set(state)
+end
+
+
 -- TODO: attach `prev_mode` variable to RK state table and set it to nil as
 -- default
 function state_interface.setMode(mode)

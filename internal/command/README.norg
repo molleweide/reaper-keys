@@ -1,0 +1,20 @@
+@document.meta
+title: README
+description:
+authors: hjalmarjakobsson
+categories:
+created: 2024-02-14T01:27:09-0500
+updated: 2024-02-14T01:32:04-0500
+version: 1.1.1
+@end
+
+* Step by step: how commands are build and executed in core.
+
+** build command ()
+
+
+** if command
+*** True: handle command ()
+
+*** False: get possible futures ()
+

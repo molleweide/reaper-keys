@@ -92,6 +92,7 @@ end
 -- 2. only list relevant tracks when it pertains to midi, ie. pass an option to filter
 -- by track object classes. >>> syntax > get track objects list > filter classes, eg. MCAB > jump to tracks.
 --
+-- todo: add all_tracks
 
 pickers.all_tracks = function(meta, opts)
 	local vtt = syntax.getVerifiedTree()
