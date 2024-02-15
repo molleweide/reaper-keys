@@ -3,6 +3,8 @@ local format = require("utils.format")
 local pickers = require("pickers.pickers")
 local lib_tr = require("library.tracks")
 local s = require("utils.string")
+local tl = require("library.timeline")
+local containers = require("library.items")
 
 local fzf = require("library.fzf")
 
@@ -128,6 +130,17 @@ commands.add_track_nodes_ui = function(_, opts)
 	})
 end
 
+local function check_if_item_exists_or_create(track, check_start_pos, check_end_pos)
+	local items_found = containers.get_track_items_that_span_cursor_pos(track, check_start_pos, check_end_pos)
+	local target_item
+	if items_found then
+		target_item = items_found[1].ref
+	else
+		target_item = containers.create_new_item(true, track, check_start_pos, check_end_pos)
+	end
+	return target_item
+end
+
 -- NOTE:
 -- A. Initially, this should only work on the focused track selection.
 --    >>> Later, add ability to target specific tracks.
@@ -141,8 +154,6 @@ end
 --    handled when auto generating.
 --
 commands.main_insert_midi_block_from_string_UI = function()
-	local tl = require("library.timeline")
-	local containers = require("library.items")
 	local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
 	if context ~= "main" then
 		return
@@ -154,8 +165,10 @@ commands.main_insert_midi_block_from_string_UI = function()
 
 	local items_found =
 		containers.get_track_items_that_span_cursor_pos(focus_track_obj.tr, check_start_pos, check_end_pos)
+
 	-- log.user(">>>", focus_track_obj)
 	-- midi_editor.createEditMidiItemAtPositionForTrack(_, focus_track_obj)
+
 	local function handle_midi_string(insert_midi_str)
 		log.user("MIDI BLOCK STRING:", insert_midi_str)
 		local return_code = true
@@ -200,11 +213,28 @@ end
 --
 -- OLD NAME: commands.MIDI_select_tracks_insert_block_by_string = function(meta, opts)
 commands.apply_patterns_across_tracks = function(meta, opts)
-	local function apply_patterns_to_sel_tracks(main_input_str)
+	local function apply_patterns_to_sel_tracks(t_sel_trks, main_input_str)
+		-- Get music data from string
 		local ok, t_final_rendered_notes = midi.parse_and_render_midi_notes_block_from_string(main_input_str)
 		if not ok then
 			return false
 		end
+
+		local cursor_info = tl.get_cursor_info()
+		for _, trnode in ipairs(t_sel_trks) do
+			local target_item = check_if_item_exists_or_create(trnode.tr, cursor_info.msr.start, cursor_info.msr._end)
+
+			-- Apply music data to track
+			--
+			-- TODO: use intermediary function that applies the class-hooks
+			--
+			midi.insert_notes({
+				item = target_item,
+				notes = t_final_rendered_notes,
+			})
+			--
+		end
+
 		return true
 	end
 
@@ -217,7 +247,8 @@ commands.apply_patterns_across_tracks = function(meta, opts)
 			on_select_func = function(gui)
 				local _, main_input = gui:controlGetByName("main_input")
 				if main_input then
-					local ret, data = apply_patterns_to_sel_tracks(main_input.value)
+					local ret, data =
+						apply_patterns_to_sel_tracks(gui:selection_history_find("tracks"), main_input.value)
 					return ret
 				end
 				return true

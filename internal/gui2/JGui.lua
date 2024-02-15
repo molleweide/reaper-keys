@@ -658,6 +658,8 @@ function jGui:get_mult_select()
 	return self.selection_current
 end
 
+-- FIX: check if entry is already selected -> toggle select/unselect
+--
 function jGui:add_to_current_selection(sel)
 	table.insert(self.selection_current, sel)
 end
@@ -676,7 +678,7 @@ end
 
 function jGui:selection_history_push(tag, data)
 	table.insert(self.picker_selection_history.list, data)
-	self.picker_selection_history[tag] = data
+	self.picker_selection_history.by_keys[tag] = data
 end
 
 function jGui:selection_history_get(idx)
@@ -687,7 +689,9 @@ function jGui:selection_history_get(idx)
 	end
 end
 
-function jGui:selection_history_find(tag) end
+function jGui:selection_history_find(tag)
+  return self.picker_selection_history.by_keys[tag]
+end
 
 -----------------------------------------------------------------------------
 -- Misc

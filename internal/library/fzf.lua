@@ -1,8 +1,6 @@
---[[
-@description Fast FX Finder
-@author n0ne
-@about
-	# Fast VST/FX Rack/Template Finder
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 	-- TODO: move all picker variables to GUI
 	--
@@ -18,60 +16,12 @@
 -- returns false. Eg. this is not wanted when writing add track node strings,
 -- since we might just want to correct a minor typo.
 
-  A little window that allows for quick searching of FX (can be VST, templates or fxrack).
+-- TODO: if using multi-select -> always show initial column with `[ ]` and fill
+-- with `x` if item is selected.
 
-	The script stores how often you select a certain FX and orders the list by how many times something is used.
-@version 0.7.27
-@changelog
-	0.7.27
-	+ Added support for copy/pasting. CTRL + C will copy the whole textfield.  CTRL + V will paste at the carret.
-	0.7.26
-	+ added more comments to default settings file to make it easier to costumize things
-	0.7.25
-	+ Fix window focus when opening in dock
-	0.7.24
-	+ Fix negative screen coordinates error message
-	+ Updated error message when JSFX ini file does not exist. Updating Reaper deletes this file and you need to run the default FX browser once.
-	+ Added colors for different type's of FX
-	+ Added option to float fx windows after adding FXCHAIN
-	0.7.22
-	+ Fix bug with paths in Reaper 6.04
-	0.7.21
-	+ Add Audio Unit support
-	0.7.19
-	+ Fixed textbox bug
-	+ Improve textbox: use ctrl+backspace for deleting the last word, ctrl+shift+backspace to clear the field. Home and end work too!
-	0.7.18
-	+ Allow blacklist search to also look in plugin filename (add dll to skip VST version or VSTi to skip instruments for example)
-	+ Only pull actual template and fxchain files from directories
-	+ Don't filter when you start typing a '@' tag. If you want to filter for a word starting with '@', escape it like: \@
-	+ Added support for JSFX and @js tag!
-	+ Cleaned up default settings ini, left some test comments in there ;p
-	+ Add (experimental) support for loading actions. Turn on in settings. Can use @a tag. Right now only main window actions.
-	0.7.17
-	+ Allow resizing of GUI and change number of results
-	+ Store window position
-	+ Scroll down list with tab and arrow keys
-	+ Add setting to open FX in chain
-	+ Fix searching in hidden filename parts
-	+ Add support for searching with tags: @fx, @chain, @temp, @i, @vst3, @vst
-	+ Improve format of ini file. Backwards compatible but recommended to update (see REQ/ settings default)
-@provides
-	REQ/j_file_functions.lua
-	REQ/JProjectClass.lua
-	REQ/JProjectClassReq.lua
-	REQ/j_tables.lua
-	REQ/JGui.lua
-	REQ/JGuiColors.lua
-	REQ/JGuiControls.lua
-	REQ/JGuiFunctions.lua
-	REQ/j_trackstatechunk_functions.lua
-	REQ/j_settings_functions.lua
-	REQ/j_string_functions.lua
-	REQ/jKeyboard.lua
-	REQ/mouse.lua
-	REQ/fx-finder-settings-default.ini
---]]
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 local log = require("utils.log")
 local format = require("utils.format")
