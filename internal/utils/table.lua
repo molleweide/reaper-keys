@@ -38,12 +38,12 @@ end
 
 -- create a new table by copying and adding together.
 function tbl.copy_add(orig, tbl_add)
-  local copy = tbl.copy(orig)
-  -- extend with
-  for k, v in pairs(tbl_add) do
-    copy[k] = v
-  end
-  return copy
+	local copy = tbl.copy(orig)
+	-- extend with
+	for k, v in pairs(tbl_add) do
+		copy[k] = v
+	end
+	return copy
 end
 
 tbl.filter = function(t, condition, debug)
@@ -59,6 +59,11 @@ tbl.filter = function(t, condition, debug)
 	return result
 end
 
+---
+---@param t table
+---@param compare_key string
+---@param search_value string
+---@return number|boolean, any
 tbl.findIndexOf = function(t, compare_key, search_value)
 	for i, val in ipairs(t) do
 		if compare_key then
@@ -66,25 +71,25 @@ tbl.findIndexOf = function(t, compare_key, search_value)
 				return i, val
 			end
 		else
-		  if val == search_value then
-		    return i, val
-		  end
+			if val == search_value then
+				return i, val
+			end
 		end
 	end
 	return false
 end
 
 tbl.deep_extend = function(destination, ...)
-    for _, source in ipairs({...}) do
-        for key, value in pairs(source) do
-            if type(value) == "table" and type(destination[key]) == "table" then
-                destination[key] = tbl.deep_extend(destination[key], value)
-            else
-                destination[key] = value
-            end
-        end
-    end
-    return destination
+	for _, source in ipairs({ ... }) do
+		for key, value in pairs(source) do
+			if type(value) == "table" and type(destination[key]) == "table" then
+				destination[key] = tbl.deep_extend(destination[key], value)
+			else
+				destination[key] = value
+			end
+		end
+	end
+	return destination
 end
 
 return tbl

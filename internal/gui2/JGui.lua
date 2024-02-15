@@ -6,6 +6,7 @@
 
 local log = require("utils.log")
 local format = require("utils.format")
+local tbl = require("utils.table")
 
 -- J_SCRIPT_DIR = reaper.GetResourcePath() .. "/Scripts/LUA/" -- This should not be there for reascript version??
 -- package.path = package.path .. ";" .. J_SCRIPT_DIR .. "?.lua"
@@ -69,7 +70,7 @@ jGui = {
 	doExit = false,
 	imageId = 0,
 
-	lastChar = false, -- this is where reapers gfx.getChar() is stored
+	lastChar = false, -- this is where reapers gfx.getchar() is stored
 
 	next_is_picker = false,
 }
@@ -391,6 +392,11 @@ function jGui:controlGet(id)
 		msg("Control doenst exist: " .. id .. ", " .. #self.controls)
 	end
 	return self.controls[id]
+end
+
+function jGui:controlGetByName(name)
+	local idx, val = tbl.findIndexOf(self.controls, "title", name)
+	return idx, val
 end
 
 function jGui:controlDeleteAll()

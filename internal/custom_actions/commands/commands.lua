@@ -200,18 +200,26 @@ end
 --
 -- OLD NAME: commands.MIDI_select_tracks_insert_block_by_string = function(meta, opts)
 commands.apply_patterns_across_tracks = function(meta, opts)
+	local function apply_patterns_to_sel_tracks(main_input_str)
+		local ok, t_final_rendered_notes = midi.parse_and_render_midi_notes_block_from_string(main_input_str)
+		if not ok then
+			return false
+		end
+		return true
+	end
+
 	local function prompt()
 		fzf.init({
 			title = "Add MIDI blocks",
 			x = 200,
 			width = 1100,
 			height = 75,
-			on_select_func = function(self2)
-				local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
-				-- if main_input then
-				-- 	local ret, data = handle_midi_string(main_input.value)
-				-- 	return ret
-				-- end
+			on_select_func = function(gui)
+				local _, main_input = gui:controlGetByName("main_input")
+				if main_input then
+					local ret, data = apply_patterns_to_sel_tracks(main_input.value)
+					return ret
+				end
 				return true
 			end,
 			extended_mappings = {
@@ -240,7 +248,6 @@ commands.apply_patterns_across_tracks = function(meta, opts)
 				local selection = self.t_search_results[i]
 				jGui:selection_history_push(tag, { selection })
 			end
-
 			prompt()
 		end,
 		-- FIX: all params have to be passed normally to bindings so that I
