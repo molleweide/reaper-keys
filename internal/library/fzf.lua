@@ -617,6 +617,11 @@ local function build_picker(opts, on_enter)
 	return true
 end
 
+
+--
+-- TODO: refactor this into a method onto the jGui class
+--
+
 local function reset_new_picker(opts)
 	for k, v in pairs(DEFAULT_OPTS) do
 		GUI[k] = opts[k] and opts[k] or v

@@ -176,7 +176,7 @@ commands.main_insert_midi_block_from_string_UI = function()
 		return return_code
 	end
 
-  -- TODO: move this into pickers file as `pickers.basic_text_prompt`
+	-- TODO: move this into pickers file as `pickers.basic_text_prompt`
 	fzf.init({
 		title = "Add MIDI blocks",
 		x = 200,
@@ -201,18 +201,55 @@ end
 -- OLD NAME: commands.MIDI_select_tracks_insert_block_by_string = function(meta, opts)
 commands.apply_patterns_across_tracks = function(meta, opts)
 
-	pickers.all_tracks(_, {
-		title = "jump to track midi",
-		filter = "M", -- filter nodes
-		next = function(_, data)
-			-- midi_editor.createEditMidiItemAtPositionForTrack(_, data.selection)
+  local function prompt()
+			fzf.init({
+				title = "Add MIDI blocks",
+				x = 200,
+				width = 1100,
+				height = 75,
+				on_select_func = function(self2)
+					local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
+					-- if main_input then
+					-- 	local ret, data = handle_midi_string(main_input.value)
+					-- 	return ret
+					-- end
+					return true
+				end,
+				extended_mappings = {
+					["C-z"] = function()
+						track_fx_ui(true)
+					end,
+				},
+			})
+  end
 
+
+	pickers.all_tracks(_, {
+		title = "Select track(s) for prompt insertion.",
+		width = 900,
+		filter = "M", -- filter nodes
+		on_select_func = function(self, i)
+			local selection = self.t_search_results[i]
+			prompt()
 		end,
+		extended_mappings = {
+			["C-s"] = function(t)
+				local selection = t.gui_ref.t_search_results[t.sel_idx]
+				selection.selected = true
+				t.gui_ref:add_to_current_selection(selection)
+				-- log.user("--- sel cur names ----")
+				-- for _, cs in ipairs(t.gui_ref.selection_current) do
+				--   log.user(cs.name)
+				-- end
+			end,
+			["C-a"] = function(t)
+				t.gui_ref:reset_current_selection()
+			end,
+		},
 	})
 end
 
-commands.promp_make_next_region = function()
-end
+commands.promp_make_next_region = function() end
 
 -- TODO:
 -- ~ Connect this with the command/parser from above `main_insert_midi_block_from_string_UI`
@@ -342,21 +379,18 @@ commands.track_fx_ui = function(meta, opts)
 	track_fx_ui()
 end
 
-
 --
 -- TODO: the purpose of this command is to make it easy to MIX the current
 -- region during live playback.
 --
-commands.picker_all_tracks_THAT_have_active_items_in_CURRENT_region = function()
-end
+commands.picker_all_tracks_THAT_have_active_items_in_CURRENT_region = function() end
 
 --
 -- TODO: the purpose of this command is to make it easy to MIX the next
 -- region during live playback so that I can apply some crazy filters
 -- to prepare an interesting section coming up.
 --
-commands.picker_all_tracks_THAT_have_active_items_in_NEXT_region = function()
-end
+commands.picker_all_tracks_THAT_have_active_items_in_NEXT_region = function() end
 
 -- A. Base picker it `all tracks`
 -- B. on_select -> open attributes for selected track

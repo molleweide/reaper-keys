@@ -49,8 +49,22 @@ jGui = {
 		font_color = { 1, 1, 1, 1 },
 	},
 
+	-- Table hosting all entries passed to the picker.
 	t_results_data = {},
+
+	-- Table hosting filtered entries.
 	t_search_results = {},
+
+	-- TODO --
+	--
+	-- With multiple selection, each selection should be tracked here.??
+	selection_current = {},
+	-- Store each selection across multiple picker views so that I can
+	-- build complex selections over time.
+	picker_selection_history = {
+		by_keys = {},
+		list = {},
+	},
 
 	doExit = false,
 	imageId = 0,
@@ -625,6 +639,36 @@ end
 function jGui:onExit()
 	-- Called when the GUI is closed, to be defined by user
 end
+
+-----------------------------------------------------------------------------
+-- Selection
+--
+
+function jGui:add_to_current_selection(sel)
+	table.insert(self.selection_current, sel)
+end
+
+function jGui:reset_current_selection()
+	for _, s in ipairs(self.selection_current) do
+		s.selected = false
+	end
+	self.selection_current = nil
+end
+
+-- picker_selection_history = {
+-- 	by_keys = {},
+-- 	list = {},
+-- }
+
+function jGui:selection_history_push(tag, data) end
+
+function jGui:selection_history_get(idx)
+	if not idx then
+	else
+	end
+end
+
+function jGui:selection_history_find(tag) end
 
 -----------------------------------------------------------------------------
 -- Misc

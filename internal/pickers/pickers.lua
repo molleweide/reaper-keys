@@ -649,4 +649,22 @@ pickers.sample_selector_from_track_name = function() end
 
 pickers.file_browser = function() end
 
+
+pickers.basic_prompt = function()
+	fzf.init(tbl.deep_extend({
+		title = "Basic prompt",
+		x = 200,
+		width = 1100,
+		height = 75,
+		on_select_func = function(self)
+			local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
+			if main_input then
+				local ret, data = handle_midi_string(main_input.value)
+				return ret
+			end
+			return true
+		end,
+	}, opts))
+end
+
 return pickers

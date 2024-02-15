@@ -975,6 +975,7 @@ return {
 	RK_SAMPLE_LIB_BROWSER = commands.sample_library_file_browser,
 
 	INSERT_MIDI_BLOCK = commands.main_insert_midi_block_from_string_UI,
+	INSERT_MIDI_ACROSS_TRACKS = commands.apply_patterns_across_tracks,
 
 	-- TODO: this will be preparation for the track attributes UI
 	Unhide_ShowAllTracks = commands,
