@@ -19,6 +19,10 @@ require('gui2.JProjectClassReq')
 -- Make the new index functions so that if its not in one of the lists or in .prototype to show an error msg
 
 
+-----------------------------------------------------------------------------
+-- JParam
+--
+
 local JParam = {}
 JParam.mt = {}
 JParam.prototype = {iParam = false, _parent = false}
@@ -61,13 +65,20 @@ function JParam.prototype:setNormalized(value)
 	return reaper.TrackFX_SetParamNormalized(self:getTrack():getReaperTrack(), self:getFx(), self.iParam, value)
 end
 
+-----------------------------------------------------------------------------
 -- FX
--- This is an FX class. It can be created bt a Track class. It holds a reference to its parent Track class.
--- It should be noted that in reaper an actual effect is linked to a JTrack. I.e. an FX can't excist without its parent JTrack.
--- Here an instance of this FX class could still live while its parent track was deleted. It wouldnt know. However when calling
--- most functions in this class the pointer to the parent track would be pointing to nothing which will result in errors.
--- Because there are some usages advantages to having a seperate FX class this implementation was chosen. Mostly because
--- it makes it a lot easier to find a certain fx (either by name or index) and then do multiple things with this JFx.
+-- This is an FX class. It can be created bt a Track class. It holds a
+-- reference to its parent Track class. It should be noted that in reaper an
+-- actual effect is linked to a JTrack. I.e. an FX can't excist without its
+-- parent JTrack. Here an instance of this FX class could still live while its
+-- parent track was deleted. It wouldnt know. However when calling most
+-- functions in this class the pointer to the parent track would be pointing to
+-- nothing which will result in errors. Because there are some usages
+-- advantages to having a seperate FX class this implementation was chosen.
+-- Mostly because it makes it a lot easier to find a certain fx (either by name
+-- or index) and then do multiple things with this JFx.
+--
+
 JFx = {}
 JFx.mt = {}
 JFx.prototype = {iFx = false, _parent = false}
@@ -203,7 +214,10 @@ function JFx.prototype:getParamsByName(sPattern, iInstance, find_init, find_plai
     end
 end
 
+-----------------------------------------------------------------------------
 -- SEND
+--
+
 JSend = {}
 JSend.mt = {}
 JSend.prototype = {iSend = false, category = 0, _parent = false}
@@ -263,8 +277,12 @@ function JSend.prototype:delete()
 	end
 	return r
 end
+
+-----------------------------------------------------------------------------
 -- TRACK
 -- This is a Track "class". It can be created by a Project class and is linked to a track in reaper by its MediaTrack pointer.
+--
+
 JTrack = {fx = {}}
 JTrack.prototype = {pTrack = false, _parentProject = false}
 JTrack.mt = {}
@@ -367,6 +385,8 @@ function JTrack.prototype:getSend(idx)
 
 	return JSend:new({iSend = idx, category = 0, _parent = self})
 end
+
+
 
 function JTrack.prototype:getInstrument()
 	local r = reaper.TrackFX_GetInstrument(self.pTrack)
@@ -677,7 +697,10 @@ function JTrack.prototype:setStateChunk(strIn, bIsUndo)
 	return retval
 end
 
+-----------------------------------------------------------------------------
 -- MEDIA ITEM TAKE STRETCH MARKER
+--
+
 JStretchMarker = {}
 JStretchMarker.prototype = {iStretchMarker = false, pos = false, srcpos = false, _parentTake = false}
 JStretchMarker.mt = {}
@@ -730,7 +753,10 @@ JStretchMarker.mt.__newindex = function (table, key, value)
 end
 ]]
 
+-----------------------------------------------------------------------------
 -- MEDIA ITEM TAKE
+--
+
 JTake = {}
 JTake.prototype = {pTake = false, _parentItem = false}
 JTake.mt = {}
@@ -849,7 +875,10 @@ function JTake.prototype:addFx(sFxName)
 	end
 end
 
+-----------------------------------------------------------------------------
 -- MEDIA ITEM
+--
+
 JItem = {}
 JItem.prototype = {pItem = false}
 JItem.mt = {}
@@ -975,7 +1004,11 @@ function JItem.prototype:setStateChunk(newChunk)
 	local r = reaper.SetItemStateChunk(self:getReaperItem(), newChunk)
 	return r
 end
+
+-----------------------------------------------------------------------------
 -- PROJECT
+--
+
 JProject = {}
 JProject.prototype = {pId = 0}
 JProject.mt = {}

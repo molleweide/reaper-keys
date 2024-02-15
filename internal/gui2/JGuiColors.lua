@@ -10,19 +10,19 @@ function jGuiColors:get(sColor, opacity)
 	opacity = opacity or 1
 
 	local myColors = {
-		white 			= 	    {	1,		1, 		1		},
-		black 			= 	    {	0, 		0, 		0		},
-		red 			=    	{	1, 		0, 		0		},
-		green 			= 	    {	0, 		1, 		0		},
-		blue 			=    	{	0,	 	0, 		1		},
-		yellow			=		{	1,		1,		0		}
+		white = { 1, 1, 1 },
+		black = { 0, 0, 0 },
+		red = { 1, 0, 0 },
+		green = { 0, 1, 0 },
+		blue = { 0, 0, 1 },
+		yellow = { 1, 1, 0 },
 	}
 
 	if not myColors[sColor] then
 		msg("Unknown color: " .. sColor)
 		return false
 	end
-	local res = {table.unpack(myColors[sColor])}
+	local res = { table.unpack(myColors[sColor]) }
 	res[4] = opacity
 	return res
 end
@@ -30,21 +30,21 @@ end
 function jGuiColors:setAllStates(tColors)
 	local res = {}
 	assert(#tColors == 4, "Colors table does not have 4 entries")
-	res.normal = 	tColors
-	res.hover = 	tColors
-	res.focus = 	tColors
-	res.active = 	tColors
+	res.normal = tColors
+	res.hover = tColors
+	res.focus = tColors
+	res.active = tColors
 	return res
 end
 
 function jGuiColors:lighter(x)
 	x = x or 1.2
-	return {self[1] * x, self[2] * x, self[3] * x, self[4]}
+	return { self[1] * x, self[2] * x, self[3] * x, self[4] }
 end
 
 -------------
 -- new color class
-jColor = {1, 1, 1, 1}
+jColor = { 1, 1, 1, 1 }
 
 function jColor:new(o)
 	local newObject = {}
@@ -67,19 +67,19 @@ function jColor:make(sColor, opacity)
 	opacity = opacity or 1
 
 	local myColors = {
-		white 			= 	    {	1,		1, 		1		},
-		black 			= 	    {	0, 		0, 		0		},
-		red 			=    	{	1, 		0, 		0		},
-		green 			= 	    {	0, 		1, 		0		},
-		blue 			=    	{	0,	 	0, 		1		},
-		yellow			=		{	1,		1,		0		}
+		white = { 1, 1, 1 },
+		black = { 0, 0, 0 },
+		red = { 1, 0, 0 },
+		green = { 0, 1, 0 },
+		blue = { 0, 0, 1 },
+		yellow = { 1, 1, 0 },
 	}
 
 	if not myColors[sColor] then
 		msg("Unknown color: " .. sColor)
 		return false
 	end
-	local res = {table.unpack(myColors[sColor])}
+	local res = { table.unpack(myColors[sColor]) }
 	self[1] = res[1]
 	self[2] = res[2]
 	self[3] = res[3]
@@ -95,5 +95,5 @@ function jColor:lighter(x)
 	-- self[3] = self[3] * x
 	-- self[4] = self[4] * x
 	-- return self
-	return {self[1] + x, self[2] + x, self[3] + x, self[4]}
+	return { self[1] + x, self[2] + x, self[3] + x, self[4] }
 end

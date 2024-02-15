@@ -6,6 +6,8 @@
 
 -- Some functions to help working with the JGui
 
+-- NOTE: Unused!!
+
 -- Create multiple controls of controlType in a grid
 function createControls(controlType, num, perRow, settings, x, y, w, h, x_space, y_space)
     local tResult = {}

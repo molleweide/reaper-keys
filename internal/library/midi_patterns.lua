@@ -114,7 +114,7 @@ end
 -- replace `input_units` with their respective shorthand mapping
 local function apply_shorthands(t_ps, cases)
 	for i, s_unit in ipairs(t_ps.input_units) do
-		case_apply(cases, i, s_unit, t_patterns)
+		case_apply(cases, i, s_unit, t_patterns) -- t_ps???
 	end
 end
 
