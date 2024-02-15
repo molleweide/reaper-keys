@@ -32,6 +32,10 @@ return {
 		["<C-H>"] = "Prev4Measures",
 		["<C-L>"] = "Next4Measures",
 		["`"] = "MarkedTimelinePosition",
+
+    -- ["{"] = "NextRegion",
+    -- ["}"] = "PrevRegion",
+
 	},
 	timeline_operator = {
 		["r"] = "Record",

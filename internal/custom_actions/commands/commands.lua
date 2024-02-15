@@ -206,6 +206,20 @@ commands.main_insert_midi_block_from_string_UI = function()
 	})
 end
 
+local function apply_music_transform_hooks(trnode, target_item, midi_data)
+	local group_hooks = require("definitions.midi_apply_hooks").groups
+	for hook_name, fn in pairs(group_hooks) do
+		if trnode.group.name:lower():match(hook_name) then
+			log.user("BASS HOOK")
+			midi_data = fn(midi_data)
+		end
+	end
+	midi.insert_notes({
+		item = target_item,
+		notes = midi_data,
+	})
+end
+
 -- TODO: refactor the above midi_parse function into midi library, and then
 -- reuse it here in this bicker
 --
@@ -223,16 +237,7 @@ commands.apply_patterns_across_tracks = function(meta, opts)
 		local cursor_info = tl.get_cursor_info()
 		for _, trnode in ipairs(t_sel_trks) do
 			local target_item = check_if_item_exists_or_create(trnode.tr, cursor_info.msr.start, cursor_info.msr._end)
-
-			-- Apply music data to track
-			--
-			-- TODO: use intermediary function that applies the class-hooks
-			--
-			midi.insert_notes({
-				item = target_item,
-				notes = t_final_rendered_notes,
-			})
-			--
+			apply_music_transform_hooks(trnode, target_item, t_final_rendered_notes)
 		end
 
 		return true
