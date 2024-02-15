@@ -644,6 +644,14 @@ end
 -- Selection
 --
 
+function jGui:has_mult_select()
+	return #self.selection_current > 0
+end
+
+function jGui:get_mult_select()
+	return self.selection_current
+end
+
 function jGui:add_to_current_selection(sel)
 	table.insert(self.selection_current, sel)
 end
@@ -660,11 +668,16 @@ end
 -- 	list = {},
 -- }
 
-function jGui:selection_history_push(tag, data) end
+function jGui:selection_history_push(tag, data)
+	table.insert(self.picker_selection_history.list, data)
+	self.picker_selection_history[tag] = data
+end
 
 function jGui:selection_history_get(idx)
 	if not idx then
+		return self.picker_selection_history.list[#self.picker_selection_history.list]
 	else
+		return self.picker_selection_history.list[idx]
 	end
 end
 

@@ -232,14 +232,14 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 			end
 
 			function ResultsEntryControl:onMouseClick()
-				gui.on_select_func(gui, i + SCROLL_RESULTS)
+				local should_exit = gui.on_select_func(gui, i + SCROLL_RESULTS)
 				gui:setFocus(textBox)
 				UPDATE_RESULTS = true
 
-				if not gui.kb.shift() then
+				if should_exit and not gui.kb.shift() then
 					-- this allows the picker to keep running for the next picker.
 					-- if not gui.next_is_picker then
-						self.parentGui:exit()
+					self.parentGui:exit()
 					-- end
 				end
 			end
@@ -367,9 +367,9 @@ local function gui_create_main_text_box(gui, on_enter)
 		if gui.on_select_func(gui, 1) then
 			-- this allows the picker to keep running for the next picker.
 			-- if not gui.next_is_picker then
-				gui:exit()
+			gui:exit()
 			-- else
-				-- log.user("controlDeleteAll")
+			-- log.user("controlDeleteAll")
 			-- end
 		end
 
@@ -540,7 +540,7 @@ local DEFAULT_OPTS = {
 	meta = {},
 	extended_mappings = nil,
 	next = nil, -- next picker func should default to nil ie close prev picker.
-	calling_command_meta = nil
+	calling_command_meta = nil,
 }
 
 -- TODO: update master title for every new picker view
@@ -617,9 +617,8 @@ local function build_picker(opts, on_enter)
 	return true
 end
 
-
 --
--- TODO: refactor this into a method onto the jGui class
+-- FIX: refactor this into a method onto the jGui class
 --
 
 local function reset_new_picker(opts)
@@ -666,9 +665,15 @@ local function reset_new_picker(opts)
 				local lookup_str = s_key:gsub("%.0$", "")
 				local key_bind_function = GUI.attach_mappings[tostring(lookup_str)]
 				if type(key_bind_function) == "function" then
+
 					key_bind_function({
 						gui_ref = GUI,
+
+						-- FIX: use self.lastChar instead...
 						key = key,
+
+						-- FIX: assign this to jGui instead, so that this can be accessed
+						-- by gui:current_sel_idx
 						sel_idx = 1,
 					})
 				end

@@ -200,38 +200,51 @@ end
 --
 -- OLD NAME: commands.MIDI_select_tracks_insert_block_by_string = function(meta, opts)
 commands.apply_patterns_across_tracks = function(meta, opts)
-
-  local function prompt()
-			fzf.init({
-				title = "Add MIDI blocks",
-				x = 200,
-				width = 1100,
-				height = 75,
-				on_select_func = function(self2)
-					local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
-					-- if main_input then
-					-- 	local ret, data = handle_midi_string(main_input.value)
-					-- 	return ret
+	local function prompt()
+		fzf.init({
+			title = "Add MIDI blocks",
+			x = 200,
+			width = 1100,
+			height = 75,
+			on_select_func = function(self2)
+				local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
+				-- if main_input then
+				-- 	local ret, data = handle_midi_string(main_input.value)
+				-- 	return ret
+				-- end
+				return true
+			end,
+			extended_mappings = {
+				["C-s"] = function(t)
+					-- log.user("prompt", #t.gui_ref:selection_history_get())
+					-- log.user("--- sel cur names ----")
+					-- for _, cs in ipairs(t.gui_ref.selection_current) do
+					-- 	log.user(cs.name)
 					-- end
-					return true
 				end,
-				extended_mappings = {
-					["C-z"] = function()
-						track_fx_ui(true)
-					end,
-				},
-			})
-  end
-
+			},
+		})
+	end
 
 	pickers.all_tracks(_, {
 		title = "Select track(s) for prompt insertion.",
 		width = 900,
 		filter = "M", -- filter nodes
 		on_select_func = function(self, i)
-			local selection = self.t_search_results[i]
+			-- TODO: assign selection to picker prev sel hist
+			--
+			local tag = "tracks"
+			if self:has_mult_select() then
+				jGui:selection_history_push(tag, self:get_mult_select())
+			else
+				local selection = self.t_search_results[i]
+				jGui:selection_history_push(tag, { selection })
+			end
+
 			prompt()
 		end,
+		-- FIX: all params have to be passed normally to bindings so that I
+		-- can use (gui, char, sel_idx)
 		extended_mappings = {
 			["C-s"] = function(t)
 				local selection = t.gui_ref.t_search_results[t.sel_idx]
