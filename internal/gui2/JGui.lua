@@ -60,6 +60,10 @@ jGui = {
 	next_is_picker = false,
 }
 
+-------------------------------------------------------
+-- Init
+--
+
 function jGui:new(o)
 	o = o or {}
 	setmetatable(o, self)
@@ -70,9 +74,8 @@ end
 function jGui:init()
 	gfx.init(self.title, self.width, self.height, self.dockstate, self.x, self.y)
 	gfx.setfont(1, self.settings.font, self.settings.fontsize)
-
+	-- special bkg color prop // prolly hex value.
 	gfx.clear = 3355443 -- ??
-
 	self:_resize() -- call once to do initial drawing
 	self:updateFocusOrder()
 end
@@ -93,9 +96,9 @@ function jGui:_resize()
 	self:onResize()
 end
 
-function jGui:onResize()
-	-- user defined
-end
+-------------------------------------------------------
+-- Process keyboard
+--
 
 function jGui:processKeyboard()
 	-- this function handles the keyboard presses
@@ -110,6 +113,9 @@ function jGui:processKeyboard()
 		if self.lastChar == self.kb.escape then
 			-- The escape closes the script and is not passed on to the control
 			self:onEsc()
+
+		-----
+		-- focus
 		elseif self.lastChar == self.kb.enter and self.focus then -- ENTER
 			self.focus:_onEnter()
 		elseif self.lastChar == self.kb.tab and not self.kb.shift() then -- TAB
@@ -141,6 +147,10 @@ function jGui:processKeyboard()
 				self.focus:_onKeyboard(self.lastChar)
 			end
 		end
+
+	-- focus ends
+	----------------------
+	--
 	elseif self.lastChar == -1 then
 		-- The window was closed
 		self:onClose()
@@ -148,13 +158,9 @@ function jGui:processKeyboard()
 	return self.lastChar
 end
 
-function jGui:focusNext()
-	self:setFocus(self:getNextFocus())
-end
-
-function jGui:focusPrev()
-	self:setFocus(self:getNextFocus(true))
-end
+-----------------------------------------------------------------------------
+-- JGui Run
+--
 
 function jGui:update()
 	-- To be defined by user. Main program should go here. Excecuted after the keyboard is processed, before the gui is refreshed and drawn
@@ -174,8 +180,13 @@ function jGui:loop()
 	return not self.doExit
 end
 
+function jGui:exit()
+	self:onExit()
+	self.doExit = true
+end
+
 function jGui:draw()
-	for i, curControl in ipairs(self:getControlsByZ()) do
+	for _, curControl in ipairs(self:getControlsByZ()) do
 		if curControl.visible then
 			curControl:_draw()
 		end
@@ -192,8 +203,120 @@ function jGui:drawStr(sString, iX, iY, tFontColor)
 	gfx.drawstr(sString)
 end
 
+-----------------------------------------------------------------------------
+-- JGui Focus
+--
+
+function jGui:setReaperFocus()
+	-- TODO: These internals should be moved to the utils/reaper.lua file.
+	if reaper.JS_Window_Find == nil then -- JS Extention not installed
+		return false
+	end
+	local window = reaper.JS_Window_Find(self.title, true)
+	if window then
+		reaper.JS_Window_SetFocus(window)
+		return true
+	else
+		return false
+	end
+end
+
+function jGui:focusNext()
+	self:setFocus(self:getNextFocus())
+end
+
+function jGui:focusPrev()
+	self:setFocus(self:getNextFocus(true))
+end
+
+function jGui:setFocus(c)
+	-- Sets which gui control has focus.
+	-- Set c to false to lose all focus
+	if c == self.focus then -- already focussed on this control, nothing changes
+		return false
+	end
+
+	if self.focus then -- blur the current focused control
+		self.focus:_onBlur()
+	end
+
+	if c then
+		self.focus = c
+		c:_onFocus()
+	else
+		self.focus = false
+	end
+	-- msg("focus on: " .. tostring(self.focus) .. "/" .. #self.focusOrder)
+end
+
+function jGui:getFocusIndex()
+	return #self.focusOrder + 1
+end
+
+function jGui:getNextFocus(bGetPrev)
+	local bGetPrev = bGetPrev or false
+
+	if #self.focusOrder < 1 then -- nothing to be focussed on
+		return false
+	end
+
+	-- Check if there are any visible controls in the focus order
+	local focusOrderVisible = {}
+	for i, v in ipairs(self.focusOrder) do
+		if v.visible then
+			table.insert(focusOrderVisible, v)
+		end
+	end
+	if #focusOrderVisible < 1 then
+		return false
+	end -- There are no visible controls in the order
+
+	if not self.focus then -- not focussed yet, start at 1 or last
+		if bGetPrev then
+			return focusOrderVisible[#focusOrderVisible]
+		else
+			return focusOrderVisible[1]
+		end
+	end
+
+	for i, v in ipairs(focusOrderVisible) do
+		if v == self.focus then
+			if bGetPrev then
+				local target = i - 1
+				if i == 1 then -- first element, loop around
+					target = #focusOrderVisible
+				end
+				return focusOrderVisible[target]
+			else
+				local target = i + 1
+				if i == #focusOrderVisible then -- this is the last element, loop around
+					target = 1
+				end
+				return focusOrderVisible[target]
+			end
+		end
+	end
+end
+
+function jGui:updateFocusOrder()
+	table.sort(self.focusOrder, jGui.__focusSort)
+end
+
+function jGui.__focusSort(a, b)
+	-- used to sort tab indexes
+	if a.focus_index < b.focus_index then
+		return true
+	else
+		return false
+	end
+end
+
+-----------------------------------------------------------------------------
+-- JGui Controls
+--
+
 function jGui:getControlHover()
-	for i, curControl in ipairs(self:getControlsByZInv()) do
+	for _, curControl in ipairs(self:getControlsByZInv()) do
 		curArea = curControl:getArea()
 		if
 			curControl.mouse_input
@@ -298,6 +421,80 @@ function jGui:controlDelete(inC)
 
 	self:updateFocusOrder()
 end
+
+function jGui:__setGfxColor(tColors)
+	gfx.set(tColors[1], tColors[2], tColors[3], tColors[4])
+end
+
+function jGui:controlSetAll(tControls, key, value)
+	for i, j in pairs(tControls) do
+		j[key] = value
+	end
+end
+
+function jGui:controlInitAll()
+	for i, j in pairs(self.controls) do
+		j:_init()
+	end
+end
+
+function jGui:controlGetAll(tControls, key, value)
+	local tResult = {}
+
+	for i, j in pairs(tControls) do
+		if j[key] == value then
+			tResult[#tResult + 1] = j
+		end
+	end
+
+	return tResult
+end
+
+function jGui:controlGetAllValues(tControls, key)
+	local tResult = {}
+
+	for i, j in pairs(tControls) do
+		tResult[#tResult + 1] = j[key]
+	end
+
+	return tResult
+end
+
+-----------------------------------------------------------------------------
+-- JGui Z-Index
+--
+
+function jGui._sortByZ(a, b)
+	if a.z > b.z then
+		return true
+	else
+		return false
+	end
+end
+
+function jGui._sortByZInv(b, a)
+	if a.z > b.z then
+		return true
+	else
+		return false
+	end
+end
+
+function jGui:getControlsByZ()
+	local res = { table.unpack(self.controls) }
+	table.sort(res, self._sortByZ)
+	return res
+end
+
+function jGui:getControlsByZInv()
+	local res = { table.unpack(self.controls) }
+	table.sort(res, self._sortByZInv)
+	return res
+end
+
+-----------------------------------------------------------------------------
+-- JGui Mouse
+--
 
 function jGui:mouseUpdate()
 	local mouse = self.mouse
@@ -407,129 +604,12 @@ function jGui:OnMouseDrag(x, y, lmb_down, rmb_down)
 	end
 end
 
-function jGui:__setGfxColor(tColors)
-	gfx.set(tColors[1], tColors[2], tColors[3], tColors[4])
-end
+-----------------------------------------------------------------------------
+-- JGui Events, onExit, onResize, onEsc
+--
 
-function jGui:controlSetAll(tControls, key, value)
-	for i, j in pairs(tControls) do
-		j[key] = value
-	end
-end
-
-function jGui:controlInitAll()
-	for i, j in pairs(self.controls) do
-		j:_init()
-	end
-end
-
-function jGui:controlGetAll(tControls, key, value)
-	local tResult = {}
-
-	for i, j in pairs(tControls) do
-		if j[key] == value then
-			tResult[#tResult + 1] = j
-		end
-	end
-
-	return tResult
-end
-
-function jGui:controlGetAllValues(tControls, key)
-	local tResult = {}
-
-	for i, j in pairs(tControls) do
-		tResult[#tResult + 1] = j[key]
-	end
-
-	return tResult
-end
-
-function jGui:setFocus(c)
-	-- Sets which gui control has focus.
-	-- Set c to false to lose all focus
-	if c == self.focus then -- already focussed on this control, nothing changes
-		return false
-	end
-
-	if self.focus then -- blur the current focused control
-		self.focus:_onBlur()
-	end
-
-	if c then
-		self.focus = c
-		c:_onFocus()
-	else
-		self.focus = false
-	end
-	-- msg("focus on: " .. tostring(self.focus) .. "/" .. #self.focusOrder)
-end
-
-function jGui:getFocusIndex()
-	return #self.focusOrder + 1
-end
-
-function jGui:getNextFocus(bGetPrev)
-	local bGetPrev = bGetPrev or false
-
-	if #self.focusOrder < 1 then -- nothing to be focussed on
-		return false
-	end
-
-	-- Check if there are any visible controls in the focus order
-	local focusOrderVisible = {}
-	for i, v in ipairs(self.focusOrder) do
-		if v.visible then
-			table.insert(focusOrderVisible, v)
-		end
-	end
-	if #focusOrderVisible < 1 then
-		return false
-	end -- There are no visible controls in the order
-
-	if not self.focus then -- not focussed yet, start at 1 or last
-		if bGetPrev then
-			return focusOrderVisible[#focusOrderVisible]
-		else
-			return focusOrderVisible[1]
-		end
-	end
-
-	for i, v in ipairs(focusOrderVisible) do
-		if v == self.focus then
-			if bGetPrev then
-				local target = i - 1
-				if i == 1 then -- first element, loop around
-					target = #focusOrderVisible
-				end
-				return focusOrderVisible[target]
-			else
-				local target = i + 1
-				if i == #focusOrderVisible then -- this is the last element, loop around
-					target = 1
-				end
-				return focusOrderVisible[target]
-			end
-		end
-	end
-end
-
-function jGui:updateFocusOrder()
-	table.sort(self.focusOrder, jGui.__focusSort)
-end
-
-function jGui.__focusSort(a, b)
-	-- used to sort tab indexes
-	if a.focus_index < b.focus_index then
-		return true
-	else
-		return false
-	end
-end
-
-function jGui:exit()
-	self:onExit()
-	self.doExit = true
+function jGui:onResize()
+	-- user defined
 end
 
 function jGui:onClose()
@@ -546,51 +626,12 @@ function jGui:onExit()
 	-- Called when the GUI is closed, to be defined by user
 end
 
+-----------------------------------------------------------------------------
+-- Misc
+--
+
 function jGui:getImgId()
 	local r = self.imageId
 	self.imageId = self.imageId + 1
-
 	return r
-end
-
-function jGui._sortByZ(a, b)
-	if a.z > b.z then
-		return true
-	else
-		return false
-	end
-end
-
-function jGui._sortByZInv(b, a)
-	if a.z > b.z then
-		return true
-	else
-		return false
-	end
-end
-
-function jGui:getControlsByZ()
-	local res = { table.unpack(self.controls) }
-	table.sort(res, self._sortByZ)
-	return res
-end
-
-function jGui:getControlsByZInv()
-	local res = { table.unpack(self.controls) }
-	table.sort(res, self._sortByZInv)
-	return res
-end
-
-function jGui:setReaperFocus()
-	if reaper.JS_Window_Find == nil then -- JS Extention not installed
-		return false
-	end
-
-	local window = reaper.JS_Window_Find(self.title, true)
-	if window then
-		reaper.JS_Window_SetFocus(window)
-		return true
-	else
-		return false
-	end
 end
