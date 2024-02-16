@@ -599,6 +599,7 @@ return {
 						["o"] = "OpenProject",
 						["m"] = "INSERT_MIDI_BLOCK",
 						["M"] = "INSERT_MIDI_ACROSS_TRACKS",
+						["T"] = "INSERT_MIDI_ACROSS_REGIONS_AND_TRACKS",
 						["c"] = "NewProjectTab",
 						["x"] = "CloseProject",
 						["C"] = "CleanProjectDirectory",

@@ -2,9 +2,9 @@
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
-	-- TODO: move all picker variables to GUI
-	--
-	-- TODO: start using pluginsData
+-- TODO: move all picker variables to GUI
+--
+-- TODO: start using pluginsData
 
 -- TODO: Add a master title for the current picker when initiating the
 -- UI, then i create a jGui class function that can update the window title.
@@ -182,7 +182,9 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 			end
 
 			function ResultsEntryControl:onMouseClick()
-				local should_exit = gui.on_select_func(gui, i + SCROLL_RESULTS)
+				local last_idx = i + SCROLL_RESULTS
+				gui:set_last_selection_idx(last_idx)
+				local should_exit = gui.on_select_func(gui, last_idx)
 				gui:setFocus(textBox)
 				UPDATE_RESULTS = true
 
@@ -313,6 +315,7 @@ local function gui_create_main_text_box(gui, on_enter)
 		-- --
 		-- If `on_select_func` returns true, that should be interpreted as you
 		-- are expecting the GUI to exit.
+		gui:set_last_selection_idx(1)
 
 		if gui.on_select_func(gui, 1) then
 			-- this allows the picker to keep running for the next picker.
@@ -615,7 +618,6 @@ local function reset_new_picker(opts)
 				local lookup_str = s_key:gsub("%.0$", "")
 				local key_bind_function = GUI.attach_mappings[tostring(lookup_str)]
 				if type(key_bind_function) == "function" then
-
 					key_bind_function({
 						gui_ref = GUI,
 

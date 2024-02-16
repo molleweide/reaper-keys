@@ -96,24 +96,18 @@ end
 
 pickers.all_tracks = function(meta, opts)
 	local vtt = syntax.getVerifiedTree()
-
 	local t_picker_results = vtt.track_list
-
 	log.user("<PICKER: ALL TRACKS>")
-
 	if opts.filter then
 		-- TODO: should the filter be passed as a param to syntax.get_list_of_track_objects(filter)
 		t_picker_results = tbl.filter(vtt.track_list, function(o)
 			return str.strHasOneOfChars(o.class, opts.filter)
 		end)
 	end
-
 	-- log.user(format.block(t_track_objects))
-
 	fzf.init(tbl.deep_extend({
 		title = opts.title or "All Tracks (Default)",
 		results = t_picker_results,
-
 		-- move into module
 		on_select_func = function(self, i)
 			local selection = self.t_search_results[i]
@@ -371,9 +365,8 @@ pickers.marks = function()
 	}, opts))
 end
 
-pickers.regions = function()
+pickers.regions = function(_, opts)
 	local t_regions = marks.get_all(true)
-
 	fzf.init(tbl.deep_extend({
 		env = RK_FZF_ENV,
 		title = "project regions",

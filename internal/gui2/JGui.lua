@@ -71,6 +71,7 @@ jGui = {
 	imageId = 0,
 
 	lastChar = false, -- this is where reapers gfx.getchar() is stored
+	lastSelIdx = nil,
 
 	next_is_picker = false,
 }
@@ -675,6 +676,17 @@ end
 -- 	by_keys = {},
 -- 	list = {},
 -- }
+function jGui:set_last_selection_idx(idx)
+	self.lastSelIdx = idx
+end
+
+function jGui:get_last_selection_idx()
+	return self.lastSelIdx
+end
+
+function jGui:get_on_enter_selection()
+	return self.t_search_results[self:get_last_selection_idx()]
+end
 
 function jGui:selection_history_push(tag, data)
 	table.insert(self.picker_selection_history.list, data)
@@ -689,8 +701,12 @@ function jGui:selection_history_get(idx)
 	end
 end
 
+function jGui:selection_history_get_tags(tag)
+	return self.picker_selection_history.by_keys
+end
+
 function jGui:selection_history_find(tag)
-  return self.picker_selection_history.by_keys[tag]
+	return self.picker_selection_history.by_keys[tag]
 end
 
 -----------------------------------------------------------------------------
@@ -701,4 +717,46 @@ function jGui:getImgId()
 	local r = self.imageId
 	self.imageId = self.imageId + 1
 	return r
+end
+
+-----------------------------------------------------------------------------
+-- Debugging
+--
+
+function jGui:log_current_selection()
+	local res = "--------------------------------------------"
+	res = res .. "\n-- jgui: current selection\n"
+	for _, cs in ipairs(self.selection_current) do
+		for key, v in pairs(cs) do
+			if key == "name" then
+				res = res .. key .. " = " .. v .. "\n"
+			end
+		end
+	end
+	log.user(res)
+end
+
+function jGui:log_selection_history_keys()
+	local res = "--------------------------------------------"
+	res = res .. "\n-- jgui: selection history\n"
+	for hk, cs in pairs(self.picker_selection_history.by_keys) do
+		res = res .. "\n" .. string.format("hist key: %s", hk) .. "\n"
+		for key, v in ipairs(cs) do
+			res = res .. "elem" .. key .. "\n"
+
+			for ek, value in pairs(v) do
+				-- if key == "name" then
+				res = res .. "  " .. ek .. " = " .. tostring(value) .. "\n"
+				-- end
+			end
+		end
+	end
+	log.user(res)
+end
+
+function jGui:log_selection_history_by_key(tag)
+	local found = self.picker_selection_history.by_keys[tag]
+	if found then
+	  log.user(format.block(found))
+	end
 end

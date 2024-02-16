@@ -220,11 +220,31 @@ local function apply_music_transform_hooks(trnode, target_item, midi_data)
 	})
 end
 
+-- TODO: make this default bindings
+--
+-- FIX: only pass `gui` to bindings functions!!
+local em = {
+	["C-s"] = function(t)
+		local selection = t.gui_ref.t_search_results[t.sel_idx]
+		selection.selected = true
+		t.gui_ref:add_to_current_selection(selection)
+		-- log.user("--- sel cur names ----")
+		-- for _, cs in ipairs(t.gui_ref.selection_current) do
+		--   log.user(cs.name)
+		-- end
+	end,
+	["C-a"] = function(t)
+		t.gui_ref:reset_current_selection()
+	end,
+}
+
 --
 -- TODO: if has tracks; if has regions; if has XYZ...
 -- >>> make this func fully reusable, in other types of pickers, eg. [ region -> tracks -> prompt ].
 --
 
+-- FIX: move this to its own file
+--
 local function apply_patterns_to_sel_tracks(t_sel_trks, main_input_str)
 	-- Get music data from string
 	local ok, t_final_rendered_notes = midi.parse_and_render_midi_notes_block_from_string(main_input_str)
@@ -263,15 +283,6 @@ commands.apply_patterns_across_tracks = function(meta, opts)
 				end
 				return true
 			end,
-			extended_mappings = {
-				["C-s"] = function(t)
-					-- log.user("prompt", #t.gui_ref:selection_history_get())
-					-- log.user("--- sel cur names ----")
-					-- for _, cs in ipairs(t.gui_ref.selection_current) do
-					-- 	log.user(cs.name)
-					-- end
-				end,
-			},
 		})
 	end
 
@@ -284,38 +295,74 @@ commands.apply_patterns_across_tracks = function(meta, opts)
 			--
 			local tag = "tracks"
 			if self:has_mult_select() then
-				jGui:selection_history_push(tag, self:get_mult_select())
+				self:selection_history_push(tag, self:get_mult_select())
 			else
 				local selection = self.t_search_results[i]
-				jGui:selection_history_push(tag, { selection })
+				self:selection_history_push(tag, { selection })
 			end
 			prompt()
 		end,
-		-- FIX: all params have to be passed normally to bindings so that I
-		-- can use (gui, char, sel_idx)
-		extended_mappings = {
-			["C-s"] = function(t)
-				local selection = t.gui_ref.t_search_results[t.sel_idx]
-				selection.selected = true
-				t.gui_ref:add_to_current_selection(selection)
-				-- log.user("--- sel cur names ----")
-				-- for _, cs in ipairs(t.gui_ref.selection_current) do
-				--   log.user(cs.name)
-				-- end
-			end,
-			["C-a"] = function(t)
-				t.gui_ref:reset_current_selection()
-			end,
-		},
+		extended_mappings = em,
 	})
 end
 
 commands.apply_patterns_across_sel_REGIONS_and_TRACKS = function(meta, opts)
-	-- prompt
+	local function prompt()
+		fzf.init({
+			title = "Add MIDI blocks",
+			x = 200,
+			width = 1100,
+			height = 75,
+			on_select_func = function(gui)
+				local _, main_input = gui:controlGetByName("main_input")
+				if main_input then
+					local ret, data = apply_patterns_to_sel_tracks(gui:selection_history_get_tags(), main_input.value)
+					return ret
+				end
+				return true
+			end,
+		})
+	end
 
-	-- tracks
+	local function tracks()
+		local tag = "tracks"
+		pickers.all_tracks(_, {
+			title = "Select track(s) for prompt insertion.",
+			width = 900,
+			filter = "M", -- filter nodes
+			on_select_func = function(gui, i)
+				if gui:has_mult_select() then
+					gui:selection_history_push(tag, gui:get_mult_select())
+				else
+					gui:selection_history_push(tag, { gui:get_on_enter_selection() })
+				end
+				prompt()
+			end,
+			extended_mappings = em,
+		})
+	end
 
-	-- regions
+	local function regions()
+		local tag = "regions"
+		pickers.regions(_, {
+			title = "REGIONS -> TRACKS -> PROMPT",
+			x = 200,
+			width = 800,
+			height = 600,
+			on_select_func = function(gui)
+				if gui:has_mult_select() then
+					gui:selection_history_push(tag, gui:get_mult_select())
+				else
+					gui:selection_history_push(tag, { gui:get_on_enter_selection() })
+				end
+				gui:log_selection_history_by_key(tag)
+				tracks()
+			end,
+			extended_mappings = em,
+		})
+	end
+
+	regions()
 end
 
 commands.promp_make_next_region = function() end
