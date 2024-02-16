@@ -55,6 +55,7 @@ function state_interface.get()
 	return state
 end
 
+-- FIX: why is ME_follow_motions hard coded as key here?
 function state_interface.toggleKey(key)
 	local old_val = state_interface.getKey(key)
 	if type(old_val) == "boolean" then
@@ -124,22 +125,21 @@ end
 
 function state_interface.set_timeline_motion_range(t_range)
 	local state = state_interface.get()
-	state["last_timeline_motion_range"] = t_range
+	state["last_set_timeline_range"] = t_range
 	state_interface.set(state)
 end
-
 
 -- TODO: attach `prev_mode` variable to RK state table and set it to nil as
 -- default
 function state_interface.setMode(mode)
-  log.user("[state_interface.setMode] START =================")
+	log.user("[state_interface.setMode] START =================")
 	local state = state_interface.get()
 	local old_mode = state.mode
 	state.mode = mode
-  events.on_mode_exit(old_mode, state)
-  events.on_mode_enter(state)
+	events.on_mode_exit(old_mode, state)
+	events.on_mode_enter(state)
 	state_interface.set(state)
-  log.user("[state_interface.setMode] END ===================")
+	log.user("[state_interface.setMode] END ===================")
 end
 
 -- why is there a need for this additional function to set normal mode, when
@@ -156,6 +156,15 @@ end
 state_interface.getContext = function()
 	local state = state_interface.get()
 	return state.context
+end
+
+state_interface.last_command_has = function(asf_type)
+	local last_command = state_interface.getKey("last_command")
+	for _, elem in ipairs(last_command.action_sequence) do
+	  if elem:match(asf_type) then
+	    return true
+	  end
+	end
 end
 
 return state_interface

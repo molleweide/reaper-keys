@@ -195,10 +195,12 @@ commands.main_insert_midi_block_from_string_UI = function()
 		x = 200,
 		width = 1100,
 		height = 75,
-		on_select_func = function(self)
-			local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
+		on_select_func = function(gui)
+			local _, main_input = gui:controlGetByName("main_input")
 			if main_input then
-				local ret, data = handle_midi_string(main_input.value)
+				local ret, data = require("library.apply_music_transform").apply_patterns_to_sel_tracks({
+					prompt_str = main_input.value,
+				})
 				return ret
 			end
 			return true
@@ -224,7 +226,7 @@ local em = {
 	end,
 }
 
-commands.apply_patterns_across_tracks = function(meta, opts)
+commands.apply_patterns_across_tracks = function()
 	local function prompt()
 		fzf.init({
 			title = "Add MIDI blocks",
@@ -234,10 +236,10 @@ commands.apply_patterns_across_tracks = function(meta, opts)
 			on_select_func = function(gui)
 				local _, main_input = gui:controlGetByName("main_input")
 				if main_input then
-					local ret, data = require("library.apply_music_transform").apply_patterns_to_sel_tracks(
-						gui:selection_history_find("tracks"),
-						main_input.value
-					)
+					local ret, data = require("library.apply_music_transform").apply_patterns_to_sel_tracks({
+						targets = gui:selection_history_find("tracks"),
+						prompt_str = main_input.value,
+					})
 					return ret
 				end
 				return true
@@ -245,24 +247,25 @@ commands.apply_patterns_across_tracks = function(meta, opts)
 		})
 	end
 
-	pickers.all_tracks(_, {
-		title = "Select track(s) for prompt insertion.",
-		width = 900,
-		filter = "M", -- filter nodes
-		on_select_func = function(self, i)
-			-- TODO: assign selection to picker prev sel hist
-			--
-			local tag = "tracks"
-			if self:has_mult_select() then
-				self:selection_history_push(tag, self:get_mult_select())
-			else
-				local selection = self.t_search_results[i]
-				self:selection_history_push(tag, { selection })
-			end
-			prompt()
-		end,
-		extended_mappings = em,
-	})
+	local function tracks()
+		local tag = "tracks"
+		pickers.all_tracks(_, {
+			title = "Select track(s) for prompt insertion.",
+			width = 900,
+			filter = "M", -- filter nodes
+			on_select_func = function(gui)
+				if gui:has_mult_select() then
+					gui:selection_history_push(tag, gui:get_mult_select())
+				else
+					gui:selection_history_push(tag, { gui:get_on_enter_selection() })
+				end
+				prompt()
+			end,
+			extended_mappings = em,
+		})
+	end
+
+	tracks()
 end
 
 commands.apply_patterns_across_sel_REGIONS_and_TRACKS = function(meta, opts)

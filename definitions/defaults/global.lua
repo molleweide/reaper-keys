@@ -33,9 +33,8 @@ return {
 		["<C-L>"] = "Next4Measures",
 		["`"] = "MarkedTimelinePosition",
 
-    -- ["{"] = "NextRegion",
-    -- ["}"] = "PrevRegion",
-
+		-- ["{"] = "NextRegion",
+		-- ["}"] = "PrevRegion",
 	},
 	timeline_operator = {
 		["r"] = "Record",
@@ -43,6 +42,13 @@ return {
 		["t"] = "PlayAndLoop",
 		["%"] = "CreateMeasures",
 		["<C-%>"] = "CreateProjectTempo",
+		["<SPC>"] = {
+			"+leader commands",
+			{
+				["q"] = "INSERT_MIDI_BLOCK",
+				["Q"] = "INSERT_MIDI_ACROSS_TRACKS",
+			},
+		},
 	},
 	timeline_selector = {
 		["~"] = "MarkedRegion",
@@ -358,8 +364,8 @@ return {
 				["t"] = {
 					"+track",
 					{
-					  ["H"] = "Unhide_ShowAllTracks",
-					  ["h"] = "Hide_Current_Group",
+						["H"] = "Unhide_ShowAllTracks",
+						["h"] = "Hide_Current_Group",
 						["n"] = "ResetTrackToNormal",
 						["R"] = "RenderTrack",
 						["r"] = "UpdateTrackName",

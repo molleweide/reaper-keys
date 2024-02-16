@@ -3,6 +3,8 @@ local format = require("utils.format")
 local tl = require("library.timeline")
 local containers = require("library.items")
 local midi = require("library.midi")
+local lib_tr = require("library.tracks")
+local state_interface = require("state_machine.state_interface")
 
 local function check_if_item_exists_or_create(track, check_start_pos, check_end_pos)
 	local items_found = containers.get_track_items_that_span_cursor_pos(track, check_start_pos, check_end_pos)
@@ -31,15 +33,19 @@ end
 
 local amt = {}
 
-amt.apply_patterns_to_sel_tracks = function(opts, t_sel_trks, main_input_str)
+amt.apply_patterns_to_sel_tracks = function(opts)
+	opts = opts or {}
 	local custom_targets = opts.targets or {}
-	local target_tracks, target_ranges
 
-  --
-  -- GET MUSIC DATA FROM STRING
-  --
-  -- TODO: add good defaults if not string is provided
-  --
+	local last_command = state_interface.getKey("last_command")
+
+	-- log.user("last_command:", format.block(last_command))
+
+	--
+	-- GET MUSIC DATA FROM STRING
+	--
+	-- TODO: add good defaults if not string is provided
+	--
 
 	local ok, t_final_rendered_notes = midi.parse_and_render_midi_notes_block_from_string(opts.prompt_str)
 	if not ok then
@@ -50,6 +56,7 @@ amt.apply_patterns_to_sel_tracks = function(opts, t_sel_trks, main_input_str)
 	-- COMPUTE TARGET TRACKS
 	--
 
+	local target_tracks
 	if custom_targets.tracks then
 		target_tracks = custom_targets.tracks
 	else
@@ -57,19 +64,43 @@ amt.apply_patterns_to_sel_tracks = function(opts, t_sel_trks, main_input_str)
 		target_tracks = focused_track_objects
 	end
 
+	-- -- log.user("apply music:", #target_tracks)
+	-- for _, cs in ipairs(target_tracks) do
+	-- 	log.user(cs.name)
+	-- end
+
 	--
 	-- COMPUTE TIMELINE RANGES
 	--
-
-	-- TODO: log ranges etc.
-
+	-- If regions exist then we prioritize those,
+	-- else, if last command was motion/selector, we
+	-- use their ranges.
+	--
+	-- TODO: one should also be able to specify in the prompt_str itself
+	-- the positions themselves on a custom basis.
+	--
+	local target_ranges = {}
 	if custom_targets.regions then
-		-- TODO: extract ranges and put in target_ranges table?
-		target_regions = custom_targets.regions
+		for _, reg in ipairs(custom_targets.regions) do
+			table.insert(target_ranges, {
+				reg.pos,
+				reg.rgnend,
+			})
+		end
 	else
-		-- TODO: get range from timeline OR motion/selection
-		local cursor_info = tl.get_cursor_info()
+		if state_interface.last_command_has("timeline_operator") then
+			local tl_range = state_interface.getKey("last_set_timeline_range")
+			table.insert(target_ranges, tl_range)
+		else
+			local cursor_info = tl.get_cursor_info()
+			table.insert(target_ranges, {
+				cursor_info.msr.start,
+				cursor_info.msr._end,
+			})
+		end
 	end
+
+	log.user("APPLY MUSIC RANGES:", format.block(target_ranges))
 
 	--
 	-- APPLY MUSIC TRANSFORM LOOP

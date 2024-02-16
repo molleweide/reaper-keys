@@ -21,6 +21,12 @@ local function restore_timeline_sel(timeline_operator, start_sel, end_sel)
 	end
 end
 
+local function save_timeline_sel_to_state()
+	local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+	state_interface.set_timeline_motion_range({ start_sel, end_sel })
+end
+
+
 --- NOTE: Table containing { action_sequence <-> action_function } (ASFPs) pairs
 --        The [ action sequence ] should be handled in the way of the [ action function ]
 return {
@@ -40,6 +46,7 @@ return {
 				-- local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 				local start_sel, end_sel = save_timeline_sel()
 				runner.runAction(timeline_selector)
+				save_timeline_sel_to_state()
 				runner.runAction(timeline_operator)
 				restore_timeline_sel(timeline_operator, start_sel, end_sel)
 			end,
@@ -50,10 +57,8 @@ return {
 				-- log.user("ASF:", format.block(timeline_operator), format.block(timeline_motion))
 				local start_sel, end_sel = save_timeline_sel()
 
-				-- TODO: this function should assign the last ran timeline motion points to state.
 				local start, _end = runner.makeSelectionFromTimelineMotion(timeline_motion, 1)
 
-        -- NOTE: if meta data is written to state instead, then this can be reduced a lot.
 				timeline_operator.meta.start_pos = start
 				timeline_operator.meta.end_pos = _end
 				runner.runAction(timeline_operator)

@@ -21,7 +21,7 @@ local constants = {
       },
     },
     ME_follow_motions = false,
-    last_set_timeline_motion_range = nil,
+    last_set_timeline_range = nil,
 
     -- FIX: this should not reside in this state?!
     midi_step_state = {
