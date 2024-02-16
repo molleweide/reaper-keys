@@ -976,6 +976,7 @@ return {
 
 	INSERT_MIDI_BLOCK = commands.main_insert_midi_block_from_string_UI,
 	INSERT_MIDI_ACROSS_TRACKS = commands.apply_patterns_across_tracks,
+	INSERT_MIDI_ACROSS_REGIONS_AND_TRACKS = commands.apply_patterns_across_sel_REGIONS_and_TRACKS,
 
 	-- TODO: this will be preparation for the track attributes UI
 	Unhide_ShowAllTracks = commands,

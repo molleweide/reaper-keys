@@ -220,6 +220,27 @@ local function apply_music_transform_hooks(trnode, target_item, midi_data)
 	})
 end
 
+--
+-- TODO: if has tracks; if has regions; if has XYZ...
+-- >>> make this func fully reusable, in other types of pickers, eg. [ region -> tracks -> prompt ].
+--
+
+local function apply_patterns_to_sel_tracks(t_sel_trks, main_input_str)
+	-- Get music data from string
+	local ok, t_final_rendered_notes = midi.parse_and_render_midi_notes_block_from_string(main_input_str)
+	if not ok then
+		return false
+	end
+
+	local cursor_info = tl.get_cursor_info()
+	for _, trnode in ipairs(t_sel_trks) do
+		local target_item = check_if_item_exists_or_create(trnode.tr, cursor_info.msr.start, cursor_info.msr._end)
+		apply_music_transform_hooks(trnode, target_item, t_final_rendered_notes)
+	end
+
+	return true
+end
+
 -- TODO: refactor the above midi_parse function into midi library, and then
 -- reuse it here in this bicker
 --
@@ -227,22 +248,6 @@ end
 --
 -- OLD NAME: commands.MIDI_select_tracks_insert_block_by_string = function(meta, opts)
 commands.apply_patterns_across_tracks = function(meta, opts)
-	local function apply_patterns_to_sel_tracks(t_sel_trks, main_input_str)
-		-- Get music data from string
-		local ok, t_final_rendered_notes = midi.parse_and_render_midi_notes_block_from_string(main_input_str)
-		if not ok then
-			return false
-		end
-
-		local cursor_info = tl.get_cursor_info()
-		for _, trnode in ipairs(t_sel_trks) do
-			local target_item = check_if_item_exists_or_create(trnode.tr, cursor_info.msr.start, cursor_info.msr._end)
-			apply_music_transform_hooks(trnode, target_item, t_final_rendered_notes)
-		end
-
-		return true
-	end
-
 	local function prompt()
 		fzf.init({
 			title = "Add MIDI blocks",
@@ -303,6 +308,14 @@ commands.apply_patterns_across_tracks = function(meta, opts)
 			end,
 		},
 	})
+end
+
+commands.apply_patterns_across_sel_REGIONS_and_TRACKS = function(meta, opts)
+	-- prompt
+
+	-- tracks
+
+	-- regions
 end
 
 commands.promp_make_next_region = function() end
