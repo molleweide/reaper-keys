@@ -48,7 +48,7 @@ return {
 		["~"] = "MarkedRegion",
 		["!"] = "LoopSelection",
 		["<S-right>"] = "NextRegion",
-		["<S-left>"] = "PrevRegion",
+		["<S-left>"] = "PrevRegion", -- FIX: not registering?!
 		["<CS-right>"] = "TimeSelectionShiftedRight",
 		["<CS-left>"] = "TimeSelectionShiftedLeft",
 		["i"] = {

@@ -206,20 +206,6 @@ commands.main_insert_midi_block_from_string_UI = function()
 	})
 end
 
-local function apply_music_transform_hooks(trnode, target_item, midi_data)
-	local group_hooks = require("definitions.midi_apply_hooks").groups
-	for hook_name, fn in pairs(group_hooks) do
-		if trnode.group.name:lower():match(hook_name) then
-			log.user("BASS HOOK")
-			midi_data = fn(midi_data)
-		end
-	end
-	midi.insert_notes({
-		item = target_item,
-		notes = midi_data,
-	})
-end
-
 -- TODO: make this default bindings
 --
 -- FIX: only pass `gui` to bindings functions!!
@@ -238,35 +224,6 @@ local em = {
 	end,
 }
 
---
--- TODO: if has tracks; if has regions; if has XYZ...
--- >>> make this func fully reusable, in other types of pickers, eg. [ region -> tracks -> prompt ].
---
-
--- FIX: move this to its own file
---
-local function apply_patterns_to_sel_tracks(t_sel_trks, main_input_str)
-	-- Get music data from string
-	local ok, t_final_rendered_notes = midi.parse_and_render_midi_notes_block_from_string(main_input_str)
-	if not ok then
-		return false
-	end
-
-	local cursor_info = tl.get_cursor_info()
-	for _, trnode in ipairs(t_sel_trks) do
-		local target_item = check_if_item_exists_or_create(trnode.tr, cursor_info.msr.start, cursor_info.msr._end)
-		apply_music_transform_hooks(trnode, target_item, t_final_rendered_notes)
-	end
-
-	return true
-end
-
--- TODO: refactor the above midi_parse function into midi library, and then
--- reuse it here in this bicker
---
--- TODO: add multiple select keybind, eg C-s, or C-space
---
--- OLD NAME: commands.MIDI_select_tracks_insert_block_by_string = function(meta, opts)
 commands.apply_patterns_across_tracks = function(meta, opts)
 	local function prompt()
 		fzf.init({
@@ -277,8 +234,10 @@ commands.apply_patterns_across_tracks = function(meta, opts)
 			on_select_func = function(gui)
 				local _, main_input = gui:controlGetByName("main_input")
 				if main_input then
-					local ret, data =
-						apply_patterns_to_sel_tracks(gui:selection_history_find("tracks"), main_input.value)
+					local ret, data = require("library.apply_music_transform").apply_patterns_to_sel_tracks(
+						gui:selection_history_find("tracks"),
+						main_input.value
+					)
 					return ret
 				end
 				return true
@@ -316,7 +275,10 @@ commands.apply_patterns_across_sel_REGIONS_and_TRACKS = function(meta, opts)
 			on_select_func = function(gui)
 				local _, main_input = gui:controlGetByName("main_input")
 				if main_input then
-					local ret, data = apply_patterns_to_sel_tracks(gui:selection_history_get_tags(), main_input.value)
+					local ret, data = require("library.apply_music_transform").apply_patterns_to_sel_tracks({
+						targets = gui:selection_history_get_tags(),
+						prompt_str = main_input.value,
+					})
 					return ret
 				end
 				return true
