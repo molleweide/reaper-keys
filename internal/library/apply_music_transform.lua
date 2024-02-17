@@ -5,6 +5,23 @@ local containers = require("library.items")
 local midi = require("library.midi")
 local lib_tr = require("library.tracks")
 local state_interface = require("state_machine.state_interface")
+local tbl = require("utils.table")
+
+local function shift_midi_events_in_time(t_midi_events, shift_amount)
+	local res = {}
+
+	for _, note in ipairs(t_midi_events) do
+		local new_note = tbl.copy(note)
+
+		-- TODO:...
+		-- new_note.start = new_note.start + shift_amount
+		-- new_note.__end = new_note.start + shift_amount
+
+		table.insert(res, new_note)
+	end
+
+	return res
+end
 
 local function check_if_item_exists_or_create(track, check_start_pos, check_end_pos)
 	local items_found = containers.get_track_items_that_span_cursor_pos(track, check_start_pos, check_end_pos)
@@ -119,6 +136,15 @@ amt.apply_patterns_to_sel_tracks = function(opts)
 			-- log.user("???:", i)
 			local target_item = check_if_item_exists_or_create(trn.tr, rng[1], rng[2])
 			-- log.user("target item:", target_item)
+
+			-- NOTE: because midi data is assumed to be generated at zero, therefore,
+			-- I can simply add the range start position as shift amount, and then
+			-- all midi notes should become correctly positioned.
+
+			-- TODO: shift midi data into position
+			--
+			-- local music_data_shifted_to_position = shift_midi_events_in_time(t_final_rendered_notes, rng[1])
+
 			apply_music_transform_hooks(trn, target_item, t_final_rendered_notes)
 		end
 	end
