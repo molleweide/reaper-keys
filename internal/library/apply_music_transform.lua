@@ -37,8 +37,6 @@ amt.apply_patterns_to_sel_tracks = function(opts)
 	opts = opts or {}
 	local custom_targets = opts.targets or {}
 
-	local last_command = state_interface.getKey("last_command")
-
 	-- log.user("last_command:", format.block(last_command))
 
 	--
@@ -66,7 +64,7 @@ amt.apply_patterns_to_sel_tracks = function(opts)
 
 	-- -- log.user("apply music:", #target_tracks)
 	-- for _, cs in ipairs(target_tracks) do
-	-- 	log.user(cs.name)
+	-- 	log.user("track:", cs.name, cs.tr)
 	-- end
 
 	--
@@ -79,8 +77,16 @@ amt.apply_patterns_to_sel_tracks = function(opts)
 	-- TODO: one should also be able to specify in the prompt_str itself
 	-- the positions themselves on a custom basis.
 	--
+
+	-- log.user("CUSTOM_TARGETS.REGIONS", format.block(custom_targets.regions))
+
+	-- local last_command = state_interface.getKey("last_command")
+
 	local target_ranges = {}
 	if custom_targets.regions then
+		-- for _, cs in ipairs(custom_targets.regions) do
+		-- 	log.user("regions:", cs.name)
+		-- end
 		for _, reg in ipairs(custom_targets.regions) do
 			table.insert(target_ranges, {
 				reg.pos,
@@ -100,14 +106,26 @@ amt.apply_patterns_to_sel_tracks = function(opts)
 		end
 	end
 
-	log.user("APPLY MUSIC RANGES:", format.block(target_ranges))
+	-- log.user("APPLY MUSIC RANGES:", format.block(target_ranges))
+
+	log.user("???????")
 
 	--
 	-- APPLY MUSIC TRANSFORM LOOP
 	--
 
-	-- 1. for each track node
-	-- 2. for each region
+	local function insert_for_each_range(trn)
+		for i, rng in ipairs(target_ranges) do
+			-- log.user("???:", i)
+			local target_item = check_if_item_exists_or_create(trn.tr, rng[1], rng[2])
+			-- log.user("target item:", target_item)
+			apply_music_transform_hooks(trn, target_item, t_final_rendered_notes)
+		end
+	end
+
+	for _, trnode in ipairs(target_tracks) do
+		insert_for_each_range(trnode)
+	end
 
 	-- for _, trnode in ipairs(target_tracks) do
 	-- 	local target_item = check_if_item_exists_or_create(trnode.tr, cursor_info.msr.start, cursor_info.msr._end)

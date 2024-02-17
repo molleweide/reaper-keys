@@ -666,10 +666,11 @@ function jGui:add_to_current_selection(sel)
 end
 
 function jGui:reset_current_selection()
-	for _, s in ipairs(self.selection_current) do
-		s.selected = false
-	end
-	self.selection_current = nil
+	-- for _, s in ipairs(self.selection_current) do
+	-- 	s.selected = false
+	-- end
+	self.selection_current = {}
+	log.user("#SELECTION_CURRENT:", #self.selection_current)
 end
 
 -- picker_selection_history = {

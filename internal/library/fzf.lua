@@ -575,6 +575,8 @@ end
 --
 
 local function reset_new_picker(opts)
+	GUI:reset_current_selection()
+
 	for k, v in pairs(DEFAULT_OPTS) do
 		GUI[k] = opts[k] and opts[k] or v
 	end

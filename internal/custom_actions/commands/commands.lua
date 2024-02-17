@@ -295,7 +295,10 @@ commands.apply_patterns_across_sel_REGIONS_and_TRACKS = function(meta, opts)
 			title = "Select track(s) for prompt insertion.",
 			width = 900,
 			filter = "M", -- filter nodes
-			on_select_func = function(gui, i)
+			on_select_func = function(gui)
+				-- gui:log_current_selection()
+				log.user("length current sel:", #gui.selection_current)
+
 				if gui:has_mult_select() then
 					gui:selection_history_push(tag, gui:get_mult_select())
 				else
@@ -320,7 +323,7 @@ commands.apply_patterns_across_sel_REGIONS_and_TRACKS = function(meta, opts)
 				else
 					gui:selection_history_push(tag, { gui:get_on_enter_selection() })
 				end
-				gui:log_selection_history_by_key(tag)
+				-- gui:log_selection_history_by_key(tag)
 				tracks()
 			end,
 			extended_mappings = em,
