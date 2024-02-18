@@ -128,40 +128,18 @@ amt.apply_patterns_to_sel_tracks = function(opts)
 
   -- log.user("APPLY MUSIC RANGES:", format.block(target_ranges))
 
-  log.user("???????")
-
   --
   -- APPLY MUSIC TRANSFORM LOOP
   --
 
-  log.user("t final:", format.block(t_final_rendered_notes))
+  for _, rng in ipairs(target_ranges) do
+    local music_data_shifted_to_position = shift_midi_events_in_time(t_final_rendered_notes, rng[1])
 
-  local function insert_for_each_range(trn)
-    for i, rng in ipairs(target_ranges) do
-      -- log.user("???:", i)
-      local target_item = check_if_item_exists_or_create(trn.tr, rng[1], rng[2])
-      -- log.user("target item:", target_item)
-
-      -- NOTE: because midi data is assumed to be generated at zero, therefore,
-      -- I can simply add the range start position as shift amount, and then
-      -- all midi notes should become correctly positioned.
-
-      -- TODO: shift midi data into position
-      --
-      local music_data_shifted_to_position = shift_midi_events_in_time(t_final_rendered_notes, rng[1])
-
-      apply_music_transform_hooks(trn, target_item, music_data_shifted_to_position)
+    for _, trnode in ipairs(target_tracks) do
+      local target_item = check_if_item_exists_or_create(trnode.tr, rng[1], rng[2])
+      apply_music_transform_hooks(trnode, target_item, music_data_shifted_to_position)
     end
   end
-
-  for _, trnode in ipairs(target_tracks) do
-    insert_for_each_range(trnode)
-  end
-
-  -- for _, trnode in ipairs(target_tracks) do
-  -- 	local target_item = check_if_item_exists_or_create(trnode.tr, cursor_info.msr.start, cursor_info.msr._end)
-  -- 	apply_music_transform_hooks(trnode, target_item, t_final_rendered_notes)
-  -- end
 
   return true
 end
