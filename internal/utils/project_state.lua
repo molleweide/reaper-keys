@@ -8,9 +8,9 @@ local serpent = require("serpent")
 local project_state = {}
 
 ---
----@param ext string
----@param key string
----@param lua_table table
+---@param ext string the ext_table name
+---@param key string the ext_table sub key
+---@param lua_table table the data
 ---@return number
 function project_state.overwrite(ext, key, lua_table)
 	local current_project, _ = reaper.EnumProjects(-1, "")

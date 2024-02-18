@@ -3,8 +3,6 @@ local format = require("utils.format")
 local s = require("utils.string")
 local tl = require("library.timeline")
 
-local state_table_name = "midipatterns"
-
 local NOTE_END_GAP = 0.005
 
 local SHORTHAND_CASES = require("definitions.pattern_shorthands")
@@ -238,6 +236,7 @@ midi_patterns.parse = function(_, opts)
 	-- maybe rename it to command state as a more general term so that this pattern
 	-- could be reused in other of my custom action commands.
 	local t_patterns_state = {
+	  input_string = str_pat_input,
 		input_units = s.split(str_pat_input, PATTERN_SPEC.pattern_sep),
 		note_start = pattern_start_pos, -- This value is incremented for each note added to the pattern.
 	}

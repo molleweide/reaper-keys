@@ -260,7 +260,7 @@ custom_actions.jumpToRegionAndLoop = function(opts)
 end
 
 custom_actions.midi_patterns_insert_at_measure = function(meta, opts)
-  require("library.midi_patterns").create_insert_midi_pattern_by_string(meta, {
+  require("library.midi").create_insert_midi_pattern_by_string(meta, {
     start_at_measure = true,
   })
 end
