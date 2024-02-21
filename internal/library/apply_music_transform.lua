@@ -40,7 +40,24 @@ local function check_if_item_exists_or_create(track, check_start_pos, check_end_
   return target_item
 end
 
+-- TEST: LOOPING
+--    default: beginning of measure
+--    `l`      loop across range
+--    -{N}     Start insertion N measures from the end of range.
+--    n{N}     Insert every Nth measure.
+--               Assumed `l`, so it will be auto-enabled
+
+-- TEST: REGION CREATION
+--    default: work in current region
+--    r        make new region after current region, use same length as current
+--    R        make new region before current region, use same length as current
+--    +        duplicate/use-current region, AND build on top of it.
+
 local function amt_parse_options(amt_opts)
+  amt.start_at_beginning_of_measure = true
+  amt.loop_across_range = true
+  amt.start_insertion_N_measures_from_the_end = 5
+  amt.insert_every_Nth_measure = 2
 end
 
 local function apply_music_transform_hooks(trnode, target_item, midi_data)
@@ -120,34 +137,6 @@ amt.apply_patterns_to_sel_tracks = function(opts)
       })
     end
   end
-
-  --
-  -- PARSE AMT OPTIONS
-  --
-
-  -- TODO: parse the options and see what I can do here. I don't know how this
-  -- should be done, but I have sort of an idea of what should be done so
-  -- I just need to sketch it out so that we can at least do something and
-  -- then I can refine it over time and make it better and better so tha
-  -- we can the look at the fucking shit system that they have on the other
-  -- side. why would you even say that my nigga and if they would have thrown
-  -- him over board then it could also have gotten much more exhausted in
-  -- the winter or autumn time.
-  --
-  -- TEST: LOOPING
-  --    default: beginning of measure
-  --    `l`      loop across range
-  --    -{N}     Start insertion N measures from the end of range.
-  --    n{N}     Insert every Nth measure.
-  --               Assumed `l`, so it will be auto-enabled
-  --
-  -- TEST: REGION CREATION
-  --    default: work in current region
-  --    r        make new region after current region, use same length as current
-  --    R        make new region before current region, use same length as current
-  --    +        duplicate/use-current region, AND build on top of it.
-  --
-  -- This info should be parsed and attached to the opts table.
 
   amt_parse_options(opts)
 
