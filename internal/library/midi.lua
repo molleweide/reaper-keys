@@ -1276,10 +1276,6 @@ midi.create_insert_midi_pattern_by_string = function(meta, opts)
     start_at_zero = opts.start_at_zero,
   })
 
-  --
-  -- FIX: Everything bellow here should go into `lib/midi.lua`
-  --
-
   if not opts.dry_run then
     local pattern_start_ppq = reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[1].time_pos_start)
 
@@ -1318,127 +1314,53 @@ end
 -- insert complex midi into a project.
 
 midi.parse_and_render_midi_notes_block_from_string = function(insert_midi_str)
-  log.user("MIDI BLOCK STRING:", insert_midi_str)
+  log.debug("MIDI BLOCK STRING:", insert_midi_str)
+
+  -- Remove this since it should actually okay to pass an empty string
+  if insert_midi_str == "" then
+    return
+  end
+
   local return_code = false
 
   local main_divider = "/"
 
-  local function countCharInString(inputString, charToCount)
-    local count = 0
-    local prev = 0
-    local t_res = {}
+  local _, input_units = s.get_count_char_and_in_between_sub_strings(insert_midi_str, main_divider)
 
-    for i = 1, #inputString do
-      if string.sub(inputString, i, i) == charToCount then
-        count = count + 1
-        if i - prev < 2 then
-          table.insert(t_res, "")
-        else
-          table.insert(t_res, inputString:sub(prev + 1, i - 1))
-        end
-        prev = i
-      end
-      if i == #inputString then
-        if i - prev < 2 then
-          table.insert(t_res, "")
-        else
-          table.insert(t_res, inputString:sub(prev + 1, i))
-        end
-      end
-    end
-    return count, t_res
-  end
-
-  -- TODO: if no input_pattern, then fill the measure with a full measure note.
-  local function parse_pattern(input_pattern)
-    local t_pattern_midi_notes
-    if input_pattern == "" then
-      -- todo ...
-    else
-      _, t_pattern_midi_notes = midi.create_insert_midi_pattern_by_string(_, {
-        pattern = input_pattern,
-        dry_run = true, -- only return data, DON'T try insert any midi
-        start_at_zero = true, -- HACK: temporary fix to make midi data be generated from timeline=0
-      })
-    end
-    return t_pattern_midi_notes
-  end
-
-  -- ~ I need a way to specifically target chords / scale
-  -- ~ Add octave number to the initial pitch
-  local function parse_note_pool(note_pool_str)
-    local root_pitch, note_pool_found
-    local default_pitch = 60
-
-    if note_pool_str == nil or note_pool_str == "" then
-      return {
-        root_pitch = default_pitch,
-        note_pool = nil,
-      }
-    else
-      local t_parsed_pool = s.split(note_pool_str, " ")
-
-      -- log.user("t parsed pool:", format.block(t_parsed_pool))
-
-      local parsed_pool
-
-      if #t_parsed_pool == 1 then
-        root_pitch = default_pitch
-        parsed_pool = t_parsed_pool[1]
-      elseif #t_parsed_pool > 1 then
-        root_pitch = t_parsed_pool[1]
-        parsed_pool = t_parsed_pool[2]
-      end
-
-      local all_note_pools = require("constants.all_note_pools")()
-      local found_np = false
-
-      for _, np in ipairs(all_note_pools) do
-        if np.name_short:lower():match("^" .. parsed_pool) then
-          note_pool_found = np
-          found_np = true
-        end
-      end
-    end
-
-    if note_pool_found then
-      for i, pitch in ipairs(note_pool_found.relative_intervals) do
-        note_pool_found.relative_intervals[i] = pitch + default_pitch
-      end
-    end
-    return {
-      root_pitch = root_pitch,
-      note_pool = note_pool_found,
-    }
-  end
-
-  -- 0. SPLIT INPUT && ASSIGN `PATTERN/POOL/ARP`
-
-  if insert_midi_str == "" then
-    return
-  end
-  local _, input_units = countCharInString(insert_midi_str, main_divider)
   local input_pattern
   local input_note_pool
   local input_arp_expr
+  local s_input_options
+
+  -- FIX: Redo #input_units check.
+  -- >>> Since args are expected in fixed positions, I might as well just do
+  -- a fixed check for each index.
+  -- Ie. `if input_units[1] ~= nil then ... end`
+
   if #input_units == 1 then
     input_pattern = input_units[1]
-  elseif #input_units == 2 then
+  end
+  if #input_units == 2 then
     input_pattern = input_units[1]
     input_note_pool = input_units[2]
-  elseif #input_units > 2 then
+  end
+  if #input_units > 2 then
     input_pattern = input_units[1]
     input_note_pool = input_units[2]
     input_arp_expr = input_units[3]
   end
+  if input_units[4] ~= nil then
+    s_input_options = input_units[4]
+  end
+
   local use_expr = input_arp_expr == "" and false
 
-  log.user("midi_block", #input_units, format.block(input_units))
+  log.debug("midi_block", #input_units, format.block(input_units))
 
   -------------------------------------------------------
 
-  local pattern = parse_pattern(input_pattern)
-  local note_pool = parse_note_pool(input_note_pool)
+  local pattern = require("library.parsers.midi_rhythm_pattern").parse_pattern(input_pattern)
+  local note_pool = require("library.parsers.midi_note_pool").parse_note_pool(input_note_pool)
 
   log.user("NOTE POOL:", format.block(note_pool))
 
@@ -1450,6 +1372,8 @@ midi.parse_and_render_midi_notes_block_from_string = function(insert_midi_str)
   -------------------------------------------------------
   -- Merge pattern with note pool
   --
+
+  -- FIX: do not do this here!! Move it into the apply music transform func.
 
   local t_final_rendered_notes = {}
 
@@ -1475,7 +1399,14 @@ midi.parse_and_render_midi_notes_block_from_string = function(insert_midi_str)
 
   return_code = true
 
-  return return_code, t_final_rendered_notes
+  local return_opts = {
+    arp_expr = input_arp_expr,
+    note_pool = input_note_pool,
+    pattern_events = pattern,
+    cli_options = s_input_options
+  }
+
+  return return_code, t_final_rendered_notes, return_opts
 end
 
 return midi

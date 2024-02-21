@@ -7,6 +7,8 @@ local lib_tr = require("library.tracks")
 local state_interface = require("state_machine.state_interface")
 local tbl = require("utils.table")
 
+-- TODO: CLI -> specify ranges manually?
+
 local function shift_midi_events_in_time(t_midi_events, shift_amount)
   local res = {}
 
@@ -26,6 +28,7 @@ local function shift_midi_events_in_time(t_midi_events, shift_amount)
   return res
 end
 
+-- TODO: move this to lib/items
 local function check_if_item_exists_or_create(track, check_start_pos, check_end_pos)
   local items_found = containers.get_track_items_that_span_cursor_pos(track, check_start_pos, check_end_pos)
   local target_item
@@ -35,6 +38,9 @@ local function check_if_item_exists_or_create(track, check_start_pos, check_end_
     target_item = containers.create_new_item(true, track, check_start_pos, check_end_pos)
   end
   return target_item
+end
+
+local function amt_parse_options(amt_opts)
 end
 
 local function apply_music_transform_hooks(trnode, target_item, midi_data)
@@ -57,18 +63,15 @@ amt.apply_patterns_to_sel_tracks = function(opts)
   opts = opts or {}
   local custom_targets = opts.targets or {}
 
-  -- log.user("last_command:", format.block(last_command))
-
   --
   -- GET MUSIC DATA FROM STRING
   --
-  -- TODO: add good defaults if not string is provided
-  --
 
-  local ok, t_final_rendered_notes = midi.parse_and_render_midi_notes_block_from_string(opts.prompt_str)
+  local ok, t_final_rendered_notes, ret_opts = midi.parse_and_render_midi_notes_block_from_string(opts.prompt_str)
   if not ok then
     return false
   end
+  tbl.deep_extend(opts, ret_opts)
 
   --
   -- COMPUTE TARGET TRACKS
@@ -93,14 +96,6 @@ amt.apply_patterns_to_sel_tracks = function(opts)
   -- If regions exist then we prioritize those,
   -- else, if last command was motion/selector, we
   -- use their ranges.
-  --
-  -- TODO: one should also be able to specify in the prompt_str itself
-  -- the positions themselves on a custom basis.
-  --
-
-  -- log.user("CUSTOM_TARGETS.REGIONS", format.block(custom_targets.regions))
-
-  -- local last_command = state_interface.getKey("last_command")
 
   local target_ranges = {}
   if custom_targets.regions then
@@ -126,7 +121,35 @@ amt.apply_patterns_to_sel_tracks = function(opts)
     end
   end
 
-  -- log.user("APPLY MUSIC RANGES:", format.block(target_ranges))
+  --
+  -- PARSE AMT OPTIONS
+  --
+
+  -- TODO: parse the options and see what I can do here. I don't know how this
+  -- should be done, but I have sort of an idea of what should be done so
+  -- I just need to sketch it out so that we can at least do something and
+  -- then I can refine it over time and make it better and better so tha
+  -- we can the look at the fucking shit system that they have on the other
+  -- side. why would you even say that my nigga and if they would have thrown
+  -- him over board then it could also have gotten much more exhausted in
+  -- the winter or autumn time.
+  --
+  -- TEST: LOOPING
+  --    default: beginning of measure
+  --    `l`      loop across range
+  --    -{N}     Start insertion N measures from the end of range.
+  --    n{N}     Insert every Nth measure.
+  --               Assumed `l`, so it will be auto-enabled
+  --
+  -- TEST: REGION CREATION
+  --    default: work in current region
+  --    r        make new region after current region, use same length as current
+  --    R        make new region before current region, use same length as current
+  --    +        duplicate/use-current region, AND build on top of it.
+  --
+  -- This info should be parsed and attached to the opts table.
+
+  amt_parse_options(opts)
 
   --
   -- APPLY MUSIC TRANSFORM LOOP

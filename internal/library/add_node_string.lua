@@ -3,6 +3,8 @@ local format = require("utils.format")
 
 local s = require("utils.string")
 
+-- TODO: move this to `library/parsers/{...}`
+
 local nodes_string = {}
 
 local function containsOnlyAlphanumericAndPeriod(str)
