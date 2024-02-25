@@ -669,4 +669,16 @@ commands.MIDI_AI_PROMPT = function()
 	-- details.
 end
 
+commands.midi_substitute = function ()
+  --
+  -- Todo: Make a command that mirror's vim's substitute command,
+  --
+  -- {target|range} / {filter|match_pattern|midi_regex} / {transform|apply} / {flags}
+  --
+  -- Todo: Custom previewer that allows one to have very detailed knowledge
+  -- of what tracks will be targeted.
+
+
+end
+
 return commands

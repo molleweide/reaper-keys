@@ -1,9 +1,19 @@
+local log = require("utils.log")
+local format = require("utils.format")
+
+local tbl = require("utils.table")
+
+local sf = require("utils.j_string_functions")
+local settings = require("utils.j_settings_functions")
+
+require("gui2.JGui")
+
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
 -- TODO: move all picker variables to GUI
---
+
 -- TODO: start using pluginsData
 
 -- TODO: Add a master title for the current picker when initiating the
@@ -19,28 +29,32 @@
 -- TODO: if using multi-select -> always show initial column with `[ ]` and fill
 -- with `x` if item is selected.
 
--------------------------------------------------------------------------------
--------------------------------------------------------------------------------
--------------------------------------------------------------------------------
+-- TODO: Show prev picker in left upper corner if there is a previous picker,
 
-local log = require("utils.log")
-local format = require("utils.format")
-
-local tbl = require("utils.table")
-
-local sf = require("utils.j_string_functions")
-local settings = require("utils.j_settings_functions")
-
-require("gui2.JGui")
+-- TODO: prefix title with current UI master title
+-- >>>> dynamically update the name of the sub-picker title upon each picker/view
+-- change.
 
 -- TODO: always open fzf at cursor/selection so that I don't need to move
 -- my eyes.
 
--- TODO: remove this msg function -> replace all instances with `log.<level>`
+-- TEST: PICKER PROMPT UPDATE VALUE
+-- -> Say, eg. that I am using the track manager menu and I want to update
+-- the name of select(ed) tracks, then I will fire up a new prompt, and upon
+-- exiting this renaming-prompt, I will be brought back to the main track
+-- manager.
 
-function msg(m)
-	return reaper.ShowConsoleMsg(tostring(m) .. "\n")
-end
+-- TODO: keybinding -> store current value as default for selected param
+-- in the `plugins/<plugin_x>.lua` file.
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+-- Remove this msg function...
+-- function msg(m)
+-- 	return reaper.ShowConsoleMsg(tostring(m) .. "\n")
+-- end
 
 local fzf = {}
 

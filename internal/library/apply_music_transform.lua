@@ -40,6 +40,19 @@ local function check_if_item_exists_or_create(track, check_start_pos, check_end_
   return target_item
 end
 
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+-- NOTE: Don't otimize the CLI now. I can be creative about that later,
+-- and do some talking with chat gpt etc. but now it is just a matter
+-- of getting the basics to work here so that I can start creating live
+-- music shows. and I will be able to do that this week because now it
+-- is going to be fucking done.
+-- ithis week i will be done with everything that matters up until this system,
+-- and so that I can then move on and start creating the beats.
+
 -- TEST: LOOPING
 --    default: beginning of measure
 --    `l`      loop across range
@@ -53,13 +66,17 @@ end
 --    R        make new region before current region, use same length as current
 --    +        duplicate/use-current region, AND build on top of it.
 
-local function amt_parse_options(amt_opts)
-  amt.start_at_beginning_of_measure = true
-  amt.loop_across_range = true
-  amt.start_insertion_N_measures_from_the_end = 5
-  amt.insert_every_Nth_measure = 2
+local function amt_parse_options(opts)
+  opts.start_at_beginning_of_measure = true
+  opts.loop_across_range = true
+  opts.start_insertion_N_measures_from_the_end = 5
+  opts.insert_every_Nth_measure = 2
 end
 
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 local function apply_music_transform_hooks(trnode, target_item, midi_data)
   local group_hooks = require("definitions.midi_apply_hooks").groups
   for hook_name, fn in pairs(group_hooks) do
