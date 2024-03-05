@@ -67,39 +67,33 @@ end
 --    r        Make new region after current region, use same length as current
 --    R        Make new region before current region, use same length as current
 --    #        Duplicate/use-current region, AND build on top of it.
---
--- NOTE: Improved taxonomy needed!!!
--- >> Easy be confused -> So many ways of referring to project time
--- range intervals. I need to document or define what words to use precisely
--- for each situation/context.
--- --
--- mark       Timeline position in Reaper.
--- region     Interval range in Reaper.
--- range      The timeline interval of the current insertion pattern.
 
 local function amt_parse_options(opts)
   local cli_opts = opts.cli_options
+  opts.configs = {}
+
+
+  -- PATTERN POSITION AND LOOPING
 
   -- Insert pattern at beginning of each supplied range
-  opts.start_at_beginning_of_range = true
-
+  opts.configs.start_at_beginning_of_range = true
   -- `l` | loop across range
-  if cli_opts:match("l") then
-    opts.loop_across_range = true
-  end
-
+  opts.configs.loop_across_range = cli_opts:match("l")
+  -- Right-shift should take precedence over left shift.
   -- `+{N}` | Left-shift / or start N measures from the left.
-  local left_shift_number = cli_opts:match("%+(%d+)")
-
   -- `-{N}` | right-shift / or start N measures from the right/end.
-  local right_shift_number = cli_opts:match("%-(%d+)")
-  opts.start_insertion_N_measures_from_the_end = 5
-  -- opts.left_shift =
+  opts.configs.left_shift_number = cli_opts:match("%+(%d+)")
+  opts.configs.start_insertion_N_measures_from_the_end = cli_opts:match("%-(%d+)")
+  opts.configs.stop_loop_N_measures_from_region_end = cli_opts:match("s(%d+)")
+  opts.configs.nth_measure_number = cli_opts:match("n(%d+)")
 
-  opts.stop_loop_N_measures_from_region_end = nil
+  -- NEW REGION
 
-  local nth_measure_number = cli_opts:match("n(%d+)")
-  opts.insert_every_Nth_measure = 2
+  opts.configs.make_new_region_after = cli_opts:match("r")
+  opts.configs.make_new_region_before = cli_opts:match("R")
+  opts.configs.reuse_current_region = cli_opts:match("#")
+
+  log.user("PATTERN CLI OPTS:", format.block(opts.configs))
 end
 
 -------------------------------------------------------------------------------
