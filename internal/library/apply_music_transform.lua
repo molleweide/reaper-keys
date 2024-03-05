@@ -9,6 +9,17 @@ local tbl = require("utils.table")
 
 -- TODO: CLI -> specify ranges manually?
 
+local function make_bool_flag(search_str, pat)
+  local found = search_str:find(pat)
+  -- log.user(search_str, pat, "->found:", found)
+  return found and true or nil
+end
+
+local function make_int_flag(search_str, pat)
+  local found = search_str:match(pat .. "(%d+)")
+  return found and tonumber(found) or nil
+end
+
 local function shift_midi_events_in_time(t_midi_events, shift_amount)
   local res = {}
 
@@ -72,26 +83,25 @@ local function amt_parse_options(opts)
   local cli_opts = opts.cli_options
   opts.configs = {}
 
-
   -- PATTERN POSITION AND LOOPING
 
   -- Insert pattern at beginning of each supplied range
   opts.configs.start_at_beginning_of_range = true
   -- `l` | loop across range
-  opts.configs.loop_across_range = cli_opts:match("l")
+  opts.configs.loop_across_range = make_bool_flag(cli_opts, "l")
   -- Right-shift should take precedence over left shift.
   -- `+{N}` | Left-shift / or start N measures from the left.
   -- `-{N}` | right-shift / or start N measures from the right/end.
-  opts.configs.left_shift_number = cli_opts:match("%+(%d+)")
-  opts.configs.start_insertion_N_measures_from_the_end = cli_opts:match("%-(%d+)")
-  opts.configs.stop_loop_N_measures_from_region_end = cli_opts:match("s(%d+)")
-  opts.configs.nth_measure_number = cli_opts:match("n(%d+)")
+  opts.configs.left_shift_number = make_int_flag(cli_opts, "%+") --cli_opts:match("%+(%d+)")
+  opts.configs.start_insertion_N_measures_from_the_end = make_int_flag(cli_opts, "%-") --cli_opts:match("%+(%d+)")
+  opts.configs.stop_loop_N_measures_from_region_end = make_int_flag(cli_opts, "s")
+  opts.configs.nth_measure_number = make_int_flag(cli_opts, "n")
 
   -- NEW REGION
 
-  opts.configs.make_new_region_after = cli_opts:match("r")
-  opts.configs.make_new_region_before = cli_opts:match("R")
-  opts.configs.reuse_current_region = cli_opts:match("#")
+  opts.configs.make_new_region_after = make_bool_flag(cli_opts, "r")
+  opts.configs.make_new_region_before = make_bool_flag(cli_opts, "R")
+  opts.configs.reuse_current_region = make_bool_flag(cli_opts, "#")
 
   log.user("PATTERN CLI OPTS:", format.block(opts.configs))
 end
