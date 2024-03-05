@@ -1,3 +1,13 @@
+@document.meta
+title: routing
+description:
+authors: hjalmarjakobsson
+categories:
+created: 2024-03-02T06:29:33-0500
+updated: 2024-03-02T06:29:36-0500
+version: 1.1.1
+@end
+
 ---
 title: Routing
 nav_order: 4
@@ -112,7 +122,7 @@ pan
 - `if track num_sends == 0 and name match:drum_categories` send to DRUMS_ALL
 
     get tracks that match drum categories
-    
+
       `routing.create('(DRUMS_ALL){0,0}', list_drum_tracks)`
 
 

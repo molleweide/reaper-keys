@@ -53,24 +53,42 @@ end
 -- ithis week i will be done with everything that matters up until this system,
 -- and so that I can then move on and start creating the beats.
 
--- TEST: LOOPING
---    default: beginning of measure
---    `l`      loop across range
+-- TEST: PATTERN START / LOOPING ----------------------------------------------
+--    default: Beginning of measure
+--    `l`      Loop across range
+--    +{N}     Start inserting pattern N measures from left/start.
 --    -{N}     Start insertion N measures from the end of range.
 --    n{N}     Insert every Nth measure.
---               Assumed `l`, so it will be auto-enabled
+--               ?? Assumed `l`, so it will be auto-enabled
+--               !! `l` is not required i think
 
 -- TEST: REGION CREATION
---    default: work in current region
---    r        make new region after current region, use same length as current
---    R        make new region before current region, use same length as current
---    +        duplicate/use-current region, AND build on top of it.
+--    default: Work in current region
+--    r        Make new region after current region, use same length as current
+--    R        Make new region before current region, use same length as current
+--    #        Duplicate/use-current region, AND build on top of it.
+--
+-- NOTE: Improved taxonomy needed!!!
+-- >> Easy be confused -> So many ways of referring to project time
+-- range intervals. I need to document or define what words to use precisely
+-- for each situation/context.
 
 local function amt_parse_options(opts)
+
+  -- What does this even mean?
+  --
+  -- ?? If I insert a pattern into a large region, does this mean start at
+  -- the current measure of the edit cursor, or the beginning measure of the region.
   opts.start_at_beginning_of_measure = true
+
   opts.loop_across_range = true
+
   opts.start_insertion_N_measures_from_the_end = 5
+
+  opts.stop_loop_N_measures_from_region_end.
+
   opts.insert_every_Nth_measure = 2
+
 end
 
 -------------------------------------------------------------------------------
