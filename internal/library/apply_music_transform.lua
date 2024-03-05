@@ -72,23 +72,34 @@ end
 -- >> Easy be confused -> So many ways of referring to project time
 -- range intervals. I need to document or define what words to use precisely
 -- for each situation/context.
+-- --
+-- mark       Timeline position in Reaper.
+-- region     Interval range in Reaper.
+-- range      The timeline interval of the current insertion pattern.
 
 local function amt_parse_options(opts)
+  local cli_opts = opts.cli_options
 
-  -- What does this even mean?
-  --
-  -- ?? If I insert a pattern into a large region, does this mean start at
-  -- the current measure of the edit cursor, or the beginning measure of the region.
-  opts.start_at_beginning_of_measure = true
+  -- Insert pattern at beginning of each supplied range
+  opts.start_at_beginning_of_range = true
 
-  opts.loop_across_range = true
+  -- `l` | loop across range
+  if cli_opts:match("l") then
+    opts.loop_across_range = true
+  end
 
+  -- `+{N}` | Left-shift / or start N measures from the left.
+  local left_shift_number = cli_opts:match("%+(%d+)")
+
+  -- `-{N}` | right-shift / or start N measures from the right/end.
+  local right_shift_number = cli_opts:match("%-(%d+)")
   opts.start_insertion_N_measures_from_the_end = 5
+  -- opts.left_shift =
 
-  opts.stop_loop_N_measures_from_region_end.
+  opts.stop_loop_N_measures_from_region_end = nil
 
+  local nth_measure_number = cli_opts:match("n(%d+)")
   opts.insert_every_Nth_measure = 2
-
 end
 
 -------------------------------------------------------------------------------
