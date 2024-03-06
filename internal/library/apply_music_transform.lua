@@ -87,14 +87,19 @@ local function amt_parse_options(opts)
 
   -- Insert pattern at beginning of each supplied range
   opts.configs.start_at_beginning_of_range = true
+
   -- `l` | loop across range
   opts.configs.loop_across_range = make_bool_flag(cli_opts, "l")
+
   -- Right-shift should take precedence over left shift.
   -- `+{N}` | Left-shift / or start N measures from the left.
   -- `-{N}` | right-shift / or start N measures from the right/end.
   opts.configs.left_shift_number = make_int_flag(cli_opts, "%+") --cli_opts:match("%+(%d+)")
+
   opts.configs.start_insertion_N_measures_from_the_end = make_int_flag(cli_opts, "%-") --cli_opts:match("%+(%d+)")
+
   opts.configs.stop_loop_N_measures_from_region_end = make_int_flag(cli_opts, "s")
+
   opts.configs.nth_measure_number = make_int_flag(cli_opts, "n")
 
   -- NEW REGION
@@ -193,12 +198,28 @@ amt.apply_patterns_to_sel_tracks = function(opts)
   --
   -- APPLY MUSIC TRANSFORM LOOP
   --
+  -- NOTE: In the case of [rR#], how do I handle if multiple regions or
+  -- ranges are passed into AMT?
+  -- SOLUTION: ->>> Assume, that only one region/range is passed and work
+  -- as if everything will workout - Handle issues along the way.
 
-  for _, rng in ipairs(target_ranges) do
-    local music_data_shifted_to_position = shift_midi_events_in_time(t_final_rendered_notes, rng[1])
+  -- FIX: I should reverse loop insert data, so that ranges don't fall
+  -- out of sync after first insertion of a new region/section.
+
+  for _, t_target_range in ipairs(target_ranges) do
+    -- note: Everything from here on, can depend on the cli options so I have
+    -- to implement them one by one.
+
+    --
+    -- (A). FOR EACH TARGET RANGE
+    --
+    -- The rhythm events are shifted from zero-based to each target range,
+    -- including if running @ cursor.
+
+    local music_data_shifted_to_position = shift_midi_events_in_time(t_final_rendered_notes, t_target_range[1])
 
     for _, trnode in ipairs(target_tracks) do
-      local target_item = check_if_item_exists_or_create(trnode.tr, rng[1], rng[2])
+      local target_item = check_if_item_exists_or_create(trnode.tr, t_target_range[1], t_target_range[2])
       apply_music_transform_hooks(trnode, target_item, music_data_shifted_to_position)
     end
   end

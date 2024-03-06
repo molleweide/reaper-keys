@@ -3,7 +3,7 @@ local format = require("utils.format")
 local s = require("utils.string")
 local tl = require("library.timeline")
 
--- todo: move this file to `lib/parsers/midi_rhythm_pattern.lua`
+-- TODO: move this file to `lib/parsers/midi_rhythm_pattern.lua`
 
 local NOTE_END_GAP = 0.005
 
@@ -248,7 +248,11 @@ midi_patterns.parse = function(_, opts)
   local t_patterns_state = {
     input_string = str_pat_input,
     input_units = input_str,
-    note_start = pattern_start_pos, -- This value is incremented for each note added to the pattern.
+    -- This value is incremented for each note added to the pattern.
+    note_start = pattern_start_pos,
+    -- TODO: This info needs to be colleced so that I can easilly loop the
+    -- pattern later
+    num_measures_affected = nil,
   }
 
   if t_midi_context.note_row == -1 then
@@ -283,33 +287,13 @@ midi_patterns.parse = function(_, opts)
     end
   end
 
-  log.debug("t pattern state", format.block(t_patterns_state), format.block(t_midi_notes))
+  log.debug(
+    "midi_patterns.parse() -> [log before return]:",
+    format.block(t_patterns_state),
+    format.block(t_midi_notes)
+  )
 
-  --
-  -- FIX: Everything bellow here should go into `lib/midi.lua`
-  --
-
-  -- if not opts.dry_run then
-  -- 	local pattern_start_ppq = reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[1].time_pos_start)
-  -- 	local pattern_end_ppq =
-  -- 		reaper.MIDI_GetPPQPosFromProjTime(t_midi_context.take, t_midi_notes[#t_midi_notes].time_pos_end_without_gap)
-  -- 	midi.midi_take_filter_transform(t_midi_context.take, {
-  -- 		remove = {
-  -- 			notes = {
-  -- 				pitch = function(note)
-  -- 					return note.pitch == t_midi_context.note_row
-  -- 						and (pattern_start_ppq <= note.ppq_s and note.ppq_e <= pattern_end_ppq)
-  -- 				end,
-  -- 			},
-  -- 		},
-  -- 	})
-  --
-  -- 	midi.insert_notes({
-  -- 		take = t_midi_context.take,
-  -- 		notes = t_midi_notes,
-  -- 	})
-  -- 	reaper_state.set(state_table_name, { prev_pattern_string = str_pat_input })
-  -- end
+  -- FIX: should return a single table only!!!
 
   return t_patterns_state, t_midi_notes
 end
