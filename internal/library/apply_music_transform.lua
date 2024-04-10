@@ -8,6 +8,8 @@ local state_interface = require("state_machine.state_interface")
 local tbl = require("utils.table")
 
 -- TODO: CLI -> specify ranges manually?
+--
+-- `utils/cli.lua`
 
 local function make_bool_flag(search_str, pat)
   local found = search_str:find(pat)
@@ -15,10 +17,12 @@ local function make_bool_flag(search_str, pat)
   return found and true or nil
 end
 
-local function make_int_flag(search_str, pat)
+local function make_int_flag(search_str, pat, default)
   local found = search_str:match(pat .. "(%d+)")
-  return found and tonumber(found) or nil
+  return found and tonumber(found) or default
 end
+
+----
 
 local function shift_midi_events_in_time(t_midi_events, shift_amount)
   local res = {}
@@ -83,27 +87,22 @@ local function amt_parse_options(opts)
   local cli_opts = opts.cli_options
   opts.configs = {}
 
+  -- FIX: I can get rid of the `cli_opts` param to flag func by having the func
+  -- return a new func that uses the cli_opts inside...
+
   -- PATTERN POSITION AND LOOPING
 
   -- Insert pattern at beginning of each supplied range
   opts.configs.start_at_beginning_of_range = true
-
-  -- `l` | loop across range
   opts.configs.loop_across_range = make_bool_flag(cli_opts, "l")
-
-  -- Right-shift should take precedence over left shift.
-  -- `+{N}` | Left-shift / or start N measures from the left.
-  -- `-{N}` | right-shift / or start N measures from the right/end.
-  opts.configs.left_shift_number = make_int_flag(cli_opts, "%+") --cli_opts:match("%+(%d+)")
-
+  opts.configs.left_shift_number = make_int_flag(cli_opts, "%+")                      --cli_opts:match("%+(%d+)")
   opts.configs.start_insertion_N_measures_from_the_end = make_int_flag(cli_opts, "%-") --cli_opts:match("%+(%d+)")
-
   opts.configs.stop_loop_N_measures_from_region_end = make_int_flag(cli_opts, "s")
-
   opts.configs.nth_measure_number = make_int_flag(cli_opts, "n")
 
   -- NEW REGION
 
+  opts.configs.new_region_length_in_measures = make_int_flag(cli_opts, "n", 8)
   opts.configs.make_new_region_after = make_bool_flag(cli_opts, "r")
   opts.configs.make_new_region_before = make_bool_flag(cli_opts, "R")
   opts.configs.reuse_current_region = make_bool_flag(cli_opts, "#")
@@ -111,64 +110,14 @@ local function amt_parse_options(opts)
   log.user("PATTERN CLI OPTS:", format.block(opts.configs))
 end
 
--------------------------------------------------------------------------------
--------------------------------------------------------------------------------
--------------------------------------------------------------------------------
--------------------------------------------------------------------------------
-local function apply_music_transform_hooks(trnode, target_item, midi_data)
-  local group_hooks = require("definitions.midi_apply_hooks").groups
-  for hook_name, fn in pairs(group_hooks) do
-    if trnode.group.name:lower():match(hook_name) then
-      log.user("BASS HOOK")
-      midi_data = fn(midi_data)
-    end
-  end
-  midi.insert_notes({
-    item = target_item,
-    notes = midi_data,
-  })
-end
-
-local amt = {}
-
-amt.apply_patterns_to_sel_tracks = function(opts)
-  opts = opts or {}
-  local custom_targets = opts.targets or {}
-
-  --
-  -- GET MUSIC DATA FROM STRING
-  --
-
-  local ok, t_final_rendered_notes, ret_opts = midi.parse_and_render_midi_notes_block_from_string(opts.prompt_str)
-  if not ok then
-    return false
-  end
-  tbl.deep_extend(opts, ret_opts)
-
-  --
-  -- COMPUTE TARGET TRACKS
-  --
-
-  local target_tracks
-  if custom_targets.tracks then
-    target_tracks = custom_targets.tracks
-  else
-    local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
-    target_tracks = focused_track_objects
-  end
-
-  -- -- log.user("apply music:", #target_tracks)
-  -- for _, cs in ipairs(target_tracks) do
-  -- 	log.user("track:", cs.name, cs.tr)
-  -- end
-
-  --
-  -- COMPUTE TIMELINE RANGES
-  --
-  -- If regions exist then we prioritize those,
-  -- else, if last command was motion/selector, we
-  -- use their ranges.
-
+--- If regions exist then we prioritize those,
+--- else, if last command was motion/selector, we
+--- use their ranges.
+--- Selected regions take precedence.
+--- motion/selector is used last?
+---@param custom_targets any
+---@return table
+local function compute_target_timeline_ranges(custom_targets)
   local target_ranges = {}
   if custom_targets.regions then
     -- for _, cs in ipairs(custom_targets.regions) do
@@ -192,6 +141,70 @@ amt.apply_patterns_to_sel_tracks = function(opts)
       })
     end
   end
+  return target_ranges
+end
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+local function apply_music_transform_hooks(trnode, target_item, midi_data)
+  local group_hooks = require("definitions.midi_apply_hooks").groups
+  for hook_name, fn in pairs(group_hooks) do
+    if trnode.group.name:lower():match(hook_name) then
+      log.user("BASS HOOK")
+      midi_data = fn(midi_data)
+    end
+  end
+  midi.insert_notes({
+    item = target_item,
+    notes = midi_data,
+  })
+end
+
+local amt = {}
+
+--- Takes a set of tracks and musical patterns and applies this midi data
+--- the target tracks at specified timeline ranges. It allows one to operate
+--- on a macro level by injecting musical data algorhitmically.
+---@param opts any
+---@return boolean
+amt.apply_patterns_to_sel_tracks = function(opts)
+  opts = opts or {}
+  local custom_targets = opts.targets or {}
+
+  --
+  -- GET MUSIC DATA FROM STRING
+  --
+  --
+
+  local ok, t_final_rendered_notes, ret_opts = midi.parse_and_render_midi_notes_block_from_string(opts.prompt_str)
+  if not ok then
+    return false
+  end
+  tbl.deep_extend(opts, ret_opts)
+
+  --
+  -- COMPUTE TARGET TRACKS
+  --
+  -- depending on whether or not target tracks are specified in the string prompt
+  -- we have to have a smart chain for computing default tracks to target if
+  -- none are specified.
+
+  local target_tracks
+  if custom_targets.tracks then
+    target_tracks = custom_targets.tracks
+  else
+    local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+    target_tracks = focused_track_objects
+  end
+
+  -- -- log.user("apply music:", #target_tracks)
+  -- for _, cs in ipairs(target_tracks) do
+  -- 	log.user("track:", cs.name, cs.tr)
+  -- end
+
+  local target_ranges = compute_target_timeline_ranges(custom_targets)
 
   amt_parse_options(opts)
 

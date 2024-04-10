@@ -17,12 +17,12 @@ local PATTERN_SPEC = {
     input_field_width = "extrawidth=350",
     retvals_csv = "",
   },
-  pattern_sep = " ", -- whitespace
-  UNIT_MULTIPLIER = 0.5, -- quarter note
-  UNIT_DIVIDER = 4, -- sixteenth note (0.125)
+  pattern_sep = " ",          -- whitespace
+  UNIT_MULTIPLIER = 0.5,      -- quarter note
+  UNIT_DIVIDER = 4,           -- sixteenth note (0.125)
   special_symbols = {
-    ["["] = { mult = 0.5 }, -- half
-    ["]"] = { mult = 2 }, -- /2 *2
+    ["["] = { mult = 0.5 },   -- half
+    ["]"] = { mult = 2 },     -- /2 *2
     ["("] = { mult = 2 / 3 }, -- tripple
     [")"] = { mult = 3 / 2 },
     ["{"] = { mult = 1 / 3 },
@@ -30,7 +30,7 @@ local PATTERN_SPEC = {
   },
 }
 PATTERN_SPEC.user_input.caption_csv =
-string.format("%s,%s", PATTERN_SPEC.user_input.placeholder, PATTERN_SPEC.user_input.input_field_width)
+    string.format("%s,%s", PATTERN_SPEC.user_input.placeholder, PATTERN_SPEC.user_input.input_field_width)
 
 local midi_patterns = {}
 
@@ -105,10 +105,13 @@ local function case_apply(cases, i, s_unit, t_target)
   end
 end
 
--- replace `input_units` with their respective shorthand mapping
+-- FIX: This function is pretty much impossible to understand..
+--
+-- Replace `input_units` with their respective shorthand mapping so that user
+-- can write pattern strings faster.
 local function apply_shorthands(t_ps, cases)
   for i, s_unit in ipairs(t_ps.input_units) do
-    case_apply(cases, i, s_unit, t_patterns) -- t_ps???
+    case_apply(cases, i, s_unit, t_ps)
   end
 end
 
@@ -172,17 +175,19 @@ end
 local function get_prepare_unit_params(unit)
   local multiplier, divider = get_unit_multipliers(unit)
   local note_step = multiplier / divider
+
   log.debug(string.format(
     [[
 		COMPUTE PATTERN UNIT PARAMS
 	mul = %s
 	div = %s
 	note_step = %s
-	]]  ,
+	]],
     multiplier,
     divider,
     note_step
   ))
+
   return {
     note_step = note_step,
     multiplier = multiplier,
@@ -210,12 +215,14 @@ end
 --    []  =
 
 -- midi_patterns.create_insert_midi_pattern_by_string = function(meta, opts)
+
 midi_patterns.parse = function(_, opts)
   local t_midi_notes = {}
   local str_pat_input = opts.pattern or nil
 
   local t_midi_context = opts.midi_context
 
+  -- TODO: make this into a helper func.
   if not str_pat_input then
     _, str_pat_input = reaper.GetUserInputs(
       PATTERN_SPEC.user_input.title,
@@ -225,11 +232,17 @@ midi_patterns.parse = function(_, opts)
     )
   end
 
+  -- WARN: Assuming we are using the same time signature throughout a track
+  -- Get cursor info so that we can compute measure length and start/end
+  -- positions.
+  local cursor_info = tl.get_cursor_info()
+
+  -- Determine start position when generating midi events.
   local pattern_start_pos
   if opts.start_at_zero then
     pattern_start_pos = 0
   elseif opts.start_at_measure then
-    pattern_start_pos = (tl.get_cursor_info()).msr.start
+    pattern_start_pos = cursor_info.msr.start
   else
     pattern_start_pos = t_midi_context.cursor_pos
   end
@@ -237,21 +250,20 @@ midi_patterns.parse = function(_, opts)
   -- Handle case of empty input string
   local input_str
   if str_pat_input == "" then
-    -- TODO: ...
-    -- input_str =
+    -- todo...
   else
     input_str = s.split(str_pat_input, PATTERN_SPEC.pattern_sep)
   end
 
-  -- maybe rename it to command state as a more general term so that this pattern
+  -- Maybe rename it to command state as a more general term so that this pattern
   -- could be reused in other of my custom action commands.
   local t_patterns_state = {
     input_string = str_pat_input,
     input_units = input_str,
     -- This value is incremented for each note added to the pattern.
     note_start = pattern_start_pos,
-    -- TODO: This info needs to be colleced so that I can easilly loop the
-    -- pattern later
+
+    -- Fore each step forward check if we should increment the num measures touched.
     num_measures_affected = nil,
   }
 
@@ -283,7 +295,7 @@ midi_patterns.parse = function(_, opts)
 			unit_subtract_len > 0
 			-> User input unit did not make even time according to multiplier,
 			but this is fine, just know that you did not...
-			]]  )
+			]])
     end
   end
 
@@ -292,6 +304,37 @@ midi_patterns.parse = function(_, opts)
     format.block(t_patterns_state),
     format.block(t_midi_notes)
   )
+
+
+  -- > VARIABLES AT OUR DISPOSAL
+  -- >> Start pos
+  --    Time_pos_end_without_gap
+  --    Get_measure_length()
+  --    Tot_len = end - start
+  --    msr_len = cursor_info._end - cursor_info.start
+  --
+  --    How many msr_len
+  --
+  --    In order to ensure that the full pattern is included when cycling the loop
+  --    then we need to check how many measures can be multiply and compare
+  --    to the tot pattern length before the difference is
+  --
+  --    tot_len <= msr_len * X
+  --
+  --    local n = 1
+  --    while (tot_len <= msr_len * n) do
+  --    n = n + 1
+  --    end
+  --
+  -- t_patterns_state.num_measures_affected = n
+  --
+
+
+
+
+
+
+
 
   -- FIX: should return a single table only!!!
 
