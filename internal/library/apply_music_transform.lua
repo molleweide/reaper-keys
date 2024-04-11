@@ -7,6 +7,8 @@ local lib_tr = require("library.tracks")
 local state_interface = require("state_machine.state_interface")
 local tbl = require("utils.table")
 
+local fb = format.block
+
 -- TODO: CLI -> specify ranges manually?
 --
 -- `utils/cli.lua`
@@ -24,21 +26,55 @@ end
 
 ----
 
-local function shift_midi_events_in_time(t_midi_events, shift_amount)
+-- TODO: respect CLI prompt options
+-- ~ preshift
+-- ~ postshift
+-- ~ every Nth
+--
+---Apply range shift and looping of musical data for a single range.
+---@param opts any
+---@param t_midi_events any
+---@param current_range any
+---@return table
+local function shift_and_loop_data_to_range(opts, t_midi_events, current_range)
   local res = {}
 
-  for _, note in ipairs(t_midi_events) do
-    local new_note = tbl.copy(note)
+  local range_len = current_range[2] - current_range[1]
 
-    -- FIX: I am not too fond of the naming here. midi note tl positions should
-    -- be the same everywhere and regardless of context so that working with
-    -- midi becomes more predictible.
+  local loop_measures_len = opts.pattern.meta_data.num_measures_affected_length
 
-    new_note.time_pos_start = new_note.time_pos_start + shift_amount
-    new_note.time_pos_end = new_note.time_pos_end + shift_amount
+  local num_loops = 1
 
-    table.insert(res, new_note)
+  while (range_len > loop_measures_len * num_loops) do
+    num_loops = num_loops + 1
   end
+
+  log.user("CHECK LOOP", format.block({
+    range_len = range_len,
+    loop_measures_len=loop_measures_len,
+    num_loops = num_loops
+  }))
+
+  -- num_loops = 1
+
+  for i = 0, num_loops - 1, 1 do
+    for _, note in ipairs(t_midi_events) do
+      local new_note = tbl.copy(note)
+
+      -- FIX: I am not too fond of the naming here. midi note tl positions should
+      -- be the same everywhere and regardless of context so that working with
+      -- midi becomes more predictible.
+
+      local loop_shift = loop_measures_len * i
+
+      new_note.time_pos_start = new_note.time_pos_start + current_range[1] + loop_shift
+      new_note.time_pos_end = new_note.time_pos_end + current_range[1] + loop_shift
+
+      table.insert(res, new_note)
+    end
+  end
+
+  -- log.user("res",fb(res))
 
   return res
 end
@@ -85,6 +121,9 @@ end
 
 local function amt_parse_options(opts)
   local cli_opts = opts.cli_options
+  if not cli_opts then
+    return
+  end
   opts.configs = {}
 
   -- FIX: I can get rid of the `cli_opts` param to flag func by having the func
@@ -95,7 +134,7 @@ local function amt_parse_options(opts)
   -- Insert pattern at beginning of each supplied range
   opts.configs.start_at_beginning_of_range = true
   opts.configs.loop_across_range = make_bool_flag(cli_opts, "l")
-  opts.configs.left_shift_number = make_int_flag(cli_opts, "%+")                      --cli_opts:match("%+(%d+)")
+  opts.configs.left_shift_number = make_int_flag(cli_opts, "%+")                       --cli_opts:match("%+(%d+)")
   opts.configs.start_insertion_N_measures_from_the_end = make_int_flag(cli_opts, "%-") --cli_opts:match("%+(%d+)")
   opts.configs.stop_loop_N_measures_from_region_end = make_int_flag(cli_opts, "s")
   opts.configs.nth_measure_number = make_int_flag(cli_opts, "n")
@@ -148,14 +187,24 @@ end
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
+
+-- WARN: hooks cannot transform notes in time so that the pattern becomes longer
+-- than expected.
+--
+---Apply user configured hooks
+---@param trnode any
+---@param target_item any
+---@param midi_data any
 local function apply_music_transform_hooks(trnode, target_item, midi_data)
   local group_hooks = require("definitions.midi_apply_hooks").groups
+
   for hook_name, fn in pairs(group_hooks) do
     if trnode.group.name:lower():match(hook_name) then
       log.user("BASS HOOK")
       midi_data = fn(midi_data)
     end
   end
+
   midi.insert_notes({
     item = target_item,
     notes = midi_data,
@@ -184,6 +233,9 @@ amt.apply_patterns_to_sel_tracks = function(opts)
   end
   tbl.deep_extend(opts, ret_opts)
 
+  log.user("opts", format.block(opts))
+
+  log.user("final notes", format.block(t_final_rendered_notes))
   --
   -- COMPUTE TARGET TRACKS
   --
@@ -229,7 +281,9 @@ amt.apply_patterns_to_sel_tracks = function(opts)
     -- The rhythm events are shifted from zero-based to each target range,
     -- including if running @ cursor.
 
-    local music_data_shifted_to_position = shift_midi_events_in_time(t_final_rendered_notes, t_target_range[1])
+    local music_data_shifted_to_position = shift_and_loop_data_to_range(opts, t_final_rendered_notes, t_target_range)
+
+    -- log.user("music_data_shifted_to_position", format.block(music_data_shifted_to_position))
 
     for _, trnode in ipairs(target_tracks) do
       local target_item = check_if_item_exists_or_create(trnode.tr, t_target_range[1], t_target_range[2])

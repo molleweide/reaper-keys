@@ -609,7 +609,7 @@ return {
 						["c"] = "NewProjectTab",
 						["x"] = "CloseProject",
 						["C"] = "CleanProjectDirectory",
-						["S"] = "SaveProjectWithNewVersion",
+						-- ["S"] = "SaveProjectWithNewVersion",
 						["t"] = {
 							"+timebase",
 							{

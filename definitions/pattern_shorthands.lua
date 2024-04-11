@@ -12,6 +12,7 @@ return {
   ["b"] = "xx(xxx)",
   ["c"] = "x[xx](xox)",
   ["d"] = "xxx2,3", -- 2-
+  ["q"] = "xxxo",
 }
 
 

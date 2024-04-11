@@ -216,6 +216,13 @@ end
 
 -- midi_patterns.create_insert_midi_pattern_by_string = function(meta, opts)
 
+-- FIX: I should move-out any logic pertaining to pitch/not row info.
+--
+---Parses a pattern string and returns pattern meta data and rhytm midi events
+---@param _ any
+---@param opts any
+---@return table
+---@return table
 midi_patterns.parse = function(_, opts)
   local t_midi_notes = {}
   local str_pat_input = opts.pattern or nil
@@ -267,6 +274,8 @@ midi_patterns.parse = function(_, opts)
     num_measures_affected = nil,
   }
 
+  -- TODO: remove anything pertaining to note rows
+
   if t_midi_context.note_row == -1 then
     t_midi_context.note_row = 80
   end
@@ -276,6 +285,9 @@ midi_patterns.parse = function(_, opts)
   -- end
 
   apply_repeats(t_patterns_state)
+
+
+-- FIX: short hands are not applied correctly it seems...
   apply_shorthands(t_patterns_state, SHORTHAND_CASES)
 
   for _, unit in pairs(t_patterns_state.input_units) do
@@ -306,35 +318,17 @@ midi_patterns.parse = function(_, opts)
   )
 
 
-  -- > VARIABLES AT OUR DISPOSAL
-  -- >> Start pos
-  --    Time_pos_end_without_gap
-  --    Get_measure_length()
-  --    Tot_len = end - start
-  --    msr_len = cursor_info._end - cursor_info.start
-  --
-  --    How many msr_len
-  --
-  --    In order to ensure that the full pattern is included when cycling the loop
-  --    then we need to check how many measures can be multiply and compare
-  --    to the tot pattern length before the difference is
-  --
-  --    tot_len <= msr_len * X
-  --
-  --    local n = 1
-  --    while (tot_len <= msr_len * n) do
-  --    n = n + 1
-  --    end
-  --
-  -- t_patterns_state.num_measures_affected = n
-  --
-
-
-
-
-
-
-
+  -- Compute how many measures are affected by given pattern.
+  local pattern_total_len = t_midi_notes[#t_midi_notes].time_pos_end_without_gap - pattern_start_pos
+  local msr_len = cursor_info.msr._end - cursor_info.msr.start
+  local n = 1
+  -- ensure that pattern is not longer than a multiple of measure. Exit as soon as
+  -- this is false, ie. if pattern is equal to or shorter.
+  while (pattern_total_len <= msr_len * n) do
+    n = n + 1
+  end
+  t_patterns_state.num_measures_affected = n
+  t_patterns_state.num_measures_affected_length = n * msr_len
 
   -- FIX: should return a single table only!!!
 
