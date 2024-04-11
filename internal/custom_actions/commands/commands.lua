@@ -691,18 +691,40 @@ commands.insert_new_region_prompt = function()
 
       local opts = {}
 
-      -- PARSE STRING
+      -- PARSE STRING -------------------------------------------------------
       -- [ <jump_char> ] [ <name> ] [-^$] [ <measures_count> ]
 
-      -- default insert new region after current
+      -- 1. Split string on first slash
 
-      -- GET THE TIMELINE POS FOR INJECTING THE NEW REGION
-      -- >>> if no region exists at cursor -> use cursor info position.
+      -- 2. If 2,
+
+      --    in split[1]
+
+      --    match alpha char -> regions jump char
+
+      --    match [-^$] -> insert_at_type [pre/post/start/end]
+
+      --    match number -> measures length
+
+      -- 3. If 2 use split[2] or the whole string
+
+      --    Use this for the region long name.
+
+
+      -- GET TL POS FOR INJECTING NEW REGION ---------------------------------
+
+      -- START: if start -> use timeline pos == 0
+
+      -- PRE/POST: if cursor position INSIDE region -> use this region start/_end
+      -- elseif NOT inside region -> use measure at cursor.
+
+      -- END: if end -> get last region position._end
+
       -- local inject_position = get_..
 
-      -- SHIFT EXISTING DATA BASED ON MEASURE COUNT
+      -- SHIFT FORWARD EXISTING DATA ---------------------------------------
 
-      -- CREATE NEW REGION CHAR/NAME
+      -- CREATE NEW REGION CHAR/NAME ---------------------------------
 
 
     end,
