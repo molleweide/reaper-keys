@@ -324,9 +324,20 @@ midi_patterns.parse = function(_, opts)
   local n = 1
   -- ensure that pattern is not longer than a multiple of measure. Exit as soon as
   -- this is false, ie. if pattern is equal to or shorter.
-  while (pattern_total_len <= msr_len * n) do
+
+  log.user(format.block({
+    pattern_total_len = pattern_total_len,
+    msr_len = msr_len,
+    n = n,
+    msr_len_n = msr_len * n,
+    test = pattern_total_len <= msr_len * n
+  }))
+
+  while (pattern_total_len > msr_len * n) do
     n = n + 1
   end
+
+
   t_patterns_state.num_measures_affected = n
   t_patterns_state.num_measures_affected_length = n * msr_len
 

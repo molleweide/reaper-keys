@@ -74,7 +74,7 @@ local function shift_and_loop_data_to_range(opts, t_midi_events, current_range)
     end
   end
 
-  -- log.user("res",fb(res))
+  log.user("res",fb(res))
 
   return res
 end
@@ -149,11 +149,11 @@ local function amt_parse_options(opts)
   log.user("PATTERN CLI OPTS:", format.block(opts.configs))
 end
 
---- If regions exist then we prioritize those,
---- else, if last command was motion/selector, we
---- use their ranges.
---- Selected regions take precedence.
---- motion/selector is used last?
+---Compute the regions for which we should inject data.
+---1. If picked regions exist
+---2. Check if selector command
+---3. Check if visual timeline is set
+---4. Check if "motion"
 ---@param custom_targets any
 ---@return table
 local function compute_target_timeline_ranges(custom_targets)
@@ -286,6 +286,7 @@ amt.apply_patterns_to_sel_tracks = function(opts)
     -- log.user("music_data_shifted_to_position", format.block(music_data_shifted_to_position))
 
     for _, trnode in ipairs(target_tracks) do
+      log.user("?")
       local target_item = check_if_item_exists_or_create(trnode.tr, t_target_range[1], t_target_range[2])
       apply_music_transform_hooks(trnode, target_item, music_data_shifted_to_position)
     end
