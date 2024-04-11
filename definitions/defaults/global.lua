@@ -265,16 +265,16 @@ return {
             -- TEST: make sure that all these can be used with count prefix.
             ["T"] = "RepeatInsertTimeSelection",
             -- TODO: these three
-            ["R"] = "Items_DuplicateCountTimes",
+            ["D"] = "Items_DuplicateCountTimes",
             ["r"] = "Items_DuplicateCountTimesAndGlue",
             ["l"] = "Items_LoopCountTimes",
             ---------------------------------
             -- use this to controll the song structure with fuzzy finder.
             ["i"] = "InsertNewRegion_UI",
-            ["n"] = "InsertNewRegion_After_Current",
-            ["p"] = "InsertNewRegion_Before_Current",
-            ["E"] = "InsertNewRegion_To_Project_End",
-            ["B"] = "InsertNewRegion_To_Project_Beginning",
+            ["R"] = "InsertNewRegion_prompt",
+            -- ["p"] = "InsertNewRegion_Before_Current",
+            -- ["E"] = "InsertNewRegion_To_Project_End",
+            -- ["B"] = "InsertNewRegion_To_Project_Beginning",
           },
         },
         ["s"] = {

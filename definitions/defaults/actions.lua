@@ -1075,10 +1075,10 @@ return {
 	},
 
 	InsertNewRegion_UI = commands.UI_add_new_regions,
-	InsertNewRegion_After_Current = commands.insert_new_region_beginning,
-	InsertNewRegion_Before_Current = commands.insert_new_region_before_current_region,
-	InsertNewRegion_To_Project_End = commands.insert_new_region_after_current_region,
-	InsertNewRegion_To_Project_Beginning = commands.insert_new_region_beginning,
+	InsertNewRegion_prompt = commands.insert_new_region_prompt,
+	-- InsertNewRegion_Before_Current = commands.insert_new_region_before_current_region,
+	-- InsertNewRegion_To_Project_End = commands.insert_new_region_after_current_region,
+	-- InsertNewRegion_To_Project_Beginning = commands.insert_new_region_beginning,
 
 	-- switch easy between devices
 	--

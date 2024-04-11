@@ -677,29 +677,55 @@ commands.UI_add_new_regions = function()
   -- NOTE: There is already `regions_manager_fuzzy_ui` above.
 end
 
-commands.insert_new_region_after_current_region = function()
+-- NOTE: I can reduce everything here into one command by checking for
+-- the usual suspect chars.
+-- -> Default: Insert after current region.
+-- -> If find `-` then insert before.
+-- -> If $, then insert region at project project end.
+-- -> If ^, then insert region at beginning.
+
+commands.insert_new_region_prompt = function()
   pickers.basic_prompt({
     title = "Add region AFTER current",
-    callback = function(prompt_string) end,
+    callback = function(prompt_string)
+
+      local opts = {}
+
+      -- PARSE STRING
+      -- [ <jump_char> ] [ <name> ] [-^$] [ <measures_count> ]
+
+      -- default insert new region after current
+
+      -- GET THE TIMELINE POS FOR INJECTING THE NEW REGION
+      -- >>> if no region exists at cursor -> use cursor info position.
+      -- local inject_position = get_..
+
+      -- SHIFT EXISTING DATA BASED ON MEASURE COUNT
+
+      -- CREATE NEW REGION CHAR/NAME
+
+
+    end,
   })
 end
-commands.insert_new_region_before_current_region = function()
-  pickers.basic_prompt({
-    title = "Add region BEFORE current",
-    callback = function(prompt_string) end,
-  })
-end
-commands.insert_new_region_last = function()
-  pickers.basic_prompt({
-    title = "Add region to project end.",
-    callback = function(prompt_string) end,
-  })
-end
-commands.insert_new_region_beginning = function()
-  pickers.basic_prompt({
-    title = "Insert region at project start.",
-    callback = function(prompt_string) end,
-  })
-end
+
+-- commands.insert_new_region_before_current_region = function()
+--   pickers.basic_prompt({
+--     title = "Add region BEFORE current",
+--     callback = function(prompt_string) end,
+--   })
+-- end
+-- commands.insert_new_region_last = function()
+--   pickers.basic_prompt({
+--     title = "Add region to project end.",
+--     callback = function(prompt_string) end,
+--   })
+-- end
+-- commands.insert_new_region_beginning = function()
+--   pickers.basic_prompt({
+--     title = "Insert region at project start.",
+--     callback = function(prompt_string) end,
+--   })
+-- end
 
 return commands
