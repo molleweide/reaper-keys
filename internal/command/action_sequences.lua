@@ -9,6 +9,8 @@ local action_sequence_definitions = {
   midi = require('command.action_sequence_functions.midi'),
 }
 
+-- TODO: move this to `utils/table.lua`
+--
 --- Takes an array of tables and flattens them into one big table.
 ---@vararg table (how do I write this type name??)
 ---@return table
@@ -31,23 +33,10 @@ end
 --- context and mode and flattens the action function pair into a single table.
 --- Eg.
 --- {
----   ...,
----   ...,
 ---   {
 ---     { 'command' },
 ---     function(action) runner.runAction(action) end
 ---   },
----   {
----     { 'timeline_operator', 'timeline_selector' },
----     function(timeline_operator, timeline_selector)
----       local start_sel, end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
----        ...
----     end
----   },
----   {
----     { 'timeline_operator', 'timeline_motion' },
----     function() ... end,
----   }
 ---   ...,
 ---   ...,
 --- }

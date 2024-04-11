@@ -1,12 +1,17 @@
 local log = require("utils.log")
 local format = require("utils.format")
 
+-- TODO: Move all of this into `lib/timeline.lua`
+
 -- start, end = reaper.GetSet_LoopTimeRange(boolean isSet, boolean isLoop, number start, number end, boolean allowautoseek)
 
 -- functions related to moving segments and sections of a song
 
 local segments = {}
 
+-- TODO: Document what happens here???
+--
+--
 function segments.insertSpaceAtEditCursorFromTimeSelection()
 	log.user("fn insert space")
 
@@ -22,7 +27,7 @@ function segments.insertSpaceAtEditCursorFromTimeSelection()
 	reaper.PreventUIRefresh(-1)
 end
 
--- TODO
+-- TODO: Document clearly what this command does???
 --
 -- get this to work now
 function segments.repeatShiftAllItemsInTimeSelectionByTrackByTimeSel()

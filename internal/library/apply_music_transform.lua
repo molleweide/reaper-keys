@@ -9,6 +9,8 @@ local tbl = require("utils.table")
 
 local fb = format.block
 
+-- FIX: truncate midi events that overflows range
+
 -- TODO: CLI -> specify ranges manually?
 --
 -- `utils/cli.lua`

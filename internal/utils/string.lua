@@ -101,7 +101,7 @@ string_util.get_count_char_and_in_between_sub_strings = function(inputString, ch
       prev = i
     end
     if i == #inputString then
-      if i - prev < 2 then
+      if i - prev < 1 then -- this was `2` before.
         table.insert(t_res, "")
       else
         table.insert(t_res, inputString:sub(prev + 1, i))
