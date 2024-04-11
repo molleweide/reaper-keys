@@ -333,8 +333,6 @@ commands.apply_patterns_across_sel_REGIONS_and_TRACKS = function(meta, opts)
 	regions()
 end
 
-commands.promp_make_next_region = function() end
-
 -- TODO:
 -- ~ Connect this with the command/parser from above `main_insert_midi_block_from_string_UI`
 -- ~ Chain pickers [ SelectRegion->Prompt ]
@@ -669,16 +667,21 @@ commands.MIDI_AI_PROMPT = function()
 	-- details.
 end
 
-commands.midi_substitute = function ()
-  --
-  -- Todo: Make a command that mirror's vim's substitute command,
-  --
-  -- {target|range} / {filter|match_pattern|midi_regex} / {transform|apply} / {flags}
-  --
-  -- Todo: Custom previewer that allows one to have very detailed knowledge
-  -- of what tracks will be targeted.
-
-
+commands.midi_substitute = function()
+	--
+	-- Todo: Make a command that mirror's vim's substitute command,
+	--
+	-- {target|range} / {filter|match_pattern|midi_regex} / {transform|apply} / {flags}
+	--
+	-- Todo: Custom previewer that allows one to have very detailed knowledge
+	-- of what tracks will be targeted.
 end
+
+commands.UI_add_new_regions = function() end
+
+commands.insert_new_region_after_current_region = function() end
+commands.insert_new_region_before_current_region = function() end
+commands.insert_new_region_last = function() end
+commands.insert_new_region_beginning = function() end
 
 return commands

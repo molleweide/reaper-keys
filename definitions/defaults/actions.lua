@@ -1074,6 +1074,12 @@ return {
 		lib.segments.repeatShiftAllItemsInTimeSelectionByTrackByTimeSel,
 	},
 
+	InsertNewRegion_After_PickerRegions = commands.UI_add_new_regions,
+	InsertNewRegion_After_Current = commands.insert_new_region_beginning,
+	InsertNewRegion_Before_Current = commands.insert_new_region_before_current_region,
+	InsertNewRegion_To_Project_End = commands.insert_new_region_after_current_region,
+	InsertNewRegion_To_Project_Beginning = commands.insert_new_region_beginning,
+
 	-- switch easy between devices
 	--
 	-- i included this here to show you mike
