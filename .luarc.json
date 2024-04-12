@@ -1,0 +1,4 @@
+{
+  "workspace.library": ["./reascript_lsp_definitions.lua"],
+  "runtime.version": "Lua 5.3"
+}
