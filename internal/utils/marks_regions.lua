@@ -2,6 +2,8 @@ local marks = {}
 
 -- NOTE: how does this relate to `library/marks.lua`??
 
+-- TODO: everything here should go into the library/marks file
+
 --
 -- TODO: "regions" |"marks" |"both"
 --
@@ -28,6 +30,7 @@ marks.get_all = function(user_wants)
 			i = i + 1
 		end
 	else
+	  -- TODO: return false
 		log.user("Project has no regions!")
 	end
 	return t_results

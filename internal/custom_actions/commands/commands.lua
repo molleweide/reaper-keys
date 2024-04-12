@@ -5,6 +5,7 @@ local lib_tr = require("library.tracks")
 local s = require("utils.string")
 local tl = require("library.timeline")
 local containers = require("library.items")
+local segments = require("library.segments")
 
 local fzf = require("library.fzf")
 
@@ -675,6 +676,8 @@ end
 
 commands.UI_add_new_regions = function()
   -- NOTE: There is already `regions_manager_fuzzy_ui` above.
+  -- BUT I think the idea here was to select regions with picker to
+  -- add multiple regions at once.
 end
 
 -- NOTE: I can reduce everything here into one command by checking for
@@ -684,49 +687,99 @@ end
 -- -> If $, then insert region at project project end.
 -- -> If ^, then insert region at beginning.
 
+-- TODO: check for a char at the -> move cursor to new region?
+
 commands.insert_new_region_prompt = function()
+
+
   pickers.basic_prompt({
     title = "Add region AFTER current",
     callback = function(prompt_string)
+      -- TODO: move these to user configs
 
-      local opts = {}
+      local opts = {
+        name_string = nil,
+        after_current = true, -- Insert region after current or before.
+        at_beginning = false,
+        at_the_end = false,
+        char_key = nil,
+        measure_length = 8,
+        new_region_start = nil,
+      }
+
+      -- TODO: reuse flag parsers from music apply transform
 
       -- PARSE STRING -------------------------------------------------------
-      -- [ <jump_char> ] [ <name> ] [-^$] [ <measures_count> ]
+      -- [<jump_char>][-^$][<measures_count>]/[<name>]
 
-      -- 1. Split string on first slash
+      local s_split = s.split(prompt_string, "/")
 
-      -- 2. If 2,
-
-      --    in split[1]
-
-      --    match alpha char -> regions jump char
-
-      --    match [-^$] -> insert_at_type [pre/post/start/end]
-
-      --    match number -> measures length
-
-      -- 3. If 2 use split[2] or the whole string
-
-      --    Use this for the region long name.
-
+      if #s_split == 1 then
+        opts.name_string = s_split[1]
+      elseif #s_split > 1 then
+        opts.name_string = s_split[2]
+        local a = s_split[1]
+        local b = s_split[2]
+        opts.after_current = a:find("%-") and false
+        opts.at_beginning = a:find("%^") and true or false
+        opts.at_the_end = a:find("%$") and true or false
+        opts.char_key = a:match("%a")  -- match a single char
+        local num_found = a:match("(%d+)") -- match the largest sequence of consecutive digits
+        if num_found then
+          opts.measure_length = num_found and tonumber(num_found)
+        end
+      end
 
       -- GET TL POS FOR INJECTING NEW REGION ---------------------------------
 
-      -- START: if start -> use timeline pos == 0
+      if opts.at_beginning then
+        opts.new_region_start = 0
+      else
+        local t_regions = require("library.marks").get_all_manually_without_state(true)
+        local no_regions = #t_regions == 0
 
-      -- PRE/POST: if cursor position INSIDE region -> use this region start/_end
-      -- elseif NOT inside region -> use measure at cursor.
+        if opts.at_the_end then
+          opts.new_region_start = t_regions[#t_regions].rgnend
 
-      -- END: if end -> get last region position._end
+          -- TODO: if no regions at cursor
 
-      -- local inject_position = get_..
+
+        else
+          local cursor_info = tl.get_cursor_info()
+
+          -- TODO: if no regions at cursor
+
+          local current_region
+          for _, reg in ipairs(t_regions) do
+            if reg.pos <= cursor_info.cursor_pos and reg.rgnend >= cursor_info.cursor_pos then
+              current_region = reg
+            end
+          end
+
+          if opts.after_current then
+            opts.new_region_start = current_region.rgnend
+          else
+            opts.new_region_start = current_region.pos
+          end
+        end
+      end
+
+      opts.new_region_end = opts.new_region_start + opts.measure_length
+
+      log.user("insert_region_opts", format.block(opts))
 
       -- SHIFT FORWARD EXISTING DATA ---------------------------------------
+      --
+      -- segments function -> get shift functionality
+      --            ?? Check if data exists after point.
+      --                (This func is used because we don't want to run the multi track
+      --                shifter function unless we know that data exists..)
+      segments.insert_x_num_empty_measures_at_pos(opts.new_region_start, opts.measure_length)
 
       -- CREATE NEW REGION CHAR/NAME ---------------------------------
+      -- call the marks API and create a new region.
 
-
+      return true
     end,
   })
 end

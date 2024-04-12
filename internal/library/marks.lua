@@ -4,6 +4,9 @@ local reaper_utils = require("custom_actions.utils")
 local log = require("utils.log")
 local format = require("utils.format")
 
+-- TODO: Maybe add double char sequences so that I can ensure that it is
+-- very unlikely that one runs out of accessor keys.
+
 local serpent = require("serpent")
 
 local marks = {}
@@ -175,6 +178,10 @@ marks.delete_all_markers_manually = function()
     -- reaper.DeleteProjectMarker(0, mark.index, true)
     i = i + 1
   end
+end
+
+marks.get_region_for_pos = function()
+  -- markeridx, regionidx = reaper.GetLastMarkerAndCurRegion( proj, time )
 end
 
 return marks

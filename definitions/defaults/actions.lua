@@ -1074,8 +1074,8 @@ return {
 		lib.segments.repeatShiftAllItemsInTimeSelectionByTrackByTimeSel,
 	},
 
-	InsertNewRegion_UI = commands.UI_add_new_regions,
-	InsertNewRegion_prompt = commands.insert_new_region_prompt,
+	InsertNewRegion_UI = commands.UI_add_new_regions, -- not implemented
+	InsertNewRegion_prompt = commands.insert_new_region_prompt, -- wip
 	-- InsertNewRegion_Before_Current = commands.insert_new_region_before_current_region,
 	-- InsertNewRegion_To_Project_End = commands.insert_new_region_after_current_region,
 	-- InsertNewRegion_To_Project_Beginning = commands.insert_new_region_beginning,
