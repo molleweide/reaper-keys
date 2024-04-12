@@ -54,6 +54,7 @@ function overwriteMark(mark, register)
   log.trace("New Marks State: " .. format.block(all_project_marks))
 end
 
+-- TODO: rename `generate_from_key_bind_register`
 function marks.save(register)
   local time_left, time_right = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 
@@ -96,6 +97,7 @@ marks.deleteAll = function()
   end
   -- force remove all regions/markers manually
   marks.delete_all_markers_manually()
+
   -- reset the ext state marks table
   project_state.deleteExt("marks")
 end

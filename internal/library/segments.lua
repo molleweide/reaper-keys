@@ -40,12 +40,14 @@ function segments.insert_x_num_empty_measures_at_pos(pos, num_measure)
 
   reaper.PreventUIRefresh(1)
 
-  -- set temporary sel
+  -- todo: pass this as a parameter instead ??
   local _, _, qn_end = reaper.TimeMap_GetMeasureInfo(0, num_measure)
   local measures_length = reaper.TimeMap2_QNToTime(0, qn_end)
   local real_length = measures_length - 2
 
+  -- set temporary sel
   reaper.GetSet_LoopTimeRange(true, false, pos, pos + real_length, false)
+
   insert_empty_space_at_time_selection_by_pushing_existing_forward()
 
   -- restore sel
