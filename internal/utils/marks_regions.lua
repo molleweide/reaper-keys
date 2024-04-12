@@ -31,7 +31,7 @@ marks.get_all = function(user_wants)
 		end
 	else
 	  -- TODO: return false
-		log.user("Project has no regions!")
+		log.debug("Project has no regions!")
 	end
 	return t_results
 end

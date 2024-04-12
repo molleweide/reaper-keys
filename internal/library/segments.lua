@@ -47,8 +47,11 @@ function segments.insert_x_num_empty_measures_at_pos(pos_start, pos_end)
 
   insert_empty_space_at_time_selection_by_pushing_existing_forward()
 
+  local curPos = reaper.GetCursorPosition()
+  local shift =  save_start_sel < pos_start and 0 or real_length
+
   -- restore sel
-  reaper.GetSet_LoopTimeRange(true, false, save_start_sel + real_length, save_end_sel + real_length, false)
+  reaper.GetSet_LoopTimeRange(true, false, save_start_sel + shift, save_end_sel + shift, false)
 
   reaper.PreventUIRefresh(-1)
 end

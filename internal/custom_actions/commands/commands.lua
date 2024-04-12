@@ -739,16 +739,13 @@ commands.insert_new_region_prompt = function()
       else
         local t_regions = marks.get_all_manually_without_state(true)
         local no_regions = #t_regions == 0
+        local cursor_info = tl.get_cursor_info()
 
-        if opts.at_the_end then
+        if no_regions then
+          opts.new_region_start = cursor_info.msr.start
+        elseif opts.at_the_end then
           opts.new_region_start = t_regions[#t_regions].rgnend
-
-          -- TODO: if no regions at cursor
         else
-          local cursor_info = tl.get_cursor_info()
-
-          -- TODO: if no regions at cursor
-
           local current_region
           for _, reg in ipairs(t_regions) do
             if reg.pos <= cursor_info.cursor_pos and reg.rgnend >= cursor_info.cursor_pos then
@@ -756,7 +753,9 @@ commands.insert_new_region_prompt = function()
             end
           end
 
-          if opts.after_current then
+          if not current_region then
+            opts.new_region_start = cursor_info.msr.start
+          elseif opts.after_current then
             opts.new_region_start = current_region.rgnend
           else
             opts.new_region_start = current_region.pos
@@ -767,7 +766,6 @@ commands.insert_new_region_prompt = function()
       local _, _, qn_end = reaper.TimeMap_GetMeasureInfo(0, opts.num_measures)
       local measures_length = reaper.TimeMap2_QNToTime(0, qn_end)
       local real_length = measures_length - 2
-
       opts.new_region_end = opts.new_region_start + real_length
 
       log.user("insert_region_opts", format.block(opts))
