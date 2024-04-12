@@ -22,7 +22,7 @@ local commands = {}
 commands.MIDI_ChangeActiveSelection = function(meta, opts)
   pickers.all_tracks(_, {
     title = "jump to track midi",
-    filter = "MCS", -- filter track_obj.class = [MCS]
+    filter = "MCS",     -- filter track_obj.class = [MCS]
     next = function(_, data)
       midi_editor.createEditMidiItemAtPositionForTrack(_, data.selection)
     end,
@@ -252,7 +252,7 @@ commands.apply_patterns_across_tracks = function()
     pickers.all_tracks(_, {
       title = "Select track(s) for prompt insertion.",
       width = 900,
-      filter = "M", -- filter nodes
+      filter = "M",       -- filter nodes
       on_select_func = function(gui)
         if gui:has_mult_select() then
           gui:selection_history_push(tag, gui:get_mult_select())
@@ -294,7 +294,7 @@ commands.apply_patterns_across_sel_REGIONS_and_TRACKS = function(meta, opts)
     pickers.all_tracks(_, {
       title = "Select track(s) for prompt insertion.",
       width = 900,
-      filter = "M", -- filter nodes
+      filter = "M",       -- filter nodes
       on_select_func = function(gui)
         -- gui:log_current_selection()
         log.user("length current sel:", #gui.selection_current)
@@ -690,7 +690,7 @@ end
 -- TODO: check for a char at the -> move cursor to new region?
 
 commands.insert_new_region_prompt = function()
-
+  local marks = require("library.marks")
 
   pickers.basic_prompt({
     title = "Add region AFTER current",
@@ -699,11 +699,11 @@ commands.insert_new_region_prompt = function()
 
       local opts = {
         name_string = nil,
-        after_current = true, -- Insert region after current or before.
+        after_current = true,         -- Insert region after current or before.
         at_beginning = false,
         at_the_end = false,
-        char_key = nil,
-        measure_length = 8,
+        register = nil,
+        num_measures = 8,
         new_region_start = nil,
       }
 
@@ -720,13 +720,15 @@ commands.insert_new_region_prompt = function()
         opts.name_string = s_split[2]
         local a = s_split[1]
         local b = s_split[2]
-        opts.after_current = a:find("%-") and false
+        if a:match("%-") then
+          opts.after_current = false
+        end
         opts.at_beginning = a:find("%^") and true or false
         opts.at_the_end = a:find("%$") and true or false
-        opts.char_key = a:match("%a")  -- match a single char
-        local num_found = a:match("(%d+)") -- match the largest sequence of consecutive digits
+        opts.register = a:match("%a")              -- match a single char
+        local num_found = a:match("(%d+)")         -- match the largest sequence of consecutive digits
         if num_found then
-          opts.measure_length = num_found and tonumber(num_found)
+          opts.num_measures = num_found and tonumber(num_found)
         end
       end
 
@@ -735,15 +737,13 @@ commands.insert_new_region_prompt = function()
       if opts.at_beginning then
         opts.new_region_start = 0
       else
-        local t_regions = require("library.marks").get_all_manually_without_state(true)
+        local t_regions = marks.get_all_manually_without_state(true)
         local no_regions = #t_regions == 0
 
         if opts.at_the_end then
           opts.new_region_start = t_regions[#t_regions].rgnend
 
           -- TODO: if no regions at cursor
-
-
         else
           local cursor_info = tl.get_cursor_info()
 
@@ -764,20 +764,30 @@ commands.insert_new_region_prompt = function()
         end
       end
 
-      opts.new_region_end = opts.new_region_start + opts.measure_length
+      local _, _, qn_end = reaper.TimeMap_GetMeasureInfo(0, opts.num_measures)
+      local measures_length = reaper.TimeMap2_QNToTime(0, qn_end)
+      local real_length = measures_length - 2
+
+      opts.new_region_end = opts.new_region_start + real_length
 
       log.user("insert_region_opts", format.block(opts))
 
       -- SHIFT FORWARD EXISTING DATA ---------------------------------------
       --
-      -- segments function -> get shift functionality
       --            ?? Check if data exists after point.
       --                (This func is used because we don't want to run the multi track
       --                shifter function unless we know that data exists..)
-      segments.insert_x_num_empty_measures_at_pos(opts.new_region_start, opts.measure_length)
+      segments.insert_x_num_empty_measures_at_pos(opts.new_region_start, opts.new_region_end)
 
       -- CREATE NEW REGION CHAR/NAME ---------------------------------
-      -- call the marks API and create a new region.
+
+      marks.create({
+        type = "region",
+        register = opts.register,
+        name = opts.name_string,
+        left = opts.new_region_start,
+        right = opts.new_region_end,
+      })
 
       return true
     end,

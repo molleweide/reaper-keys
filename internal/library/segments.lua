@@ -33,20 +33,17 @@ function segments.insertSpaceAtEditCursorFromTimeSelection()
   reaper.PreventUIRefresh(-1)
 end
 
-function segments.insert_x_num_empty_measures_at_pos(pos, num_measure)
+function segments.insert_x_num_empty_measures_at_pos(pos_start, pos_end)
   -- save time sel
   -- TODO: move into util
   local save_start_sel, save_end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 
   reaper.PreventUIRefresh(1)
 
-  -- todo: pass this as a parameter instead ??
-  local _, _, qn_end = reaper.TimeMap_GetMeasureInfo(0, num_measure)
-  local measures_length = reaper.TimeMap2_QNToTime(0, qn_end)
-  local real_length = measures_length - 2
+  local real_length = pos_end - pos_start
 
   -- set temporary sel
-  reaper.GetSet_LoopTimeRange(true, false, pos, pos + real_length, false)
+  reaper.GetSet_LoopTimeRange(true, false, pos_start, pos_start + real_length, false)
 
   insert_empty_space_at_time_selection_by_pushing_existing_forward()
 

@@ -4,6 +4,13 @@ local reaper_utils = require("custom_actions.utils")
 local log = require("utils.log")
 local format = require("utils.format")
 
+-- NOTE: All register actions expect a `register` as their first parameter.
+-- This is because `registerActions` are being passed the register requested
+-- by the user - Look into the core implemantation for further details.
+-- In order to allow for programmatically managing marks, the CONVENTION
+-- from now on is that the second parameter to register functions should be
+-- an `opts` table so that the user can specify exactly what is required.
+
 -- TODO: Maybe add double char sequences so that I can ensure that it is
 -- very unlikely that one runs out of accessor keys.
 
@@ -25,15 +32,26 @@ function overwriteMark(mark, register)
   local mode = state_interface.getMode()
 
   -- build and apply mark
-  if mode == "visual_timeline" then
+  if mark.type == "region" or mode == "visual_timeline" then
     local region_name = string.format("%s # %s", register, mark.name)
     mark["type"] = "region"
+
+    log.user("?? create mark", format.block(mark))
+
+    -- TODO: reaper utils . add_region
+
     mark["index"] = reaper.AddProjectMarker(0, true, mark.left, mark.right, region_name, -1)
-  elseif mode == "visual_track" then
+  elseif mark.type == "track_selection" or mode == "visual_track" then
+    -- NOTE: Notice here with this implementation that all information is stored
+    -- for all marker types, but these are tagged as track selection, and therefore
+    -- will be used as such..
     mark["type"] = "track_selection"
   else
     local mark_name = string.format("%s # %s", register, mark.name)
     mark["type"] = "timeline_position"
+
+    -- TODO: reaper utils . add_mark
+
     mark["index"] = reaper.AddProjectMarker(0, false, mark.position, mark.position, mark_name, -1)
   end
   mark["register"] = register
@@ -54,14 +72,15 @@ function overwriteMark(mark, register)
   log.trace("New Marks State: " .. format.block(all_project_marks))
 end
 
--- TODO: rename `generate_from_key_bind_register`
+---Save a marker to data of type [mark | region | track selection]
+---@param register string
 function marks.save(register)
   local time_left, time_right = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 
   local _, marks_named_input = reaper.GetUserInputs(
     "Name for new region:",
-    1, -- num inputs
-    "region " .. register, -- placeholder
+    1,                         -- num inputs
+    "region " .. register,     -- placeholder
     ""
   )
 
@@ -75,6 +94,23 @@ function marks.save(register)
   }
 
   overwriteMark(mark, register)
+end
+
+
+-- FIX: Validation: I need to validate that the necessary information has
+-- been supplied depending on which type user wants.
+--
+---Use this function to programmatically create markers
+---@param marker_opts any
+function marks.create(opts)
+
+  if not opts.register then
+    -- FIX: ensure that we have a valid register
+    opts.register = "q"
+  end
+
+
+  overwriteMark(opts, opts.register)
 end
 
 function marks.delete(register)
