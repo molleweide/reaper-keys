@@ -1,4 +1,11 @@
 {
   "workspace.library": ["./reascript_lsp_definitions.lua"],
-  "runtime.version": "Lua 5.3"
+  "runtime.version": "Lua 5.3",
+  "completion": {
+    "autoRequire": true,
+    "callSnippet": true,
+    "displayContext": true
+    "keywordSnippet": true
+    "postfix": true
+  }
 }
