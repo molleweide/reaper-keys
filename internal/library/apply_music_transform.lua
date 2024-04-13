@@ -47,15 +47,18 @@ local function shift_and_loop_data_to_range(opts, t_midi_events, current_range)
 
   local num_loops = 1
 
-  while (range_len > loop_measures_len * num_loops) do
+  while range_len > loop_measures_len * num_loops do
     num_loops = num_loops + 1
   end
 
-  log.user("CHECK LOOP", format.block({
-    range_len = range_len,
-    loop_measures_len=loop_measures_len,
-    num_loops = num_loops
-  }))
+  log.user(
+    "CHECK LOOP",
+    format.block({
+      range_len = range_len,
+      loop_measures_len = loop_measures_len,
+      num_loops = num_loops,
+    })
+  )
 
   -- num_loops = 1
 
@@ -76,7 +79,7 @@ local function shift_and_loop_data_to_range(opts, t_midi_events, current_range)
     end
   end
 
-  log.user("res",fb(res))
+  log.user("res", fb(res))
 
   return res
 end
@@ -136,8 +139,8 @@ local function amt_parse_options(opts)
   -- Insert pattern at beginning of each supplied range
   opts.configs.start_at_beginning_of_range = true
   opts.configs.loop_across_range = make_bool_flag(cli_opts, "l")
-  opts.configs.left_shift_number = make_int_flag(cli_opts, "%+")                       --cli_opts:match("%+(%d+)")
-  opts.configs.start_insertion_N_measures_from_the_end = make_int_flag(cli_opts, "%-") --cli_opts:match("%+(%d+)")
+  opts.configs.left_shift_number = make_int_flag(cli_opts, "%+")                         --cli_opts:match("%+(%d+)")
+  opts.configs.start_insertion_N_measures_from_the_end = make_int_flag(cli_opts, "%-")   --cli_opts:match("%+(%d+)")
   opts.configs.stop_loop_N_measures_from_region_end = make_int_flag(cli_opts, "s")
   opts.configs.nth_measure_number = make_int_flag(cli_opts, "n")
 
@@ -160,6 +163,7 @@ end
 ---@return table
 local function compute_target_timeline_ranges(custom_targets)
   local target_ranges = {}
+  -- 1. selected regions
   if custom_targets.regions then
     -- for _, cs in ipairs(custom_targets.regions) do
     -- 	log.user("regions:", cs.name)
@@ -171,10 +175,12 @@ local function compute_target_timeline_ranges(custom_targets)
       })
     end
   else
+    -- 2. operator & motion
     if state_interface.last_command_has("timeline_operator") then
       local tl_range = state_interface.getKey("last_set_timeline_range")
       table.insert(target_ranges, tl_range)
     else
+      -- 3. cursor position
       local cursor_info = tl.get_cursor_info()
       table.insert(target_ranges, {
         cursor_info.msr.start,
@@ -258,6 +264,14 @@ amt.apply_patterns_to_sel_tracks = function(opts)
   -- 	log.user("track:", cs.name, cs.tr)
   -- end
 
+  -- handle create new regions
+  if custom_targets.regions and opts.add_new_region_opts then
+    log.user("APPLY MUSIC: ADDING NEW REGIONS")
+    -- TODO: Reverse loop inject the new regions, and overwrite the custom_targets.regions
+    -- variable so the new region will be used for compute_target_timeline_ranges
+    -- below
+  end
+
   local target_ranges = compute_target_timeline_ranges(custom_targets)
 
   amt_parse_options(opts)
@@ -283,9 +297,11 @@ amt.apply_patterns_to_sel_tracks = function(opts)
     -- The rhythm events are shifted from zero-based to each target range,
     -- including if running @ cursor.
 
-    local music_data_shifted_to_position = shift_and_loop_data_to_range(opts, t_final_rendered_notes, t_target_range)
+    local music_data_shifted_to_position =
+        shift_and_loop_data_to_range(opts, t_final_rendered_notes, t_target_range)
 
     -- log.user("music_data_shifted_to_position", format.block(music_data_shifted_to_position))
+
 
     for _, trnode in ipairs(target_tracks) do
       log.user("?")

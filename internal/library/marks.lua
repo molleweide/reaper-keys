@@ -4,6 +4,8 @@ local reaper_utils = require("custom_actions.utils")
 local log = require("utils.log")
 local format = require("utils.format")
 
+-- NOTE: Maybe I should move the CRUD api under lib/api/...
+
 -- BUG: For some reason all markers are returned as capitalized keys which
 -- prevents one from using both small and big letters with markers.
 -- I dunno why this is..
@@ -18,9 +20,7 @@ local marks = {}
 local function get_unused_register()
     local valid_registers = "ABCDEFGHIJKLMNOPQRSTUVXYZ"
     local _, all_project_marks = project_state.getAll("marks")
-
-    log.user(format.block(all_project_marks))
-
+    -- log.user(format.block(all_project_marks))
     for char in valid_registers:gmatch(".") do
         if all_project_marks[char] == nil then
             log.user("found char ->", char)
@@ -47,8 +47,7 @@ local function overwriteMark(mark, register)
     if mark.type == "region" or mode == "visual_timeline" then
         local region_name = string.format("%s # %s", register, mark.name)
         mark["type"] = "region"
-
-        log.user("?? create mark", format.block(mark))
+        -- log.user("?? create mark", format.block(mark))
 
         -- TODO: reaper utils . add_region
 

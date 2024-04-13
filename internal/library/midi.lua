@@ -1330,6 +1330,7 @@ midi.parse_and_render_midi_notes_block_from_string = function(insert_midi_str)
 	local input_note_pool
 	local input_arp_expr
 	local s_input_options
+	local input_new_region
 
 	-- FIX: Redo #input_units check.
 	-- >>> Since args are expected in fixed positions, I might as well just do
@@ -1351,6 +1352,15 @@ midi.parse_and_render_midi_notes_block_from_string = function(insert_midi_str)
 	if input_units[4] ~= nil then
 		s_input_options = input_units[4]
 	end
+
+	-- The mere existence of [5] means that we are going to add at least one new
+	-- region.
+	local new_region_opts
+	if input_units[5] ~= nil then
+		input_new_region = input_units[5]
+		new_region_opts = require("library.parsers.create_new_region")(input_new_region)
+	end
+
 
 	local use_expr = input_arp_expr == "" and false
 
@@ -1413,6 +1423,7 @@ midi.parse_and_render_midi_notes_block_from_string = function(insert_midi_str)
 		pattern_events = pattern.midi_events,
 		pattern = pattern,
 		cli_options = s_input_options,
+		add_new_region_opts = new_region_opts
 	}
 
 	return return_code, t_final_rendered_notes, return_opts

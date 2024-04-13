@@ -689,103 +689,28 @@ end
 
 -- TODO: check for a char at the -> move cursor to new region?
 
+-- fix: the timeline selection moves wierdly when
+
 commands.insert_new_region_prompt = function()
   local marks = require("library.marks")
-
   pickers.basic_prompt({
     title = "Add region AFTER current",
     callback = function(prompt_string)
-      -- TODO: move these to user configs
+      local region_opts = require("library.parsers.create_new_region")(prompt_string)
 
-      local opts = {
-        name_string = nil,
-        after_current = true,         -- Insert region after current or before.
-        at_beginning = false,
-        at_the_end = false,
-        register = nil,
-        num_measures = 8,
-        new_region_start = nil,
-      }
+      local regions_data = segments.compute_new_regions_data_for_insertion(region_opts)
 
-      -- TODO: reuse flag parsers from music apply transform
+      -- segments.insert_x_num_empty_measures_at_pos(region_opts.new_region_start, region_opts.new_region_end)
+      -- marks.create({
+      --   type = "region",
+      --   register = region_opts.register,
+      --   name = region_opts.name_string,
+      --   left = region_opts.new_region_start,
+      --   right = region_opts.new_region_end,
+      -- })
 
-      -- PARSE STRING -------------------------------------------------------
-      -- [<jump_char>][-^$][<measures_count>]/[<name>]
-
-      local s_split = s.split(prompt_string, "/")
-
-      if #s_split == 1 then
-        opts.name_string = s_split[1]
-      elseif #s_split > 1 then
-        opts.name_string = s_split[2]
-        local a = s_split[1]
-        local b = s_split[2]
-        if a:match("%-") then
-          opts.after_current = false
-        end
-        opts.at_beginning = a:find("%^") and true or false
-        opts.at_the_end = a:find("%$") and true or false
-        opts.register = a:match("%a")              -- match a single char
-        local num_found = a:match("(%d+)")         -- match the largest sequence of consecutive digits
-        if num_found then
-          opts.num_measures = num_found and tonumber(num_found)
-        end
-      end
-
-      -- GET TL POS FOR INJECTING NEW REGION ---------------------------------
-
-      if opts.at_beginning then
-        opts.new_region_start = 0
-      else
-        local t_regions = marks.get_all_manually_without_state(true)
-        local no_regions = #t_regions == 0
-        local cursor_info = tl.get_cursor_info()
-
-        if no_regions then
-          opts.new_region_start = cursor_info.msr.start
-        elseif opts.at_the_end then
-          opts.new_region_start = t_regions[#t_regions].rgnend
-        else
-          local current_region
-          for _, reg in ipairs(t_regions) do
-            if reg.pos <= cursor_info.cursor_pos and reg.rgnend >= cursor_info.cursor_pos then
-              current_region = reg
-            end
-          end
-
-          if not current_region then
-            opts.new_region_start = cursor_info.msr.start
-          elseif opts.after_current then
-            opts.new_region_start = current_region.rgnend
-          else
-            opts.new_region_start = current_region.pos
-          end
-        end
-      end
-
-      local _, _, qn_end = reaper.TimeMap_GetMeasureInfo(0, opts.num_measures)
-      local measures_length = reaper.TimeMap2_QNToTime(0, qn_end)
-      local real_length = measures_length - 2
-      opts.new_region_end = opts.new_region_start + real_length
-
-      log.user("insert_region_opts", format.block(opts))
-
-      -- SHIFT FORWARD EXISTING DATA ---------------------------------------
-      --
-      --            ?? Check if data exists after point.
-      --                (This func is used because we don't want to run the multi track
-      --                shifter function unless we know that data exists..)
-      segments.insert_x_num_empty_measures_at_pos(opts.new_region_start, opts.new_region_end)
-
-      -- CREATE NEW REGION CHAR/NAME ---------------------------------
-
-      marks.create({
-        type = "region",
-        register = opts.register,
-        name = opts.name_string,
-        left = opts.new_region_start,
-        right = opts.new_region_end,
-      })
+      -- TODO:
+      -- segments.inject_new_empty_region()
 
       return true
     end,
