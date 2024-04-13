@@ -6,6 +6,7 @@ local midi = require("library.midi")
 local lib_tr = require("library.tracks")
 local state_interface = require("state_machine.state_interface")
 local tbl = require("utils.table")
+local segments = require("library.segments")
 
 local fb = format.block
 
@@ -265,11 +266,15 @@ amt.apply_patterns_to_sel_tracks = function(opts)
   -- end
 
   -- handle create new regions
+  local rd
   if custom_targets.regions and opts.add_new_region_opts then
     log.user("APPLY MUSIC: ADDING NEW REGIONS")
     -- TODO: Reverse loop inject the new regions, and overwrite the custom_targets.regions
     -- variable so the new region will be used for compute_target_timeline_ranges
     -- below
+    rd = segments.compute_new_regions_data_for_insertion(opts.add_new_region_opts, custom_targets.regions)
+
+
   end
 
   local target_ranges = compute_target_timeline_ranges(custom_targets)

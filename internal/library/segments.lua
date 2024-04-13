@@ -194,6 +194,17 @@ end
 -- TODO: Take a table of region info that I want to create with variable
 -- lengths for each region, so that I can create a list of regions in a prompt,
 -- and then render everything.
+--
+-- TODO: If each provided region description has a register then use it,
+-- otherwise, if only a single register is supplied, then use it for the
+-- first region inserted - I will evaluate what to do later...
+
+-- TODO: create new regios data from list of regions specs
+
+-- WARN: Currently, creates only ONE region, unless multiple regions have
+-- been picked via picker, then we attach this single region to every
+-- selected region, effectively creating multiple regions.
+-- >>> We are not YET creating multiple regions from a spec list
 
 segments.compute_new_regions_data_for_insertion = function(region_opts, selected_regions)
     local rd = {} -- new regions data
@@ -264,6 +275,9 @@ segments.compute_new_regions_data_for_insertion = function(region_opts, selected
     log.user("insert_region_opts", format.block(region_opts))
 
     return rd
+end
+
+segments.create_sequence_of_regions_from_list_spec = function(spec, at_cursor)
 end
 
 --- Creates a <ReaperRegion> based on table with region opts.

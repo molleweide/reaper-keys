@@ -709,6 +709,8 @@ commands.insert_new_region_prompt = function()
       --   right = region_opts.new_region_end,
       -- })
 
+      -- TODO: each regions_data sub table should be passed to the `inject_new_empty_region(subtable)`
+
       -- TODO:
       -- segments.inject_new_empty_region()
 
