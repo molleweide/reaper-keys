@@ -1,4 +1,5 @@
 local log = require("utils.log")
+local format = require("utils.format")
 local state_interface = require("state_machine.state_interface")
 local config = require("definitions.config")
 
@@ -90,15 +91,12 @@ function state.toggle_live_mode()
     if not ok then
         return
     end
-
     local feedback_model = require("gui.feedback.model")
-
     if live_mode then
-        -- rgba(119, 11, 11, 0.8)
         local Color = require("public.color")
-
-        -- feedback_model.setKeys({ message_bg = Color.toRgba(119, 11, 11, 0.8) })
-        feedback_model.setKeys({ message_bg = { 50, 50, 50, 50 } })
+        -- log.user(format.block(Color.fromRgba(112, 8, 62, 0.8)))
+        local cr = Color.fromHex("#AD1457")
+        feedback_model.setKeys({ message_bg = cr })
     else
         feedback_model.setKeys({ message_bg = "background" })
     end
