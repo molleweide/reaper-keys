@@ -209,6 +209,8 @@ end
 segments.compute_new_regions_data_for_insertion = function(region_opts, selected_regions)
     local rd = {} -- new regions data
 
+    -- log.user("sr", format.block(selected_regions))
+
     local function get_region_length(num_msrs)
         local _, _, qn_end = reaper.TimeMap_GetMeasureInfo(0, num_msrs)
         local measures_length = reaper.TimeMap2_QNToTime(0, qn_end)
@@ -216,17 +218,24 @@ segments.compute_new_regions_data_for_insertion = function(region_opts, selected
     end
 
     -- NOTE: Currently, all new regions are made of same length
-    local function add_region(s)
+    local function add_region(s, n, r)
+        if region_opts.register and not selected_regions then
+            r = region_opts.register
+        end
+
         table.insert(rd, {
-            start_pos = s,
-            end_pos = get_region_length(region_opts.num_measures),
+            type = "region",
+            register = r,
+            name = n,
+            left = s,
+            right = s + get_region_length(region_opts.num_measures),
         })
     end
 
     -- I. BEGINNING -------------------------------------------------------
     if region_opts.at_beginning then
         region_opts.new_region_start = 0
-        add_region(0)
+        add_region(0, region_opts.name_string)
     else
         local tl = require("library.timeline")
 
@@ -237,59 +246,80 @@ segments.compute_new_regions_data_for_insertion = function(region_opts, selected
         -- II. No regions?? --------------------------------------------
         if no_regions then
             region_opts.new_region_start = cursor_info.msr.start
-            add_region(cursor_info.msr.start)
+            add_region(cursor_info.msr.start, region_opts.name_string)
 
         -- III. At the end. ------------------------------------------
         elseif region_opts.at_the_end then
             region_opts.new_region_start = t_regions[#t_regions].rgnend
-            add_region(t_regions[#t_regions].rgnend)
+            add_region(t_regions[#t_regions].rgnend, region_opts.name_string)
 
         -- IV. At specific regions.
         else
-            --
-            -- TODO: if selected regions, then apply to each selected region.
-            --
+            --   Selected region table structure.
+            --   {
+            --     color = 0,
+            --     id = 17,
+            --     isrgn = true,
+            --     mark_region_idx = 16,
+            --     name = "S # ???",
+            --     pos = 0.0,
+            --     rgnend = 4.0,
+            --     selected = true
+            --   }
 
-            local current_region
-            for _, reg in ipairs(t_regions) do
-                if reg.pos <= cursor_info.cursor_pos and reg.rgnend >= cursor_info.cursor_pos then
-                    current_region = reg
+            if selected_regions then
+                for i, rg in ipairs(selected_regions) do
+                    local first_register = i == 1 and region_opts.register or nil
+                    if region_opts.after_current then
+                        -- after selected region
+                        add_region(rg.rgnend, region_opts.name_string, ffirst_register)
+                    else
+                        -- before selected region
+                        add_region(rg.pos, region_opts.name_string, first_register)
+                    end
                 end
-            end
-
-            if not current_region then
-                region_opts.new_region_start = cursor_info.msr.start
-                add_region(cursor_info.msr.start)
-            elseif region_opts.after_current then
-                region_opts.new_region_start = current_region.rgnend
-                add_region(current_region.rgnend)
             else
-                region_opts.new_region_start = current_region.pos
-                add_region(current_region.pos)
+                local current_region
+                for _, reg in ipairs(t_regions) do
+                    if reg.pos <= cursor_info.cursor_pos and reg.rgnend >= cursor_info.cursor_pos then
+                        current_region = reg
+                    end
+                end
+
+                if not current_region then
+                    region_opts.new_region_start = cursor_info.msr.start
+                    add_region(cursor_info.msr.start, region_opts.name_string)
+                elseif region_opts.after_current then
+                    region_opts.new_region_start = current_region.rgnend
+                    add_region(current_region.rgnend, region_opts.name_string)
+                else
+                    region_opts.new_region_start = current_region.pos
+                    add_region(current_region.pos, region_opts.name_string)
+                end
             end
         end
     end
 
-    region_opts.new_region_end = region_opts.new_region_start + get_region_length(region_opts.num_measures)
+    -- region_opts.new_region_end = region_opts.new_region_start + get_region_length(region_opts.num_measures)
 
     log.user("insert_region_opts", format.block(region_opts))
 
     return rd
 end
 
-segments.create_sequence_of_regions_from_list_spec = function(spec, at_cursor)
-end
+segments.create_sequence_of_regions_from_list_spec = function(spec, at_cursor) end
 
 --- Creates a <ReaperRegion> based on table with region opts.
-segments.inject_new_empty_region = function()
-    segments.insert_x_num_empty_measures_at_pos(region_opts.new_region_start, region_opts.new_region_end)
-    marks.create({
-        type = "region",
-        register = region_opts.register,
-        name = region_opts.name_string,
-        left = region_opts.new_region_start,
-        right = region_opts.new_region_end,
-    })
+segments.inject_new_empty_region = function(region_data)
+    -- {
+    --     type = "region",
+    --     register = region_opts.register,
+    --     name = region_opts.name_string,
+    --     left = region_opts.new_region_start,
+    --     right = region_opts.new_region_end,
+    -- }
+    segments.insert_x_num_empty_measures_at_pos(region_data.left, region_data.right)
+    marks.create(region_data)
 end
 
 return segments

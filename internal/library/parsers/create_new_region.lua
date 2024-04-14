@@ -12,7 +12,7 @@ return function(prompt_string)
         at_beginning = false,
         at_the_end = false,
         register = nil,
-        num_measures = 4,
+        num_measures = 2,
         new_region_start = nil,
     }
 
@@ -21,7 +21,7 @@ return function(prompt_string)
     -- PARSE STRING
     -- [<jump_char>][-^$][<measures_count>]/[<name>]
 
-    local s_split = s.split(prompt_string, "/")
+    local s_split = s.split(prompt_string, ";")
 
     if #s_split == 1 then
         opts.name_string = s_split[1]
