@@ -1,0 +1,15 @@
+@document.meta
+title: README
+description:
+authors: hjalmarjakobsson
+categories:
+created: 2024-04-14T11:43:11-0500
+updated: 2024-04-14T11:45:54-0500
+version: 1.1.1
+@end
+
+* SCYTHE GUI LIB
+
+  {https://github.com/jalovatt/scythe}[scythe github]
+  {https://forum.cockos.com/showthread.php?t=177772}[cockos forum thread for the lib]
+  {https://jalovatt.github.io/scythe/#/}[scythe docs]

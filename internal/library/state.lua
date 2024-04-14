@@ -86,6 +86,7 @@ function state.switchTimelineSelectionSide()
     end
 end
 
+-- NOTE:
 function state.toggle_live_mode()
     local ok, live_mode = state_interface.toggleKey("live_mode")
     if not ok then

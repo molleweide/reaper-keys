@@ -127,6 +127,9 @@ function View:updateMessage(model)
     self.elements.message:val(model.message, model.right_text, model.mode)
 end
 
+-- NOTE: I dunno if this is the way one should update colors, but
+-- this does not really matter because the important thing for now is
+-- that this works!!
 function View:updateBackground(model)
   if model.message_bg then
       self.elements.message.bg = model.message_bg
@@ -153,8 +156,6 @@ function View:open()
             self:updateMessage(model)
 
             self:updateBackground(model)
-
-            -- log.user("self.elem", format.block(self.elements.message.bg))
 
             if completions_triggered then
                 self:updateCompletions(completions)
