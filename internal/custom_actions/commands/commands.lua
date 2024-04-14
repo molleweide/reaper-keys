@@ -6,6 +6,7 @@ local s = require("utils.string")
 local tl = require("library.timeline")
 local containers = require("library.items")
 local segments = require("library.segments")
+local marks = require("library.marks")
 
 local fzf = require("library.fzf")
 
@@ -709,23 +710,37 @@ commands.insert_new_region_prompt = function()
     })
 end
 
--- commands.insert_new_region_before_current_region = function()
---   pickers.basic_prompt({
---     title = "Add region BEFORE current",
---     callback = function(prompt_string) end,
---   })
--- end
--- commands.insert_new_region_last = function()
---   pickers.basic_prompt({
---     title = "Add region to project end.",
---     callback = function(prompt_string) end,
---   })
--- end
--- commands.insert_new_region_beginning = function()
---   pickers.basic_prompt({
---     title = "Insert region at project start.",
---     callback = function(prompt_string) end,
---   })
--- end
+commands.add_song_structure_at_cursor = function()
+    local st = require("definitions.project_region_templates")
+
+    -- log.debug(format.block(all_chords))
+
+    fzf.init({
+        title = "Add song structure at cursor",
+        results = st,
+        on_select_func = function(self, i)
+            local sel_st = self.t_search_results[i]
+
+            for i, part in ipairs(sel_st.regions) do
+                local region_opts = require("library.parsers.create_new_region")(part)
+
+                local regions_data = segments.compute_new_regions_data_for_insertion(region_opts)
+
+                -- log.user("rd", format.block(regions_data))
+
+                marks.create(regions_data[1])
+            end
+            -- segments.inject_new_empty_region(regions_data[1])
+
+            return true
+        end,
+        results_filter = "name",
+        sort_comp = "name",
+        -- chords picker should also display the step-array last in a nice manner.
+        entry_maker = "name",
+    })
+end
+
+commands.inject_song_structure_at_cursor = function() end
 
 return commands

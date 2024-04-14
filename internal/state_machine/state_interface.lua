@@ -55,13 +55,15 @@ function state_interface.get()
 	return state
 end
 
--- FIX: why is ME_follow_motions hard coded as key here?
 function state_interface.toggleKey(key)
 	local old_val = state_interface.getKey(key)
 	if type(old_val) == "boolean" then
-		state_interface.setKey("ME_follow_motions", not old_val)
+	  local new_val = not old_val
+		state_interface.setKey(key, new_val)
+		return true, new_val
 	else
 		log.trace("[state_interface]: Cannot toggle non-boolean key.")
+		return false
 	end
 end
 

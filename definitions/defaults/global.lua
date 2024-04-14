@@ -275,6 +275,8 @@ return {
             -- ["p"] = "InsertNewRegion_Before_Current",
             -- ["E"] = "InsertNewRegion_To_Project_End",
             -- ["B"] = "InsertNewRegion_To_Project_Beginning",
+            ["N"] = "Picker_AddSongStructure_At_Cursor",
+            ["n"] = "Picker_InjectSongStructure_At_Cursor",
           },
         },
         ["s"] = {
@@ -515,6 +517,7 @@ return {
             ["m"] = "MediaExplorerToggle",
             ["r"] = "ResetControlDevices",
             [","] = "ShowPreferences",
+            ["L"] = "Toggle_Live_Mode",
             ["S"] = "UnsoloAllItems",
             ["s"] = {
               "+show/hide",

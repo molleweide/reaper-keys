@@ -1079,6 +1079,11 @@ return {
 	-- InsertNewRegion_Before_Current = commands.insert_new_region_before_current_region,
 	-- InsertNewRegion_To_Project_End = commands.insert_new_region_after_current_region,
 	-- InsertNewRegion_To_Project_Beginning = commands.insert_new_region_beginning,
+	Picker_AddSongStructure_At_Cursor = commands.add_song_structure_at_cursor,
+	Picker_InjectSongStructure_At_Cursor = commands.inject_song_structure_at_cursor,
+
+
+	Toggle_Live_Mode = lib.state.toggle_live_mode,
 
 	-- switch easy between devices
 	--
