@@ -537,9 +537,12 @@ return {
                                 ["c"] = "ViewFxChainMaster",
                             },
                         },
-                        ["e"] = { "+envelope", {
-                            ["t"] = "ToggleShowAllEnvelopeGlobal",
-                        } },
+                        ["e"] = {
+                            "+envelope",
+                            {
+                                ["t"] = "ToggleShowAllEnvelopeGlobal",
+                            },
+                        },
                         ["t"] = {
                             "+track",
                             {
@@ -639,12 +642,13 @@ return {
                     "+live",
                     {
                         ["q"] = "MoveTimeSelectionToNextRegion",
-                        -- TODO: todo_body
+                        -- TODO: All commands below
                         ["c"] = "Add_Patterns_To_Current_Region",
                         ["a"] = "Add_Patterns_Next_Region",
                         ["i"] = "Inject_Region_W_Pattern_After_Current",
-                        -- so that I have better control over upcomming segments
                         ["A"] = "Add_New_Region_W_Patterns_After_Nth_Region",
+                        ["D"] = "Double_The_Length_Of_Nth_Region",
+                        ["e"] = "Copy_Curent_Track_Items_To_NextRegion",
                     },
                 },
             },
