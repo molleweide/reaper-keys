@@ -637,7 +637,15 @@ return {
                 },
                 ["h"] = {
                     "+live",
-                    { ["q"] = "MoveTimeSelectionToNextRegion" },
+                    {
+                        ["q"] = "MoveTimeSelectionToNextRegion",
+                        -- TODO: todo_body
+                        ["c"] = "Add_Patterns_To_Current_Region",
+                        ["a"] = "Add_Patterns_Next_Region",
+                        ["i"] = "Inject_Region_W_Pattern_After_Current",
+                        -- so that I have better control over upcomming segments
+                        ["A"] = "Add_New_Region_W_Patterns_After_Nth_Region",
+                    },
                 },
             },
         },

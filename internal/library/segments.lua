@@ -322,4 +322,9 @@ segments.inject_new_empty_region = function(region_data)
     marks.create(region_data)
 end
 
+segments.modify_length_of_region_by_N_measures = function()
+end
+
+-- segments.
+
 return segments
