@@ -230,8 +230,35 @@ marks.delete_all_markers_manually = function()
     end
 end
 
-marks.get_region_for_pos = function()
-    -- markeridx, regionidx = reaper.GetLastMarkerAndCurRegion( proj, time )
+-- move to segments
+function marks.get_region_for_pos_or_current(pos)
+    pos = pos or reaper.GetCursorPosition()
+    local ret, region_id = reaper.GetLastMarkerAndCurRegion(0, pos)
+    return region_id
+end
+
+---Get the Nth region after timeline position. N == 0 means get current region,
+---N == 1 means get the next region, etc..
+---@param pos any
+---@param n any
+marks.get_nth_region_for_pos = function(pos, n)
+    n = n or 0
+    pos = pos or reaper.GetCursorPosition()
+    local regidx = marks.get_region_for_pos_or_current(pos)
+    if not regidx then
+        return false
+    end
+    local all_regions = marks.get_all_manually_without_state(true)
+    if #all_regions == 0 then
+        return false
+    end
+
+    for _, reg in ipairs(all_regions) do
+        if reg.mark_region_idx == (regidx + n) then
+            return reg
+        end
+    end
+    return false
 end
 
 return marks

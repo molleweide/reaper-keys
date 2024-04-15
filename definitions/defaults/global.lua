@@ -635,6 +635,10 @@ return {
             ["R"] = "Regions_UI_string",
           },
         },
+        ["h"] = {
+          "+live"
+          ,{ ["q"] = "MoveTimeSelectionToNextRegion", }
+        }
       },
     },
   },

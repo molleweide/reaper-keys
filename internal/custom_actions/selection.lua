@@ -1,4 +1,5 @@
 local utils = require("custom_actions.utils")
+local marks = require("library.marks")
 
 local selection = {}
 
@@ -39,9 +40,9 @@ function selection.onlyCurrentTrack()
 end
 
 function selection.innerRegion()
-  local current_position = reaper.GetCursorPosition()
-  _, region_id = reaper.GetLastMarkerAndCurRegion(0, current_position)
-  utils.selectRegion(region_id)
+  -- local current_position = reaper.GetCursorPosition()
+  -- _, region_id = reaper.GetLastMarkerAndCurRegion(0, current_position)
+  utils.selectRegion(marks.get_region_for_pos_or_current())
 end
 
 return selection
