@@ -641,14 +641,16 @@ return {
                 ["h"] = {
                     "+live",
                     {
-                        ["q"] = "MoveTimeSelectionToNextRegion",
-                        -- TODO: All commands below
+                        ["q"] = "MoveTimeSelectionToNextRegion", -- support count
+                        ["Q"] = "Extend_time_selection_backwards", -- support count
+                        --
                         ["c"] = "Add_Patterns_To_Current_Region",
                         ["a"] = "Add_Patterns_Next_Region",
+                        -- TODO: All commands below
                         ["i"] = "Inject_Region_W_Pattern_After_Current",
                         ["A"] = "Add_New_Region_W_Patterns_After_Nth_Region",
                         ["D"] = "Double_The_Length_Of_Nth_Region",
-                        ["e"] = "Copy_Curent_Track_Items_To_NextRegion",
+                        ["e"] = "Copy_Select_Track_Items_To_NextRegion",
                     },
                 },
             },

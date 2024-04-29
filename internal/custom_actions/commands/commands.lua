@@ -110,10 +110,6 @@ commands.picker_first_comp_on_focused_track = function()
     end
 end
 
-commands.open_route_ui = function(meta, opts)
-    -- NOTE: what should this UI do?
-end
-
 commands.add_track_nodes_ui = function(_, opts)
     fzf.init({
         title = "Add track nodes",
@@ -289,6 +285,9 @@ commands.apply_patterns_across_sel_REGIONS_and_TRACKS = function(meta, opts)
             end,
         })
     end
+
+    -- NOTE: maybe these types of "tags" names should be kept in a dedicated
+    -- file for security so I dont mess thigs up.
 
     local function tracks()
         local tag = "tracks"
@@ -742,5 +741,147 @@ commands.add_song_structure_at_cursor = function()
 end
 
 commands.inject_song_structure_at_cursor = function() end
+
+local function prompt_pattern_and_apply_region_manually(reg)
+    fzf.init({
+        title = "Music apply pattern",
+        x = 200,
+        width = 1100,
+        height = 75,
+        on_select_func = function(gui)
+            local _, main_input = gui:controlGetByName("main_input")
+            if main_input then
+                local picker_tags = gui:selection_history_get_tags()
+                picker_tags["regions"] = { reg }
+                local ret, data = require("library.apply_music_transform").apply_patterns_to_sel_tracks({
+                    targets = picker_tags,
+                    prompt_str = main_input.value,
+                })
+                return ret
+            end
+            return true
+        end,
+    })
+end
+
+local function picker_select_tracks_for_insert_pattern_to_region(reg, pattern_prompt)
+    local tag = "tracks"
+    pickers.all_tracks(_, {
+        title = "Select track(s) for prompt insertion.",
+        width = 900,
+        filter = "M", -- filter nodes
+        on_select_func = function(gui)
+            -- TODO: this if statement could be moved to inside jgui so that I only
+            -- configure the current picker with the "tag", name and the rest is
+            -- handled inside the picker.
+            if gui:has_mult_select() then
+                gui:selection_history_push(tag, gui:get_mult_select())
+            else
+                gui:selection_history_push(tag, { gui:get_on_enter_selection() })
+            end
+            pattern_prompt(reg)
+        end,
+        extended_mappings = em,
+    })
+end
+
+commands.add_patterns_to_current_region = function()
+    local current_region_ref = marks.get_nth_region_for_pos(false, 0)
+
+    log.user("add_patterns_to_current_region:", format.block(current_region_ref))
+
+    if not current_region_ref then
+        log.user("no region!!!!")
+        return
+    end
+    picker_select_tracks_for_insert_pattern_to_region(current_region_ref, prompt_pattern_and_apply_region_manually)
+end
+
+commands.add_patterns_next_region = function()
+    local current_region_ref = marks.get_nth_region_for_pos(false, 1)
+    log.user("add_patterns_next_region:", format.block(current_region_ref))
+    if not current_region_ref then
+        log.user("no region!!!!")
+        return
+    end
+    picker_select_tracks_for_insert_pattern_to_region(current_region_ref, prompt_pattern_and_apply_region_manually)
+end
+
+commands.add_patterns_nth_region = function()
+    -- Same as above but with nth region from current region
+end
+
+commands.inject_region_w_pattern_after_current = function()
+    -- TODO: Inject new region after current so that we can add a completely
+    -- new segment if I realize that something is needed in order to transition to
+    -- the segment coming after it.
+    -- >> Pretty much same as add patterns to next region but inject the region
+    -- instead.
+end
+
+-- NOTE: Same as above but inject before the nth region.
+commands.add_new_region_w_patterns_after_nth_region = function() end
+
+-- NOTE: Take the nth region, extend the length of it by pushing everything
+-- after forward, reuse my duplicate segments command, and make the region
+-- double the length
+commands.double_the_length_of_nth_region = function() end
+
+-- NOTE: 1. picker -> list tracks that have existing media items in curent region
+-- 2. select tracks.
+-- 3. copy these patterns over to next region.
+-- 4. Fit the data to next region somehow.
+commands.copy_selected_track_items_from_current_region_to_next_region = function() end
+
+--
+-- ROUTING UI
+--
+
+-- Later, I will also be able to study the layout system of those programs
+-- NUI, and nui components, and then see what I can bring over to reaper,
+-- and maybe later also do an ImGui seup and see if that UI is more performant.
+-- And now the important thing is to get through. And then also play around
+-- with the scythe UI library and by doing so see what i can learn and then see
+-- how it differs in neovim UI library, nui, and thenz.
+-- It will be so much fun to create more fancy UI states when navigating around.
+-- state monitor.
+
+commands.open_route_ui = function(meta, opts)
+    -- NOTE: what should this UI do?
+    -- 1. open prompt -> input route opts
+    -- 2. on <CR> switch to picker source selection
+    -- 3. on <CR> switch to dest selection
+    -- 4. on <tab> -> switch to route opts string to continue editing it.
+    -- 5. create NEW gui window for sources ON LEFT side
+    -- 6. create NEW gui window for dest ON RIGHT side
+    -- 7. Add binding confirm and apply current route configuration
+    -- 8. Run updateState()
+end
+
+commands.picker_select_anything = function()
+    -- NOTE: Create a picker where I can select from a list anything possible
+    -- in reaper to list, and then put me through a UI pipeline that allows me
+    -- to filter and narrow down any type of selection.
+
+    local categories = {
+        "tracks",
+        "items",
+        "takes",
+        "routes",
+        "fx",
+        "envelopes",
+        "regions",
+        "marks",
+    }
+end
+
+commands.picker_select_position_midi_editor_UI = function()
+    -- The final selection should be an item to jump to.
+    --
+    -- First filter down items in a specific sub section of a project,
+    -- List items in this position,
+    -- Jump to midi editor for editing the selection.
+    -- if, it is an audio file jump to this audio file.
+end
 
 return commands

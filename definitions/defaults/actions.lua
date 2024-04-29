@@ -1085,9 +1085,13 @@ return {
     Toggle_Live_Mode = lib.state.toggle_live_mode,
 
     MoveTimeSelectionToNextRegion = lib.move_time_selection_to_next_region,
-    -- switch easy between devices
-    --
-    -- i included this here to show you mike
+
+    Add_Patterns_To_Current_Region = commands.add_patterns_to_current_region,
+    Add_Patterns_Next_Region = commands.add_patterns_next_region,
+    Inject_Region_W_Pattern_After_Current = commands.inject_region_w_pattern_after_current,
+    Add_New_Region_W_Patterns_After_Nth_Region = commands.add_new_region_w_patterns_after_nth_region, -- switch easy between devices
+    Double_The_Length_Of_Nth_Region = commands.double_the_length_of_nth_region, --
+    Copy_Select_Track_Items_To_NextRegion = commands.copy_selected_track_items_from_current_region_to_next_region, -- i included this here to show you mike
     -- but this list of devices is ofc different for everybody.
     -- but these commands allow me to hook into a custom midi pre processor
     -- that i built to accompany reaper keys.
