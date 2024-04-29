@@ -170,10 +170,7 @@ local function compute_target_timeline_ranges(custom_targets)
         -- 	log.user("regions:", cs.name)
         -- end
         for _, reg in ipairs(custom_targets.regions) do
-            -- TODO: 1. Just assign the region here instead.
-            -- 2. Attach left/right keys below.
-
-            table.insert(target_ranges, reg)
+            table.insert(target_ranges, { left = reg.pos, right = reg.rgnend })
         end
     else
         -- 2. operator & motion
@@ -245,9 +242,10 @@ amt.apply_patterns_to_sel_tracks = function(opts)
     end
     tbl.deep_extend(opts, ret_opts)
 
-    log.user("opts", format.block(opts))
+    -- log.user("opts", format.block(opts))
 
-    log.user("final notes", format.block(t_final_rendered_notes))
+    -- log.user("final notes", format.block(t_final_rendered_notes))
+
     --
     -- COMPUTE TARGET TRACKS
     --
@@ -267,6 +265,8 @@ amt.apply_patterns_to_sel_tracks = function(opts)
     -- for _, cs in ipairs(target_tracks) do
     -- 	log.user("track:", cs.name, cs.tr)
     -- end
+
+    log.user("custom targets.regions", format.block(custom_targets.regions))
 
     -- handle create new regions
     local rd

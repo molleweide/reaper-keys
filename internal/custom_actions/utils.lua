@@ -95,8 +95,12 @@ function utils.getBigItemPositionsOnSelectedTracks()
     return big_item_positions
 end
 
+---Selects a region w/timeline selection.
+---@param id number zero based
+---@return boolean
 function utils.selectRegion(id)
     local ok, is_region, start_pos, end_pos, _, got_id = reaper.EnumProjectMarkers(id)
+
     if ok and is_region then
         reaper.GetSet_LoopTimeRange(true, false, start_pos, end_pos, false)
         return true

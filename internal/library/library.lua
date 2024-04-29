@@ -72,10 +72,11 @@ end
 function library.move_time_selection_to_next_region()
     local next_region = marks.get_nth_region_for_pos(_, 1)
 
-    log.user(next_region.name)
+    log.user(format.block(next_region))
 
     if next_region then
-        require("custom_actions.utils").selectRegion(next_region.mark_region_idx)
+        -- remember that we need to make the number zero based
+        require("custom_actions.utils").selectRegion(next_region.mark_region_idx - 1)
     end
 end
 
