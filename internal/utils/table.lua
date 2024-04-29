@@ -79,6 +79,10 @@ tbl.findIndexOf = function(t, compare_key, search_value)
 	return false
 end
 
+---Subsequent tables are being merged into the first table.
+---@param destination table
+---@param ... table[]
+---@return table
 tbl.deep_extend = function(destination, ...)
 	for _, source in ipairs({ ... }) do
 		for key, value in pairs(source) do

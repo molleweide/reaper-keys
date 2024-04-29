@@ -685,6 +685,10 @@ function jGui:get_last_selection_idx()
 	return self.lastSelIdx
 end
 
+-- NOTE: in pickers when attaching single results with this, I have to first
+-- wrap the result in a table, ie. everything needs to be in a table.
+-- ->> I should probably redo this so that I never have to think about this
+-- manual wrapping with { ... }.
 function jGui:get_on_enter_selection()
 	return self.t_search_results[self:get_last_selection_idx()]
 end
