@@ -20,6 +20,11 @@ local midi_editor = require("library.midi_editor")
 
 local commands = {}
 
+--
+-- NOTE: I need to revise everything here and see what I can refactor into
+-- lib modules.
+--
+
 commands.MIDI_ChangeActiveSelection = function(meta, opts)
     pickers.all_tracks(_, {
         title = "jump to track midi",
@@ -811,27 +816,57 @@ commands.add_patterns_nth_region = function()
     -- Same as above but with nth region from current region
 end
 
-commands.inject_region_w_pattern_after_current = function()
+commands.Inject_Region_W_Pattern_After_Nth_Region = function()
     -- TODO: Inject new region after current so that we can add a completely
     -- new segment if I realize that something is needed in order to transition to
     -- the segment coming after it.
     -- >> Pretty much same as add patterns to next region but inject the region
     -- instead.
+    --
+    -- 00. add prefix count to actions
+    -- 0. get count number
+    -- 1. get the Nth region
+    -- 2. re-use the opts table from `insert_new_region_prompt`
+    -- 3. create new region from opts table.
+    -- 4. insert pattern for same
+  -- 5. refactor into lib module
 end
 
--- NOTE: Same as above but inject before the nth region.
-commands.add_new_region_w_patterns_after_nth_region = function() end
+commands.Inject_Region_W_Pattern_Before_Nth_Region_before = function()
+    -- same as above BUT:
+  -- i. make the count variable negative.
+  -- ii. insert after or before region N?
+  --         >>>> add ability to re-specify before/after
+end
 
 -- NOTE: Take the nth region, extend the length of it by pushing everything
 -- after forward, reuse my duplicate segments command, and make the region
 -- double the length
-commands.double_the_length_of_nth_region = function() end
+commands.double_the_length_of_nth_region = function()
+
+  -- 1. picker select region(s) || input count or default -> double region
+  -- 2. for the selected (Nth) region(s), inject the same length after.
+  -- 3. copy the data to new empty timeline ranges
+  -- 4. extend selected region(s) to include this new extended area.
+  -- ...
+  -- future: take this function and allow for passing a float number, so
+  --         that one can increase length by eg. 50% (ie. multiply length by 1.5)
+  --         and make 16 bars -> 24...
+  --
+
+end
 
 -- NOTE: 1. picker -> list tracks that have existing media items in curent region
 -- 2. select tracks.
 -- 3. copy these patterns over to next region.
 -- 4. Fit the data to next region somehow.
-commands.copy_selected_track_items_from_current_region_to_next_region = function() end
+commands.copy_selected_track_items_from_current_region_to_next_region = function()
+
+  -- in current region
+  --     picker tracks with items in current region
+  --         selection -> duplicate item data to next region,
+
+end
 
 --
 -- ROUTING UI

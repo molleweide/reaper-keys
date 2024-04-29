@@ -1088,8 +1088,9 @@ return {
 
     Add_Patterns_To_Current_Region = commands.add_patterns_to_current_region,
     Add_Patterns_Next_Region = commands.add_patterns_next_region,
-    Inject_Region_W_Pattern_After_Current = commands.inject_region_w_pattern_after_current,
-    Add_New_Region_W_Patterns_After_Nth_Region = commands.add_new_region_w_patterns_after_nth_region, -- switch easy between devices
+    Inject_Region_W_Pattern_After_Nth_Region = commands.Inject_Region_W_Pattern_After_Nth_Region,
+    Inject_Region_W_Pattern_Before_Nth_Region_before = commands.Inject_Region_W_Pattern_Before_Nth_Region_before,
+
     Double_The_Length_Of_Nth_Region = commands.double_the_length_of_nth_region, --
     Copy_Select_Track_Items_To_NextRegion = commands.copy_selected_track_items_from_current_region_to_next_region, -- i included this here to show you mike
     -- but this list of devices is ofc different for everybody.

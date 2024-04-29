@@ -647,10 +647,12 @@ return {
                         ["c"] = "Add_Patterns_To_Current_Region",
                         ["a"] = "Add_Patterns_Next_Region",
                         -- TODO: All commands below
-                        ["i"] = "Inject_Region_W_Pattern_After_Current",
-                        ["A"] = "Add_New_Region_W_Patterns_After_Nth_Region",
+                        ["i"] = "Inject_Region_W_Pattern_After_Nth_Region", -- support count, if no count or 0 -> try use current region
+                        ["b"] = "Inject_Region_W_Pattern_Before_Nth_Region_before",
                         ["D"] = "Double_The_Length_Of_Nth_Region",
                         ["e"] = "Copy_Select_Track_Items_To_NextRegion",
+            ["t"] = "Picker_Tracks_with_items_in_current_region",
+            ["T"] = "Picker_Tracks_with_items_crossing_edit_cursor",
                     },
                 },
             },
