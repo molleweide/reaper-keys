@@ -231,6 +231,7 @@ amt.apply_patterns_to_sel_tracks = function(opts)
     opts = opts or {}
     local custom_targets = opts.targets or {}
 
+    -- log.user("custom targets.regions PRE", format.block(custom_targets.regions))
     --
     -- GET MUSIC DATA FROM STRING
     --

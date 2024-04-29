@@ -50,7 +50,8 @@ local function overwriteMark(mark, register)
     if mark.type == "region" or mode == "visual_timeline" then
         local region_name = string.format("%s # %s", register, mark.name)
         mark["type"] = "region"
-        -- log.user("?? create mark", format.block(mark))
+        log.user("?? create mark", format.block(mark))
+
 
         -- TODO: reaper utils . add_region
 
@@ -84,6 +85,8 @@ local function overwriteMark(mark, register)
     -- debug
     local _, all_project_marks = project_state.getAll("marks")
     log.trace("New Marks State: " .. format.block(all_project_marks))
+
+  return mark
 end
 
 ---Save a marker to data of type [mark | region | track selection]
@@ -125,7 +128,9 @@ function marks.create(opts)
         end
     end
 
-    overwriteMark(opts, opts.register)
+  -- log.user("?????")
+
+    return overwriteMark(opts, opts.register)
 end
 
 function marks.delete(register)

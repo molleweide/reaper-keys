@@ -272,7 +272,7 @@ segments.compute_new_regions_data_for_insertion = function(region_opts, selected
                     local first_register = i == 1 and region_opts.register or nil
                     if region_opts.after_current then
                         -- after selected region
-                        add_region(rg.rgnend, region_opts.name_string, ffirst_register)
+                        add_region(rg.rgnend, region_opts.name_string, first_register)
                     else
                         -- before selected region
                         add_region(rg.pos, region_opts.name_string, first_register)
@@ -319,7 +319,7 @@ segments.inject_new_empty_region = function(region_data)
     --     right = region_opts.new_region_end,
     -- }
     segments.insert_x_num_empty_measures_at_pos(region_data.left, region_data.right)
-    marks.create(region_data)
+    return marks.create(region_data)
 end
 
 segments.modify_length_of_region_by_N_measures = function()

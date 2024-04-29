@@ -1088,7 +1088,7 @@ return {
 
     Add_Patterns_To_Current_Region = commands.add_patterns_to_current_region,
     Add_Patterns_Next_Region = commands.add_patterns_next_region,
-    Inject_Region_W_Pattern_After_Nth_Region = commands.Inject_Region_W_Pattern_After_Nth_Region,
+    Inject_Region_W_Pattern_After_Nth_Region = { commands.Inject_Region_W_Pattern_After_Nth_Region, prefixRepetitionCount = true },
     Inject_Region_W_Pattern_Before_Nth_Region_before = commands.Inject_Region_W_Pattern_Before_Nth_Region_before,
 
     Double_The_Length_Of_Nth_Region = commands.double_the_length_of_nth_region, --
