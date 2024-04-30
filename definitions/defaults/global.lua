@@ -646,6 +646,8 @@ return {
                         --
                         ["c"] = "Add_Patterns_To_Current_Region",
                         ["a"] = "Add_Patterns_Next_Region",
+                        --
+                        ["R"] = "RenameCurrentRegionAtCursor", -- FIX: this one
                         -- TODO: All commands below
                         ["i"] = "Inject_Region_W_Pattern_After_Nth_Region", -- support count, if no count or 0 -> try use current region
                         ["b"] = "Inject_Region_W_Pattern_Before_Nth_Region_before",

@@ -1,0 +1,18 @@
+@document.meta
+title: README
+description:
+authors: hjalmarjakobsson
+categories:
+created: 2024-04-29T23:44:25-0500
+updated: 2024-04-30T00:17:07-0500
+version: 1.1.1
+@end
+
+get_nth_region_for_pos
+
+has to be modified because, the indices of the regions dont correspond to their
+position in the arrange window so we have to check for position compared to
+timeline.
+
+
+get region for current position.

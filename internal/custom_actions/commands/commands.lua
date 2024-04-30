@@ -748,9 +748,7 @@ end
 commands.inject_song_structure_at_cursor = function() end
 
 local function prompt_pattern_and_apply_region_manually(reg, reg_opts)
-
   log.user("REG:", format.block(reg))
-
 
   fzf.init({
     title = "Music apply pattern",
@@ -766,7 +764,7 @@ local function prompt_pattern_and_apply_region_manually(reg, reg_opts)
           targets = picker_tags,
           prompt_str = main_input.value,
           add_new_region_opts = reg_opts or nil,
-         })
+        })
         return ret
       end
       return true
@@ -843,7 +841,7 @@ commands.Inject_Region_W_Pattern_After_Nth_Region = function(meta, opts)
   }
 
   -- Prepare/create new regions data from opts table.
-  local new_regions_data = segments.compute_new_regions_data_for_insertion(opts_region, regions_target_after)
+  -- local new_regions_data = segments.compute_new_regions_data_for_insertion(opts_region, regions_target_after)
 
   -- log.user(">>>X", format.block(new_regions_data[1]))
 
@@ -852,10 +850,12 @@ commands.Inject_Region_W_Pattern_After_Nth_Region = function(meta, opts)
   -- log.user(">>>", format.block(new_regions_data[1]))
 
   -- TODO: revise how this was done for multiple regions.
-  -- 1. revise how the patterns prompt was fired up.
-  -- 2. get pattern
-  -- 3. apply to my pre-determined region selection.
-  picker_select_tracks_for_insert_pattern_to_region(new_regions_data[1], prompt_pattern_and_apply_region_manually, opts_region)
+  -- 1. Document region string parsing.
+  picker_select_tracks_for_insert_pattern_to_region(
+    find_region,
+    prompt_pattern_and_apply_region_manually,
+    opts_region
+  )
 
   -- 5. refactor into lib module
 end
@@ -950,6 +950,16 @@ commands.picker_select_position_midi_editor_UI = function()
   -- List items in this position,
   -- Jump to midi editor for editing the selection.
   -- if, it is an audio file jump to this audio file.
+end
+
+commands.rename_region_at_cursor = function()
+  local find_region = marks.get_nth_region_for_pos(false, 0)
+
+  if not find_region then
+    return
+  end
+
+  -- TODO: marks.set_name_for_mark  mark/region
 end
 
 return commands

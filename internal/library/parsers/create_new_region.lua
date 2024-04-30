@@ -1,5 +1,14 @@
 local s = require("utils.string")
 
+-- NOTE: DOCUMENTATION
+-- PARSE STRING
+-- [<jump_char>][-+^$][<measures_count>]/[<name>]
+--
+-- ; is used as a divider
+--
+-- IF NOT ;
+-- then the whole string become the new region name.
+
 return function(prompt_string)
     -- TODO: move these to user configs
     --

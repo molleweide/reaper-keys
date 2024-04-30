@@ -1100,6 +1100,7 @@ return {
     -- i will submit that later.
     --
     -- needs to alert user if no devices found.
+  RenameCurrentRegionAtCursor = commands.rename_region_at_cursor,
 
     TrackInSet_MIDI_QMK = { lib.io_device.setInputTo_MIDI_QMK, custom.setupMidiInputPreProcessorOnSelTrks },
     TrackInSet_MIDI_GRAND_ROLAND = {

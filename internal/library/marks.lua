@@ -52,7 +52,6 @@ local function overwriteMark(mark, register)
         mark["type"] = "region"
         log.user("?? create mark", format.block(mark))
 
-
         -- TODO: reaper utils . add_region
 
         mark["index"] = reaper.AddProjectMarker(0, true, mark.left, mark.right, region_name, -1)
@@ -86,7 +85,7 @@ local function overwriteMark(mark, register)
     local _, all_project_marks = project_state.getAll("marks")
     log.trace("New Marks State: " .. format.block(all_project_marks))
 
-  return mark
+    return mark
 end
 
 ---Save a marker to data of type [mark | region | track selection]
@@ -128,7 +127,11 @@ function marks.create(opts)
         end
     end
 
-  -- log.user("?????")
+    if not opts.name then
+        opts.name = "[no name]"
+    end
+
+    -- log.user("?????")
 
     return overwriteMark(opts, opts.register)
 end
@@ -198,6 +201,9 @@ end
 -- FIX: redo this with the existing api
 --
 
+---Enumerates markers chronologically.
+---@param user_wants any
+---@return table
 marks.get_all_manually_without_state = function(user_wants)
     local t_results = {}
     local ret, num_markers, num_regions = reaper.CountProjectMarkers(0)
@@ -215,6 +221,7 @@ marks.get_all_manually_without_state = function(user_wants)
                 color = color,
             }
             if user_wants == isrgn then
+                log.user("#region = ", markrgnindexnumber)
                 table.insert(t_results, t_prepare)
             end
             i = i + 1
@@ -248,6 +255,13 @@ function marks.get_region_for_pos_or_current(pos)
     return region_id
 end
 
+-- ---Get the region table object for id. If not id then get for current position.
+-- ---@param id number
+-- ---@return
+-- function marks.get_region_object(id)
+--   -- marks.get_region_for_pos_or_current(pos)
+-- end
+
 ---Get the Nth region after timeline position. N == 0 means get current region
 ---(ie. the region the edit cursor resides within), N == 1 means get the next
 ---region, etc..
@@ -278,10 +292,30 @@ marks.get_nth_region_for_pos = function(pos, n)
     -- one based.
     regidx = regidx + 1
 
+    local found_count = 0
+    local found_n = false
+
     for _, reg in ipairs(all_regions) do
-        if reg.mark_region_idx == (regidx + n) then
+        -- for each region that we look at, check if cursor pos is after or equal
+        -- and increment count
+        if reg.pos <= pos then
+            found_count = found_count + 1
+
+            -- if count == n + 1 then we stop counting
+            if found_count == (n + 1) then
+                found_n = true
+            end
+        end
+
+        -- check that we are inside the Nth count region by comparing both start,
+        -- and end point to position/cursor.
+        if found_n and reg.pos <= pos and pos < reg.rgnend then
             return reg
         end
+
+        -- if reg.mark_region_idx == (regidx + n) then
+        --     return reg
+        -- end
     end
     return false
 end
