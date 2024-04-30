@@ -98,12 +98,19 @@ pickers.all_tracks = function(meta, opts)
 	local vtt = syntax.getVerifiedTree()
 	local t_picker_results = vtt.track_list
 	log.user("<PICKER: ALL TRACKS>")
+
+	-- TODO: Add
+	-- a. Tracks that HAVE items in CURRENT region
+	-- a2. Tracks that DO NOT HAVE items in CURRENT region
+	-- b. Tracks that HAVE items CROSSING edit cursor
+
 	if opts.filter then
 		-- TODO: should the filter be passed as a param to syntax.get_list_of_track_objects(filter)
 		t_picker_results = tbl.filter(vtt.track_list, function(o)
 			return str.strHasOneOfChars(o.class, opts.filter)
 		end)
 	end
+
 	-- log.user(format.block(t_track_objects))
 	fzf.init(tbl.deep_extend({
 		title = opts.title or "All Tracks (Default)",

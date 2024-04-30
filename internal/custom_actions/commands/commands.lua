@@ -860,26 +860,46 @@ commands.Inject_Region_W_Pattern_After_Nth_Region = function(meta, opts)
   -- 5. refactor into lib module
 end
 
-commands.Inject_Region_W_Pattern_Before_Nth_Region_before = function()
   -- same as above BUT:
   -- i. make the count variable negative.
   -- ii. insert after or before region N?
   --         >>>> add ability to re-specify before/after
+commands.Inject_Region_W_Pattern_Before_Nth_Region_before = function()
 end
 
--- NOTE: Take the nth region, extend the length of it by pushing everything
--- after forward, reuse my duplicate segments command, and make the region
--- double the length
 commands.double_the_length_of_nth_region = function()
-  -- 1. picker select region(s) || input count or default -> double region
-  -- 2. for the selected (Nth) region(s), inject the same length after.
-  -- 3. copy the data to new empty timeline ranges
-  -- 4. extend selected region(s) to include this new extended area.
+  -- Picker select region(s) || input count or default -> double region
+  --
+  -- >>> i'll just work with the current region for simplicity's sake right now...
+  local find_region = marks.get_nth_region_for_pos(false, 0)
+  if not find_region then
+    return
+  end
+
+  -- For the selected (Nth) region(s), inject the same length after.
+  -- compute length of find_region
+  local length_time = find_region.right - find_region.left
+
+  -- Inject empty space at region end
+
+  -- Get all items that exist completely inside region of relevant types.
+  -- First, create lib/items func for getting all media items.
+  -- Filter items  starting AND ending inside region
+  -- TODO: filter transform all media items across tracks -> find items within
+  -- region
+
+  -- Copy/Duplicate the data.
+
   -- ...
-  -- future: take this function and allow for passing a float number, so
+  -- future: take this function and allow for passing a "multiplier" float number, so
   --         that one can increase length by eg. 50% (ie. multiply length by 1.5)
   --         and make 16 bars -> 24...
   --
+  --
+  --         >>> make current region 0.25
+  --
+  --         >>> make current region 2.5
+
 end
 
 -- NOTE: 1. picker -> list tracks that have existing media items in curent region
@@ -887,9 +907,13 @@ end
 -- 3. copy these patterns over to next region.
 -- 4. Fit the data to next region somehow.
 commands.copy_selected_track_items_from_current_region_to_next_region = function()
-  -- in current region
+  -- In current region
   --     picker tracks with items in current region
+  --     >>>>> This just means implementing a new filter for the picker.
+  --           Just search for `opts.filter` in pickers.pickers
+  --         --
   --         selection -> duplicate item data to next region,
+  --
 end
 
 --

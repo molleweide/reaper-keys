@@ -14,57 +14,73 @@ local lib_items = {}
 -- NOTE: import this file as `libit` to avoid name collisions.
 
 local test_new_struct = {
-  items = {},
-  takes = {},
-  -- functions take midi editor HWND as first arg and return something pertaining
-  -- to items/takes within the passed midi editor.
-  midi_editor = {},
+    items = {},
+    takes = {},
+    -- functions take midi editor HWND as first arg and return something pertaining
+    -- to items/takes within the passed midi editor.
+    midi_editor = {},
 }
+
+lib_items.get_filter_all_items_in_project = function()
+    -- reaper.CountMediaItems( proj )
+    local itemCount = CountMediaItems(0)
+    for i = 1, itemCount do
+        local item = GetMediaItem(0, i - 1)
+        local retval, stringNeedBig = GetSetMediaItemInfo_String(item, "GUID", "", false)
+        if stringNeedBig == itemGUID then
+            return item
+        end
+    end
+end
 
 -- TODO: needs nil checks and error handling
 lib_items.get_all_media_items_for_track_obj = function(tobj)
-  local t_tr_items = {}
-  local num_items = reaper.GetTrackNumMediaItems(tobj.tr)
-  if num_items > 0 then
-    -- first_item = reaper.GetTrackMediaItem(track, 0)
-    -- first_item_sel = reaper.IsMediaItemSelected(first_item)
-    for i = 0, num_items - 1 do
-      local item = reaper.GetTrackMediaItem(tobj.tr, i)
-      local item_cur_take = reaper.GetTake(item, 0)
-      local take_name = reaper.GetTakeName(item_cur_take)
-      table.insert(t_tr_items, {
-        parent_track_guid = tobj.guid,
-        item_idx = reaper.GetMediaItemInfo_Value(item, "IP_ITEMNUMBER"),
-        name = take_name,
-        pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION"),
-        length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH"),
-      })
+    local t_tr_items = {}
+    local num_items = reaper.GetTrackNumMediaItems(tobj.tr)
+    if num_items > 0 then
+        -- first_item = reaper.GetTrackMediaItem(track, 0)
+        -- first_item_sel = reaper.IsMediaItemSelected(first_item)
+        for i = 0, num_items - 1 do
+            local item = reaper.GetTrackMediaItem(tobj.tr, i)
+            local item_cur_take = reaper.GetTake(item, 0)
+            local take_name = reaper.GetTakeName(item_cur_take)
+            table.insert(t_tr_items, {
+                parent_track_guid = tobj.guid,
+                item_idx = reaper.GetMediaItemInfo_Value(item, "IP_ITEMNUMBER"),
+                name = take_name,
+                pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION"),
+                length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH"),
+            })
+        end
     end
-  end
-  return t_tr_items
+    return t_tr_items
 end
 
 lib_items.get_items_in_track_objects = function(t_track_objects)
-  local t_all_items = {}
-  for _, trk_obj in pairs(t_track_objects) do
-    local num_items = reaper.GetTrackNumMediaItems(trk_obj.tr)
-    if num_items > 0 then
-      -- first_item = reaper.GetTrackMediaItem(track, 0)
-      -- first_item_sel = reaper.IsMediaItemSelected(first_item)
+    local t_all_items = {}
+    for _, trk_obj in pairs(t_track_objects) do
+        local num_items = reaper.GetTrackNumMediaItems(trk_obj.tr)
+        if num_items > 0 then
+            -- first_item = reaper.GetTrackMediaItem(track, 0)
+            -- first_item_sel = reaper.IsMediaItemSelected(first_item)
 
-      for i = 0, num_items - 1 do
-        local item = reaper.GetTrackMediaItem(trk_obj.tr, i)
-        local item_cur_take = reaper.GetTake(item, 0)
-        local take_name = reaper.GetTakeName(item_cur_take)
-        table.insert(t_all_items, {
-          parent_track_id = guid,
-          item_idx = reaper.GetMediaItemInfo_Value(item, "IP_ITEMNUMBER"),
-          name = take_name,
-        })
-      end
+            for i = 0, num_items - 1 do
+                local item = reaper.GetTrackMediaItem(trk_obj.tr, i)
+                local item_cur_take = reaper.GetTake(item, 0)
+                local take_name = reaper.GetTakeName(item_cur_take)
+                table.insert(t_all_items, {
+                    parent_track_id = guid,
+                    item_idx = reaper.GetMediaItemInfo_Value(item, "IP_ITEMNUMBER"),
+                    name = take_name,
+                })
+            end
+        end
+        return t_all_items
     end
-    return t_all_items
-  end
+end
+
+-- This one is also an important function
+lib_items.all_tracks_filter_transform_items = function(opts)
 end
 
 -- TODO: insert new item and add params, such as POSITION and LENGTH, NAME, and
@@ -80,76 +96,76 @@ end
 -- func. this is probably more efficient.
 
 lib_items.single_track_filter_transform_items = function(tobj, opts)
-  opts = opts or {}
-  if not tobj then
-    log.debug("no tobj passed to lib_items.get_all_items_data")
-    return
-  end
-
-  -- HANDLE CONFIGS
-  local filter = opts.filter or {}
-
-  local info_filter = filter.info
-  local data_filter = filter.data -- this is good that I use the `data` term during config. makes things clearer
-
-  local no_filters = not info_filter and not data_filter
-
-  local midi_and_audio
-  if data_filter then
-    midi_and_audio = data_filter.midi == nil and data_filter.audio == nil
-  end
-
-  -- log.user(string.format([[filter=%s, noflt=%s, m_and_a_=%s ]], filter, no_filters, midi_and_audio))
-  local t_return_all_item_objs = {}
-  r.node_iter_items_and_xtake(tobj, function(item, take, take_is_midi)
-    local t_item_data_obj = { -- this info is already capture in get item info, and get take info
-      guid = reaper.BR_GetMediaItemGUID(item),
-    }
-    if no_filters or info_filter then
-      log.debug("GETTING: item info data")
-      t_item_data_obj.item_info = lib_items.get_item_info(item)
-      t_item_data_obj.take_info = lib_items.get_take_info(take)
-    end
-    -- midi_take_filter_transform should be moved into items since it is dealing
-    -- with items/takes first hand, and not midi. >>> it is an item_util!!
-    if no_filters or midi_and_audio or data_filter.midi and take_is_midi then
-      log.debug("GETTING item midi data")
-      t_item_data_obj.midi_data = require("library.midi").midi_take_filter_transform(take, {
-        filter = data_filter and data_filter.midi,
-      })
-    end
-    if no_filters or midi_and_audio or data_filter.audio and not take_is_midi then
-      log.debug("GETTING item audio data")
-      -- t_item_data_obj.audio_data = require("library.items").get_audio_data_from_take(take, {
-      -- 	filter = data_filter and data_filter.audio,
-      -- })
+    opts = opts or {}
+    if not tobj then
+        log.debug("no tobj passed to lib_items.get_all_items_data")
+        return
     end
 
-    -- NOTE: i am processing every single item/take here.
-    -- This means that I can remove and transform items/takes
-    --
-    -- removing should be moved above so i don't run the midi filters if
-    -- i am intending to delete something.
-    --
-    -- this has to be cleaned up a bit so that can specify exactly what I want
-    -- in the opts config. now i am a bit confused but. I know that I
-    -- need to be able to transform items. and it would mostly be updating the
-    -- length parameter when glueing items together and what not.
+    -- HANDLE CONFIGS
+    local filter = opts.filter or {}
 
-    if opts.remove then
-    elseif opts.transform then
+    local info_filter = filter.info
+    local data_filter = filter.data -- this is good that I use the `data` term during config. makes things clearer
+
+    local no_filters = not info_filter and not data_filter
+
+    local midi_and_audio
+    if data_filter then
+        midi_and_audio = data_filter.midi == nil and data_filter.audio == nil
     end
 
-    table.insert(t_return_all_item_objs, t_item_data_obj)
-  end)
+    -- log.user(string.format([[filter=%s, noflt=%s, m_and_a_=%s ]], filter, no_filters, midi_and_audio))
+    local t_return_all_item_objs = {}
+    r.node_iter_items_and_xtake(tobj, function(item, take, take_is_midi)
+        local t_item_data_obj = { -- this info is already capture in get item info, and get take info
+            guid = reaper.BR_GetMediaItemGUID(item),
+        }
+        if no_filters or info_filter then
+            log.debug("GETTING: item info data")
+            t_item_data_obj.item_info = lib_items.get_item_info(item)
+            t_item_data_obj.take_info = lib_items.get_take_info(take)
+        end
+        -- midi_take_filter_transform should be moved into items since it is dealing
+        -- with items/takes first hand, and not midi. >>> it is an item_util!!
+        if no_filters or midi_and_audio or data_filter.midi and take_is_midi then
+            log.debug("GETTING item midi data")
+            t_item_data_obj.midi_data = require("library.midi").midi_take_filter_transform(take, {
+                filter = data_filter and data_filter.midi,
+            })
+        end
+        if no_filters or midi_and_audio or data_filter.audio and not take_is_midi then
+            log.debug("GETTING item audio data")
+            -- t_item_data_obj.audio_data = require("library.items").get_audio_data_from_take(take, {
+            -- 	filter = data_filter and data_filter.audio,
+            -- })
+        end
 
-  -- opts is outside since it is outside of the loop
-  -- but, what if I want to check if exists by comparing guits, then
-  -- i should do it inside the loop above.
-  if opts.insert then
-  end
+        -- NOTE: i am processing every single item/take here.
+        -- This means that I can remove and transform items/takes
+        --
+        -- removing should be moved above so i don't run the midi filters if
+        -- i am intending to delete something.
+        --
+        -- this has to be cleaned up a bit so that can specify exactly what I want
+        -- in the opts config. now i am a bit confused but. I know that I
+        -- need to be able to transform items. and it would mostly be updating the
+        -- length parameter when glueing items together and what not.
 
-  return t_return_all_item_objs
+        if opts.remove then
+        elseif opts.transform then
+        end
+
+        table.insert(t_return_all_item_objs, t_item_data_obj)
+    end)
+
+    -- opts is outside since it is outside of the loop
+    -- but, what if I want to check if exists by comparing guits, then
+    -- i should do it inside the loop above.
+    if opts.insert then
+    end
+
+    return t_return_all_item_objs
 end
 
 -- NOTE: reaper.GetTakeName( take )
@@ -175,79 +191,79 @@ end
 -- reaper.GetSetMediaItemTakeInfo_String(active_take, 'P_NAME', new_take_name[i], true)
 
 lib_items.get_item_info = function(item)
-  if not item then
-    log.debug("no item passed to get_item_info")
-    return
-  end
-  local D_POSITION = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local D_LENGTH = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-  local guid = reaper.BR_GetMediaItemGUID(item)
+    if not item then
+        log.debug("no item passed to get_item_info")
+        return
+    end
+    local D_POSITION = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+    local D_LENGTH = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+    local guid = reaper.BR_GetMediaItemGUID(item)
 
-  return {
-    guid = guid,
-    start = D_POSITION,
-    _end = D_POSITION + D_LENGTH,
-    -- B_MUTE : bool * : muted (item solo overrides). setting this value will clear C_MUTE_SOLO.
-    -- B_MUTE_ACTUAL : bool * : muted (ignores solo). setting this value will not affect C_MUTE_SOLO.
-    -- C_LANEPLAYS : char * : in fixed lane tracks, 0=this item lane does not play, 1=this item lane plays exclusively, 2=this item lane plays and other lanes also play (read-only)
-    -- C_MUTE_SOLO : char * : solo override (-1=soloed, 0=no override, 1=unsoloed). note that this API does not automatically unsolo other items when soloing (nor clear the unsolos when clearing the last soloed item), it must be done by the caller via action or via this API.
-    -- B_LOOPSRC : bool * : loop source
-    -- B_ALLTAKESPLAY : bool * : all takes play
-    -- B_UISEL : bool * : selected in arrange view
-    -- C_BEATATTACHMODE : char * : item timebase, -1=track or project default, 1=beats (position, length, rate), 2=beats (position only). for auto-stretch timebase: C_BEATATTACHMODE=1, C_AUTOSTRETCH=1
-    -- C_AUTOSTRETCH: : char * : auto-stretch at project tempo changes, 1=enabled, requires C_BEATATTACHMODE=1
-    -- C_LOCK : char * : locked, &1=locked
-    -- D_VOL : double * : item volume, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc
-    D_POSITION = D_POSITION, -- double * : item position in seconds
-    D_LENGTH = D_LENGTH, -- double * : item length in seconds
-    -- D_SNAPOFFSET : double * : item snap offset in seconds
-    -- D_FADEINLEN : double * : item manual fadein length in seconds
-    -- D_FADEOUTLEN : double * : item manual fadeout length in seconds
-    -- D_FADEINDIR : double * : item fadein curvature, -1..1
-    -- D_FADEOUTDIR : double * : item fadeout curvature, -1..1
-    -- D_FADEINLEN_AUTO : double * : item auto-fadein length in seconds, -1=no auto-fadein
-    -- D_FADEOUTLEN_AUTO : double * : item auto-fadeout length in seconds, -1=no auto-fadeout
-    -- C_FADEINSHAPE : int * : fadein shape, 0..6, 0=linear
-    -- C_FADEOUTSHAPE : int * : fadeout shape, 0..6, 0=linear
-    -- I_GROUPID : int * : group ID, 0=no group
-    -- I_LASTY : int * : Y-position (relative to top of track) in pixels (read-only)
-    -- I_LASTH : int * : height in pixels (read-only)
-    -- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x1000000 (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it will not be used, but will store the color
-    -- I_CURTAKE : int * : active take number
-    -- IP_ITEMNUMBER : int : item number on this track (read-only, returns the item number directly)
-    -- F_FREEMODE_Y : float * : free item positioning or fixed lane Y-position. 0=top of track, 1.0=bottom of track
-    -- F_FREEMODE_H : float * : free item positioning or fixed lane height. 0.5=half the track height, 1.0=full track height
-    -- I_FIXEDLANE : int * : fixed lane of item (fine to call with setNewValue, but returned value is read-only)
-    -- B_FIXEDLANE_HIDDEN : bool * : true if displaying only one fixed lane and this item is in a different lane (read-only)
-    -- P_TRACK : MediaTrack * : (read-only)
-  }
+    return {
+        guid = guid,
+        start = D_POSITION,
+        _end = D_POSITION + D_LENGTH,
+        -- B_MUTE : bool * : muted (item solo overrides). setting this value will clear C_MUTE_SOLO.
+        -- B_MUTE_ACTUAL : bool * : muted (ignores solo). setting this value will not affect C_MUTE_SOLO.
+        -- C_LANEPLAYS : char * : in fixed lane tracks, 0=this item lane does not play, 1=this item lane plays exclusively, 2=this item lane plays and other lanes also play (read-only)
+        -- C_MUTE_SOLO : char * : solo override (-1=soloed, 0=no override, 1=unsoloed). note that this API does not automatically unsolo other items when soloing (nor clear the unsolos when clearing the last soloed item), it must be done by the caller via action or via this API.
+        -- B_LOOPSRC : bool * : loop source
+        -- B_ALLTAKESPLAY : bool * : all takes play
+        -- B_UISEL : bool * : selected in arrange view
+        -- C_BEATATTACHMODE : char * : item timebase, -1=track or project default, 1=beats (position, length, rate), 2=beats (position only). for auto-stretch timebase: C_BEATATTACHMODE=1, C_AUTOSTRETCH=1
+        -- C_AUTOSTRETCH: : char * : auto-stretch at project tempo changes, 1=enabled, requires C_BEATATTACHMODE=1
+        -- C_LOCK : char * : locked, &1=locked
+        -- D_VOL : double * : item volume, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc
+        D_POSITION = D_POSITION, -- double * : item position in seconds
+        D_LENGTH = D_LENGTH, -- double * : item length in seconds
+        -- D_SNAPOFFSET : double * : item snap offset in seconds
+        -- D_FADEINLEN : double * : item manual fadein length in seconds
+        -- D_FADEOUTLEN : double * : item manual fadeout length in seconds
+        -- D_FADEINDIR : double * : item fadein curvature, -1..1
+        -- D_FADEOUTDIR : double * : item fadeout curvature, -1..1
+        -- D_FADEINLEN_AUTO : double * : item auto-fadein length in seconds, -1=no auto-fadein
+        -- D_FADEOUTLEN_AUTO : double * : item auto-fadeout length in seconds, -1=no auto-fadeout
+        -- C_FADEINSHAPE : int * : fadein shape, 0..6, 0=linear
+        -- C_FADEOUTSHAPE : int * : fadeout shape, 0..6, 0=linear
+        -- I_GROUPID : int * : group ID, 0=no group
+        -- I_LASTY : int * : Y-position (relative to top of track) in pixels (read-only)
+        -- I_LASTH : int * : height in pixels (read-only)
+        -- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x1000000 (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it will not be used, but will store the color
+        -- I_CURTAKE : int * : active take number
+        -- IP_ITEMNUMBER : int : item number on this track (read-only, returns the item number directly)
+        -- F_FREEMODE_Y : float * : free item positioning or fixed lane Y-position. 0=top of track, 1.0=bottom of track
+        -- F_FREEMODE_H : float * : free item positioning or fixed lane height. 0.5=half the track height, 1.0=full track height
+        -- I_FIXEDLANE : int * : fixed lane of item (fine to call with setNewValue, but returned value is read-only)
+        -- B_FIXEDLANE_HIDDEN : bool * : true if displaying only one fixed lane and this item is in a different lane (read-only)
+        -- P_TRACK : MediaTrack * : (read-only)
+    }
 end
 
 -- only data / no ref
 lib_items.get_take_info = function(take)
-  guid = reaper.BR_GetMediaItemTakeGUID(take)
-  return {
-    guid = guid,
-    -- reaper.GetMediaItemTakeInfo_Value( take, parmname )
-    --
-    -- Get media item take numerical-value attributes.
-    -- D_STARTOFFS : double * : start offset in source media, in seconds
-    -- D_VOL : double * : take volume, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc, negative if take polarity is flipped
-    -- D_PAN : double * : take pan, -1..1
-    -- D_PANLAW : double * : take pan law, -1=default, 0.5=-6dB, 1.0=+0dB, etc
-    -- D_PLAYRATE : double * : take playback rate, 0.5=half speed, 1=normal, 2=double speed, etc
-    -- D_PITCH : double * : take pitch adjustment in semitones, -12=one octave down, 0=normal, +12=one octave up, etc
-    -- B_PPITCH : bool * : preserve pitch when changing playback rate
-    -- I_LASTY : int * : Y-position (relative to top of track) in pixels (read-only)
-    -- I_LASTH : int * : height in pixels (read-only)
-    -- I_CHANMODE : int * : channel mode, 0=normal, 1=reverse stereo, 2=downmix, 3=left, 4=right
-    -- I_PITCHMODE : int * : pitch shifter mode, -1=projext default, otherwise high 2 bytes=shifter, low 2 bytes=parameter
-    -- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x1000000 (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it will not be used, but will store the color
-    -- IP_TAKENUMBER : int : take number (read-only, returns the take number directly)
-    -- P_TRACK : pointer to MediaTrack (read-only)
-    -- P_ITEM : pointer to MediaItem (read-only)
-    -- P_SOURCE : PCM_source *. Note that if setting this, you should first retrieve the old source, set the new, THEN delete the old.
-  }
+    guid = reaper.BR_GetMediaItemTakeGUID(take)
+    return {
+        guid = guid,
+        -- reaper.GetMediaItemTakeInfo_Value( take, parmname )
+        --
+        -- Get media item take numerical-value attributes.
+        -- D_STARTOFFS : double * : start offset in source media, in seconds
+        -- D_VOL : double * : take volume, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc, negative if take polarity is flipped
+        -- D_PAN : double * : take pan, -1..1
+        -- D_PANLAW : double * : take pan law, -1=default, 0.5=-6dB, 1.0=+0dB, etc
+        -- D_PLAYRATE : double * : take playback rate, 0.5=half speed, 1=normal, 2=double speed, etc
+        -- D_PITCH : double * : take pitch adjustment in semitones, -12=one octave down, 0=normal, +12=one octave up, etc
+        -- B_PPITCH : bool * : preserve pitch when changing playback rate
+        -- I_LASTY : int * : Y-position (relative to top of track) in pixels (read-only)
+        -- I_LASTH : int * : height in pixels (read-only)
+        -- I_CHANMODE : int * : channel mode, 0=normal, 1=reverse stereo, 2=downmix, 3=left, 4=right
+        -- I_PITCHMODE : int * : pitch shifter mode, -1=projext default, otherwise high 2 bytes=shifter, low 2 bytes=parameter
+        -- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x1000000 (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it will not be used, but will store the color
+        -- IP_TAKENUMBER : int : take number (read-only, returns the take number directly)
+        -- P_TRACK : pointer to MediaTrack (read-only)
+        -- P_ITEM : pointer to MediaItem (read-only)
+        -- P_SOURCE : PCM_source *. Note that if setting this, you should first retrieve the old source, set the new, THEN delete the old.
+    }
 end
 
 -- TODO: next two functions could be refactored into one smarter func api,
@@ -259,115 +275,114 @@ end
 ---@param range_end
 ---@return
 lib_items.get_track_items_in_range_time_w_data = function(track, range_start, range_end)
-  local item_cnt = reaper.GetTrackNumMediaItems(track)
-  local items_found = {}
+    local item_cnt = reaper.GetTrackNumMediaItems(track)
+    local items_found = {}
 
-  local function check_if_item_spans_cursor_position_measure()
-    -- item.start less than cursor pos
-    -- item._end greater than cursor pos
-  end
-
-  for i = 0, item_cnt - 1 do
-    local item_ref = reaper.GetTrackMediaItem(track, i)
-    local item_info = lib_items.get_item_info(item_ref)
-
-    -- NOTE: the commented out part ._end makes func ignore items that span wider..
-    if item_info.start >= range_start and item_info._end <= range_end then
-      table.insert(items_found, {
-        ref = item_ref,
-        info = item_info,
-      })
+    local function check_if_item_spans_cursor_position_measure()
+        -- item.start less than cursor pos
+        -- item._end greater than cursor pos
     end
-  end
-  return #items_found > 0 and items_found or false
+
+    for i = 0, item_cnt - 1 do
+        local item_ref = reaper.GetTrackMediaItem(track, i)
+        local item_info = lib_items.get_item_info(item_ref)
+
+        -- NOTE: the commented out part ._end makes func ignore items that span wider..
+        if item_info.start >= range_start and item_info._end <= range_end then
+            table.insert(items_found, {
+                ref = item_ref,
+                info = item_info,
+            })
+        end
+    end
+    return #items_found > 0 and items_found or false
 end
 
 lib_items.get_track_items_that_span_cursor_pos = function(track, range_start, range_end)
-  local item_cnt = reaper.GetTrackNumMediaItems(track)
-  local items_found = {}
+    local item_cnt = reaper.GetTrackNumMediaItems(track)
+    local items_found = {}
 
-  for i = 0, item_cnt - 1 do
-    local item_ref = reaper.GetTrackMediaItem(track, i)
-    local item_info = lib_items.get_item_info(item_ref)
+    for i = 0, item_cnt - 1 do
+        local item_ref = reaper.GetTrackMediaItem(track, i)
+        local item_info = lib_items.get_item_info(item_ref)
 
-    if item_info.start <= range_start and item_info._end >= range_end then
-      table.insert(items_found, {
-        ref = item_ref,
-        info = item_info,
-      })
+        if item_info.start <= range_start and item_info._end >= range_end then
+            table.insert(items_found, {
+                ref = item_ref,
+                info = item_info,
+            })
+        end
     end
-  end
-  return #items_found > 0 and items_found or false
+    return #items_found > 0 and items_found or false
 end
 
-
 lib_items.unselect_items = function(t_indices)
-  if not t_indices then
-    local csi = reaper.CountSelectedMediaItems(0)
-    if csi > 0 then
-      for i = 0, csi - 1 do
-        local item = reaper.GetSelectedMediaItem(0, i)
-        log.user(">>>>>>>>", type(item), item)
-        reaper.SetMediaItemSelected(reaper.GetSelectedMediaItem(0, i), false)
-      end
+    if not t_indices then
+        local csi = reaper.CountSelectedMediaItems(0)
+        if csi > 0 then
+            for i = 0, csi - 1 do
+                local item = reaper.GetSelectedMediaItem(0, i)
+                log.user(">>>>>>>>", type(item), item)
+                reaper.SetMediaItemSelected(reaper.GetSelectedMediaItem(0, i), false)
+            end
+        end
+    else
+        -- TODO:...
+        -- for k, v in pairs(t) do
+        --
+        -- end
     end
-  else
-    -- TODO:...
-    -- for k, v in pairs(t) do
-    --
-    -- end
-  end
 end
 
 ------------------------------------------------------------------------------
 
 function toBits(num) -- returns a table of bits, least significant first.
-  local t = {}
-  while num > 0 do
-    rest = math.fmod(num, 2)
-    t[#t + 1] = math.floor(rest)
-    num = (num - rest) / 2
-  end
-  return t
+    local t = {}
+    while num > 0 do
+        rest = math.fmod(num, 2)
+        t[#t + 1] = math.floor(rest)
+        num = (num - rest) / 2
+    end
+    return t
 end
 
 function IsSelectionLinkEdit() -- return bol
-  link = toBits(reaper.SNM_GetIntConfigVar("midieditor", 5))[10] -- Is Selection is linked to editability On? 0 Yes 1 No.
-  if link == 0 then
-    link = true
-  elseif link == 1 then
-    link = false
-  end
-  return link
+    link = toBits(reaper.SNM_GetIntConfigVar("midieditor", 5))[10] -- Is Selection is linked to editability On? 0 Yes 1 No.
+    if link == 0 then
+        link = true
+    elseif link == 1 then
+        link = false
+    end
+    return link
 end
 
 -- https://forum.cockos.com/showthread.php?p=2431991#post2431991
 function GetEditableMIDITakes(link) --  bool link - Is Selection linked to editability? //Return a take_table with the takes editable in piano roll
-  take_table = {}
-  if link == true then -- Selection is linked to editability
-    local item_count = reaper.CountSelectedMediaItems(0)
-    if item_count > 0 then -- If at least one item is MIDI
-      for i = 0, item_count - 1 do
-        local loop_item = reaper.GetSelectedMediaItem(0, i)
-        local loop_take = reaper.GetMediaItemTake(loop_item, 0)
-        local bol = reaper.TakeIsMIDI(loop_take)
-        if bol == true then
-          table.insert(take_table, loop_take)
+    take_table = {}
+    if link == true then -- Selection is linked to editability
+        local item_count = reaper.CountSelectedMediaItems(0)
+        if item_count > 0 then -- If at least one item is MIDI
+            for i = 0, item_count - 1 do
+                local loop_item = reaper.GetSelectedMediaItem(0, i)
+                local loop_take = reaper.GetMediaItemTake(loop_item, 0)
+                local bol = reaper.TakeIsMIDI(loop_take)
+                if bol == true then
+                    table.insert(take_table, loop_take)
+                end
+            end
         end
-      end
+        if item_count == 0 or #take_table == 0 then -- No selected Item or None was added to a table(none is MIDI)
+            local midieditor = reaper.MIDIEditor_GetActive()
+            local take = reaper.MIDIEditor_GetTake(midieditor)
+            table.insert(take_table, take)
+        end
+        print(#take_table)
+    elseif link == false then -- Selection is NOT linked to editability
+        local midieditor = reaper.MIDIEditor_GetActive()
+        local take = reaper.MIDIEditor_GetTake(midieditor)
+        table.insert(take_table, take)
     end
-    if item_count == 0 or #take_table == 0 then -- No selected Item or None was added to a table(none is MIDI)
-      local midieditor = reaper.MIDIEditor_GetActive()
-      local take = reaper.MIDIEditor_GetTake(midieditor)
-      table.insert(take_table, take)
-    end
-    print(#take_table)
-  elseif link == false then -- Selection is NOT linked to editability
-    local midieditor = reaper.MIDIEditor_GetActive()
-    local take = reaper.MIDIEditor_GetTake(midieditor)
-    table.insert(take_table, take)
-  end
-  return take_table
+    return take_table
 end
 
 ------------------------------------------------------------------------------
@@ -515,104 +530,104 @@ end
 --- FTC item/midi helpers
 
 lib_items.create_new_item = function(is_midi, tr, start, _end, new_name)
-  local new_item
-  if is_midi then
-    new_item = reaper.CreateNewMIDIItemInProj(tr, start, _end, false)
-  else
-    new_item = reaper.AddMediaItemToTrack(tr)
-    local length = _end - start
-    reaper.SetMediaItemInfo_Value(new_item, "D_POSITION", start)
-    reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", length)
-  end
-  lib_items.rename_item(new_item, new_name)
-  return new_item
+    local new_item
+    if is_midi then
+        new_item = reaper.CreateNewMIDIItemInProj(tr, start, _end, false)
+    else
+        new_item = reaper.AddMediaItemToTrack(tr)
+        local length = _end - start
+        reaper.SetMediaItemInfo_Value(new_item, "D_POSITION", start)
+        reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", length)
+    end
+    lib_items.rename_item(new_item, new_name)
+    return new_item
 end
 
 lib_items.rename_item = function(new_item, new_name)
-  new_name = new_name or "[no name]"
-  local take = reaper.GetActiveTake(new_item)
-  reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", new_name, true)
+    new_name = new_name or "[no name]"
+    local take = reaper.GetActiveTake(new_item)
+    reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", new_name, true)
 end
 
 lib_items.getItemSelection = function()
-  local items = {}
-  for i = 0, reaper.CountSelectedMediaItems(0) - 1 do
-    items[#items + 1] = reaper.GetSelectedMediaItem(0, i)
-  end
-  return items
+    local items = {}
+    for i = 0, reaper.CountSelectedMediaItems(0) - 1 do
+        items[#items + 1] = reaper.GetSelectedMediaItem(0, i)
+    end
+    return items
 end
 
 -- unselect_items() is better because it allows you to also pass a list if
 -- indices which can be used to fine tune affected items.
 lib_items.unselectAllMediaItems = function()
-  -- reaper.SelectAllMediaItems(0, false) -- NOTE: why not just use this?!
-  for i = reaper.CountSelectedMediaItems(0) - 1, 0, -1 do
-    local item = reaper.GetSelectedMediaItem(0, i)
-    reaper.SetMediaItemSelected(item, false)
-  end
+    -- reaper.SelectAllMediaItems(0, false) -- NOTE: why not just use this?!
+    for i = reaper.CountSelectedMediaItems(0) - 1, 0, -1 do
+        local item = reaper.GetSelectedMediaItem(0, i)
+        reaper.SetMediaItemSelected(item, false)
+    end
 end
 
 lib_items.setItemSelection = function(items)
-  lib_items.unselectAllMediaItems()
-  if type(items) == "userdata" then
-    reaper.SetMediaItemSelected(items, true)
-  elseif type(items) == "table" then
-    for _, item in ipairs(items) do
-      reaper.SetMediaItemSelected(item, true)
+    lib_items.unselectAllMediaItems()
+    if type(items) == "userdata" then
+        reaper.SetMediaItemSelected(items, true)
+    elseif type(items) == "table" then
+        for _, item in ipairs(items) do
+            reaper.SetMediaItemSelected(item, true)
+        end
     end
-  end
 end
 
 lib_items.setSelectionStateOfItems = function(items, state)
-  for _, item in ipairs(items) do
-    reaper.SetMediaItemSelected(item, state)
-  end
+    for _, item in ipairs(items) do
+        reaper.SetMediaItemSelected(item, state)
+    end
 end
 
 lib_items.addItemsToSelection = function(items) end
 
 lib_items.getTakeChunk = function(take)
-  local item = reaper.GetMediaItemTake_Item(take)
-  local _, chunk = reaper.GetItemStateChunk(item, "", false)
-  local tk = reaper.GetMediaItemTakeInfo_Value(take, "IP_TAKENUMBER")
+    local item = reaper.GetMediaItemTake_Item(take)
+    local _, chunk = reaper.GetItemStateChunk(item, "", false)
+    local tk = reaper.GetMediaItemTakeInfo_Value(take, "IP_TAKENUMBER")
 
-  local take_start_ptr = 0
-  local take_end_ptr = 0
+    local take_start_ptr = 0
+    local take_end_ptr = 0
 
-  for _ = 0, tk do
-    take_start_ptr = take_end_ptr
-    take_end_ptr = chunk:find("\nTAKE[%s\n]", take_start_ptr + 1)
-  end
-  return chunk:sub(take_start_ptr, take_end_ptr)
+    for _ = 0, tk do
+        take_start_ptr = take_end_ptr
+        take_end_ptr = chunk:find("\nTAKE[%s\n]", take_start_ptr + 1)
+    end
+    return chunk:sub(take_start_ptr, take_end_ptr)
 end
 
 lib_items.getTakeChunkHZoom = function(chunk)
-  local pattern = "CFGEDITVIEW (.-) (.-) "
-  return chunk:match(pattern)
+    local pattern = "CFGEDITVIEW (.-) (.-) "
+    return chunk:match(pattern)
 end
 
 lib_items.getTakeChunkTimeBase = function(chunk)
-  local pattern = "CFGEDIT " .. (".- "):rep(18) .. "(.-) "
-  return tonumber(chunk:match(pattern))
+    local pattern = "CFGEDIT " .. (".- "):rep(18) .. "(.-) "
+    return tonumber(chunk:match(pattern))
 end
 
 lib_items.isValidMIDIItem = function(item)
-  if reaper.ValidatePtr(item, "MediaItem*") then
-    local active_take = reaper.GetActiveTake(item)
-    return reaper.TakeIsMIDI(active_take)
-  end
+    if reaper.ValidatePtr(item, "MediaItem*") then
+        local active_take = reaper.GetActiveTake(item)
+        return reaper.TakeIsMIDI(active_take)
+    end
 end
 
 lib_items.get_dimensions = function(itm)
-  local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-  local item_end = item_start + item_length
+    local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+    local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+    local item_end = item_start + item_length
 
-  return {
-    start = item_start,
-    _end = item_end,
-    length = item_length,
-  }
+    return {
+        start = item_start,
+        _end = item_end,
+        length = item_length,
+    }
 end
 
 -- function GetMIDIEditorView(hwnd)
@@ -1037,14 +1052,14 @@ end
 
 lib_items.repeat_items = function()
 
-  -- TODO: options
-  --    - active in ME
-  --    - selected items in arrange
-  --    - glue items together
-  --    - use [duplicating|looping|aliasing]
+    -- TODO: options
+    --    - active in ME
+    --    - selected items in arrange
+    --    - glue items together
+    --    - use [duplicating|looping|aliasing]
 
-  -- NOTE: I will need to look into `lib/segments` to see how things are
-  -- duplicated easilly
+    -- NOTE: I will need to look into `lib/segments` to see how things are
+    -- duplicated easilly
 end
 
 return lib_items

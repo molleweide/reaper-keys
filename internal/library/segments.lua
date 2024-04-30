@@ -1,43 +1,90 @@
 local marks = require("library.marks")
 local log = require("utils.log")
 local format = require("utils.format")
+local r = require("utils.reaper")
 
 -- TODO: Move all of this into `lib/timeline.lua`
 
 -- start, end = reaper.GetSet_LoopTimeRange(boolean isSet, boolean isLoop, number start, number end, boolean allowautoseek)
 
 -- functions related to moving segments and sections of a song
+--
+-- BPEF = by pusing existing data forward.
 
 local segments = {}
 
-local function insert_empty_space_at_time_selection_by_pushing_existing_forward()
+-- NOTE: Injecting new space into a project seems only possible with the
+-- main on command for injecting time before a time selection by the amount
+-- of the time selection it self.
+-- Therefore, this is a very important function which my API will be centered
+-- around.
+--
+---Inject empty space infront of time selection by pushing existing forward.
+local function inject_space_at_time_sel()
     reaper.Main_OnCommand(40200, 0) -- Time selection: Insert empty space at time selection (moving later items)
 end
 
--- TODO: Document what happens here???
---
---
-function segments.insertSpaceAtEditCursorFromTimeSelection()
-    log.user("fn insert space")
+---Inject empty space by length at timeline position.
+function segments.inject_space_at_position_from_time_sel(pos, length)
+    local tstart, tend = r.get_time_sel()
+    local save_cursor_pos = reaper.GetCursorPosition()
+    -- inject
+    reaper.SetEditCurPos(pos, true, false)
+    r.set_time_sel(pos, pos + length)
+    inject_space_at_time_sel()
+    -- restore
+    if save_cursor_pos > pos then
+        -- shift the value forward by length if the prev cursor pos was after
+        -- injection point.
+        save_cursor_pos = save_cursor_pos + length
+    end
+    reaper.SetEditCurPos(save_cursor_pos, true, false)
+    r.set_time_sel(tstart, tend)
+end
 
-    local tstart, tend = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+local function remove_space_at_time_sel()
+    -- 1. set time selection to range wanted to be removed
+    -- 2. select all items AND split at time selection
+    -- 3. re-select items inside of TLS
+    -- 4. delete selection.
+    -- 5. move everything after TLS backwards by TLS.
+    -- done!!
+    --
+    -- This should theoretically achieve the effect of deleting/cutting a
+    -- segment out of the timeline.
+end
+
+-- inject_space_from_time_sel_at_cursor
+function segments.inject_space_at_edit_cursor_from_time_sel()
+    -- TODO: redo but with `inject_space_at_position_from_time_sel(pos, length)`
+    --
+
+    log.user("fn insert space")
+    local tstart, tend = r.get_time_sel()
 
     reaper.PreventUIRefresh(1)
 
     local curPos = reaper.GetCursorPosition()
-    reaper.GetSet_LoopTimeRange(true, false, curPos, curPos + (tend - tstart), false)
+    -- reaper.GetSet_LoopTimeRange(true, false, curPos, curPos + (tend - tstart), false)
+    r.set_time_sel(curPos, curPos + (tend - tstart))
 
-    reaper.Main_OnCommand(40200, 0) -- Time selection: Insert empty space at time selection (moving later items)
+    -- reaper.Main_OnCommand(40200, 0)   -- Time selection: Insert empty space at time selection (moving later items)
+    inject_space_at_time_sel()
 
-    reaper.GetSet_LoopTimeRange(true, false, tstart, tend, false)
+    r.set_time_sel(tstart, tend)
 
     reaper.PreventUIRefresh(-1)
 end
 
-function segments.insert_x_num_empty_measures_at_pos(pos_start, pos_end)
-    -- save time sel
-    -- TODO: move into util
-    local save_start_sel, save_end_sel = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+-- function segments.inject_space_
+
+---Creates empty space at region given by range, by pushing existing data
+---forward in project time. Ie. you have to reverse loop when injecting
+---multiple ranges.
+---@param pos_start number
+---@param pos_end number
+function segments.inject_space_at_range(pos_start, pos_end)
+    local save_start_sel, save_end_sel = r.get_time_sel()
 
     reaper.PreventUIRefresh(1)
 
@@ -46,43 +93,55 @@ function segments.insert_x_num_empty_measures_at_pos(pos_start, pos_end)
     -- set temporary sel
     reaper.GetSet_LoopTimeRange(true, false, pos_start, pos_start + real_length, false)
 
-    insert_empty_space_at_time_selection_by_pushing_existing_forward()
+    inject_space_at_time_sel()
 
     local shift = save_start_sel < pos_start and 0 or real_length
 
     -- restore sel
-    reaper.GetSet_LoopTimeRange(true, false, save_start_sel + shift, save_end_sel + shift, false)
+    r.set_time_sel(save_start_sel + shift, save_end_sel + shift)
 
     reaper.PreventUIRefresh(-1)
 end
 
 -- TODO: Document clearly what this command does???
 --
+-- i dont really understand what the fuck is going on here.
+--
 -- get this to work now
-function segments.repeatShiftAllItemsInTimeSelectionByTrackByTimeSel()
-    log.user("---first---")
-    -- 1. if item pos is before time sel start  skip
-    -- 2. add time_sel_len
-    local start_sel, end_sel = reaper.GetSet_LoopTimeRange(0, 0, 0, 0, 0)
-
-    log.user("start", start_sel)
-    log.user("end", end_sel)
+function segments.duplicate_time_sel_data_at_shift_amount(tl_shift)
+    log.user("---repeat_shift_all_items_in_time_selection_by_time_sel---")
 
     local data = {}
+
+    -- ensure items are selected, why?
     if reaper.CountSelectedMediaItems(0) < 1 then
         return
     end
 
+    -- iterate and build tables
     data = collectMediaItemData(data)
 
-    log.user("!!!!!!!!")
-
+    -- ??? I have to search through MPL's scripts and see what he meant by this.
     local measure_shift, end_fullbeatsmax = CalcMeasureShift(data)
     local increment_measure = OverlapCheck(data, measure_shift, end_fullbeatsmax)
 
-    DuplicateItems(data, end_sel - start_sel)
+    DuplicateItems(data, tl_shift) -- measure_shift+increment_measure)
 end
 
+function segments.duplicate_timeline_sel_data_once_in_sequence()
+    local start_sel, end_sel = r.get_time_sel()
+    local tl_length_shift = end_sel - start_sel
+  segments.duplicate_time_sel_data_at_shift_amount(tl_length_shift)
+end
+
+function segments.duplicate_timeline_sel_data_at_cursor()
+end
+
+
+---Get a table of, or add media item data to an existing table of, media
+---items
+---@param data table
+---@return table
 function collectMediaItemData(data)
     for i = 1, reaper.CountSelectedMediaItems(0) do
         local item = reaper.GetSelectedMediaItem(0, i - 1)
@@ -318,12 +377,13 @@ segments.inject_new_empty_region = function(region_data)
     --     left = region_opts.new_region_start,
     --     right = region_opts.new_region_end,
     -- }
-    segments.insert_x_num_empty_measures_at_pos(region_data.left, region_data.right)
+    --
+    --
+    segments.inject_space_at_position(region_data.left, region_data.right)
     return marks.create(region_data)
 end
 
-segments.modify_length_of_region_by_N_measures = function()
-end
+segments.modify_length_of_region_by_N_measures = function() end
 
 -- segments.
 

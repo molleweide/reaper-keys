@@ -1064,15 +1064,22 @@ return {
     SelectAllItemsInCurrentTimeSel = 40717,
     SelectAllItemsInCurrentTimeAndTrackSel = 40718,
 
+    -- BUG: the cursor is moved back to the timeline selection, so this only works
+    -- for duplicating / repeating sections sequentially. If i want to duplicate
+    -- the timeline selection to cursor position, then I need to have the cursor
+    -- position intact.
     RepeatInsertTimeSelection = {
-        "LoopEnd",
         "SelectAllItemsInCurrentTimeSel",
         "SplitItemsAtTimeSelection",
         "UnselectItems",
         "SelectAllItemsInCurrentTimeSel",
-        lib.segments.insertSpaceAtEditCursorFromTimeSelection,
-        lib.segments.repeatShiftAllItemsInTimeSelectionByTrackByTimeSel,
+        -- motion used to put the cursor back at loop end, so that inject space
+        -- happens after to make place for repeat data.
+        "LoopEnd", -- this should be done in the inject space function.
+        lib.segments.inject_space_at_edit_cursor_from_time_sel,
+        lib.segments.duplicate_timeline_sel_data_once_in_sequence,
     },
+    Inject_timeline_range_at_cursor = lib.segments.inject_space_at_edit_cursor_from_time_sel,
 
     InsertNewRegion_UI = commands.UI_add_new_regions, -- not implemented
     InsertNewRegion_prompt = commands.insert_new_region_prompt, -- wip
@@ -1088,7 +1095,10 @@ return {
 
     Add_Patterns_To_Current_Region = commands.add_patterns_to_current_region,
     Add_Patterns_Next_Region = commands.add_patterns_next_region,
-    Inject_Region_W_Pattern_After_Nth_Region = { commands.Inject_Region_W_Pattern_After_Nth_Region, prefixRepetitionCount = true },
+    Inject_Region_W_Pattern_After_Nth_Region = {
+        commands.Inject_Region_W_Pattern_After_Nth_Region,
+        prefixRepetitionCount = true,
+    },
     Inject_Region_W_Pattern_Before_Nth_Region_before = commands.Inject_Region_W_Pattern_Before_Nth_Region_before,
 
     Double_The_Length_Of_Nth_Region = commands.double_the_length_of_nth_region, --
@@ -1100,7 +1110,7 @@ return {
     -- i will submit that later.
     --
     -- needs to alert user if no devices found.
-  RenameCurrentRegionAtCursor = commands.rename_region_at_cursor,
+    RenameCurrentRegionAtCursor = commands.rename_region_at_cursor,
 
     TrackInSet_MIDI_QMK = { lib.io_device.setInputTo_MIDI_QMK, custom.setupMidiInputPreProcessorOnSelTrks },
     TrackInSet_MIDI_GRAND_ROLAND = {
