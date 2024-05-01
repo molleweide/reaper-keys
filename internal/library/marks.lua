@@ -89,6 +89,7 @@ local function overwriteMark(mark, register)
 end
 
 ---Save a marker to data of type [mark | region | track selection]
+---This function is used to save a mark to a register by key-binds.
 ---@param register string
 function marks.save(register)
     local time_left, time_right = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
@@ -115,7 +116,7 @@ end
 -- FIX: Validation: I need to validate that the necessary information has
 -- been supplied depending on which type user wants.
 --
----Use this function to programmatically create markers
+---CREATE marker | Use this function to programmatically create markers
 ---@param marker_opts any
 function marks.create(opts)
     if not opts.register then
@@ -135,6 +136,68 @@ function marks.create(opts)
 
     return overwriteMark(opts, opts.register)
 end
+
+---Update/modify marker
+function marks.update(opts)
+    -- reaper.SetProjectMarker4( proj, markrgnindexnumber, isrgn, pos, rgnend, name, color, flags )
+    --
+    -- TODO: update region | mark
+end
+
+-- a filter can be:
+--     region at current cursor
+--
+-- These are the props of a region.
+--     - isrgn = isrgn,
+--     - pos = pos,
+--     - rgnend = rgnend,
+--     - name = name,
+--     - mark_region_idx = markrgnindexnumber,
+--     - color = color,
+--
+-- NOTE: This transform can be used for pretty much any operations on regions
+-- which means this is going to be flexible.
+--
+---Flexible API for doing most types of transform upon sets of project regions.
+---The aim is to make an API func making project region management a little bit easier.
+---Opts can take:
+---     - target region, if you already know/have what to act upon.
+---     - apply transforms to a subset of all regions.
+--- @param opts table
+function marks.filter_transform_project_regions(opts)
+    opts = opts or {}
+    local t_res = {}
+    local op_on_regions = true
+
+    local filter = opts.filter or {}
+    local remove = opts.remove or {}
+
+    -- compute target set
+    local function filter_transform_project_regions()
+        -- loop get regions pass filter
+        -- for ipairs in regions
+        --     if opts.filter
+        --         add region
+    end
+    local regions_target_set = opts.target and opts.target or filter_get_all_regions()
+
+    -- if opts.remove then
+    --     remove
+    --       return
+
+    -- if opts.transform
+    --      check params
+    --          apply changes to region targets
+
+    -- if insert or transforms requested
+    --        apply transform of the real regions space.
+
+    -- return all_regions, filtered_regions
+end
+
+function marks.filter_transform_project_marks(opts)
+end
+
 
 function marks.delete(register)
     local ok, old_mark = project_state.get("marks", register)
