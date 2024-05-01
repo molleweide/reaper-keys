@@ -860,35 +860,48 @@ commands.Inject_Region_W_Pattern_After_Nth_Region = function(meta, opts)
   -- 5. refactor into lib module
 end
 
-  -- same as above BUT:
-  -- i. make the count variable negative.
-  -- ii. insert after or before region N?
-  --         >>>> add ability to re-specify before/after
-commands.Inject_Region_W_Pattern_Before_Nth_Region_before = function()
-end
+-- same as above BUT:
+-- i. make the count variable negative.
+-- ii. insert after or before region N?
+--         >>>> add ability to re-specify before/after
+commands.Inject_Region_W_Pattern_Before_Nth_Region_before = function() end
 
+-- TODO: Picker select region(s) || input count or default -> double region
+-- so that I can specify exactly which region to double from anywhere.
+--
+-- TODO: implement but using timeselection instead of looping over all project
+-- items to filter out target items
 commands.double_the_length_of_nth_region = function()
-  -- Picker select region(s) || input count or default -> double region
-  --
-  -- >>> i'll just work with the current region for simplicity's sake right now...
   local find_region = marks.get_nth_region_for_pos(false, 0)
+
+  log.user("find_region", format.block(find_region))
+
   if not find_region then
     return
   end
 
-  -- For the selected (Nth) region(s), inject the same length after.
-  -- compute length of find_region
-  local length_time = find_region.right - find_region.left
+  local reg_start, reg_end = find_region.pos, find_region.rgnend
 
-  -- Inject empty space at region end
+  local length_time = reg_end - reg_start
 
-  -- Get all items that exist completely inside region of relevant types.
-  -- First, create lib/items func for getting all media items.
-  -- Filter items  starting AND ending inside region
-  -- TODO: filter transform all media items across tracks -> find items within
-  -- region
+  -- Method A: filter items within TL manually
+  local items_in_region = require("library.items").all_project_items_filter_transform({
+    get_type = "content",
+    filter = {
+      range = { reg_start, reg_end },
+    },
+  })
 
-  -- Copy/Duplicate the data.
+  -- Method B: get items in TL by leveraging get/set timeline
+  -- TEST: see if this has better performance.
+
+
+  -- note: if the region is the last one in proj -> we dont need to inject space...
+  segments.inject_space_at_range(reg_end, reg_end + length_time)
+
+  segments.duplicate_items(items_in_region, length_time)
+
+  -- TODO: extend the length of region N
 
   -- ...
   -- future: take this function and allow for passing a "multiplier" float number, so
@@ -899,7 +912,6 @@ commands.double_the_length_of_nth_region = function()
   --         >>> make current region 0.25
   --
   --         >>> make current region 2.5
-
 end
 
 -- NOTE: 1. picker -> list tracks that have existing media items in curent region
