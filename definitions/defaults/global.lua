@@ -264,7 +264,11 @@ return {
                     {
                         -- TEST: make sure that all these can be used with count prefix.
                         ["T"] = "RepeatInsertTimeSelection",
-            ["I"] = "Inject_timeline_range_at_cursor",
+                        ["I"] = "Inject_timeline_range_at_cursor",
+                        --
+                        ["d"] = "Double_The_Length_of_selected_regions",
+                        ["p"] = "Picker_UI_select_single_region_insert_at_cursor",
+                        ["S"] = "Picker_scale_region_by_multiplyer",
                         -- TODO: these three
                         ["D"] = "Items_DuplicateCountTimes",
                         ["r"] = "Items_DuplicateCountTimesAndGlue",
@@ -413,6 +417,8 @@ return {
                                 ["q"] = "RouteRemoveAllSends",
                                 ["Q"] = "RouteRemoveAllRecieves",
                                 ["l"] = "RouteLogSelection",
+                                ["L"] = "Routes_List_routes_for_track",
+                                ["X"] = "Routes_List_All_sends_for_all_tracks",
                                 ["c"] = "RouteTestCodedT",
                                 ["p"] = "TrackToggleSendToParent",
                                 ["s"] = "ToggleShowTrackRouting",

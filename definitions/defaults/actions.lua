@@ -846,6 +846,7 @@ return {
     RouteRemoveAllSends = lib.routing.removeAllSends,
     RouteRemoveAllRecieves = lib.routing.removeAllRecieves,
     RouteTestCodedT = lib.routing.testCodedTargets,
+    Routes_List_routes_for_track = commands.picker_list_routes_for_track,
 
     MediaExplorerToggle = media_explorer.toggle,
 
@@ -1080,6 +1081,9 @@ return {
         lib.segments.duplicate_timeline_sel_data_once_in_sequence,
     },
     Inject_timeline_range_at_cursor = lib.segments.inject_space_at_edit_cursor_from_time_sel,
+
+    Picker_UI_select_single_region_insert_at_cursor = commands.picker_ui_select_region_to_insert_at_cursor,
+    Picker_scale_region_by_multiplyer = commands.picker_scale_regions_by_multiplyer,
 
     InsertNewRegion_UI = commands.UI_add_new_regions, -- not implemented
     InsertNewRegion_prompt = commands.insert_new_region_prompt, -- wip
