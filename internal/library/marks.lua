@@ -43,6 +43,23 @@ local function deleteMarkIndications(mark)
     end
 end
 
+local function create_project_region(left, right, name_string)
+    reaper.AddProjectMarker(0, true, left, right, name_string, -1)
+end
+
+local function update_project_region(rg)
+  local rg_flags = false
+    reaper.SetProjectMarker3(0, rg.mark_region_idx, rg.isrgn, rg.pos, rg.rgnend, rg.name, rg.color)--, rg_flags)
+end
+
+local function create_project_mark(pos, name_string)
+    return reaper.AddProjectMarker(0, false, pos, pos, name_string, -1)
+end
+
+local function make_marker_name(register, name_string)
+    return string.format("%s # %s", register, name_string)
+end
+
 local function overwriteMark(mark, register)
     local mode = state_interface.getMode()
 
@@ -50,23 +67,12 @@ local function overwriteMark(mark, register)
     if mark.type == "region" or mode == "visual_timeline" then
         local region_name = string.format("%s # %s", register, mark.name)
         mark["type"] = "region"
-        log.user("?? create mark", format.block(mark))
-
-        -- TODO: reaper utils . add_region
-
-        mark["index"] = reaper.AddProjectMarker(0, true, mark.left, mark.right, region_name, -1)
+        mark["index"] = create_project_region(mark.left, mark.right, make_marker_name(register, mark.name))
     elseif mark.type == "track_selection" or mode == "visual_track" then
-        -- NOTE: Notice here with this implementation that all information is stored
-        -- for all marker types, but these are tagged as track selection, and therefore
-        -- will be used as such..
         mark["type"] = "track_selection"
     else
-        local mark_name = string.format("%s # %s", register, mark.name)
         mark["type"] = "timeline_position"
-
-        -- TODO: reaper utils . add_mark
-
-        mark["index"] = reaper.AddProjectMarker(0, false, mark.position, mark.position, mark_name, -1)
+        mark["index"] = create_project_mark(mark.position, make_marker_name(register, mark.name))
     end
     mark["register"] = register
     mark["time"] = os.time()
@@ -173,31 +179,119 @@ function marks.filter_transform_project_regions(opts)
     local remove = opts.remove or {}
 
     -- compute target set
-    local function filter_transform_project_regions()
-        -- loop get regions pass filter
-        -- for ipairs in regions
-        --     if opts.filter
-        --         add region
+    local function filter_get_all_regions()
+        log.user("?")
+        local t_results = {}
+        local ret, num_markers, num_regions = reaper.CountProjectMarkers(0)
+        local num_total = num_markers + num_regions
+        if num_regions > 0 then
+            local i = 0
+            while i < num_total do
+                local _, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
+
+                if isrgn then
+                    local add_current = false
+                    if opts.filter then
+                    else
+                        add_current = true
+                    end
+                    if add_current then
+                        table.insert(t_results, {
+                            isrgn = isrgn,
+                            pos = pos,
+                            rgnend = rgnend,
+                            name = name,
+                            mark_region_idx = markrgnindexnumber,
+                            color = color,
+                        })
+                    end
+                end
+                i = i + 1
+            end
+        else
+            log.debug("Project has no regions!")
+        end
+        return t_results
     end
-    local regions_target_set = opts.target and opts.target or filter_get_all_regions()
+    local regions_target_set = opts.target_region and opts.target_region or filter_get_all_regions()
 
     -- if opts.remove then
     --     remove
     --       return
+    --
+    --       >>>> use: deleteMarkIndications(mark)
 
     -- if opts.transform
     --      check params
     --          apply changes to region targets
+    --
+    log.user(":::::::::::::::: pre transform :::::::::::::::::")
+    log.user("[ filter_transform_project_regions ]", format.block(opts), format.block(regions_target_set))
+
+    local targets_updated = 0
+    if opts.transform then
+        local transform = opts.transform
+
+        -- NOTE:
+        -- - a single number means shift.
+
+        for i, rg in ipairs(regions_target_set) do
+            local update = false
+            for k, v in pairs(transform) do
+                if type(v) == "boolean" then
+                    log.trace("fltr regions [transform] section: set bool:", i, rg[k], "->", v)
+                    rg[k] = v -- set bool value
+                    update = true
+                elseif type(v) == "number" then
+                    log.trace("fltr regions [transform] section: shift num:", i, rg[k], "->", rg[k] + v)
+                    rg[k] = rg[k] + v -- shift by number
+                    update = true
+                elseif type(v) == "table" then
+                    log.trace("fltr regions [transform] section: force const:", i, rg[k], "->", v[1])
+                    rg[k] = v[2] == "force" and v[1] -- { number, "force"} means force all notes to value
+                    update = true
+                elseif type(v) == "function" then
+                    log.trace("fltr regions [transform] section: func:", i, rg[k], "->", v(rg))
+                    rg[k] = v(rg) -- apply function transform per note
+                    update = true
+                end
+                if update then
+                    targets_updated = targets_updated + 1
+                end
+            end
+        end
+    end
+
+    log.user(":::::::::::::::: post transform :::::::::::::::::")
+    log.user("[ filter_transform_project_regions ]", format.block(opts), format.block(regions_target_set))
 
     -- if insert or transforms requested
     --        apply transform of the real regions space.
+    --        >>>> use: reaper.SetProjectMarker4( proj, markrgnindexnumber, isrgn, pos, rgnend, name, color, flags )
+    --        >>>> use: create_project_region(left, right, name_string)
+
+    if (targets_updated > 0 or opts.insert) and not opts.dry_run then
+        -- if not opts.insert then
+        --     midi.delete_notes(take, t_notes)
+        -- end
+        log.user("just before inserting notes")
+        -- midi.insert_notes({
+        --     take = take,
+        --     notes = t_notes,
+        -- })
+        if targets_updated then
+            for _, rg in ipairs(regions_target_set) do
+                -- all the data has been prepared/transformed so I only need to send it
+                -- to be writtene here/now.
+                update_project_region(rg)
+            end
+        end
+    end
 
     -- return all_regions, filtered_regions
 end
 
-function marks.filter_transform_project_marks(opts)
-end
-
+function marks.filter_transform_project_marks(opts) end
 
 function marks.delete(register)
     local ok, old_mark = project_state.get("marks", register)
@@ -284,7 +378,7 @@ marks.get_all_manually_without_state = function(user_wants)
                 color = color,
             }
             if user_wants == isrgn then
-                log.user("#region = ", markrgnindexnumber)
+                -- log.user("#region = ", markrgnindexnumber)
                 table.insert(t_results, t_prepare)
             end
             i = i + 1
@@ -337,7 +431,7 @@ marks.get_nth_region_for_pos = function(pos, n)
     -- returns zero indexed region number
     local regidx = marks.get_region_for_pos_or_current(pos)
 
-    log.user("regidx =", regidx)
+    -- log.user("regidx =", regidx)
 
     if not regidx then
         return false
@@ -345,7 +439,7 @@ marks.get_nth_region_for_pos = function(pos, n)
 
     local all_regions = marks.get_all_manually_without_state(true)
 
-    log.user(format.block(all_regions))
+    -- log.user(format.block(all_regions))
 
     if #all_regions == 0 then
         return false
