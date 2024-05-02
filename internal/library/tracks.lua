@@ -28,6 +28,11 @@ tracks.getTrackGuidsByName = function()
   return t
 end
 
+
+tracks.filter_transform = function(opts)
+
+end
+
 -- function JProject.prototype:getTracksByName(sPattern, iInstance, find_init, find_plain)
 --     -- Search track(s) by name
 -- 	-- sPattern: Specify pattern to look for

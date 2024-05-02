@@ -507,4 +507,11 @@ end
 -- 	end
 -- end
 
+---Filter/transform API for working with all projects track fx.
+---This could be useful in order to eg. mute all effects based on a certain
+---criterion.
+---@param opts table | nil
+fx_util.fltr_all = function (opts)
+end
+
 return fx_util

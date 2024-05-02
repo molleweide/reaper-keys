@@ -847,6 +847,7 @@ return {
     RouteRemoveAllRecieves = lib.routing.removeAllRecieves,
     RouteTestCodedT = lib.routing.testCodedTargets,
     Routes_List_routes_for_track = commands.picker_list_routes_for_track,
+  Routes_List_All_sends_for_all_tracks = commands.picker_list_all_sends_for_all_tracks,
 
     MediaExplorerToggle = media_explorer.toggle,
 
