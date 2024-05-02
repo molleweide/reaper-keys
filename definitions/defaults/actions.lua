@@ -1107,7 +1107,7 @@ return {
     Inject_Region_W_Pattern_Before_Nth_Region_before = commands.Inject_Region_W_Pattern_Before_Nth_Region_before,
 
     Double_The_Length_Of_Nth_Region = commands.double_the_length_of_nth_region, --
-    Copy_Select_Track_Items_To_NextRegion = commands.copy_selected_track_items_from_current_region_to_next_region, -- i included this here to show you mike
+    Copy_Select_Track_Items_To_NextRegion = commands.picker_copy_sel_tracks_items_from_current_region_to_next_region, -- i included this here to show you mike
     -- but this list of devices is ofc different for everybody.
     -- but these commands allow me to hook into a custom midi pre processor
     -- that i built to accompany reaper keys.
