@@ -882,20 +882,20 @@ commands.double_the_length_of_nth_region = function()
     local reg_start, reg_end = find_region.pos, find_region.rgnend
     local length_time = reg_end - reg_start
 
-    -- ---------------------------------------------------------------------------
-    -- -- Method A: filter items within TL manually
-    -- local items_in_region = require("library.items").all_project_items_filter_transform({
-    --   get_type = "content",
-    --   filter = {
-    --     range = { reg_start, reg_end },
-    --   },
-    -- })
-    -- -- Method B: get items in TL by leveraging get/set timeline
-    -- -- TEST: see if this has better performance.
-    -- ---------------------------------------------------------------------------
-    -- -- note: if the region is the last one in proj -> we dont need to inject space...
-    -- segments.inject_space_at_range(reg_end, reg_end + length_time)
-    -- segments.duplicate_items(items_in_region, length_time)
+    ---------------------------------------------------------------------------
+    -- Method A: filter items within TL manually
+    local items_in_region = require("library.items").all_project_items_filter_transform({
+      get_type = "content",
+      filter = {
+        range = { reg_start, reg_end },
+      },
+    })
+    -- Method B: get items in TL by leveraging get/set timeline
+    -- TEST: see if this has better performance.
+    ---------------------------------------------------------------------------
+    -- note: if the region is the last one in proj -> we dont need to inject space...
+    segments.inject_space_at_range(reg_end, reg_end + length_time)
+    segments.duplicate_items(items_in_region, length_time)
 
     -- TEST: extend the length of region N
 
