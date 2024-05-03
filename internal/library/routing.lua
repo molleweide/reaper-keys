@@ -50,91 +50,91 @@ local div = "\n##########################################\n\n"
 --      - flip phase
 
 function routing.updateState(route_str, coded_sources, coded_dests)
-	-- log.clear()
+    -- log.clear()
 
-	-- get default route configs
-	local t_route_opts = rc
-	local _
+    -- get default route configs
+    local t_route_opts = rc
+    local _
 
-	-- TODO: attach route_str to t_route_opts
+    -- TODO: attach route_str to t_route_opts
 
-	--  I set remove_routes explicitly here. Why?
-	--  Because on my second laptop this prop gets converted
-	--  to true even though i never set it to true. I don't understad why.
-	--  This is really wierd. Anyways, luckilly it works by setting it here
-	t_route_opts.remove_routes = false -- ??
+    --  I set remove_routes explicitly here. Why?
+    --  Because on my second laptop this prop gets converted
+    --  to true even though i never set it to true. I don't understad why.
+    --  This is really wierd. Anyways, luckilly it works by setting it here
+    t_route_opts.remove_routes = false -- ??
 
-	log.user("!!!!!!!!", route_str)
+    log.user("!!!!!!!!", route_str)
 
-	-- route_str is passed explicitly to the function if
-	-- you are embeddig this function. If nil, then user
-	-- will be prompted to input a string manually.
-	-- kind of like command mode in vim.
-	if route_str == nil then
-		t_route_opts.user_input = true
-		_, route_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
-		if not _ then
-			return
-		end
-	end
+    -- route_str is passed explicitly to the function if
+    -- you are embeddig this function. If nil, then user
+    -- will be prompted to input a string manually.
+    -- kind of like command mode in vim.
+    if route_str == nil then
+        t_route_opts.user_input = true
+        _, route_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
+        if not _ then
+            return
+        end
+    end
 
-	t_route_opts.state_string = route_str
+    t_route_opts.state_string = route_str
 
-	-- look at the route string and extract the parameters
-	-- needed for updating to new route state below.
-	-- returns a table of all parameters.
-	local ret
-	ret, t_route_opts = rlib_string.extractParamsFromString(t_route_opts, route_str)
-	if not ret then
-		return
-	end -- something went wrong
+    -- look at the route string and extract the parameters
+    -- needed for updating to new route state below.
+    -- returns a table of all parameters.
+    local ret
+    ret, t_route_opts = rlib_string.extractParamsFromString(t_route_opts, route_str)
+    if not ret then
+        return
+    end -- something went wrong
 
-	-- embedded targets. overwrits targets comming from
-	-- route string.
-	-- targets can be one of
-	-- track name string
-	-- track guid
-	-- table of name strings, guid, or tr_num
-	-- i am not sure why i included tr_num??
-	if coded_sources ~= nil then
-		t_route_opts.coded_targets = true
-		ret, t_route_opts = rlib_targets.setRouteTargetGuids(t_route_opts, "src_guids", coded_sources)
-	end
-	if coded_dests ~= nil then
-		t_route_opts.coded_targets = true
-		ret, t_route_opts = rlib_targets.setRouteTargetGuids(t_route_opts, "dst_guids", coded_dests)
-	end
+    -- embedded targets. overwrits targets comming from
+    -- route string.
+    -- targets can be one of
+    -- track name string
+    -- track guid
+    -- table of name strings, guid, or tr_num
+    -- i am not sure why i included tr_num??
+    if coded_sources ~= nil then
+        t_route_opts.coded_targets = true
+        ret, t_route_opts = rlib_targets.setRouteTargetGuids(t_route_opts, "src_guids", coded_sources)
+    end
+    if coded_dests ~= nil then
+        t_route_opts.coded_targets = true
+        ret, t_route_opts = rlib_targets.setRouteTargetGuids(t_route_opts, "dst_guids", coded_dests)
+    end
 
-	-- execute and update route state. Either remove routes,
-	-- add new, or add new routes with confirmation.
-	--
-	-- TODO
-	--
-	-- update action type (add/rm/log)
-	-- if t_route_opts.action_next == "log" >> log...
-	-- elseif t_route_opts.action_next == "rm"
-	-- elseif t_route_opts.action_next == "add"
-	if t_route_opts.remove_routes then
-		rlib.handleRemoval(t_route_opts)
-	elseif not t_route_opts.user_input then
-		-- NOTE: this means that we called api
-		rlib.targetLoop(t_route_opts)
-	elseif rlib.confirmRouteCreation(t_route_opts) then
-		rlib.targetLoop(t_route_opts)
-	else
-		log.debug("<ROUTE COMMAND ABORTED>")
-	end
+    -- execute and update route state. Either remove routes,
+    -- add new, or add new routes with confirmation.
+    --
+    -- TODO
+    --
+    -- update action type (add/rm/log)
+    -- if t_route_opts.action_next == "log" >> log...
+    -- elseif t_route_opts.action_next == "rm"
+    -- elseif t_route_opts.action_next == "add"
+    if t_route_opts.remove_routes then
+        rlib.handleRemoval(t_route_opts)
+    elseif not t_route_opts.user_input then
+        -- NOTE: this means that we called api
+        rlib.targetLoop(t_route_opts)
+    elseif rlib.confirmRouteCreation(t_route_opts) then
+        rlib.targetLoop(t_route_opts)
+    else
+        log.debug("<ROUTE COMMAND ABORTED>")
+    end
 end
 
 -- TODO rename to trackRouteOfType(????)
 -- also why is this function here?
 function routing.trackHasSends(guid, cat)
-	local tr, tr_idx = ru.getTrackByGUID(guid)
-	local num_routes_by_cat = reaper.GetTrackNumSends(tr, cat)
-	if num_routes_by_cat > 0 then
-		return true
-	end
-	return false
+    local tr, tr_idx = ru.getTrackByGUID(guid)
+    local num_routes_by_cat = reaper.GetTrackNumSends(tr, cat)
+    if num_routes_by_cat > 0 then
+        return true
+    end
+    return false
 end
 
 -- TODO rm these
@@ -144,15 +144,15 @@ end
 -- or at least it feels not so elegant.
 
 function routing.removeAllSends(tr)
-	rlib.removeAllRoutesTrack(tr)
+    rlib.removeAllRoutesTrack(tr)
 end
 
 function routing.removeAllRecieves(tr)
-	rlib.removeAllRoutesTrack(tr, 1)
+    rlib.removeAllRoutesTrack(tr, 1)
 end
 
 function routing.removeAllBoth(tr)
-	rlib.removeAllRoutesTrack(tr, 2)
+    rlib.removeAllRoutesTrack(tr, 2)
 end
 
 -- TODO mv to rlog
@@ -164,24 +164,53 @@ end
 -- and put conditionals for send/rec/hw in rlog.
 
 function routing.logRoutingInfoForSelectedTracks()
-	-- log.clear()
-	local log_t = ru.getSelectedTracksGUIDs()
+    -- log.clear()
+    local log_t = ru.getSelectedTracksGUIDs()
 
-	for i = 1, #log_t do
-		local tr, tr_idx = ru.getTrackByGUID(log_t[i].guid)
-		local _, current_name = reaper.GetTrackName(tr)
+    for i = 1, #log_t do
+        local tr, tr_idx = ru.getTrackByGUID(log_t[i].guid)
+        local _, current_name = reaper.GetTrackName(tr)
 
-		log.user("\n" .. div .. "\n:: routes for track #" .. tr_idx + 1 .. " `" .. current_name .. "`:")
+        log.user("\n" .. div .. "\n:: routes for track #" .. tr_idx + 1 .. " `" .. current_name .. "`:")
 
-		log.user("\n\tSENDs:")
-		rlib_log.logRoutesByCategory(tr, rc.flags.CAT_SEND)
+        log.user("\n\tSENDs:")
+        rlib_log.logRoutesByCategory(tr, rc.flags.CAT_SEND)
 
-		log.user("\tRECIEVEs:")
-		rlib_log.logRoutesByCategory(tr, rc.flags.CAT_REC)
+        log.user("\tRECIEVEs:")
+        rlib_log.logRoutesByCategory(tr, rc.flags.CAT_REC)
 
-		log.user("\tHARDWARE:")
-		rlib_log.logRoutesByCategory(tr, rc.flags.CAT_HW)
-	end
+        log.user("\tHARDWARE:")
+        rlib_log.logRoutesByCategory(tr, rc.flags.CAT_HW)
+    end
+end
+
+function routing.get_route_object_for_track(tr)
+    -- loop all categories above and return them as a unified table.
+    local route_types = {
+        rc.flags.CAT_SEND,
+        rc.flags.CAT_REC,
+        rc.flags.CAT_HW,
+    }
+
+    local log_t = ru.getSelectedTracksGUIDs()
+
+    local t_res = {}
+
+    local sends = require("library.route.util").get_routes_table_by_category(tr, rc.flags.CAT_SEND, "send")
+    local recieves = require("library.route.util").get_routes_table_by_category(tr, rc.flags.CAT_REC, "recieve")
+    local hardware = require("library.route.util").get_routes_table_by_category(tr, rc.flags.CAT_HW, "hardware")
+
+    t_res = sends
+
+    for _, v in ipairs(recieves) do
+        table.insert(t_res, v)
+    end
+
+    for _, v in ipairs(hardware) do
+        table.insert(t_res, v)
+    end
+
+    return t_res
 end
 
 -- how can i create a better test suite for checking
@@ -194,10 +223,10 @@ end
 -- route bcomes 1 or two lines max as compared. this is
 
 function routing.testCodedTargets()
-	local guid_src = getMatchedTrackGUIDs("TEST_A")
-	local guid_dst = getMatchedTrackGUIDs("TEST_B")
-	-- log.user(format.block(guid_src[1]))
-	routing.create("[0|2]R", guid_src[#guid_src].guid, guid_dst[#guid_dst].guid)
+    local guid_src = getMatchedTrackGUIDs("TEST_A")
+    local guid_dst = getMatchedTrackGUIDs("TEST_B")
+    -- log.user(format.block(guid_src[1]))
+    routing.create("[0|2]R", guid_src[#guid_src].guid, guid_dst[#guid_dst].guid)
 end
 
 return routing

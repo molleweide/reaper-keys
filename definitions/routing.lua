@@ -179,6 +179,8 @@ return {
 		MIDI_ALL_CH = TRACK_INFO_MIDIFLAGS_ALL_CH,
 		MIDI_OFF = TRACK_INFO_MIDIFLAGS_DISABLED,
 		CAT_SEND = TRACK_INFO_CATEGORY_SEND,
+		-- `CAT_REC` is a very bad name because it is ambigous and makes me think
+		-- of REC as in record, but I believe that it is REC as in `recieve` here!!
 		CAT_REC = TRACK_INFO_CATEGORY_RECIEVE,
 		CAT_HW = 1,
 	},

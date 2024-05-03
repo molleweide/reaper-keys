@@ -1,5 +1,6 @@
 local log = require('utils.log')
 local midi_util = require('utils.midi')
+local route_util = require("library.route.util")
 
 local route_log = {}
 
@@ -10,9 +11,11 @@ function route_log.logHeader(str)
 end
 
 function route_log.logRoutesByCategory(tr, cat)
-  local num_cat_sends = reaper.GetTrackNumSends(tr, cat)
-  if num_cat_sends == 0 then return end
-  for si = 0, num_cat_sends-1 do
+  local count_routes_by_cat = route_util.get_num_routes_by_category(tr, cat)
+
+  if count_routes_by_cat == 0 then return end
+
+  for si = 0, count_routes_by_cat-1 do
     if cat <= 0 then -- REGULAR SENDS ////////////////////////////////////////////
       local other_tr, other_tr_idx = getOtherTrack(tr, cat, si)
       local _, other_tr_name = reaper.GetTrackName(other_tr)
@@ -26,6 +29,7 @@ function route_log.logRoutesByCategory(tr, cat)
     elseif cat > 0 then -- HARDWARE /////////////////////////////////////
     end
   end
+
 end
 
 function route_log.logConfirmList(rp)

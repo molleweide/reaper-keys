@@ -17,6 +17,7 @@ local midi_operators = require("custom_actions.midi_operators")
 local midi_step_commands = require("custom_actions.midi_step_commands")
 
 local commands = require("custom_actions.commands.commands")
+local automation = require("custom_actions.commands.automation")
 local fx_commands = require("custom_actions.commands.fx")
 local logging_commands = require("custom_actions.commands.logging")
 
@@ -1126,4 +1127,7 @@ return {
     TrackInSet_MIDI_DEFAULT = { lib.io_device.setInputTo_MIDI_DEFAULT, custom.setupMidiInputPreProcessorOnSelTrks },
 
     SetModeVKB = lib.state.setModeVirtualKeyboard,
+
+
+ Test_insert_automation_points = automation.test,
 }

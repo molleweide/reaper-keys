@@ -257,6 +257,12 @@ return {
                         ["t"] = "SetAutomationModeTouch",
                         ["u"] = "AUTOMATION_UI",
                         ["w"] = "SetAutomationModeWrite",
+                        ["i"] = {
+                            "+insert",
+                            {
+                                ["t"] = "Test_insert_automation_points",
+                            },
+                        },
                     },
                 },
                 ["S"] = {
