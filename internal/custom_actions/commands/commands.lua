@@ -521,15 +521,24 @@ end
 commands.rk_master_menu = function()
     local fzf = require("library.fzf")
 
+  -- navigate around this tree recursively for the menu.
     local rk_main_menu = {
-        { name = "preferences" },
-        { name = "tracks" },
+        preferences = {
+            audio_devices = {},
+            midi_devices = {},
+            buffering = {},
+        },
+        tracks = {
+            add_new_tracks = {},
+            remove_tracks = {},
+        },
         { name = "regions" },
         { name = "automation" },
         { name = "tempo" },
         { name = "samples" },
         { name = "audio_file_loops" },
     }
+
     local rk_main_prefs = {
         "audio devices",
         "midi devices",
@@ -920,20 +929,7 @@ commands.double_the_length_of_nth_region = function()
     --         >>> make current region 2.5
 end
 
--- NOTE: 1. picker -> list tracks that have existing media items in curent region
--- 2. select tracks.
--- 3. copy these patterns over to next region.
--- 4. Fit the data to next region somehow.
---
--- HACK: I would like to do:
--- pickers.all_tracks(_, {
---   width = 900,
---   fltr = {
---       class = { "M", "C", "S"}, -- or "MCS"
---       items = {
---           within = { range_start, range_end }
---       }
---   }
+-- NOTE: This function repeats the selected region data once sequentially.
 commands.picker_copy_sel_tracks_items_from_current_region_to_next_region = function()
     -- In current region
     --     picker tracks with items in current region
@@ -968,8 +964,15 @@ commands.picker_copy_sel_tracks_items_from_current_region_to_next_region = funct
             end
             log.user("sel tr:", format.block(ts))
 
-            -- -- TODO: get items to copy
-            -- -- 2. run dupl items
+            -- HACK: I would like to do:
+            -- pickers.all_tracks(_, {
+            --   width = 900,
+            --   fltr = {
+            --       class = { "M", "C", "S"}, -- or "MCS"
+            --       items = {
+            --           within = { range_start, range_end }
+            --       }
+            --   }
             local items_in_region_for_tracks = require("library.items").all_project_items_filter_transform({
                 get_type = "content",
                 filter = {
@@ -978,7 +981,7 @@ commands.picker_copy_sel_tracks_items_from_current_region_to_next_region = funct
                 },
             })
 
-            -- segments.duplicate_items(items_in_region, length_time)
+            segments.duplicate_items(items_in_region, length_time)
 
             return true
         end,
@@ -1023,7 +1026,7 @@ commands.picker_list_routes_for_track = function()
             return true
         end,
         sort_comp = "other_tr_name",
-    results_filter = "other_tr_name",
+        results_filter = "other_tr_name",
 
         -- TODO: add zone/group name before each track name
         -- entry_maker = require("pickers.entry_makers.track_nodes"),
@@ -1082,6 +1085,15 @@ commands.picker_select_position_midi_editor_UI = function()
     -- List items in this position,
     -- Jump to midi editor for editing the selection.
     -- if, it is an audio file jump to this audio file.
+end
+
+commands.picker_midi_view_show_selected_group = function()
+
+    -- TODO:
+    --   - for target range in time line
+    --   - check which group has midi items, and collect how many tracks/items
+    --   - list group with numb tracks/items
+    --   - on select -> make items within selected group visible in ME.
 end
 
 commands.rename_region_at_cursor = function()
