@@ -1,77 +1,9 @@
 local log = require("utils.log")
 local format = require("utils.format")
 local envelopes = require("library.envelopes")
-
 local lib_tr = require("library.tracks")
 
 local automation_actions = {}
-
--- number reaper.GetEnvelopeInfo_Value( env, parmname )
---     Gets an envelope numerical-value attribute:
---     I_TCPY : int : Y offset of envelope relative to parent track (may be separate lane or overlap with track contents)
---     I_TCPH : int : visible height of envelope
---     I_TCPY_USED : int : Y offset of envelope relative to parent track, exclusive of padding
---     I_TCPH_USED : int : visible height of envelope, exclusive of padding
---     P_TRACK : MediaTrack * : parent track pointer (if any)
---     P_DESTTRACK : MediaTrack * : destination track pointer, if on a send
---     P_ITEM : MediaItem * : parent item pointer (if any)
---     P_TAKE : MediaItem_Take * : parent take pointer (if any)
---     I_SEND_IDX : int : 1-based index of send in P_TRACK, or 0 if not a send
---     I_HWOUT_IDX : int : 1-based index of hardware output in P_TRACK or 0 if not a hardware output
---     I_RECV_IDX : int : 1-based index of receive in P_DESTTRACK or 0 if not a send/receive
-
--- env_points_count = reaper.CountEnvelopePoints(env)
-
--- br_env = reaper.BR_EnvAlloc(env, false)
---     [BR] Allocate envelope object from track or take envelope pointer. Always
---     call BR_EnvFree when done to release the object and commit changes if
---     needed.
---
---     takeEnvelopesUseProjectTime: take envelope points' positions are counted
---     from take position, not project start time. If you want to work with project
---     time instead, pass this as true.
---
---     For further manipulation see BR_EnvCountPoints, BR_EnvDeletePoint,
---     BR_EnvFind, BR_EnvFindNext, BR_EnvFindPrevious, BR_EnvGetParentTake,
---     BR_EnvGetParentTrack, BR_EnvGetPoint, BR_EnvGetProperties, BR_EnvSetPoint,
---     BR_EnvSetProperties, BR_EnvValueAtPos.
-
--- boolean reaper.BR_EnvFree(BR_Envelope envelope, boolean commit)
--- [BR] Free envelope object allocated with BR_EnvAlloc and commit changes if
--- needed. Returns true if changes were committed successfully. Note that when
--- envelope object wasn't modified nothing will get committed even if commit =
--- true - in that case function returns false.
-
---  integer reaper.GetEnvelopeScalingMode( env )
---      Returns the envelope scaling mode: 0=no scaling, 1=fader scaling. All
---      API functions deal with raw envelope point values, to convert raw
---      from/to scaled values see
---
--- number reaper.ScaleFromEnvelopeMode(integer scaling_mode, number val)
-
--- 	reaper.DeleteEnvelopePointRange(envelope, start_time-0.000000001, end_time+0.000000001)
-
--- boolean reaper.SetEnvelopePoint(env, k, timeInOptional, valueInOptional, shapeInOptional, tensionInOptional, false, true)
--- boolean reaper.SetEnvelopePoint( envelope, ptidx, timeIn, valueIn, shapeIn, tensionIn, selectedIn, noSortIn )
-
--- boolean reaper.InsertEnvelopePoint(
---     TrackEnvelope envelope,
---     number time,
---     number value,
---     integer shape,
---     number tension,
---     boolean selected,
---     optional boolean noSortIn
--- )
--- Insert an envelope point. If setting multiple points at once, set noSort=true, and call Envelope_SortPoints when done. See
-
--- retval, value, dVdS, ddVdS, dddVdS = reaper.Envelope_Evaluate( envelope, time, samplerate, samplesRequested )
---     Get the effective envelope value at a given time position.
---     samplesRequested is how long the caller expects until the next call to
---     Envelope_Evaluate (often, the buffer block size). The return value is
---     how many samples beyond that time position that the returned values are
---     valid. dVdS is the change in value per sample (first derivative), ddVdS
---     is the second derivative, dddVdS is the third derivative. See
 
 automation_actions.test = function()
     local tl = require("library.timeline")
@@ -174,30 +106,18 @@ automation_actions.test = function()
     })
 end
 
-automation_actions.insert_pattern_for_measure = function()
-    -- TODO: insert quarter note random envelope pattern.
-    -- 1. get measure info
-    -- 2. compute mid quarter note points
-    -- 3. randomize value for each mid point.
-    -- 4. insert pattern
-    --     ~ if pattern already exists for measure
-    --         ~ prompt -> do you want to replace existing pattern?
-    --
-    --
-    -- DO THIS FOR:
-    --   both FX, midi CC, and other??
-end
-
-automation_actions.picker_list_envelope_nodes_for_track = function()
-    -- ~~~ list in picker.
-    --    ~~~~ for each track active envelope
-    --    ~~~~ list every envelope node
-
-    -- TODO: 1. get all active envelopes in track
-    -- 2. for each envelope
-    --     get envelope node table
-    -- 3. list envelope nodes in picker
-    -- 4. build the picker
+-- HACK: First, implement everything for basic CC curves, then
+-- add -> pitch bend / channel pressure, etc..
+automation_actions.midi_cc_test = function()
+    -- TODO:
+    -- 1. Insert single CC value
+    -- 2. Insert array of CC values
+    -- 3. Insert values at timeselection
+    -- 4. Insert values at motion
+    -- 5. Insert values at region
+    -- 6. Insert pitch bend
+    -- 7. delete CC values in range
+    -- 8. transform CC values in range.
 end
 
 automation_actions.example_insert_pitch_bend = function()
@@ -205,7 +125,6 @@ automation_actions.example_insert_pitch_bend = function()
  * ReaScript Name: Insert Pitch Bend
  * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
 --]]
-
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     local pos = reaper.GetCursorPositionEx()
     local ppq = reaper.MIDI_GetPPQPosFromProjTime(take, pos)
@@ -213,12 +132,10 @@ automation_actions.example_insert_pitch_bend = function()
     if not retval then
         return reaper.SN_FocusMIDIEditor()
     end
-
     local value = math.floor(userinput)
     if value < -8192 or value > 8191 then
         return reaper.MB("Please enter a value from -8192 through 8191", "Error", 0), reaper.SN_FocusMIDIEditor()
     end
-
     reaper.Undo_BeginBlock()
     value = value + 8192
     local LSB = value & 0x7f
@@ -229,22 +146,19 @@ automation_actions.example_insert_pitch_bend = function()
     reaper.SN_FocusMIDIEditor()
 end
 
+-- @description Increase events in CC lane under mouse cursor
+--    * This script increases all or selected CC events in the lane under the mouse cursor
+--    * This script works only in the MIDI Editor
+-- @link https://forums.cockos.com/showthread.php?p=1923923
 automation_actions.increase_cc_values_for_measure = function()
-    -- @description Increase events in CC lane under mouse cursor
-    --    * This script increases all or selected CC events in the lane under the mouse cursor
-    --    * This script works only in the MIDI Editor
-    -- @link https://forums.cockos.com/showthread.php?p=1923923
-
     -- I wonder if this way of parsing midi events is faster?
     function CheckForSelectedEvents(cc_lane) -- check if cc_lane has selected events
         stringPos = 1 -- position in MIDIstring while parsing through events
         local selected_events = 0
-
         -- parse through all events in the MIDI string, one-by-one, excluding the final
         -- 12 bytes, which provides REAPER's All-notes-off end-of-take message
         while stringPos < MIDIlen - 12 do
             offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos) -- unpack MIDI-string on stringPos
-
             -- if msg consists of 3 bytes (= channel message)
             if
                 #msg == 3
@@ -319,14 +233,13 @@ automation_actions.increase_cc_values_for_measure = function()
     reaper.Undo_OnStateChange2(proj, "Increase events in CC" .. cc_lane .. " lane under mouse cursor")
 end
 
-automation_actions.insert_cc_linear_ramp = function()
-    --[[
+--[[
  * ReaScript Name: Insert CC linear ramp events between selected ones if consecutive
  * Description: Interpolate multiple CC events by creating new ones. Works with multiple lanes (CC Channel).
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
  * Forum Thread URI: http://forum.cockos.com/showpost.php?p=1617117&postcount=1265
 --]]
-
+automation_actions.insert_cc_linear_ramp = function()
     -- USER CONFIG AREA ---------------------
 
     interval = "2"
@@ -425,9 +338,5 @@ automation_actions.insert_cc_linear_ramp = function()
         end
     end
 end
-
--- return automation_actions
---   end
--- end
 
 return automation_actions
