@@ -521,7 +521,9 @@ end
 commands.rk_master_menu = function()
     local fzf = require("library.fzf")
 
-  -- navigate around this tree recursively for the menu.
+  -- NOTE: Make this the most comprehensive actions menu ever,
+
+  -- TODO: Navigate around this tree recursively for the menu.
     local rk_main_menu = {
         preferences = {
             audio_devices = {},

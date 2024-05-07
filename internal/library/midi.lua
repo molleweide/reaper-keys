@@ -899,7 +899,6 @@ midi.midi_take_filter_transform = function(take, opts)
 	-- delete filtered notes
 	if remove.notes then
 		midi.delete_notes(take, t_notes)
-
 	-- TODO: insert.notes is not yet implemented. Atm midi data is assigned
 	-- to insert = {data}, but I should make it possible to do this with
 	--    -> insert {notes|cc|syx}
@@ -937,7 +936,7 @@ midi.midi_take_filter_transform = function(take, opts)
 	end
 
 	if (notes_updated > 0 or opts.insert) and not opts.dry_run then
-		if not opts.insert then
+		if not opts.insert then -- ie. if transforming..
 			midi.delete_notes(take, t_notes)
 		end
 		log.user("just before inserting notes")
