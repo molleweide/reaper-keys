@@ -98,6 +98,8 @@ automation_actions.test = function()
         return
     end
 
+    log.user("automation test -> t_envs:", format.block(t_envs))
+
     -- TEST: Test all types of calls to lib.envs.fltr funcs and ensure that all
     -- ways of accessing params work.
     -- TODO: AUTOMATION TESTING
@@ -144,16 +146,32 @@ automation_actions.test = function()
     })
     --   --
     -- 6. TODO: picker select fx param insert env points
-  --
+    -- ------
+    --    a. Get/select list of all possible parameters/envelopes
+    --         -> Combine listing of [volume, pan, FX1, ..., FX2].
+    --         -> If you select an FX, chain FX parameter selection.
+    --      b. Prompt -> specify values to insert.
+    --      c. Parse string.
+    --      d. insert env points
+    -- 7. Prompt env point substitute command.
+    -- 8. Use motion as timeline edges
+    --    a.
+    -- 9. Use region as timeline edges.
+    -- 10. Picker/prompt apply specific type of curve.
+
+    -- TODO: combine fltr track envs with fltr env points
     --
-
-    -- FIX: API, create my own API for getting all events of type/lane
-
-    -- get selected / active envelope lane
-
-    -- local env = reaper.GetSelectedEnvelope(0)
-
-    log.user("automation test -> t_envs:", format.block(t_envs))
+    envelopes.fltr_track_envelopes({
+        target_track = "selected", -- default -> unnecessary...
+        -- target both track volume and table -> fx name/param
+        target_envs = { "volume", { name = "Reasamplo55000", param = 10 } },
+        env_fltr = {
+            filter = function(point)
+                return point.position > cursor_position
+            end,
+            transform = { { right = 0.25, param_val = 0.4 } },
+        },
+    })
 end
 
 automation_actions.insert_pattern_for_measure = function()
