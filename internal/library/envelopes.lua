@@ -3,6 +3,13 @@ local format = require("utils.format")
 
 local tbl = require("utils.table")
 
+-- NOTE: Automation points can be UPDATED/SET directly, IE. I dont need to delete
+-- points, and then re-insert the new values - I can just set the update the
+-- points directly.
+-- -> I should wrap this function in `update_env_point()` or `reset_` so that it
+-- makes more sense.
+-- >> reaper.SetEnvelopePoint( envelope, ptidx, timeIn, valueIn, shapeIn, tensionIn, selectedIn, noSortIn )
+
 local envelopes = {}
 
 -- NOTE: CURVE SHAPE
@@ -13,6 +20,28 @@ local envelopes = {}
 -- Valid CC lanes: CC0-127=CC, 0x100|(0-31)=14-bit CC, 0x200=velocity,
 -- 0x201=pitch, 0x202=program, 0x203=channel pressure, 0x204=bank/program
 -- select, 0x205=text, 0x206=sysex, 0x207
+
+envelopes.track_get_all_builtin_envs = function(tr)
+    local t_envs = {}
+
+    local const_builtin_envs = require("constants.constants").BUILTIN_ENVELOPES
+
+    -- for _, v in ipairs(all_builtin_envs) do
+    -- end
+
+    for _, e in pairs(const_builtin_envs) do
+        local env = reaper.GetTrackEnvelopeByChunkName(tr, e.search_string)
+
+        if env then
+            local _, buf = reaper.GetEnvelopeName(env)
+            log.user(string.format("[[ %s ===> %s ]]", e.name, buf))
+        end
+
+        table.insert(t_envs, env)
+    end
+
+    return t_envs
+end
 
 -- TODO: filter type = track/take?
 --
@@ -48,33 +77,56 @@ end
 ---This function operatos on a single Envelope object for a track.
 --NOTE: requires you to pass a target envelope
 envelopes.fltr_single_envelope = function(opts)
-  opts = opts or {}
+    opts = opts or {}
 
-  log.user("[envelopes.fltr_single_envelope]: opts = ", format.block(opts))
+    log.user("[envelopes.fltr_single_envelope]: opts = ", format.block(opts))
 
-  if not opts.target_env then
-    log.user("[envelopes.fltr_single_envelope]: No target envelope provided")
-    return
-  end
+    if not opts.target_env then
+        log.user("[envelopes.fltr_single_envelope]: No target envelope provided")
+        return
+    end
 
-  local t_env_pts = {}
+    local _, buf = reaper.GetEnvelopeName(opts.target_env)
+    log.user("target env name = ", buf)
 
+    local t_envp = {}
 
-    if (cc_updated > 0 or opts.insert) and not opts.dry_run then
+    if not opts.insert then
+    else
+        log.user("[fltr_single_envelope] (first) if not opts.insert else condition")
+        t_envp = opts.insert
+    end
+
+    if opts.filter then
+    end
+
+    local env_pts_updated = 0
+    if opts.transform then
+    end
+
+    -- Envelopes can be "set" directly, so I dont need to remove and re-insert..
+    if (env_pts_updated > 0 or opts.insert) and not opts.dry_run then
+        reaper.PreventUIRefresh(1)
         -- if not opts.insert then
         -- 	midi.delete_notes(take, t_cc)
         -- end
-        log.user("just before inserting notes")
+        log.user("[fltr_single_envelope] just before note insertion")
         -- midi.insert_notes({
         -- 	take = take,
         -- 	notes = t_cc,
         -- })
+        log.user("env pts to insert ->", format.block(t_envp))
 
-        -- local fx_env = reaper.GetFXEnvelope(track, fx_number, i - 1, true)
-        if fx_env ~= nil then
-            reaper.InsertEnvelopePoint(env, cursor_pos, param_val, 0, 0, false, true)
-        end
-        reaper.Envelope_SortPoints(fx_env)
+        -- -- local fx_env = reaper.GetFXEnvelope(track, fx_number, i - 1, true)
+        -- if fx_env ~= nil then
+        --     reaper.InsertEnvelopePoint(env, cursor_pos, param_val, 0, 0, false, true)
+        -- end
+
+        -- reaper.Envelope_SortPoints(fx_env)
+
+        reaper.PreventUIRefresh(-1)
+
+        -- reaper.UpdateArrange()
     end
 end
 
@@ -320,7 +372,8 @@ end
 -- TEST: I wonder if it will make sense to merge this into the main midi
 -- fltr api. i will have to add a type parameter.
 --
-envelopes.take_fltr_midi_cc = function(opts)
+-- TODO: target focused track if no target is passed??
+envelopes.midi_take_fltr_cc = function(opts)
     if not take or not reaper.TakeIsMIDI(take) then -- or midi take...
         log.debug("No take was supplied to midi.midi_take_filter_transform")
         return
@@ -430,6 +483,7 @@ envelopes.take_fltr_midi_cc = function(opts)
     end
 
     if (cc_updated > 0 or opts.insert) and not opts.dry_run then
+        reaper.PreventUIRefresh(1)
         -- if not opts.insert then
         -- 	midi.delete_notes(take, t_cc)
         -- end
@@ -438,9 +492,14 @@ envelopes.take_fltr_midi_cc = function(opts)
         -- 	take = take,
         -- 	notes = t_cc,
         -- })
+        reaper.PreventUIRefresh(-1)
     end
 
     -- if insert and apply transform/removal.
+end
+
+envelopes.track_reset_all = function(tr)
+    -- TODO: reset all curves to default and remove the envelope curves.
 end
 
 return envelopes

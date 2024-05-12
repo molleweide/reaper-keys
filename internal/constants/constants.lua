@@ -76,4 +76,11 @@ constants.patterns = {
  extension_wav = "%.[wW][aA][vV]$"
 }
 
+constants.BUILTIN_ENVELOPES = {
+        volume = { name = "Volume", search_string = "<VOLENV2" },
+        volume_pre_fx = { name = "Volume (Pre-FX)", search_string = "<VOLENV" },
+        pan_pre_fx = { name = "Pan (Pre-FX)", search_string = "<PANENV" },
+        pan = { name = "Pan", search_string = "<PANENV2" },
+    }
+
 return constants

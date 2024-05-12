@@ -1,0 +1,24 @@
+@document.meta
+title: README
+description:
+authors: hjalmarjakobsson
+categories:
+created: 2024-05-08T10:45:55-0500
+updated: 2024-05-08T10:50:26-0500
+version: 1.1.1
+@end
+
+
+* project
+
+  ** timeline / markers.
+
+  ** tracks / vtt
+
+    *** track nodes
+
+      **** fx
+      **** items
+      **** curves
+        ***** env objects
+      **** routes
