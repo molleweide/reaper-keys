@@ -1,5 +1,12 @@
 local track_info = {}
 
+-- NOTE: If I want:
+-- the value of all params then i just call the function to obtain all track info
+-- params of type.
+-- I could even have a fltr.track_info helper to make it possible to more easilly
+-- manage these types of values. And then I won't have to think about it more
+-- in the future because this will be good enough to handle all cases.
+
 track_info.get_track_info_params = function(track)
     -- Get track numerical-value attributes.
     local t_track_info = {
@@ -119,7 +126,6 @@ track_info.get_track_info_params = function(track)
             name = "I_MCPX",
             description = "current MCP X-position in pixels relative to mixer container (read-only)",
         },
-        -- TODO: <<<< continue here....
         I_MCPY = {
             type = "int",
             name = "I_MCPY",
@@ -204,51 +210,77 @@ track_info.get_track_info_params = function(track)
             name = "B_SHOWINMIXER",
             description = "track control panel visible in mixer (do not use on master track)",
         },
-        -- B_SHOWINTCP : bool * : track control panel visible in arrange view
-        -- (do not use on master track)
-        B_SHOWINTCP = { type = "bool", name = "B_SHOWINTCP", description = "xx" },
-        -- B_MAINSEND : bool * : track sends audio to parent
-        B_MAINSEND = { type = "bool", name = "B_MAINSEND", description = "xx" },
-        -- C_MAINSEND_OFFS : char * : channel offset of track send to parent
-        C_MAINSEND_OFFS = { type = "char", name = "C_MAINSEND_OFFS", description = "xx" },
-        -- C_MAINSEND_NCH : char * : channel count of track send to parent
-        -- (0=use all child track channels, 1=use one channel only)
-        C_MAINSEND_NCH = { type = "char", name = "C_MAINSEND_NCH", description = "xx" },
-        -- I_FREEMODE : int * : 1=track free item positioning enabled, 2=track
-        -- fixed lanes enabled (call UpdateTimeline() after changing)
-        I_FREEMODE = { type = "int", name = "I_FREEMODE", description = "xx" },
-        -- I_NUMFIXEDLANES : int * : number of track fixed lanes (fine to call
-        -- with setNewValue, but returned value is read-only)
-        I_NUMFIXEDLANES = { type = "int", name = "I_NUMFIXEDLANES", description = "xx" },
-        -- C_LANESCOLLAPSED : char * : fixed lane collapse state (1=lanes
-        -- collapsed, 2=track displays as non-fixed-lanes but hidden lanes exist)
-        C_LANESCOLLAPSED = { type = "char", name = "C_LANESCOLLAPSED", description = "xx" },
-        -- C_LANEPLAYS:N : char * : in fixed lane tracks, 0=lane N does not
-        -- play, 1=lane N plays exclusively, 2=lane N plays and other lanes also
-        -- play (fine to call with setNewValue, but returned value is read-only)
-        C_LANEPLAYS = { type = "char", name = "C_LANEPLAYS", description = "xx" },
-        -- C_BEATATTACHMODE : char * : track timebase, -1=project default,
-        -- 0=time, 1=beats (position, length, rate), 2=beats (position only)
-        C_BEATATTACHMODE = { type = "char", name = "C_BEATATTACHMODE", description = "xx" },
-        -- F_MCP_FXSEND_SCALE : float * : scale of fx+send area in MCP
-        -- (0=minimum allowed, 1=maximum allowed)
-        F_MCP_FXSEND_SCALE = { type = "float", name = "F_MCP_FXSEND_SCALE", description = "xx" },
-        -- F_MCP_FXPARM_SCALE : float * : scale of fx parameter area in MCP
-        -- (0=minimum allowed, 1=maximum allowed)
-        F_MCP_FXPARM_SCALE = { type = "float", name = "F_MCP_FXPARM_SCALE", description = "xx" },
-        -- F_MCP_SENDRGN_SCALE : float * : scale of send area as proportion of
-        -- the fx+send total area (0=minimum allowed, 1=maximum allowed)
-        F_MCP_SENDRGN_SCALE = { type = "float", name = "F_MCP_SENDRGN_SCALE", description = "xx" },
-        -- F_TCP_FXPARM_SCALE : float * : scale of TCP parameter area when TCP
-        -- FX are embedded (0=min allowed, default, 1=max allowed)
-        F_TCP_FXPARM_SCALE = { type = "float", name = "F_TCP_FXPARM_SCALE", description = "xx" },
-        -- I_PLAY_OFFSET_FLAG : int * : track media playback offset state,
-        -- &1=bypassed, &2=offset value is measured in samples (otherwise measured
-        -- in seconds)
-        I_PLAY_OFFSET_FLAG = { type = "int", name = "I_PLAY_OFFSET_FLAG", description = "xx" },
-        -- D_PLAY_OFFSET : double * : track media playback offset, units depend
-        -- on I_PLAY_OFFSET_FLAG
-        D_PLAY_OFFSET = { type = "double", name = "D_PLAY_OFFSET", description = "xx" },
+        B_SHOWINTCP = {
+            type = "bool",
+            name = "B_SHOWINTCP",
+            description = "track control panel visible in arrange view (do not use on master track)",
+        },
+        B_MAINSEND = { type = "bool", name = "B_MAINSEND", description = "track sends audio to parent" },
+        C_MAINSEND_OFFS = {
+            type = "char",
+            name = "C_MAINSEND_OFFS",
+            description = "channel offset of track send to parent",
+        },
+        C_MAINSEND_NCH = {
+            type = "char",
+            name = "C_MAINSEND_NCH",
+            description = "channel count of track send to parent (0=use all child track channels, 1=use one channel only)",
+        },
+        I_FREEMODE = {
+            type = "int",
+            name = "I_FREEMODE",
+            description = "1=track free item positioning enabled, 2=track fixed lanes enabled (call UpdateTimeline() after changing)",
+        },
+        I_NUMFIXEDLANES = {
+            type = "int",
+            name = "I_NUMFIXEDLANES",
+            description = "number of track fixed lanes (fine to call with setNewValue, but returned value is read-only)",
+        },
+        C_LANESCOLLAPSED = {
+            type = "char",
+            name = "C_LANESCOLLAPSED",
+            description = "fixed lane collapse state (1=lanes collapsed, 2=track displays as non-fixed-lanes but hidden lanes exist)",
+        },
+        C_LANEPLAYS = {
+            type = "char",
+            name = "C_LANEPLAYS",
+            description = "in fixed lane tracks, 0=lane N does not play, 1=lane N plays exclusively, 2=lane N plays and other lanes also play (fine to call with setNewValue, but returned value is read-only)",
+        },
+        C_BEATATTACHMODE = {
+            type = "char",
+            name = "C_BEATATTACHMODE",
+            description = "track timebase, -1=project default, 0=time, 1=beats (position, length, rate), 2=beats (position only)",
+        },
+        F_MCP_FXSEND_SCALE = {
+            type = "float",
+            name = "F_MCP_FXSEND_SCALE",
+            description = "scale of fx+send area in MCP (0=minimum allowed, 1=maximum allowed)",
+        },
+        F_MCP_FXPARM_SCALE = {
+            type = "float",
+            name = "F_MCP_FXPARM_SCALE",
+            description = "scale of fx parameter area in MCP (0=minimum allowed, 1=maximum allowed)",
+        },
+        F_MCP_SENDRGN_SCALE = {
+            type = "float",
+            name = "F_MCP_SENDRGN_SCALE",
+            description = "scale of send area as proportion of the fx+send total area (0=minimum allowed, 1=maximum allowed)",
+        },
+        F_TCP_FXPARM_SCALE = {
+            type = "float",
+            name = "F_TCP_FXPARM_SCALE",
+            description = "scale of TCP parameter area when TCP FX are embedded (0=min allowed, default, 1=max allowed)",
+        },
+        I_PLAY_OFFSET_FLAG = {
+            type = "int",
+            name = "I_PLAY_OFFSET_FLAG",
+            description = "track media playback offset state, &1=bypassed, &2=offset value is measured in samples (otherwise measured in seconds)",
+        },
+        D_PLAY_OFFSET = {
+            type = "double",
+            name = "D_PLAY_OFFSET",
+            description = "track media playback offset, units depend on I_PLAY_OFFSET_FLAG",
+        },
         -- P_PARTRACK : MediaTrack * : parent track (read-only)
         -- P_PARTRACK = reaper.GetMediaTrackInfo_Value(track, "P_PARTRACK"),
         -- P_PROJECT : ReaProject * : parent project (read-only)
