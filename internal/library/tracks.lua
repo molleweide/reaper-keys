@@ -171,67 +171,103 @@ tracks.get_track_info_params = function(track)
         B_MUTE = reaper.GetMediaTrackInfo_Value(track, "B_MUTE"),
         -- B_PHASE : bool * : track phase inverted
         B_PHASE = reaper.GetMediaTrackInfo_Value(track, "B_PHASE"),
-        -- B_RECMON_IN_EFFECT : bool * : record monitoring in effect (current audio-thread playback state, read-only)
+        -- B_RECMON_IN_EFFECT : bool * : record monitoring in effect (current
+        -- audio-thread playback state, read-only)
         B_RECMON_IN_EFFECT = reaper.GetMediaTrackInfo_Value(track, "B_RECMON_IN_EFFECT"),
-        -- IP_TRACKNUMBER : int : track number 1-based, 0=not found, -1=master track (read-only, returns the int directly)
+        -- IP_TRACKNUMBER : int : track number 1-based, 0=not found, -1=master
+        -- track (read-only, returns the int directly)
         IP_TRACKNUMBER = reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER"),
-        -- I_SOLO : int * : soloed, 0=not soloed, 1=soloed, 2=soloed in place, 5=safe soloed, 6=safe soloed in place
+        -- I_SOLO : int * : soloed, 0=not soloed, 1=soloed, 2=soloed in place,
+        -- 5=safe soloed, 6=safe soloed in place
         I_SOLO = reaper.GetMediaTrackInfo_Value(track, "I_SOLO"),
-        -- B_SOLO_DEFEAT : bool * : when set, if anything else is soloed and this track is not muted, this track acts soloed
+        -- B_SOLO_DEFEAT : bool * : when set, if anything else is soloed and
+        -- this track is not muted, this track acts soloed
         B_SOLO_DEFEAT = reaper.GetMediaTrackInfo_Value(track, "B_SOLO_DEFEAT"),
         -- I_FXEN : int * : fx enabled, 0=bypassed, !0=fx active
         I_FXEN = reaper.GetMediaTrackInfo_Value(track, "I_FXEN"),
         -- I_RECARM : int * : record armed, 0=not record armed, 1=record armed
         I_RECARM = reaper.GetMediaTrackInfo_Value(track, "I_RECARM"),
-        -- I_RECINPUT : int * : record input, <0=no input. if 4096 set, input is MIDI and low 5 bits represent channel (0=all, 1-16=only chan), next 6 bits represent physical input (63=all, 62=VKB). If 4096 is not set, low 10 bits (0..1023) are input start channel (ReaRoute/Loopback start at 512). If 2048 is set, input is multichannel input (using track channel count), or if 1024 is set, input is stereo input, otherwise input is mono.
+        -- I_RECINPUT : int * : record input, <0=no input. if 4096 set, input
+        -- is MIDI and low 5 bits represent channel (0=all, 1-16=only chan), next 6
+        -- bits represent physical input (63=all, 62=VKB). If 4096 is not set, low
+        -- 10 bits (0..1023) are input start channel (ReaRoute/Loopback start at
+        -- 512). If 2048 is set, input is multichannel input (using track channel
+        -- count), or if 1024 is set, input is stereo input, otherwise input is
+        -- mono.
         I_RECINPUT = reaper.GetMediaTrackInfo_Value(track, "I_RECINPUT"),
-        -- I_RECMODE : int * : record mode, 0=input, 1=stereo out, 2=none, 3=stereo out w/latency compensation, 4=midi output, 5=mono out, 6=mono out w/ latency compensation, 7=midi overdub, 8=midi replace
+        -- I_RECMODE : int * : record mode, 0=input, 1=stereo out, 2=none,
+        -- 3=stereo out w/latency compensation, 4=midi output, 5=mono out, 6=mono
+        -- out w/ latency compensation, 7=midi overdub, 8=midi replace
         I_RECMODE = reaper.GetMediaTrackInfo_Value(track, "I_RECMODE"),
-        -- I_RECMODE_FLAGS : int * : record mode flags, &3=output recording mode (0=post fader, 1=pre-fx, 2=post-fx/pre-fader)
+        -- I_RECMODE_FLAGS : int * : record mode flags, &3=output recording
+        -- mode (0=post fader, 1=pre-fx, 2=post-fx/pre-fader)
         I_RECMODE_FLAGS = reaper.GetMediaTrackInfo_Value(track, "I_RECMODE_FLAGS"),
-        -- I_RECMON : int * : record monitoring, 0=off, 1=normal, 2=not when playing (tape style)
+        -- I_RECMON : int * : record monitoring, 0=off, 1=normal, 2=not when
+        -- playing (tape style)
         I_RECINPUT = reaper.GetMediaTrackInfo_Value(track, "I_RECINPUT"),
         -- I_RECMONITEMS : int * : monitor items while recording, 0=off, 1=on
         I_RECMONITEMS = reaper.GetMediaTrackInfo_Value(track, "I_RECMONITEMS"),
-        -- B_AUTO_RECARM : bool * : automatically set record arm when selected (does not immediately affect recarm state, script should set directly if desired)
+        -- B_AUTO_RECARM : bool * : automatically set record arm when selected
+        -- (does not immediately affect recarm state, script should set directly if
+        -- desired)
         B_AUTO_RECARM = reaper.GetMediaTrackInfo_Value(track, "B_AUTO_RECARM"),
-        -- I_VUMODE : int * : track vu mode, &1:disabled, &30==0:stereo peaks, &30==2:multichannel peaks, &30==4:stereo RMS, &30==8:combined RMS, &30==12:LUFS-M, &30==16:LUFS-S (readout=max), &30==20:LUFS-S (readout=current), &32:LUFS calculation on channels 1+2 only
+        -- I_VUMODE : int * : track vu mode, &1:disabled, &30==0:stereo peaks,
+        -- &30==2:multichannel peaks, &30==4:stereo RMS, &30==8:combined RMS,
+        -- &30==12:LUFS-M, &30==16:LUFS-S (readout=max), &30==20:LUFS-S
+        -- (readout=current), &32:LUFS calculation on channels 1+2 only
         I_VUMODE = reaper.GetMediaTrackInfo_Value(track, "I_VUMODE"),
-        -- I_AUTOMODE : int * : track automation mode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch
+        -- I_AUTOMODE : int * : track automation mode, 0=trim/off, 1=read,
+        -- 2=touch, 3=write, 4=latch
         I_AUTOMODE = reaper.GetMediaTrackInfo_Value(track, "I_AUTOMODE"),
         -- I_NCHAN : int * : number of track channels, 2-128, even numbers only
         I_NCHAN = reaper.GetMediaTrackInfo_Value(track, "I_NCHAN"),
         -- I_SELECTED : int * : track selected, 0=unselected, 1=selected
         I_SELECTED = reaper.GetMediaTrackInfo_Value(track, "I_SELECTED"),
-        -- I_WNDH : int * : current TCP window height in pixels including envelopes (read-only)
+        -- I_WNDH : int * : current TCP window height in pixels including
+        -- envelopes (read-only)
         I_WNDH = reaper.GetMediaTrackInfo_Value(track, "I_WNDH"),
-        -- I_TCPH : int * : current TCP window height in pixels not including envelopes (read-only)
+        -- I_TCPH : int * : current TCP window height in pixels not including
+        -- envelopes (read-only)
         I_TCPH = reaper.GetMediaTrackInfo_Value(track, "I_TCPH"),
-        -- I_TCPY : int * : current TCP window Y-position in pixels relative to top of arrange view (read-only)
+        -- I_TCPY : int * : current TCP window Y-position in pixels relative to
+        -- top of arrange view (read-only)
         I_TCPY = reaper.GetMediaTrackInfo_Value(track, "I_TCPY"),
-        -- I_MCPX : int * : current MCP X-position in pixels relative to mixer container (read-only)
+        -- I_MCPX : int * : current MCP X-position in pixels relative to mixer
+        -- container (read-only)
         I_MCPX = reaper.GetMediaTrackInfo_Value(track, "I_MCPX"),
-        -- I_MCPY : int * : current MCP Y-position in pixels relative to mixer container (read-only)
+        -- I_MCPY : int * : current MCP Y-position in pixels relative to mixer
+        -- container (read-only)
         I_MCPY = reaper.GetMediaTrackInfo_Value(track, "I_MCPY"),
         -- I_MCPW : int * : current MCP width in pixels (read-only)
         I_MCPW = reaper.GetMediaTrackInfo_Value(track, "I_MCPW"),
         -- I_MCPH : int * : current MCP height in pixels (read-only)
         I_MCPH = reaper.GetMediaTrackInfo_Value(track, "I_MCPH"),
-        -- I_FOLDERDEPTH : int * : folder depth change, 0=normal, 1=track is a folder parent, -1=track is the last in the innermost folder, -2=track is the last in the innermost and next-innermost folders, etc
+        -- I_FOLDERDEPTH : int * : folder depth change, 0=normal, 1=track is a
+        -- folder parent, -1=track is the last in the innermost folder, -2=track is
+        -- the last in the innermost and next-innermost folders, etc
         I_FOLDERDEPTH = reaper.GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH"),
-        -- I_FOLDERCOMPACT : int * : folder collapsed state (only valid on folders), 0=normal, 1=collapsed, 2=fully collapsed
+        -- I_FOLDERCOMPACT : int * : folder collapsed state (only valid on
+        -- folders), 0=normal, 1=collapsed, 2=fully collapsed
         I_FOLDERCOMPACT = reaper.GetMediaTrackInfo_Value(track, "I_FOLDERCOMPACT"),
-        -- I_MIDIHWOUT : int * : track midi hardware output index, <0=disabled, low 5 bits are which channels (0=all, 1-16), next 5 bits are output device index (0-31)
+        -- I_MIDIHWOUT : int * : track midi hardware output index, <0=disabled,
+        -- low 5 bits are which channels (0=all, 1-16), next 5 bits are output
+        -- device index (0-31)
         I_MIDIHWOUT = reaper.GetMediaTrackInfo_Value(track, "I_MIDIHWOUT"),
-        -- I_PERFFLAGS : int * : track performance flags, &1=no media buffering, &2=no anticipative FX
+        -- I_PERFFLAGS : int * : track performance flags, &1=no media
+        -- buffering, &2=no anticipative FX
         I_PERFFLAGS = reaper.GetMediaTrackInfo_Value(track, "I_PERFFLAGS"),
-        -- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x1000000 (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it will not be used, but will store the color
+        -- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x1000000
+        -- (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it
+        -- will not be used, but will store the color
         I_CUSTOMCOLOR = reaper.GetMediaTrackInfo_Value(track, "I_CUSTOMCOLOR"),
-        -- I_HEIGHTOVERRIDE : int * : custom height override for TCP window, 0 for none, otherwise size in pixels
+        -- I_HEIGHTOVERRIDE : int * : custom height override for TCP window, 0
+        -- for none, otherwise size in pixels
         I_HEIGHTOVERRIDE = reaper.GetMediaTrackInfo_Value(track, "I_HEIGHTOVERRIDE"),
-        -- I_SPACER : int * : 1=TCP track spacer above this trackB_HEIGHTLOCK : bool * : track height lock (must set I_HEIGHTOVERRIDE before locking)
+        -- I_SPACER : int * : 1=TCP track spacer above this trackB_HEIGHTLOCK :
+        -- bool * : track height lock (must set I_HEIGHTOVERRIDE before locking)
         I_SPACER = reaper.GetMediaTrackInfo_Value(track, "I_SPACER"),
-        -- D_VOL : double * : trim volume of track, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc
+        -- D_VOL : double * : trim volume of track, 0=-inf, 0.5=-6dB, 1=+0dB,
+        -- 2=+6dB, etc
         D_VOL = reaper.GetMediaTrackInfo_Value(track, "D_VOL"),
         -- D_PAN : double * : trim pan of track, -1..1
         D_PAN = reaper.GetMediaTrackInfo_Value(track, "D_PAN"),
@@ -243,43 +279,65 @@ tracks.get_track_info_params = function(track)
         D_DUALPANR = reaper.GetMediaTrackInfo_Value(track, "D_DUALPANR"),
         -- I_PANMODE : int * : pan mode, 0=classic 3.x, 3=new balance, 5=stereo pan, 6=dual pan
         I_PANMODE = reaper.GetMediaTrackInfo_Value(track, "I_PANMODE"),
-        -- D_PANLAW : double * : pan law of track, <0=project default, 0.5=-6dB, 0.707..=-3dB, 1=+0dB, 1.414..=-3dB with gain compensation, 2=-6dB with gain compensation, etc
+        -- D_PANLAW : double * : pan law of track, <0=project default,
+        -- 0.5=-6dB, 0.707..=-3dB, 1=+0dB, 1.414..=-3dB with gain compensation,
+        -- 2=-6dB with gain compensation, etc
         D_PANLAW = reaper.GetMediaTrackInfo_Value(track, "D_PANLAW"),
-        -- I_PANLAW_FLAGS : int * : pan law flags, 0=sine taper, 1=hybrid taper with deprecated behavior when gain compensation enabled, 2=linear taper, 3=hybrid taper
+        -- I_PANLAW_FLAGS : int * : pan law flags, 0=sine taper, 1=hybrid taper
+        -- with deprecated behavior when gain compensation enabled, 2=linear taper,
+        -- 3=hybrid taper
         I_PANLAW_FLAGS = reaper.GetMediaTrackInfo_Value(track, "I_PANLAW_FLAGS"),
-        -- P_ENV:<envchunkname or P_ENV:{GUID... : TrackEnvelope * : (read-only) chunkname can be <VOLENV, <PANENV, etc; GUID is the stringified envelope GUID.
+        -- P_ENV:<envchunkname or P_ENV:{GUID... : TrackEnvelope * :
+        -- (read-only) chunkname can be <VOLENV, <PANENV, etc; GUID is the
+        -- stringified envelope GUID.
         P_ENV = reaper.GetMediaTrackInfo_Value(track, "P_ENV"),
-        -- B_SHOWINMIXER : bool * : track control panel visible in mixer (do not use on master track)
+        -- B_SHOWINMIXER : bool * : track control panel visible in mixer (do
+        -- not use on master track)
         B_SHOWINMIXER = reaper.GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"),
-        -- B_SHOWINTCP : bool * : track control panel visible in arrange view (do not use on master track)
+        -- B_SHOWINTCP : bool * : track control panel visible in arrange view
+        -- (do not use on master track)
         B_SHOWINTCP = reaper.GetMediaTrackInfo_Value(track, "B_SHOWINTCP"),
         -- B_MAINSEND : bool * : track sends audio to parent
         B_MAINSEND = reaper.GetMediaTrackInfo_Value(track, "B_MAINSEND"),
         -- C_MAINSEND_OFFS : char * : channel offset of track send to parent
         C_MAINSEND_OFFS = reaper.GetMediaTrackInfo_Value(track, "C_MAINSEND_OFFS"),
-        -- C_MAINSEND_NCH : char * : channel count of track send to parent (0=use all child track channels, 1=use one channel only)
+        -- C_MAINSEND_NCH : char * : channel count of track send to parent
+        -- (0=use all child track channels, 1=use one channel only)
         C_MAINSEND_NCH = reaper.GetMediaTrackInfo_Value(track, "C_MAINSEND_NCH"),
-        -- I_FREEMODE : int * : 1=track free item positioning enabled, 2=track fixed lanes enabled (call UpdateTimeline() after changing)
+        -- I_FREEMODE : int * : 1=track free item positioning enabled, 2=track
+        -- fixed lanes enabled (call UpdateTimeline() after changing)
         I_FREEMODE = reaper.GetMediaTrackInfo_Value(track, "I_FREEMODE"),
-        -- I_NUMFIXEDLANES : int * : number of track fixed lanes (fine to call with setNewValue, but returned value is read-only)
+        -- I_NUMFIXEDLANES : int * : number of track fixed lanes (fine to call
+        -- with setNewValue, but returned value is read-only)
         I_NUMFIXEDLANES = reaper.GetMediaTrackInfo_Value(track, "I_NUMFIXEDLANES"),
-        -- C_LANESCOLLAPSED : char * : fixed lane collapse state (1=lanes collapsed, 2=track displays as non-fixed-lanes but hidden lanes exist)
+        -- C_LANESCOLLAPSED : char * : fixed lane collapse state (1=lanes
+        -- collapsed, 2=track displays as non-fixed-lanes but hidden lanes exist)
         C_LANESCOLLAPSED = reaper.GetMediaTrackInfo_Value(track, "C_LANESCOLLAPSED"),
-        -- C_LANEPLAYS:N : char * : in fixed lane tracks, 0=lane N does not play, 1=lane N plays exclusively, 2=lane N plays and other lanes also play (fine to call with setNewValue, but returned value is read-only)
+        -- C_LANEPLAYS:N : char * : in fixed lane tracks, 0=lane N does not
+        -- play, 1=lane N plays exclusively, 2=lane N plays and other lanes also
+        -- play (fine to call with setNewValue, but returned value is read-only)
         C_LANEPLAYS = reaper.GetMediaTrackInfo_Value(track, "C_LANEPLAYS"),
-        -- C_BEATATTACHMODE : char * : track timebase, -1=project default, 0=time, 1=beats (position, length, rate), 2=beats (position only)
+        -- C_BEATATTACHMODE : char * : track timebase, -1=project default,
+        -- 0=time, 1=beats (position, length, rate), 2=beats (position only)
         C_BEATATTACHMODE = reaper.GetMediaTrackInfo_Value(track, "C_BEATATTACHMODE"),
-        -- F_MCP_FXSEND_SCALE : float * : scale of fx+send area in MCP (0=minimum allowed, 1=maximum allowed)
+        -- F_MCP_FXSEND_SCALE : float * : scale of fx+send area in MCP
+        -- (0=minimum allowed, 1=maximum allowed)
         F_MCP_FXSEND_SCALE = reaper.GetMediaTrackInfo_Value(track, "F_MCP_FXSEND_SCALE"),
-        -- F_MCP_FXPARM_SCALE : float * : scale of fx parameter area in MCP (0=minimum allowed, 1=maximum allowed)
+        -- F_MCP_FXPARM_SCALE : float * : scale of fx parameter area in MCP
+        -- (0=minimum allowed, 1=maximum allowed)
         F_MCP_FXPARM_SCALE = reaper.GetMediaTrackInfo_Value(track, "F_MCP_FXPARM_SCALE"),
-        -- F_MCP_SENDRGN_SCALE : float * : scale of send area as proportion of the fx+send total area (0=minimum allowed, 1=maximum allowed)
+        -- F_MCP_SENDRGN_SCALE : float * : scale of send area as proportion of
+        -- the fx+send total area (0=minimum allowed, 1=maximum allowed)
         F_MCP_SENDRGN_SCALE = reaper.GetMediaTrackInfo_Value(track, "F_MCP_SENDRGN_SCALE"),
-        -- F_TCP_FXPARM_SCALE : float * : scale of TCP parameter area when TCP FX are embedded (0=min allowed, default, 1=max allowed)
+        -- F_TCP_FXPARM_SCALE : float * : scale of TCP parameter area when TCP
+        -- FX are embedded (0=min allowed, default, 1=max allowed)
         F_TCP_FXPARM_SCALE = reaper.GetMediaTrackInfo_Value(track, "F_TCP_FXPARM_SCALE"),
-        -- I_PLAY_OFFSET_FLAG : int * : track media playback offset state, &1=bypassed, &2=offset value is measured in samples (otherwise measured in seconds)
+        -- I_PLAY_OFFSET_FLAG : int * : track media playback offset state,
+        -- &1=bypassed, &2=offset value is measured in samples (otherwise measured
+        -- in seconds)
         I_PLAY_OFFSET_FLAG = reaper.GetMediaTrackInfo_Value(track, "I_PLAY_OFFSET_FLAG"),
-        -- D_PLAY_OFFSET : double * : track media playback offset, units depend on I_PLAY_OFFSET_FLAG
+        -- D_PLAY_OFFSET : double * : track media playback offset, units depend
+        -- on I_PLAY_OFFSET_FLAG
         D_PLAY_OFFSET = reaper.GetMediaTrackInfo_Value(track, "D_PLAY_OFFSET"),
         -- P_PARTRACK : MediaTrack * : parent track (read-only)
         -- P_PARTRACK = reaper.GetMediaTrackInfo_Value(track, "P_PARTRACK"),
@@ -356,6 +414,20 @@ tracks.focus_tracks_fx_do = function(meta, opts)
         --   )
         -- end
     end
+end
+
+-- NOTE: This is the equivalent to my FX mixing picker but for
+-- builtin track parameters, such as Volume, Pan, Volume (Pre-FX), etc...
+tracks.picker_builtin_mix_parameters = function()
+    --
+    -- GetMediaTrackInfo_Value
+    --       reaper.SetMediaTrackInfo_Value(tr, "D_VOL", new_vol)
+
+    -- reaper.SetMediaTrackInfo_Value(tr, 'D_PAN', 0.01*pan)
+
+    -- TODO: Reuse `tracks.get_track_info_params()` here and see if I can
+    -- make a picker for controlling all track parameters at once from a single
+    -- picker view.h
 end
 
 return tracks
