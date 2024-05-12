@@ -8,11 +8,9 @@ local track_info = {}
 -- in the future because this will be good enough to handle all cases.
 
 track_info.get_track_info_params = function(track)
-    -- Get track numerical-value attributes.
     local t_track_info = {
         B_MUTE = { type = "bool", name = "B_MUTE" },
         B_PHASE = { type = "bool", name = "B_PHASE" },
-        -- B_RECMON_IN_EFFECT : bool * : record monitoring in effect (current audio-thread playback state, read-only)
         B_RECMON_IN_EFFECT = {
             type = "bool",
             read_only = true,
@@ -100,8 +98,8 @@ track_info.get_track_info_params = function(track)
             name = "I_AUTOMODE",
             description = "track automation mode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch",
         },
-        I_NCHAN = { name = "I_NCHAN", description = "Number of track channels, 2-128, even numbers only" },
-        I_SELECTED = { name = "I_SELECTED", description = "track selected, 0=unselected, 1=selected" },
+        I_NCHAN = { type = "int", name = "I_NCHAN", description = "Number of track channels, 2-128, even numbers only" },
+        I_SELECTED = { type = "int", name = "I_SELECTED", description = "track selected, 0=unselected, 1=selected" },
         I_WNDH = {
             type = "int",
             read_only = true,
@@ -131,12 +129,24 @@ track_info.get_track_info_params = function(track)
             name = "I_MCPY",
             description = "current MCP Y-position in pixels relative to mixer container (read-only)",
         },
-        I_MCPW = { type = "int", name = "I_MCPW", description = "current MCP width in pixels (read-only)" },
-        I_MCPH = { type = "int", name = "I_MCPH", description = "current MCP height in pixels (read-only)" },
+        I_MCPW = {
+            type = "int",
+            read_only = true,
+            name = "I_MCPW",
+            description = "current MCP width in pixels (read-only)",
+        },
+        I_MCPH = {
+            type = "int",
+            read_only = true,
+            name = "I_MCPH",
+            description = "current MCP height in pixels (read-only)",
+        },
         I_FOLDERDEPTH = {
             type = "int",
             name = "I_FOLDERDEPTH",
-            description = "folder depth change, 0=normal, 1=track is a folder parent, -1=track is the last in the innermost folder, -2=track is the last in the innermost and next-innermost folders, etc",
+            description = [[folder depth change, 0=normal, 1=track is a folder
+            parent, -1=track is the last in the innermost folder, -2=track is
+            the last in the innermost and next-innermost folders, etc]],
         },
         I_FOLDERCOMPACT = {
             type = "int",
@@ -156,7 +166,9 @@ track_info.get_track_info_params = function(track)
         I_CUSTOMCOLOR = {
             type = "int",
             name = "I_CUSTOMCOLOR",
-            description = "custom color, OS dependent color|0x1000000 (i.e. ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it will not be used, but will store the color",
+            description = [[custom color, OS dependent color|0x1000000 (i.e.
+            ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it
+            will not be used, but will store the color]],
         },
         I_HEIGHTOVERRIDE = {
             type = "int",
@@ -166,7 +178,9 @@ track_info.get_track_info_params = function(track)
         I_SPACER = {
             type = "int",
             name = "I_SPACER",
-            description = "1=TCP track spacer above this trackB_HEIGHTLOCK : bool * : track height lock (must set I_HEIGHTOVERRIDE before locking)",
+            description = [[1=TCP track spacer above this trackB_HEIGHTLOCK :
+            bool * : track height lock (must set I_HEIGHTOVERRIDE before
+            locking)]],
         },
         D_VOL = {
             type = "double",
@@ -202,6 +216,7 @@ track_info.get_track_info_params = function(track)
         },
         P_ENV = {
             type = "TrackEnvelope *",
+            read_only = true,
             name = "P_ENV",
             description = "(read-only) chunkname can be <VOLENV, <PANENV, etc; GUID is the stringified envelope GUID.",
         },
@@ -233,6 +248,7 @@ track_info.get_track_info_params = function(track)
         },
         I_NUMFIXEDLANES = {
             type = "int",
+            read_only = true,
             name = "I_NUMFIXEDLANES",
             description = "number of track fixed lanes (fine to call with setNewValue, but returned value is read-only)",
         },
@@ -243,13 +259,17 @@ track_info.get_track_info_params = function(track)
         },
         C_LANEPLAYS = {
             type = "char",
+            read_only = true,
             name = "C_LANEPLAYS",
             description = "in fixed lane tracks, 0=lane N does not play, 1=lane N plays exclusively, 2=lane N plays and other lanes also play (fine to call with setNewValue, but returned value is read-only)",
         },
         C_BEATATTACHMODE = {
             type = "char",
             name = "C_BEATATTACHMODE",
-            description = "track timebase, -1=project default, 0=time, 1=beats (position, length, rate), 2=beats (position only)",
+            description = [[
+            track timebase, -1=project default, 0=time, 1=beats (position,
+            length, rate), 2=beats (position only)
+            ]],
         },
         F_MCP_FXSEND_SCALE = {
             type = "float",
@@ -274,7 +294,10 @@ track_info.get_track_info_params = function(track)
         I_PLAY_OFFSET_FLAG = {
             type = "int",
             name = "I_PLAY_OFFSET_FLAG",
-            description = "track media playback offset state, &1=bypassed, &2=offset value is measured in samples (otherwise measured in seconds)",
+            description = [[
+            track media playback offset state, &1=bypassed, &2=offset value is
+            measured in samples (otherwise measured in seconds)
+            ]],
         },
         D_PLAY_OFFSET = {
             type = "double",

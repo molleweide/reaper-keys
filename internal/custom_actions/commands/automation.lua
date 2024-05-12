@@ -8,8 +8,8 @@ local automation_actions = {}
 
 automation_actions.test = function()
     local cursor_info = tl.get_cursor_info()
-    local start_pos = cursor_info.msr.start
-    local end_pos = cursor_info.msr._end
+    local msr_start_pos = cursor_info.msr.start
+    local msr_end_pos = cursor_info.msr._end
     local cursor_position = cursor_info.cursor_pos
 
     -- could this also be passed as an arg?
@@ -30,9 +30,9 @@ automation_actions.test = function()
     local t_envs = envelopes.fltr_track_envelopes(tr)
 
     -- get volume envelope
-    local volenv = reaper.GetTrackEnvelopeByChunkName(tr, "<VOLENV")
+    local volenv = reaper.GetTrackEnvelopeByChunkName(tr, "<VOLENV2")
 
-  local all_builtin_envs = envelopes.track_get_all_builtin_envs(tr)
+    local all_builtin_envs = envelopes.track_get_all_builtin_envs(tr)
 
     -- if t_envs == nil or #t_envs == 0 then
     --     log.user("No envelopes found")
@@ -42,35 +42,38 @@ automation_actions.test = function()
     log.user("automation test -> t_envs:", format.block(t_envs))
 
     -- insert points to volume curve and see what happens.
+    log.user("# TEST INSERT")
     envelopes.fltr_single_envelope({
         target_env = volenv,
         insert = { { position = cursor_position, param_val = 0.5 } },
     })
-    -- envelopes.fltr_single_envelope({
-    --     target = t_envs,
-    --     remove = {},
-    -- })
-    -- --   --
-    -- --   --
-    -- -- 3. insert multiple points / range.
-    -- --   a. pass range based on cursor to fltr func.
-    -- envelopes.fltr_single_envelope({
-    --     target = t_envs, -- FIX: only pass single env here
-    --     insert = {
-    --         { position = cursor_position - 0.5, param_val = 0.4 },
-    --         { position = cursor_position + 0.5, param_val = 0.6 },
-    --     },
-    -- })
-    -- --   --
+
+    log.user("# TEST RM MSR")
+    envelopes.fltr_single_envelope({
+        target_env = volenv,
+        remove = { { msr_start_pos, msr_end_pos } }, -- TODO: pass the range in which to remove
+    })
+
+    log.user("# TEST insert mult points")
+    envelopes.fltr_single_envelope({
+        target_env = volenv,
+        insert = {
+            { position = cursor_position + 2.5, param_val = 0.4 },
+            { position = cursor_position + 3, param_val = 0.6 },
+        },
+    })
+
     -- -- 4. transform notes
-    -- envelopes.fltr_single_envelope({
-    --     target = t_envs, -- FIX: only pass single env here
-    --     filter = function(point)
-    --         return point.position > cursor_position
-    --     end,
-    --     transform = { { right = 0.25, param_val = 0.4 } },
-    -- })
-    -- --  ..
+    log.user("# TEST transform points before cursor ")
+    envelopes.fltr_single_envelope({
+        target_env = volenv,
+        filter = function(point)
+            return point.position < cursor_position
+        end,
+        transform = { param_val = 300 },
+        -- transform = { param_val = { 200, "force"} },
+    })
+
     -- --   --
     -- -- 5. delete points in time selection
     -- envelopes.fltr_single_envelope({
@@ -165,13 +168,13 @@ end
 automation_actions.picker_add_random_curves_to_selection = function() end
 
 automation_actions.picker_builtins_add_curve = function()
-  -- TODO: from the picker select which one (<CR>) extend with a
-  -- new random curve
+    -- TODO: from the picker select which one (<CR>) extend with a
+    -- new random curve
 end
 
 automation_actions.picker_add_env_curve_for_fx_param = function()
-  -- TODO: Reuse my current FX -> FX param picker.
-  -- 1. Insert point at cursor for selection. <CR>
+    -- TODO: Reuse my current FX -> FX param picker.
+    -- 1. Insert point at cursor for selection. <CR>
 end
 
 return automation_actions

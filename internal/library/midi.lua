@@ -937,7 +937,7 @@ midi.midi_take_filter_transform = function(take, opts)
 
 	if (notes_updated > 0 or opts.insert) and not opts.dry_run then
 		if not opts.insert then -- ie. if transforming..
-			midi.delete_notes(take, t_notes)
+			midi.delete_notes(take, t_notes) -- remove notes by index before reinserting notes..
 		end
 		log.user("just before inserting notes")
 		midi.insert_notes({

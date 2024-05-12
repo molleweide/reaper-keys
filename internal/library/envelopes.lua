@@ -68,7 +68,7 @@ envelopes.fltr_track_envelopes = function(tr, opts)
     for i = 0, count_envs do
         log.user("track envelope #", i)
         local track_env = reaper.GetTrackEnvelope(tr, i)
-        table.insert(t_envelopes)
+        table.insert(t_envelopes, track_env)
     end
 
     return t_envelopes
@@ -79,55 +79,176 @@ end
 envelopes.fltr_single_envelope = function(opts)
     opts = opts or {}
 
-    log.user("[envelopes.fltr_single_envelope]: opts = ", format.block(opts))
+    -- log.user("[envelopes.fltr_single_envelope]: opts = ", format.block(opts))
 
     if not opts.target_env then
         log.user("[envelopes.fltr_single_envelope]: No target envelope provided")
         return
     end
 
-    local _, buf = reaper.GetEnvelopeName(opts.target_env)
-    log.user("target env name = ", buf)
+    local target_env = opts.target_env
+
+    -- local _, buf = reaper.GetEnvelopeName(opts.target_env)
+    -- log.user("target env name = ", buf)
 
     local t_envp = {}
 
+    -- NOTE: it seems i only need to do the collection of points in certain cases
+    -- where i know that I want to filter them specifically or have do tasks by
+    -- ptidx but this is not always.
     if not opts.insert then
+        local count_env_pts = reaper.CountEnvelopePoints(target_env)
+        for i = 0, count_env_pts, 1 do
+            local retval, time, value, shape, tension, selected = reaper.GetEnvelopePoint(target_env, i)
+            table.insert(t_envp, {
+                ptidx = i,
+                position = time,
+                param_val = value,
+                shape = shape,
+                tension = tension,
+                selected = selected,
+            })
+        end
     else
-        log.user("[fltr_single_envelope] (first) if not opts.insert else condition")
+        -- log.user("[fltr_single_envelope] (first) if not opts.insert else condition")
         t_envp = opts.insert
     end
 
     if opts.filter then
+        local filter = opts.filter
+        if type(filter) == "boolean" then
+            t_envp = tbl.filter(t_envp, function(pt)
+                return pt[k] == filter
+            end)
+        elseif type(filter) == "number" then
+            t_envp = tbl.filter(t_envp, function(pt)
+                return pt[k] == filter
+            end)
+        elseif type(filter) == "table" then
+            -- FIX: since there can be multiple ranges, i need to collect the filtered
+            -- values and then assign them to t_envp at the end
+            for _, subv in pairs(filter) do
+                if type(subv) == "number" then
+                    t_envp = tbl.filter(t_envp, function(pt)
+                        return pt[k] == subv
+                    end)
+                elseif type(subv) == "table" then
+                    t_envp = tbl.filter(t_envp, function(pt)
+                        return subv[1] <= pt[k] and pt[k] <= subv[2]
+                    end)
+                end
+            end
+        elseif type(filter) == "function" then
+            log.user("?????????")
+            t_envp = tbl.filter(t_envp, filter) -- pass filter func
+        end
     end
 
+    local transform_in_time = false
     local env_pts_updated = 0
     if opts.transform then
+        local transform = opts.transform
+
+        for i, point in ipairs(t_envp) do
+            local update = false
+            for k, v in pairs(transform) do
+                if k == "position" then
+                    transform_in_time = true
+                end
+
+                if type(v) == "boolean" then
+                    log.trace("midi take transform: set bool:", i, point[k], "->", v)
+                    point[k] = v -- set bool value
+                    update = true
+                elseif type(v) == "number" then
+                    log.user("fltr env transform: shift num:", i, point[k], "->", point[k] + v)
+                    point[k] = point[k] + v -- shift by number
+                    update = true
+                elseif type(v) == "table" then
+                    log.trace("midi take transform: force const:", i, point[k], "->", v[1])
+                    point[k] = v[2] == "force" and v[1] -- { number, "force"} means force all notes to value
+                    update = true
+                elseif type(v) == "function" then
+                    log.trace("midi take transform: func:", i, point[k], "->", v(point))
+                    point[k] = v(point) -- apply function transform per point
+                    update = true
+                end
+                if update then
+                    -- i am not sure if this is useful to keep a counter
+                    env_pts_updated = env_pts_updated + 1
+                end
+            end -- transform.notes -> k, v
+        end
     end
 
+    reaper.PreventUIRefresh(1)
+
+    -- NOTE: if points are transformed in time, then I need to remove and then re-insert
+    -- points
+
+    if opts.remove then
+        local rm = opts.remove
+        if type(rm) == "table" then
+            -- range tables are assumed to come in ascending order, so that I can reverse
+            -- remove values
+            for i = #rm, #rm, -1 do
+                local range = rm[i]
+                reaper.DeleteEnvelopePointRange(target_env, range[1], range[2])
+            end
+        end
+
     -- Envelopes can be "set" directly, so I dont need to remove and re-insert..
-    if (env_pts_updated > 0 or opts.insert) and not opts.dry_run then
-        reaper.PreventUIRefresh(1)
-        -- if not opts.insert then
-        -- 	midi.delete_notes(take, t_cc)
+    elseif (env_pts_updated > 0 or opts.insert) and not opts.dry_run then
+        -- TODO: if transform_in_time then...
+        -- if not opts.insert and transform_in_time then
+        -- 	envelopes.remove_points(take, t_cc)
         -- end
+
         log.user("[fltr_single_envelope] just before note insertion")
         -- midi.insert_notes({
         -- 	take = take,
         -- 	notes = t_cc,
         -- })
-        log.user("env pts to insert ->", format.block(t_envp))
+        -- log.user("env pts to insert ->", format.block(t_envp))
 
         -- -- local fx_env = reaper.GetFXEnvelope(track, fx_number, i - 1, true)
         -- if fx_env ~= nil then
         --     reaper.InsertEnvelopePoint(env, cursor_pos, param_val, 0, 0, false, true)
         -- end
+        for _, point in ipairs(t_envp) do
+            -- set shape etc to 0 now as default but this can be passed as param later.
+            -- log.user("point:", format.block(point))
+            if opts.insert then
+                log.user("INSERT")
+                reaper.InsertEnvelopePoint(target_env, point.position, point.param_val, 0, 0, false, true)
+            else
+                log.user("SET")
+                log.user("point:", format.block(point))
+                reaper.SetEnvelopePoint(
+                    target_env,
+                    point.ptidx,
+                    point.position,
+                    point.param_val,
+                    point.shape,
+                    point.tension,
+                    point.selected,
+                    true
+                )
+            end
+        end
+        -- else
+        -- only transform params of point.
 
-        -- reaper.Envelope_SortPoints(fx_env)
+        -- for _, point in ipairs(t_envp) do
 
-        reaper.PreventUIRefresh(-1)
+        -- reaper.SetEnvelopePoint(target_env, point.ptidx, timeIn, valueIn, shapeIn, tensionIn, selectedIn, noSortIn)
+        -- end
 
         -- reaper.UpdateArrange()
     end
+
+    reaper.Envelope_SortPoints(target_env)
+    reaper.PreventUIRefresh(-1)
 end
 
 -- retval, time, value, shape, tension, selected = reaper.GetEnvelopePoint( envelope, ptidx )
