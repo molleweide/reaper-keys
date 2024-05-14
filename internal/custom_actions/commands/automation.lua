@@ -3,6 +3,7 @@ local format = require("utils.format")
 local tl = require("library.timeline")
 local envelopes = require("library.envelopes")
 local lib_tr = require("library.tracks")
+local constants = require("constants.constants")
 
 local automation_actions = {}
 
@@ -253,7 +254,7 @@ automation_actions.midi_cc_test = function()
     envelopes.midi_take_fltr_cc({
         take = ctxm.take,
         filter = function(e)
-            return e.chanmsg == 224 and e.ppqpos == 0
+            return e.chanmsg == constants.CC_CONSTANTS.type.pitch and e.ppqpos == cp_ppq
         end,
         transform = function(e)
             e.ppqpos = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, cp + 0.5)

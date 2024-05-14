@@ -83,4 +83,19 @@ constants.BUILTIN_ENVELOPES = {
         pan = { name = "Pan", search_string = "<PANENV2" },
     }
 
+
+constants.CC_CONSTANTS = {
+    type = {
+        ---       bits of the data byte ): Note Off = 8; Note On = 9; Aftertouch = 10; CC = 11;
+        ---       Program Change = 12; Channel Pressure = 13; Pitch Vend = 14; text = 15.
+        --     note_off = ,
+        -- note_on = ,
+        cc = 176, -- 176
+        pitch = 224,
+        -- pitch =
+    },
+}
+
+
+
 return constants

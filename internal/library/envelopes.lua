@@ -660,10 +660,14 @@ envelopes.midi_take_fltr_cc = function(opts)
         -- end
 
         local _, _, cc_count = reaper.MIDI_CountEvts(opts.take)
+
+    -- NOTE: I could rewrite this as a special iterator so that I only
+    -- need to perform one single loop for all cc/insert -> filter -> transform.
         for i = 0, cc_count do
             local _, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(opts.take, i)
-            local t_cc_evt = {
 
+            -- Move the filter to here actually.
+            local t_cc_evt = {
                 index = i,
                 selected = selected,
                 muted = muted,
@@ -673,60 +677,24 @@ envelopes.midi_take_fltr_cc = function(opts)
                 msg2 = msg2,
                 msg3 = msg3,
             }
+            -- if not filter or filter(t_cc_evt) then
             table.insert(t_cc, t_cc_evt)
+            -- end
             -- end
         end
     else
-        -- NOTE: Pass notes for insertion.
-        -- It is important here that I have a unified way for setting up midi data.
-        --
-        -- this means that an item hass been passed and I want to insert notes.
-        -- This api is a bit unclear but i have to look at this later.
         t_cc = opts.insert
     end
 
     log.user("t_cc ->", format.block(t_cc))
 
     -- filter evts
-    -- TODO: specify which type of cc events i want, then perform filter.
     if filter then
         log.user("enter filter...")
-        -- for i, ccevt in ipairs(t_cc) do
-
         if type(filter) == "function" then
             log.user("[midi_take_fltr_cc] filter = function()")
             t_cc = tbl.filter(t_cc, filter) -- pass filter func
         end
-
-        -- if type(v) == "boolean" then
-        --     t_cc = tbl.filter(t_cc, function(cc_evt)
-        --         return cc_evt[k] == v
-        --     end)
-        -- elseif type(v) == "number" then
-        --     log.user("reach number?")
-        --     t_cc = tbl.filter(t_cc, function(cc_evt)
-        --         log.user(string.format("cc_evt:%s = v:%s", cc_evt[k], v))
-        --         return cc_evt[k] == v
-        --     end)
-        -- elseif type(v) == "table" then
-        --     -- FIX: since there can be multiple ranges, i need to collect the filtered
-        --     -- values and then assign them to t_cc at the end
-        --     for _, subv in pairs(v) do
-        --         if type(subv) == "number" then
-        --             t_cc = tbl.filter(t_cc, function(cc_evt)
-        --                 return cc_evt[k] == subv
-        --             end)
-        --         elseif type(subv) == "table" then
-        --             t_cc = tbl.filter(t_cc, function(cc_evt)
-        --                 return subv[1] <= cc_evt[k] and cc_evt[k] <= subv[2]
-        --             end)
-        --         end
-        --     end
-        -- elseif type(v) == "function" then
-        --     log.user("[midi_take_fltr_cc] filter = function()")
-        --     t_cc = tbl.filter(t_cc, v) -- pass filter func
-        -- end
-        -- end
     end
 
     -- -- remove
@@ -750,33 +718,6 @@ envelopes.midi_take_fltr_cc = function(opts)
                 -- i am not sure if this is useful to keep a counter
                 cc_updated = cc_updated + 1
             end
-
-            -- for j, prop in pairs(opts.transform) do
-            --     local update = false
-            --     for k, v in pairs(prop) do
-            --         if type(v) == "boolean" then
-            --             log.trace("midi take transform: set bool:", i, ccevt[k], "->", v)
-            --             ccevt[k] = v -- set bool value
-            --             update = true
-            --         elseif type(v) == "number" then
-            --             log.user("MIDI TAKE FLTR CC: shift num:", i, ccevt[k], "->", ccevt[k] + v)
-            --             ccevt[k] = ccevt[k] + v -- shift by number
-            --             update = true
-            --         elseif type(v) == "table" then
-            --             log.trace("midi take transform: force const:", i, ccevt[k], "->", v[1])
-            --             ccevt[k] = v[2] == "force" and v[1] -- { number, "force"} means force all notes to value
-            --             update = true
-            --         elseif type(v) == "function" then
-            --             log.trace("midi take transform: func:", i, ccevt[k], "->", v(ccevt))
-            --             ccevt[k] = v(ccevt) -- apply function transform per ccevt
-            --             update = true
-            --         end
-            --         if update then
-            --             -- i am not sure if this is useful to keep a counter
-            --             cc_updated = cc_updated + 1
-            --         end
-            --     end
-            -- end
         end
     end
 
