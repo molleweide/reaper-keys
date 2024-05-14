@@ -1311,7 +1311,8 @@ function CalculatePPQDifPrevNextEvnt(midi_table,last_idx,ppq)
     return dif_prev, dif_next
 end
 
----Insert a midi midi_msg at ppq in the midi_table. Insert at the right index. And adjusting offsets. Slow.
+---Insert a midi midi_msg at ppq in the midi_table. Insert at the right index.
+--And adjusting offsets. Slow.
 ---@param midi_table table table with all midi events
 ---@param pqp number when in ppq insert the message
 ---@param midi_msg string midi message packed or not.
