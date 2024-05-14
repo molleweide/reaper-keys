@@ -28,8 +28,11 @@ function Main()
   local ppq = reaper.MIDI_GetPPQPosFromProjTime(take, pos)
   local retval, userInputsCSV = reaper.GetUserInputs("Insert Bend", 3, "Range (Multiples of 128),,Interval", "0,1408,10")
   if not retval then return reaper.SN_FocusMIDIEditor() end
+
   local cc_begin, cc_end, interval = userInputsCSV:match("(.*),(.*),(.*)")
+
   cc_begin, cc_end, interval = tonumber(cc_begin), tonumber(cc_end), tonumber(interval)
+
   if cc_begin < -8192 or cc_begin > 8191 or cc_end < -8192 or cc_end > 8191 then
     return
       reaper.MB("Please enter a value from -8192 through 8191", "Error", 0),
@@ -37,19 +40,22 @@ function Main()
   end
 
   local tbl = {} -- 存储弯音值
+
   if cc_begin < cc_end then
     for j = cc_begin - 1, cc_end, step do
       j = j + 1
       table.insert(tbl, j)
     end
   end
-  if cc_begin > cc_end then
-    for y = cc_end - 1, cc_begin, step do
-      y = y + 1
-      table.insert(tbl, y)
-      table.sort(tbl,function(cc_begin,cc_end) return cc_begin > cc_end end)
-    end
-  end
+
+  -- if cc_begin > cc_end then
+  --   for y = cc_end - 1, cc_begin, step do
+  --     y = y + 1
+  --     table.insert(tbl, y)
+  --     table.sort(tbl,function(cc_begin,cc_end) return cc_begin > cc_end end)
+  --   end
+  -- end
+
   for k,v in pairs(tbl) do
     local value = v + 8192
     local LSB = value & 0x7f

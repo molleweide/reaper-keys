@@ -262,6 +262,7 @@ return {
                             {
                                 ["t"] = "Test_insert_automation_points",
                                 ["m"] = "Test_insert_midi_cc_points",
+                                ["c"] = "Test_insert_cc",
                             },
                         },
                     },

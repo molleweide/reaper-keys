@@ -49,13 +49,27 @@ end
 --start.event_n dont affect this count)). event_count is the event nº between
 --all MIDI events. stringPos the position in the string for the next event.
 ---@param MIDIstring string string with all MIDI events (use reaper.MIDI_GetAllEvts)
----@param miditype table Filter messages MIDI by message type. Table with multiple types or just a number. (Midi type values are defined in the firt 4 bits of the data byte ): Note Off = 8; Note On = 9; Aftertouch = 10; CC = 11; Program Change = 12; Channel Pressure = 13; Pitch Vend = 14; text = 15.
----@param ch table Filter messages MIDI by chnnale. Table with multiple channel or just a number. 1 Based.
----@param selected boolean Filter messages MIDI if they are selected in MIDI editor. true = only selected; false = only not selected; nil = either.
----@param muted boolean Filter messages MIDI if they are muted in MIDI editor. true = only muted; false = only not muted; nil = either.
----@param filter_midiend boolean Filter Last MIDI message (reaper automatically add a message when item ends 'CC123')
----@param start table start is a table that determine where to start iterating in the midi evnts. The key determine the options: 'ppq','event_n','stringPos' the value determine the value to start. For exemple {ppq=960} will start at events that happen at and after 960 midi ticks after the start of the item. {event_n=5} will start at the fifth midi message (just count messages that pass the filters). {stringPos = 13} will start at the midi message in the 13 byte on the packed string.
----@param step number will only return every number of step midi message (will only count messages that passes the filters).
+---@param miditype table Filter messages MIDI by message type. Table with
+---       multiple types or just a number. (Midi type values are defined in the first 4
+---       bits of the data byte ): Note Off = 8; Note On = 9; Aftertouch = 10; CC = 11;
+---       Program Change = 12; Channel Pressure = 13; Pitch Vend = 14; text = 15.
+---@param ch table Filter messages MIDI by chnnale. Table with multiple channel
+---or just a number. 1 Based.
+---@param selected boolean Filter messages MIDI if they are selected in MIDI
+---editor. true = only selected; false = only not selected; nil = either.
+---@param muted boolean Filter messages MIDI if they are muted in MIDI editor.
+---true = only muted; false = only not muted; nil = either.
+---@param filter_midiend boolean Filter Last MIDI message (reaper automatically
+---add a message when item ends 'CC123')
+---@param start table start is a table that determine where to start iterating
+---in the midi evnts. The key determine the options: 'ppq','event_n','stringPos'
+---the value determine the value to start. For exemple {ppq=960} will start at
+---events that happen at and after 960 midi ticks after the start of the item.
+---{event_n=5} will start at the fifth midi message (just count messages that
+---pass the filters). {stringPos = 13} will start at the midi message in the 13
+---byte on the packed string.
+---@param step number will only return every number of step midi message (will
+---only count messages that passes the filters).
 ---@return function -- offset, offset_count, flags, msg, event_count, stringPos
 function IterateMIDI(MIDIstring,miditype,ch,selected,muted,filter_midiend,start,step)
     local MIDIlen = MIDIstring:len()
