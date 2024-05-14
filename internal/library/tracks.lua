@@ -416,6 +416,11 @@ tracks.focus_tracks_fx_do = function(meta, opts)
     end
 end
 
+
+
+
+
+
 -- NOTE: This is the equivalent to my FX mixing picker but for
 -- builtin track parameters, such as Volume, Pan, Volume (Pre-FX), etc...
 tracks.picker_builtin_mix_parameters = function()
