@@ -1130,5 +1130,7 @@ return {
 
   Test_insert_automation_points = automation.test,
   Test_insert_midi_cc_points = automation.midi_cc_test,
-  Test_insert_cc = automation.test_insert_cc
+  Test_insert_cc = automation.test_insert_cc,
+
+  INSERT_MIDI_CC_BY_TEMPLATE = automation.picker_insert_cc_curve
 }

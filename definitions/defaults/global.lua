@@ -47,6 +47,17 @@ return {
             {
                 ["q"] = "INSERT_MIDI_BLOCK",
                 ["Q"] = "INSERT_MIDI_ACROSS_TRACKS",
+                ["a"] = {
+                    "+automation",
+                    {
+                        ["i"] = {
+                            "+insert",
+                            {
+                                ["q"] = "INSERT_MIDI_CC_BY_TEMPLATE",
+                            },
+                        },
+                    },
+                },
             },
         },
     },
@@ -260,6 +271,7 @@ return {
                         ["i"] = {
                             "+insert",
                             {
+                                -- ["q"] = "InsertTemplate",
                                 ["t"] = "Test_insert_automation_points",
                                 ["m"] = "Test_insert_midi_cc_points",
                                 ["c"] = "Test_insert_cc",

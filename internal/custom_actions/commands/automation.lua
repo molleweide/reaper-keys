@@ -226,12 +226,12 @@ automation_actions.midi_cc_test = function()
     -- NOTE: INSERT PITCH BEND two notes w/shape
     --
 
-    -- envelopes.midi_take_fltr_cc({
-    --     take = ctxm.take,
-    --     insert = {
-    --         pitch = { { ppqpos = ms, val = 0, shape = "linear" }, { ppqpos = me - 1, val = pb_step * 8 } },
-    --     },
-    -- })
+    envelopes.midi_take_fltr_cc({
+        take = ctxm.take,
+        insert = {
+            pitch = { { ppqpos = ms, val = 0, shape = "linear" }, { ppqpos = me - 1, val = pb_step * 8 } },
+        },
+    })
 
     --
     -- Remove CC events in cursor position QN
@@ -297,91 +297,50 @@ automation_actions.picker_add_env_curve_for_fx_param = function()
     -- 1. Insert point at cursor for selection. <CR>
 end
 
-automation_actions.test_insert_cc = function()
-    function Main()
-        local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+automation_actions.picker_insert_cc_curve = function()
+    local state_interface = require("state_machine.state_interface")
 
-        local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
+  -- TODO: check for selector
 
-        if take == nil then
-            return
-        end
-        local cnt, index = 0, {}
-        local val = reaper.MIDI_EnumSelNotes(take, -1)
+    if state_interface.last_command_has("timeline_operator") then
+        local tl_range = state_interface.getKey("last_set_timeline_range")
 
-        while val ~= -1 do
-            cnt = cnt + 1
-            index[cnt] = val
-            val = reaper.MIDI_EnumSelNotes(take, val)
-        end
-
-        if #index == 0 then
-            return reaper.MB("Please select one or more notes", "Error", 0)
-        end
-        local retval, userInputsCSV =
-            reaper.GetUserInputs("Linear Ramp CC Events", 4, "CC Number,Min Volume,Max Volume,Step", "11,90,127,1")
-        if not retval then
-            return reaper.SN_FocusMIDIEditor()
-        end
-        local cc_num, cc_begin, cc_end, step = userInputsCSV:match("(.*),(.*),(.*),(.*)")
-        cc_num, cc_begin, cc_end, step = tonumber(cc_num), tonumber(cc_begin), tonumber(cc_end), tonumber(step)
-
-        if cc_begin >= cc_end then
-            return reaper.SN_FocusMIDIEditor()
-        end
-
-        local ppq = {} -- 音符开头位置
-        local ppq_end = {} -- 音符尾巴位置
-        local tbl = {} -- 存储CC值
-
-        for j = cc_begin - 1, cc_end, step do
-            j = j + 1
-            if j > 127 then
-                j = 127
-            end
-            if j > cc_end then
-                j = cc_end
-            end
-            table.insert(tbl, j) -- 将计算得到的CC值存入tbl表
-        end
-
-        for i = 0, #index - 1 do
-            log.user("enter loop")
-
-            retval, selected, muted, ppq, ppq_end, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
-
-            if selected == true then
-                log.user("sel??")
-
-                ppq_len = ppq_end - ppq
-                if ppq_len >= tick / 2 and ppq_len < tick then
-                    for k, v in pairs(tbl) do
-                        log.user("A")
-                        reaper.MIDI_InsertCC(take, selected, muted, ppq + (k - 1) * 5, 0xB0, chan, cc_num, v)
-                    end
-                end
-                if ppq_len >= tick and ppq_len < tick * 2 then
-                    for k, v in pairs(tbl) do
-                        log.user("B")
-                        reaper.MIDI_InsertCC(take, selected, muted, ppq + (k - 1) * 8, 0xB0, chan, cc_num, v)
-                    end
-                end
-                if ppq_len >= tick * 2 then
-                    for k, v in pairs(tbl) do
-                        log.user("C")
-                        reaper.MIDI_InsertCC(take, selected, muted, ppq + (k - 1) * 10, 0xB0, chan, cc_num, v)
-                    end
-                end
-            end
-        end
+        -- table.insert(target_ranges, {
+        --     left = tl_range[1],
+        --     right = tl_range[2],
+        -- })
+        log.user("[ picker insert cc curve ]: operator; range:", tl_range[1], tl_range[2])
+    else
+        log.user("[ picker insert cc curve ]: NOT op")
     end
 
-    reaper.PreventUIRefresh(1) -- 防止UI刷新
-    Main() -- 执行函数
-    -- reaper.MIDIEditor_LastFocused_OnCommand(reaper.NamedCommandLookup("_RS7d3c_38c941e712837e405c3c662e2a39e3d03ffd5364"), 0) -- 移除冗余CCs
-    reaper.PreventUIRefresh(-1) -- 恢复UI刷新
-    reaper.UpdateArrange() -- 更新排列
-    -- reaper.SN_FocusMIDIEditor() -- 聚焦MIDI编辑器
+    -- local target_ranges = {}
+    -- -- 1. selected regions
+    -- if custom_targets.regions then
+    --     -- for _, cs in ipairs(custom_targets.regions) do
+    --     -- 	log.user("regions:", cs.name)
+    --     -- end
+    --     for _, reg in ipairs(custom_targets.regions) do
+    --         table.insert(target_ranges, { left = reg.pos, right = reg.rgnend })
+    --     end
+    -- else
+    --     -- 2. operator & motion
+    --     if state_interface.last_command_has("timeline_operator") then
+    --         local tl_range = state_interface.getKey("last_set_timeline_range")
+    --         table.insert(target_ranges, {
+    --             left = tl_range[1],
+    --             right = tl_range[2],
+    --         })
+    --     else
+    --         -- 3. cursor position
+    --         local cursor_info = tl.get_cursor_info()
+    --         table.insert(target_ranges, {
+    --             left = cursor_info.msr.start,
+    --             right = cursor_info.msr._end,
+    --         })
+    --     end
+    -- end
+    -- return target_ranges
 end
 
 return automation_actions
