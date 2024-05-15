@@ -6,6 +6,7 @@ local lib_tr = require("library.tracks")
 local constants = require("constants.constants")
 local fzf = require("library.fzf")
 local lib_items = require("library.items")
+local effects = require("library.fx")
 
 local automation_actions = {}
 
@@ -318,6 +319,11 @@ automation_actions.picker_insert_cc_curve = function()
         local tl_range = state_interface.getKey("last_set_timeline_range")
         range_left = tl_range[1]
         range_right = tl_range[2]
+
+        if range_left > range_right then
+            range_left, range_right = range_right, range_left
+        end
+
         log.user("[ picker insert cc curve ]: operator; range:", tl_range[1], tl_range[2])
     else
         log.user("[ picker insert cc curve ]: NOT op")
@@ -342,13 +348,15 @@ automation_actions.picker_insert_cc_curve = function()
     -- Check if there are possible midi take targets
     if context == "main" then
         is_main = true
-        local items_in_range = lib_items.get_item_enclosing_range(trobj.tr, range_left, range_right)
-        if #items_in_range > 0 then
-            local enclosing_item = items_in_range[1]
-            local take = reaper.GetActiveTake(enclosing_item)
+        local enclosing_item = lib_items.get_item_enclosing_range(trobj.tr, range_left, range_right)
+
+        log.user("items_in_range =", format.block(enclosing_item))
+
+        if enclosing_item then
+            local take = reaper.GetMediaItemTake(enclosing_item.ref, 0)
             target_midi_take = reaper.TakeIsMIDI(take) and take
         end
-        log.user("items_in_range = ", format.block(items_in_range))
+        log.user("items_in_range = ", format.block(enclosing_item))
     elseif context == "midi" then
         is_midi = true
         local ret, ctxm = require("library.midi_editor").getMidiValidContext()
@@ -359,8 +367,8 @@ automation_actions.picker_insert_cc_curve = function()
     --
 
     local t_curve_results = {
-        { "Volume", action = function() end },
-        { "Pan", action = function() end },
+        { "(env) Volume", action = function() end },
+        { "(env) Pan", action = function() end },
     }
 
     -- Vol/Pan should always be visible here.
@@ -370,13 +378,13 @@ automation_actions.picker_insert_cc_curve = function()
         -- >>> CREATE picker entry tables for
         --   pitch bend AND cc20
         table.insert(t_curve_results, {
-            "Pitch",
+            "(midi) Pitch",
             action = function()
                 -- TODO: handle pitch bend
             end,
         })
         table.insert(t_curve_results, {
-            "CC20",
+            "(midi) CC20",
             action = function()
                 -- TODO: handle cc curves
             end,
@@ -384,7 +392,27 @@ automation_actions.picker_insert_cc_curve = function()
     end
 
     --  If focused track has FX that allow for user envelopes -> add to list.
-    --
+
+    -- TODO: checkout my previous picker for FX and FX PARAMS -> How do I loop
+    -- all FX objects for a track.
+    -- --
+    -- >>> Check if there are FX of type B, ie not syntax pre or post FX.
+
+    local fltr_track_fx = effects.fltr_fx_track_single({
+        target_track = trobj.tr,
+        filter = function(fx)
+            -- ensure we dont collect any syntax-fx
+            return fx.name:match("_A_") == nil
+        end,
+    })
+
+    log.user("fltr_track_fx ->", format.block(fltr_track_fx))
+    local there_are_env_enabled_fx = false
+
+    if #fltr_track_fx > 0 then
+        there_are_env_enabled_fx = true
+    end
+
     if there_are_env_enabled_fx then
         table.insert(t_curve_results, {
             "+FX",
@@ -393,6 +421,7 @@ automation_actions.picker_insert_cc_curve = function()
             end,
         })
     end
+
 
     -- Route envelopes
     --
