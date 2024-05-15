@@ -4,6 +4,7 @@ local tl = require("library.timeline")
 local envelopes = require("library.envelopes")
 local lib_tr = require("library.tracks")
 local constants = require("constants.constants")
+local fzf = require("library.fzf")
 
 local automation_actions = {}
 
@@ -297,10 +298,18 @@ automation_actions.picker_add_env_curve_for_fx_param = function()
     -- 1. Insert point at cursor for selection. <CR>
 end
 
+-- IDEA: should i first prompt for both envelops and midi cc in the same command?
+-- And then just list:
+--  ~ (env) vol
+--  ~ (env) pan
+--  ~ +fx
+--  ~ (cc) pitch bend
+--  ~ (cc) cc1
+--  ~ (cc) cc2
 automation_actions.picker_insert_cc_curve = function()
     local state_interface = require("state_machine.state_interface")
 
-  -- TODO: check for selector
+    -- TODO: check for selector
 
     if state_interface.last_command_has("timeline_operator") then
         local tl_range = state_interface.getKey("last_set_timeline_range")
@@ -313,6 +322,31 @@ automation_actions.picker_insert_cc_curve = function()
     else
         log.user("[ picker insert cc curve ]: NOT op")
     end
+
+    local t_curve_results = {
+        { "Volume" },
+        { "Pan" },
+        { "+FX" },
+        { "Pitch" },
+        { "CC1" },
+        { "CC2" },
+    }
+
+    local function picker_curve_menu_start()
+        fzf.init({
+            title = "Picker: Curve menu start",
+            results = t_curve_results,
+            x = 200,
+            width = 600,
+            height = 600,
+            on_select_func = true,
+            results_filter = 1,
+            sort_comp = 1,
+            entry_maker = 1,
+        })
+    end
+
+    picker_curve_menu_start()
 
     -- local target_ranges = {}
     -- -- 1. selected regions
