@@ -5,6 +5,7 @@ local envelopes = require("library.envelopes")
 local lib_tr = require("library.tracks")
 local constants = require("constants.constants")
 local fzf = require("library.fzf")
+local pickers = require("pickers.pickers")
 local lib_items = require("library.items")
 local effects = require("library.fx")
 
@@ -367,41 +368,31 @@ automation_actions.picker_insert_cc_curve = function()
     --
 
     local t_curve_results = {
-        { "(env) Volume", action = function() end },
-        { "(env) Pan", action = function() end },
+        { name = "(env) Volume", code = "volume" },
+        { name = "(env) Pan", code = "pan" },
     }
 
     -- Vol/Pan should always be visible here.
 
     if target_midi_take then
-        -- TODO: add these objects here
-        -- >>> CREATE picker entry tables for
-        --   pitch bend AND cc20
         table.insert(t_curve_results, {
-            "(midi) Pitch",
-            action = function()
-                -- TODO: handle pitch bend
-            end,
+            name = "(midi) Pitch",
+            code = "pitch_bend",
+            cc = true,
         })
         table.insert(t_curve_results, {
-            "(midi) CC20",
-            action = function()
-                -- TODO: handle cc curves
-            end,
+            name = "(midi) CC20",
+            code = "cc_20",
+            cc = true,
         })
     end
 
     --  If focused track has FX that allow for user envelopes -> add to list.
 
-    -- TODO: checkout my previous picker for FX and FX PARAMS -> How do I loop
-    -- all FX objects for a track.
-    -- --
-    -- >>> Check if there are FX of type B, ie not syntax pre or post FX.
-
     local fltr_track_fx = effects.fltr_fx_track_single({
         target_track = trobj.tr,
         filter = function(fx)
-            -- ensure we dont collect any syntax-fx
+            -- ensure we dont collect any syntax-fx pre/post fx
             return fx.name:match("_A_") == nil
         end,
     })
@@ -415,13 +406,12 @@ automation_actions.picker_insert_cc_curve = function()
 
     if there_are_env_enabled_fx then
         table.insert(t_curve_results, {
-            "+FX",
-            action = function()
+            name = "+FX",
+            custom_next_menu = function()
                 -- TODO: what todo when selecting/entering on the +FX listing.
             end,
         })
     end
-
 
     -- Route envelopes
     --
@@ -433,42 +423,21 @@ automation_actions.picker_insert_cc_curve = function()
             x = 200,
             width = 600,
             height = 600,
+            -- TODO:
+            -- if next sub menu
+            --     run custom next and pass the template list picker.
+            -- else
+            --     run template listing picker, and attach the necessary
+            --     tags, eg. track/take, to be able to inject or transform
+      --     env/cc.
             on_select_func = true,
-            results_filter = 1,
-            sort_comp = 1,
-            entry_maker = 1,
+            results_filter = "name",
+            sort_comp = "name",
+            entry_maker = "name",
         })
     end
 
     picker_curve_menu_start()
-
-    -- local target_ranges = {}
-    -- -- 1. selected regions
-    -- if custom_targets.regions then
-    --     -- for _, cs in ipairs(custom_targets.regions) do
-    --     -- 	log.user("regions:", cs.name)
-    --     -- end
-    --     for _, reg in ipairs(custom_targets.regions) do
-    --         table.insert(target_ranges, { left = reg.pos, right = reg.rgnend })
-    --     end
-    -- else
-    --     -- 2. operator & motion
-    --     if state_interface.last_command_has("timeline_operator") then
-    --         local tl_range = state_interface.getKey("last_set_timeline_range")
-    --         table.insert(target_ranges, {
-    --             left = tl_range[1],
-    --             right = tl_range[2],
-    --         })
-    --     else
-    --         -- 3. cursor position
-    --         local cursor_info = tl.get_cursor_info()
-    --         table.insert(target_ranges, {
-    --             left = cursor_info.msr.start,
-    --             right = cursor_info.msr._end,
-    --         })
-    --     end
-    -- end
-    -- return target_ranges
 end
 
 return automation_actions

@@ -473,14 +473,8 @@ pickers.scales = function(meta, opts)
     }, opts))
 end
 
-pickers.envelope_template = function()
+pickers.envelope_templates = function()
     local t_env_templates = {}
-end
-
-pickers.midi_cc_templates = function()
-    -- i can start sketching these out in a config table.
-    -- definitions/midi_cc_curves.lua
-    local t_midi_cc_curves = {}
 end
 
 pickers.midi_note_articulation = function()
