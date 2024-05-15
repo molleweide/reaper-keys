@@ -131,6 +131,10 @@ end
 --
 -- option: not to get track tree
 --
+-- TODO: Maybe rename -> `rk_get_context()` and then combine this with the
+-- get midi context functions and just provide everything that could be necessary
+-- for basic action building.
+--
 tracks.get_focused_track_objects = function()
     local context = state_interface.getContext()
     log.debug("get_focused_track_objects/rk context:", context)

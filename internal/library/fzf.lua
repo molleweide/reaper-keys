@@ -152,7 +152,7 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 
 	for i = 1, math.max(#tControls, iResultsPerPage) do
 		if i > #tControls and i <= iResultsPerPage then
-			log.user("entered buttons attach mappings")
+			-- log.user("entered buttons attach mappings")
 			local ResultsEntryControl = jGuiHighlightControl:new({
 				title = "results_entry_control",
 				height = height,
@@ -178,7 +178,7 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 			})
 
 			if gui.attach_mappings then
-				log.user("CREATE RESULT BUTTONS -> attach mappings")
+				-- log.user("CREATE RESULT BUTTONS -> attach mappings")
 				function ResultsEntryControl:onKeyboard(key)
 					-- gui.attach_mappings(gui, key, i + SCROLL_RESULTS)
 					local s_key = tostring(key)
