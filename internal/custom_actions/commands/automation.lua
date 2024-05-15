@@ -405,15 +405,17 @@ automation_actions.picker_insert_cc_curve = function()
     end
 
     if there_are_env_enabled_fx then
-        table.insert(t_curve_results, {
-            name = "+FX",
-            custom_next_menu = function()
-                -- TODO: what todo when selecting/entering on the +FX listing.
-            end,
-        })
+        for _, x in ipairs(fltr_track_fx) do
+            table.insert(t_curve_results, {
+                name = string.format("(fx) [name = {%s} | pname = {%s}]", x.name, x.pname),
+                custom_next_menu = function()
+                    log.user("Call FX PARAMS ficker that in turn calls the env temp picker.")
+                end,
+            })
+        end
     end
 
-    -- Route envelopes
+    -- TODO: Route envelopes
     --
 
     local function picker_curve_menu_start()
@@ -421,16 +423,18 @@ automation_actions.picker_insert_cc_curve = function()
             title = "Picker: Curve menu start",
             results = t_curve_results,
             x = 200,
-            width = 600,
+            width = 900,
             height = 600,
-            -- TODO:
-            -- if next sub menu
-            --     run custom next and pass the template list picker.
-            -- else
-            --     run template listing picker, and attach the necessary
-            --     tags, eg. track/take, to be able to inject or transform
-      --     env/cc.
-            on_select_func = true,
+            on_select_func = function(gui)
+                local sel = gui:get_on_enter_selection()
+                log.user(format.block(sel))
+                if sel.custom_next_menu and type(sel.custom_next_menu) == "function" then
+                    sel.custom_next_menu()
+                else
+                    pickers.envelope_templates()
+                end
+                return false
+            end,
             results_filter = "name",
             sort_comp = "name",
             entry_maker = "name",

@@ -35,28 +35,28 @@ local LAYERED_CURVES_ENCODING = {
 
 return {
     {
-        name = "FLAT",
+        name = "FLAT ----",
         def = {
             {},
             {},
         },
     },
     {
-        name = "UP",
+        name = "UP /",
         def = {
             {},
             {},
         },
     },
     {
-        name = "DOWN",
+        name = "DOWN \\",
         def = {
             {},
             {},
         },
     },
     {
-        name = "UP DOWN",
+        name = "UP DOWN /\\",
         def = {
             {},
             {},
@@ -64,7 +64,7 @@ return {
         },
     },
     {
-        name = "DOWN UP",
+        name = "DOWN UP \\/",
         def = {
             {},
             {},

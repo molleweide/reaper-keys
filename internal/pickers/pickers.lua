@@ -474,7 +474,14 @@ pickers.scales = function(meta, opts)
 end
 
 pickers.envelope_templates = function()
-    local t_env_templates = {}
+    local t_env_templates = require("constants.envelope_templates")
+    fzf.init({
+        title = "Envelope templates",
+        results = t_env_templates,
+        -- results_filter = "name",
+        sort_comp = "name",
+        entry_maker = "name",
+    })
 end
 
 pickers.midi_note_articulation = function()
