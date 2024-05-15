@@ -217,6 +217,8 @@ pickers.track_fx_params = function(meta, opts)
         sort_comp = "name",
         entry_maker = require("pickers.entry_makers.fx_parameters"),
         attach_mappings = require("pickers.attach_mappings.fx_parameters"),
+        -- since i am doing deep extend I dont think I need to have opts such as
+        -- extended mappings here - it will be merged in anyways..
         extended_mappings = opts.extended_mappings or nil,
     }, opts))
 end
@@ -473,15 +475,15 @@ pickers.scales = function(meta, opts)
     }, opts))
 end
 
-pickers.envelope_templates = function()
+pickers.envelope_templates = function(opts)
     local t_env_templates = require("constants.envelope_templates")
-    fzf.init({
+    fzf.init(tbl.deep_extend({
         title = "Envelope templates",
         results = t_env_templates,
         -- results_filter = "name",
         sort_comp = "name",
         entry_maker = "name",
-    })
+    }, opts))
 end
 
 pickers.midi_note_articulation = function()
@@ -633,7 +635,6 @@ pickers.take_parameters = function()
 end
 
 pickers.load_track_from_presets = function()
-
     -- how are track templates/presets loaded and created in fzf?
     --
     --

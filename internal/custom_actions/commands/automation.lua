@@ -404,12 +404,54 @@ automation_actions.picker_insert_cc_curve = function()
         there_are_env_enabled_fx = true
     end
 
+    local function apply_env_temp_picker(opts)
+        log.user("apply_env_temp_picker; opts =", format.block(opts))
+        pickers.envelope_templates({
+            on_select_func = function(gui)
+                local sel = gui:get_on_enter_selection()
+                log.user("envelope_templates sel:", format.block(sel))
+                if opts.code == "fx" then
+                    log.user(
+                        string.format("FX curve, fx = %s, fx_param = %s", opts.fx_idx, format.block(opts.fx_param))
+                    )
+                elseif opts.code == "volume" then
+                    log.user("VOLUME curve")
+                elseif opts.code == "pan" then
+                    log.user("PAN curve")
+                elseif opts.code == "pitch_bend" then
+                    log.user("PITCH BEND curve")
+                elseif opts.code:match("^cc_") then
+                    log.user("CC curve")
+                end
+                return true
+            end,
+        })
+    end
+
     if there_are_env_enabled_fx then
-        for _, x in ipairs(fltr_track_fx) do
+        for _, fx_unit in ipairs(fltr_track_fx) do
             table.insert(t_curve_results, {
-                name = string.format("(fx) [name = {%s} | pname = {%s}]", x.name, x.pname),
+                name = string.format("(fx) [name = {%s} | pname = {%s}]", fx_unit.name, fx_unit.pname),
                 custom_next_menu = function()
-                    log.user("Call FX PARAMS ficker that in turn calls the env temp picker.")
+                    pickers.track_fx_params(_, {
+                        node = trobj,
+                        target_midi_take = target_midi_take,
+                        targeting_fx_param = true,
+                        fx_index = fx_unit.idx, -- this is being save
+                        on_select_func = function(gui)
+                            local sel = gui:get_on_enter_selection()
+                            apply_env_temp_picker({ code = "fx", fx_idx = fx_unit.idx, fx_param = sel })
+                        end,
+                        sort_comp = require("pickers.sorters.default")("name"),
+                        entry_maker = require("pickers.entry_makers.fx_parameters"),
+                        attach_mappings = nil,
+
+                        -- extended_mappings = {
+                        --     ["C-z"] = function()
+                        --         track_fx_ui(true)
+                        --     end,
+                        -- },
+                    })
                 end,
             })
         end
@@ -431,7 +473,7 @@ automation_actions.picker_insert_cc_curve = function()
                 if sel.custom_next_menu and type(sel.custom_next_menu) == "function" then
                     sel.custom_next_menu()
                 else
-                    pickers.envelope_templates()
+                    apply_env_temp_picker({ code = sel.code })
                 end
                 return false
             end,
