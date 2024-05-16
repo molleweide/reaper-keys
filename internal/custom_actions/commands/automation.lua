@@ -8,6 +8,8 @@ local fzf = require("library.fzf")
 local pickers = require("pickers.pickers")
 local lib_items = require("library.items")
 local effects = require("library.fx")
+local envelope_templates = require("constants.envelope_templates")
+local arrange_funcs = require("utils.arrange_funcs")
 
 local automation_actions = {}
 
@@ -301,14 +303,89 @@ automation_actions.picker_add_env_curve_for_fx_param = function()
     -- 1. Insert point at cursor for selection. <CR>
 end
 
--- IDEA: should i first prompt for both envelops and midi cc in the same command?
--- And then just list:
---  ~ (env) vol
---  ~ (env) pan
---  ~ +fx
---  ~ (cc) pitch bend
---  ~ (cc) cc1
---  ~ (cc) cc2
+-- NOTE: timeline: [.pt_before_L....range_left...range_right....]
+local function find_existing_curve_at_new_range(env, range_left, range_right)
+    local cnt = reaper.CountEnvelopePointsEx(env, -1)
+
+    if cnt <= 2 then
+        return
+    end
+
+    -- FIX: make it so that I can pass start index to the enumb func.
+    -- >> start check at K points before range_left.
+    -- >>>> loop values across my range and compute whether or not it is possible
+    -- to insert curve without overlapping an existing curve.
+
+    local will_create_overlap = false
+
+    local i = 0
+
+    -- TODO: Instead of i = 0, -> always get/start two env points before `range_left`, so that we
+    -- iterate over the fewest number of points possible.
+    local pt_before_L = reaper.GetEnvelopePointByTimeEx(env, -1, range_left)
+
+    -- NOTE: Because I always check and skip the last point for multi_point_nodes,
+    -- I can be sure that each
+
+    local prev_start_time, prev_end_time, prev_mid_time
+
+    while not will_create_overlap and i < cnt do
+        -- point
+        local retval, time_curve_node_0, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
+        -- delta point
+        local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
+
+        -- The `_0` should always be the "first" point of every coded curve node.
+        local delta = time2 - time_curve_node_0
+
+        local is_delta_node = false
+
+        local env_pt_node_type
+
+        if delta > "delta_max" then
+            env_pt_node_type = "MID"
+            prev_mid_time = time_curve_node_0
+            if not prev_start_time and range_left <= prev_mid_time and prev_mid_time <= range_right then
+                will_create_overlap = true
+            end
+        --
+        elseif delta == "start_delta" then
+            env_pt_node_type = "START"
+            prev_start_time = time_curve_node_0
+            if range_left <= prev_start_time and prev_start_time <= range_right then
+                will_create_overlap = true
+            end
+        --
+        elseif env_pt_node_type == "end_delta" then
+            env_pt_node_type = "END"
+            prev_end_time = time_curve_node_0
+            if range_left <= prev_end_time and prev_end_time <= range_right then
+                will_create_overlap = true
+            end
+            --
+        end
+
+        -- TODO: based on the curent env node/delta compute whether or
+        -- not my current candidate will create an overlape!!
+
+        if is_delta_node then
+            i = i + 2
+        else
+            -- if MID points are represented by single points and I dont allow overlap,
+            -- then i should jump one step for each mid point. Instead of two as with
+            -- delta points.
+            i = i + 1
+        end
+    end
+
+    return will_create_overlap
+end
+
+--
+-- NOTE: I need to check that the target range does not overlap with an existing
+-- curve.
+--
+--
 automation_actions.picker_insert_cc_curve = function()
     local state_interface = require("state_machine.state_interface")
 
@@ -410,10 +487,42 @@ automation_actions.picker_insert_cc_curve = function()
             on_select_func = function(gui)
                 local sel = gui:get_on_enter_selection()
                 log.user("envelope_templates sel:", format.block(sel))
+
                 if opts.code == "fx" then
                     log.user(
                         string.format("FX curve, fx = %s, fx_param = %s", opts.fx_idx, format.block(opts.fx_param))
                     )
+                    log.user("range:", range_left, range_right)
+
+                    local fx_env = reaper.GetFXEnvelope(trobj.tr, opts.fx_idx, opts.fx_param.index, true)
+
+                    -- local env_temps = envelope_templates.TEMPLATES
+
+                    local layer_encoder_def = envelope_templates.LAYERED_CURVES_ENCODING[1]
+
+                    --
+                    -- TODO:  compute template curve components
+                    --
+                    local t_pts_to_insert = {}
+                    for i, pt in ipairs(sel.def) do
+                        if i == 1 then
+                            -- TODO: Insert start point here. Use `range_left`
+                            log.user("startpoint")
+                        -- table.insert(t_pts_to_insert, {})
+                        elseif i == #t_pts_to_insert then
+                            -- TODO: insert mid point here. Use `range_right`
+                            log.user("endpoint")
+                        else
+                            -- TODO: insert end point here. Use the percentage value from the template definition.
+                            log.user("midpoint")
+                        end
+                    end
+
+                    envelopes.fltr_single_envelope({
+                        target_env = fx_env,
+                        -- TODO: insert template curve here.
+                        -- insert = t_pts_to_insert
+                    })
                 elseif opts.code == "volume" then
                     log.user("VOLUME curve")
                 elseif opts.code == "pan" then

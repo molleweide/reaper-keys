@@ -476,7 +476,7 @@ pickers.scales = function(meta, opts)
 end
 
 pickers.envelope_templates = function(opts)
-    local t_env_templates = require("constants.envelope_templates")
+    local t_env_templates = require("constants.envelope_templates").templates
     fzf.init(tbl.deep_extend({
         title = "Envelope templates",
         results = t_env_templates,

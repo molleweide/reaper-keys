@@ -1,4 +1,4 @@
-
+local envelope_templates = {}
 -- NOTE: TEMPLATE CURVES
 -- --
 -- Curves can consist of any number of deltas but I keep an upper maximum count.
@@ -9,12 +9,11 @@
 -- be ablet to create sawtooth curves or similar with my templates since the
 -- value of each node is separate from th time point encoding.
 
-local TEMPLATE_POINT_COUNT_MAX = 20 -- template total becomes 22, (+ start/end)
-
+envelope_templates.TEMPLATE_POINT_COUNT_MAX = 20 -- template total becomes 22, (+ start/end)
 
 -- TEST: I am just gonna have to play around with this andd see what works
 -- because I dont know the limits here..
-local ENV_STEP_DELTA = 0.0000000001
+envelope_templates.ENV_STEP_DELTA = 0.0000000001
 
 -- NOTE: Definition describing what the delta should be for template point N,
 -- starting with the first layer, second, and then third layer.
@@ -27,32 +26,34 @@ local ENV_STEP_DELTA = 0.0000000001
 -- the whole timeline.
 -- HACK: For midi these will be the actual midi tick delta, and for standard
 -- envelopes it will be the number times a ENV_DELTA_STEP
-local LAYERED_CURVES_ENCODING = {
-    { 0, 1, 2, 3 },
-    { 4, 5, 6, 7 },
-    { 8, 9, 10, 11 },
+
+-- wait shouldn't this just be
+envelope_templates.LAYERED_CURVES_ENCODING = {
+    { 0, 1, 2 },
+    { 3, 4, 5 },
+    { 6, 7, 8 },
 }
 
-return {
+envelope_templates.TEMPLATES = {
     {
         name = "FLAT ----",
         def = {
-            {},
-            {},
+            { val = 0.5 },
+            { val = 0.5 },
         },
     },
     {
         name = "UP /",
         def = {
-            {},
-            {},
+            { val = 0.25 },
+            { val = 0.75 },
         },
     },
     {
         name = "DOWN \\",
         def = {
-            {},
-            {},
+            { val = 0.75 },
+            { val = 0.25 },
         },
     },
     {
@@ -72,3 +73,5 @@ return {
         },
     },
 }
+
+return envelope_templates
