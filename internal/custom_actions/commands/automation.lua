@@ -311,11 +311,6 @@ local function find_existing_curve_at_new_range(env, range_left, range_right)
     return
   end
 
-  -- FIX: make it so that I can pass start index to the enumb func.
-  -- >> start check at K points before range_left.
-  -- >>>> loop values across my range and compute whether or not it is possible
-  -- to insert curve without overlapping an existing curve.
-
   local will_create_overlap = false
 
   local i = 0
@@ -324,16 +319,20 @@ local function find_existing_curve_at_new_range(env, range_left, range_right)
   -- iterate over the fewest number of points possible.
   local pt_before_L = reaper.GetEnvelopePointByTimeEx(env, -1, range_left)
 
-  -- NOTE: Because I always check and skip the last point for multi_point_nodes,
-  -- I can be sure that each
-
+  local env_step_delta = envelope_templates.ENV_STEP_DELTA
   local prev_start_time, prev_end_time, prev_mid_time
 
+  log.user(string.format([[
+    single = %s
+    double = %s
+    ]], env_step_delta, env_step_delta * 2))
+
   while not will_create_overlap and i < cnt do
-    -- point
+    -- point and next consecutive point
     local retval, time_curve_node_0, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
-    -- delta point
     local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
+
+    log.user("--------------------------------------------")
 
     -- The `_0` should always be the "first" point of every coded curve node.
     local delta = time2 - time_curve_node_0
@@ -342,25 +341,66 @@ local function find_existing_curve_at_new_range(env, range_left, range_right)
 
     local env_pt_node_type
 
-    if delta > "delta_max" then
+    local delta_max = envelope_templates.get_env_step_max()
+
+    local delta_enlarged = delta * envelope_templates.ENV_STEP_MULT
+
+    log.user(string.format("delta = %s, delta mult = %s", delta, delta_enlarged))
+
+
+    local ceiled = math.ceil(delta_enlarged)
+    local floored = math.floor(delta_enlarged)
+
+    local ceil_diff = ceiled - delta_enlarged
+    local floor_diff = delta_enlarged - floored
+
+    log.user(string.format([[ceiled = %s, floored = %s]], ceiled, floored))
+
+    local delta_processed
+
+    if floor_diff < ceil_diff then
+      delta_processed = floored
+    elseif ceil_diff < floor_diff then
+      delta_processed = ceiled
+    end
+
+
+    log.user("delta_processed = ", delta_processed)
+
+    -- NOTE: I just realized that there is always a "first" env point inserted
+    -- at time zero for each envelope!! This has to be considered!!
+
+
+
+    -- log.user(string.format([[delta=%s, step1=%s, step2=%s, delta==step1 ? (%s)]], delta, env_step_delta,
+    --   env_step_delta * 2, delta == env_step_delta))
+    local dp = delta_processed
+
+    if dp == nil or dp > 20 then
       env_pt_node_type = "MID"
+      log.user(string.format([[MID: delta=%s]], delta, env_step_delta))
       prev_mid_time = time_curve_node_0
       if not prev_start_time and range_left <= prev_mid_time and prev_mid_time <= range_right then
-        will_create_overlap = true
+        -- will_create_overlap = true
       end
-      --
-    elseif delta == "start_delta" then
+      -- current start delta is * 1
+    elseif dp == 1 then
+      log.user(string.format([[START: delta = %s, step = %s]], delta, env_step_delta))
+      is_delta_node = true
+
       env_pt_node_type = "START"
       prev_start_time = time_curve_node_0
       if range_left <= prev_start_time and prev_start_time <= range_right then
-        will_create_overlap = true
+        -- will_create_overlap = true
       end
-      --
-    elseif env_pt_node_type == "end_delta" then
+      -- current END delta is * 2
+    elseif dp == 2 then
       env_pt_node_type = "END"
+      is_delta_node = true
+      log.user(string.format([[END: delta = %s, step = %s]], delta, env_step_delta * 2))
       prev_end_time = time_curve_node_0
       if range_left <= prev_end_time and prev_end_time <= range_right then
-        will_create_overlap = true
+        -- will_create_overlap = true
       end
       --
     end
@@ -551,11 +591,10 @@ automation_actions.picker_insert_cc_curve = function()
 
           log.user("[picker_insert_cc_curve]: computed curve nodes:", format.block(t_pts_to_insert))
 
-          -- envelopes.fltr_single_envelope({
-          --   target_env = fx_env,
-          --   -- TODO: insert template curve here.
-          --   -- insert = t_pts_to_insert
-          -- })
+          envelopes.fltr_single_envelope({
+            target_env = fx_env,
+            insert = t_pts_to_insert
+          })
         elseif opts.code == "volume" then
           log.user("VOLUME curve")
         elseif opts.code == "pan" then

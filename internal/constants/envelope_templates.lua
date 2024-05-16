@@ -9,11 +9,17 @@ local envelope_templates = {}
 -- be ablet to create sawtooth curves or similar with my templates since the
 -- value of each node is separate from th time point encoding.
 
-envelope_templates.TEMPLATE_POINT_COUNT_MAX = 20 -- template total becomes 22, (+ start/end)
+envelope_templates.TEMPLATE_POINT_COUNT_MAX = 10 -- template total becomes 22, (+ start/end)
 
 -- TEST: I am just gonna have to play around with this andd see what works
 -- because I dont know the limits here..
 envelope_templates.ENV_STEP_DELTA = 0.000001
+
+envelope_templates.ENV_STEP_MULT = 1000000
+
+envelope_templates.get_env_step_max = function()
+  return envelope_templates.ENV_STEP_DELTA * envelope_templates.TEMPLATE_POINT_COUNT_MAX
+end
 
 -- NOTE: Definition describing what the delta should be for template point N,
 -- starting with the first layer, second, and then third layer.
@@ -52,8 +58,8 @@ envelope_templates.TEMPLATES = {
   {
     name = "DOWN \\",
     def = {
-      { val = 0.75 },
-      { val = 0.25 },
+      { val = 1 },
+      { val = 0 },
     },
   },
   {
