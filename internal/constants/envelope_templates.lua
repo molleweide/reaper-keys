@@ -13,7 +13,7 @@ envelope_templates.TEMPLATE_POINT_COUNT_MAX = 20 -- template total becomes 22, (
 
 -- TEST: I am just gonna have to play around with this andd see what works
 -- because I dont know the limits here..
-envelope_templates.ENV_STEP_DELTA = 0.0000000001
+envelope_templates.ENV_STEP_DELTA = 0.000001
 
 -- NOTE: Definition describing what the delta should be for template point N,
 -- starting with the first layer, second, and then third layer.
@@ -29,49 +29,59 @@ envelope_templates.ENV_STEP_DELTA = 0.0000000001
 
 -- wait shouldn't this just be
 envelope_templates.LAYERED_CURVES_ENCODING = {
-    { 0, 1, 2 },
-    { 3, 4, 5 },
-    { 6, 7, 8 },
+  { 1, 0, 2 },
+  { 3, 4, 5 },
+  { 6, 7, 8 },
 }
 
 envelope_templates.TEMPLATES = {
-    {
-        name = "FLAT ----",
-        def = {
-            { val = 0.5 },
-            { val = 0.5 },
-        },
+  {
+    name = "FLAT ----",
+    def = {
+      { val = 0.5 },
+      { val = 0.5 },
     },
-    {
-        name = "UP /",
-        def = {
-            { val = 0.25 },
-            { val = 0.75 },
-        },
+  },
+  {
+    name = "UP /",
+    def = {
+      { val = 0.25 },
+      { val = 0.75 },
     },
-    {
-        name = "DOWN \\",
-        def = {
-            { val = 0.75 },
-            { val = 0.25 },
-        },
+  },
+  {
+    name = "DOWN \\",
+    def = {
+      { val = 0.75 },
+      { val = 0.25 },
     },
-    {
-        name = "UP DOWN /\\",
-        def = {
-            {},
-            {},
-            {},
-        },
+  },
+  {
+    name = "UP DOWN /\\",
+    def = {
+      {},
+      { 0.5 },       -- this MID point should be inserted in the middle of the curve object.
+      {},
     },
-    {
-        name = "DOWN UP \\/",
-        def = {
-            {},
-            {},
-            {},
-        },
+  },
+  {
+    name = "DOWN UP \\/",
+    def = {
+      {},
+      {},
+      {},
     },
+  },
+  {
+    name = "FIVE",
+    def = {
+      {},
+      {},
+      {},
+      {},
+      {}
+    },
+  },
 }
 
 return envelope_templates

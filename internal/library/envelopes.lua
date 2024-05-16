@@ -362,7 +362,6 @@ end
 -- this function uses the slower method where I have to know which ccidx before hand.
 envelopes.get_midi_ccs_by_type = function(take)
     local retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
-
     -- Store CC by types
     local midi_cc = {}
     for j = 0, ccs - 1 do
@@ -374,82 +373,6 @@ envelopes.get_midi_ccs_by_type = function(take)
         table.insert(midi_cc[cc.msg2], cc)
     end
     return midi_cc
-end
-
-envelopes.loop_midi_buf_string = function()
-    local gotAllOK, MIDIstring = reaper.MIDI_GetAllEvts(take, "") -- write MIDI events to MIDIstring, get all events okay
-    if not gotAllOK then
-        reaper.ShowMessageBox("Error while loading MIDI", "Error", 0)
-        return false
-    end -- if getting the MIDI data failed
-
-    -- THESE CANT BE USED SINCE THEY ARE MOUSE DEPENDENT
-    -- local cc_lane -- CC lane under mouse
-    -- _, _, _ = reaper.BR_GetMouseCursorContext() -- initiate "get mouse cursor context"
-    -- _, _, _, cc_lane, _, _ = reaper.BR_GetMouseCursorContext_MIDI() -- get CC lane
-    -- local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive()) -- get active take in MIDI editor
-    -- local mouse_pos_ppq_int = math.floor(reaper.MIDI_GetPPQPosFromProjTime(take, reaper.BR_GetMouseCursorContext_Position())) -- get mouse position in project time, convert to PPQ and integer
-    -- _, segment, _ = reaper.BR_GetMouseCursorContext() -- get mouse hovering area
-    -- local selection_offset_found = false -- initalize
-
-    local sum_offset = 0 -- initialize
-    local MIDIlen = #MIDIstring -- get string length
-    tableEvents = {} -- initialize table, MIDI events will temporarily be stored in this table until they are concatenated into a string again
-    local stringPos = 1 -- position in MIDIstring while parsing through events
-
-    while stringPos < MIDIlen - 12 do -- parse through all events in the MIDI string, one-by-one, excluding the final 12 bytes, which provides REAPER's All-notes-off end-of-take message
-        offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos) -- unpack MIDI-string on stringPos
-
-        -- add offset until first selected event has been found
-        if selection_offset_found == false then
-            sum_offset = sum_offset + offset
-        end
-
-        if
-            #msg == 3 -- if msg consists of 3 bytes (= channel message)
-            and (msg:byte(1) >> 4) == 11
-            and flags & 1 == 1 -- if status byte is a CC and event is selected
-            and segment == "cc_lane" -- mouse cursor hovers the cc area
-            and mouse_pos_ppq_int > 0 -- mouse cursor after take start (prevents unexpected event chaos)
-        then
-            if selection_offset_found == false then -- prevents writing "selection_offset_found = true" on each iteration
-                selection_offset_found = true -- first selected event found
-            end
-
-            table.insert(tableEvents, string.pack("i4Bs4", offset, flags, msg)) -- keep original CC event
-            msg_cc_lane = msg:sub(1, 1) .. string.char(cc_lane) .. msg:sub(3, 3) -- write msg chunk for cc_lane
-            table.insert(tableEvents, string.pack("i4Bs4", mouse_pos_ppq_int - sum_offset, flags & ~1, msg_cc_lane)) -- copy CC event to mouse cursor, unselect and re-pack MIDI string
-            table.insert(tableEvents, string.pack("i4Bs4", -mouse_pos_ppq_int + sum_offset, 0, "")) -- rectify distance and put an empty event after the new CC event
-        else
-            table.insert(tableEvents, string.pack("i4Bs4", offset, flags, msg)) -- write all other events back to table
-        end
-    end
-
-    -- Note that if lanes_from_which_to_remove == "all", each 7-bit part of 14-bit CCs will be analyzed separately,
-    if lanes_from_which_to_remove == "all" then
-        laneIsALLCC, laneIsPITCH, laneIsPROGRAM, laneIsCHPRESS = true, true, true, true
-    else
-        if 0 <= targetLane and targetLane <= 127 then -- CC, 7 bit (single lane)
-            laneIsCC7BIT = true
-        elseif targetLane == 0x201 then
-            laneIsPITCH = true
-        elseif targetLane == 0x202 then
-            laneIsPROGRAM = true
-        elseif targetLane == 0x203 then -- Channel pressure
-            laneIsCHPRESS = true
-        elseif 256 <= targetLane and targetLane <= 287 then -- CC, 14 bit (double lane)
-            laneIsCC14BIT = true
-        else -- not a lane type in which script can be used.
-            reaper.ShowMessageBox(
-                "This script only works in the following lanes:\n * 7-bit CC lanes,\n * 14-bit CC lanes,\n * Pitchwheel,\n * Channel pressure or \n * Program select.\n\n"
-                    .. "(Note: The choice of method for removing redundancies from 14-bit CC lanes will depend on the user's intent: "
-                    .. "For example, LSB information can be removed by simply deleting the CCs in the LSB lane.)",
-                "ERROR",
-                0
-            )
-            return false
-        end
-    end
 end
 
 ---This is the simple version that haves no filter besides the last event.
@@ -829,8 +752,17 @@ envelopes.midi_take_fltr_cc = function(opts)
     -- if insert and apply transform/removal.
 end
 
+
+envelopes.track_delete_single_envelope = function()
+    -- TODO: reset all curves to default and remove the envelope curves.
+end
+
+
 envelopes.track_reset_all = function(tr)
     -- TODO: reset all curves to default and remove the envelope curves.
+end
+
+envelopes.list_all_curve_objects = function()
 end
 
 return envelopes
