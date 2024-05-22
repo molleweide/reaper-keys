@@ -295,7 +295,7 @@ commands.apply_patterns_across_sel_REGIONS_and_TRACKS = function(meta, opts)
         })
     end
 
-    -- NOTE: maybe these types of "tags" names should be kept in a dedicated
+    -- NOTE: maybe these types of "tags" name CONSTANTS should be kept in a dedicated
     -- file for security so I dont mess thigs up.
 
     local function tracks()
@@ -607,34 +607,6 @@ commands.automation_ui = function()
         x = 0,
         y = 1100,
         results = rk_main_menu,
-        on_select_func = false,
-        sort_comp = "name",
-        entry_maker = "name",
-        -- attach_mappings = require("pickers.attach_mappings.fx_parameters"),
-        -- extended_mappings = opts.extended_mappings or nil,
-    })
-end
-
-commands.sample_library_file_browser = function()
-    -- TODO:
-    -- 1. add sample library dir to def/config
-    -- 2. on selection -> recursive call picker with the selected dir.
-    -----
-    -- On C-z, if previous dir is beyond base sample dir, don't do anything,
-    -- else move back one step.
-    -----
-    -- C-f, preview sample,
-    --      Hit C-f again to stop current preview, eg. if file is a loop.
-    -----
-    -- C-t, toggle play selected sample on change.
-
-    fzf.init({
-        title = "SAMPLE LIBRARY BROWSER",
-        width = 1000,
-        height = 800,
-        x = 0,
-        y = 1100,
-        -- results = rk_main_menu,
         on_select_func = false,
         sort_comp = "name",
         entry_maker = "name",
@@ -1110,6 +1082,22 @@ commands.rename_region_at_cursor = function()
     -- TODO: marks.set_name_for_mark  mark/region
 end
 
+local function inspect_midi_editor_takes(hwnd)
+    -- TODO: 1. List parent tracks
+    -- 2. list items for each track
+    -- 3. show visible
+    -- 4. show editable
+    -- 5. active
+
+    -- local
+    for take in midi_utils.enumMIDITakes(hwnd, false) do
+        local parent_item = reaper.GetMediaItemTake_Item(take)
+        local parent_tr = reaper.GetMediaItem_Track(parent_item)
+        local _, buf = reaper.GetTrackName(parent_tr)
+        log.user(string.format([[parent track name = %s, item = %s]], buf, tostring(parent_item)))
+    end
+end
+
 -- TEST: Mapping: Cycle not-added items/only visible items/ ALL items.
 commands.picker_midi_editor_add_track_to_view = function()
     local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
@@ -1117,16 +1105,16 @@ commands.picker_midi_editor_add_track_to_view = function()
         return
     end
 
+    -- NOTE: This should become a fully fledged fuzzy UI for managing the
+    -- attached takes for a midi editor, so that I know that I can test all
+    -- possible actions, THEN over time let other smarter faster UIs take
+    -- form with iterations.
+
     -- TESTING: loggin midi takes attatched to ME
     local sx = require("syntax.tracks")
     local vtt = sx.getVerifiedTree()
-    -- local take = reaper.MIDIEditor_EnumTakes(hwnd, takeindex, editable_only)
-    for take in midi_utils.enumMIDITakes(ME.editor, false) do
-        local parent_item = reaper.GetMediaItemTake_Item(take)
-        local parent_tr = reaper.GetMediaItem_Track(parent_item)
-        local _, buf = reaper.GetTrackName(parent_tr)
-        log.user(string.format([[parent track name = %s, item = %s]], buf, tostring(parent_item)))
-    end
+
+    inspect_midi_editor_takes(ME.editor)
 
     pickers.all_tracks(_, {
         vtt = vtt,
@@ -1174,6 +1162,16 @@ commands.picker_midi_editor_add_track_to_view = function()
         -- ["<c-u>"] remove from editable / visible
         -- ["<c-a>"] set active track?
         extended_mappings = em,
+    })
+end
+
+commands.sample_library_file_browser = function()
+    -- TODO: 1. First, just learn to navigate the file browser.
+    -- 2. Add opts.restrict_to_dir.
+    -- 3.
+    local sample_dir_path = "/Users/hjalmarjakobsson/reaper/samples/1Shots Sampler Inst"
+    pickers.file_browser({
+        cwd = sample_dir_path,
     })
 end
 

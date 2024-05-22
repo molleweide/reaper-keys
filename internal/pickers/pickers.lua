@@ -654,7 +654,110 @@ end
 
 pickers.sample_selector_from_track_name = function() end
 
-pickers.file_browser = function() end
+pickers.file_browser = function(opts)
+    opts = opts or {}
+
+    if not opts.cwd then
+        log.debug("picker file browser requires an `opts.start_at_path` param.")
+        return
+    end
+
+    -- TODO:
+    -- 1. add sample library dir to def/config
+    -- 2. on selection -> recursive call picker with the selected dir.
+    -----
+    -- On C-z, if previous dir is beyond base sample dir, don't do anything,
+    -- else move back one step.
+    -----
+    -- C-f, preview sample,
+    --      Hit C-f again to stop current preview, eg. if file is a loop.
+    -----
+    -- C-t, toggle play selected sample on change.
+    --
+
+    local function enum_files(path)
+        local i = -1
+        return function()
+            i = i + 1
+            return reaper.EnumerateFiles(path, i)
+        end
+    end
+    local function enum_sub_dirs(path)
+        local i = -1
+        return function()
+            i = i + 1
+            return reaper.EnumerateSubdirectories(path, i)
+        end
+    end
+
+    local function scan_dir(path)
+        local t_dir_scanned = {}
+        for p in enum_sub_dirs(path) do
+            table.insert(
+                t_dir_scanned,
+                { name = p, full_path = string.format("%s/%s", path, p), type = "dir", type_formatted = "dir  :" }
+            )
+        end
+
+    -- TODO: ignore eg. .DS_Store
+        for p in enum_files(path) do
+            table.insert(
+                t_dir_scanned,
+                { name = p, full_path = string.format("%s/%s", path, p), type = "file", type_formatted = "file :" }
+            )
+        end
+        return t_dir_scanned
+    end
+
+    --
+    -- NOTE: helper APIs
+    --  local string_path = reaper.EnumerateFiles( path, fileindex )
+    --  List the files in the "path" directory. Returns NULL/nil when all files have been listed. Use fileindex = -1 to force re-read of directory (invalidate cache). See EnumerateSubdirectories
+    -- --
+    --   reaper.EnumerateSubdirectories( path, subdirindex )
+    --   List the subdirectories in the "path" directory. Use subdirindex = -1 to force re-read of directory (invalidate cache). Returns NULL/nil when all subdirectories have been listed. See EnumerateFiles
+
+    local start_dir = scan_dir(opts.cwd)
+
+    -- log.user(format.block(subdirs))
+
+    --
+    --
+    --
+    fzf.init({
+        title = "SAMPLE LIBRARY BROWSER",
+        width = 1000,
+        height = 800,
+        x = 0,
+        y = 1100,
+        results = start_dir,
+        on_select_func = function(gui)
+            local _, main_input = gui:controlGetByName("main_input")
+            if main_input then
+            end
+            local sel
+            if gui:has_mult_select() then
+                sel = gui:get_mult_select()
+            else
+                sel = { gui:get_on_enter_selection() }
+            end
+
+            log.user(format.block(sel), sel[1].type == "dir")
+
+            if sel[1].type == "dir" then
+                log.user("NEW DIR")
+                pickers.file_browser({ cwd = sel[1].full_path })
+            else
+            end
+
+            return false
+        end,
+        sort_comp = "name",
+        entry_maker = { "type_formatted", "name" },
+        -- attach_mappings = require("pickers.attach_mappings.fx_parameters"),
+        -- extended_mappings = opts.extended_mappings or nil,
+    })
+end
 
 pickers.basic_prompt = function(opts)
     fzf.init(tbl.deep_extend({
