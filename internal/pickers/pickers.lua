@@ -657,6 +657,9 @@ pickers.sample_selector_from_track_name = function() end
 pickers.file_browser = function(opts)
     opts = opts or {}
 
+    -- TODO: ~ opts.allow_multiple_select
+    -- ~ on_wav_select
+
     if not opts.cwd then
         log.debug("picker file browser requires an `opts.start_at_path` param.")
         return
@@ -699,23 +702,20 @@ pickers.file_browser = function(opts)
             )
         end
 
-    -- TODO: ignore eg. .DS_Store
+        -- TODO: ignore eg. .DS_Store
         for p in enum_files(path) do
+            if p:match("DS_Store") then
+                goto continue
+            end
+
             table.insert(
                 t_dir_scanned,
                 { name = p, full_path = string.format("%s/%s", path, p), type = "file", type_formatted = "file :" }
             )
+            ::continue::
         end
         return t_dir_scanned
     end
-
-    --
-    -- NOTE: helper APIs
-    --  local string_path = reaper.EnumerateFiles( path, fileindex )
-    --  List the files in the "path" directory. Returns NULL/nil when all files have been listed. Use fileindex = -1 to force re-read of directory (invalidate cache). See EnumerateSubdirectories
-    -- --
-    --   reaper.EnumerateSubdirectories( path, subdirindex )
-    --   List the subdirectories in the "path" directory. Use subdirindex = -1 to force re-read of directory (invalidate cache). Returns NULL/nil when all subdirectories have been listed. See EnumerateFiles
 
     local start_dir = scan_dir(opts.cwd)
 
@@ -743,19 +743,71 @@ pickers.file_browser = function(opts)
             end
 
             log.user(format.block(sel), sel[1].type == "dir")
+            -- if #sel > 1 hasFiles then
+            --     get first selected wav file.
 
-            if sel[1].type == "dir" then
-                log.user("NEW DIR")
-                pickers.file_browser({ cwd = sel[1].full_path })
+            -- get selected dirs
+            local sel_dirs = tbl.filter(sel, function(o)
+                return o.type == "dir"
+            end)
+
+            local sel_files = tbl.filter(sel, function(o)
+                return o.type == "file"
+            end)
+
+            if #sel_files > 0 then
+                -- if opts.mult select?
+                for i, s in ipairs(sel_files) do
+                    log.user("Do something with file:", s.full_path)
+                end
+            -- if opts.on_select_files then
+            --     opts.on_select_files(sel_files)
+            -- end
+            elseif #sel_dirs > 0 then
+                -- if opts.mult select?
+                -- TODO: This should be a callback so that one can specify what should happen
+                -- to the selection.
+                local the_sel = sel_dirs[1]
+                log.user("NEW DIR", format.block(the_sel))
+                pickers.file_browser({ cwd = the_sel.full_path })
+            -- if opts.on_select_dirs then
+            --     opts.on_select_dirs(sel_dirs)
+            -- end
             else
+                log.debug("It seems something went wrong with processing the picker selection?!")
             end
+
+            -- if #sel == 1 then
+            --     local the_sel = sel[1]
+            --     if the_sel.type == "dir" then
+            --         log.user("NEW DIR")
+            --         pickers.file_browser({ cwd = the_sel[1].full_path })
+            --     else
+            --     end
+            -- else
+            -- end
 
             return false
         end,
         sort_comp = "name",
+
+        -- TODO: Important to show state `selected = true/false`, so that I can
+        -- show this in the picker.
         entry_maker = { "type_formatted", "name" },
         -- attach_mappings = require("pickers.attach_mappings.fx_parameters"),
-        -- extended_mappings = opts.extended_mappings or nil,
+        extended_mappings = {
+            ["C-z"] = function()
+                local function get_parent_dir(path)
+                    return path:match("(.+)/[^/]+$")
+                end
+                local parent_path = get_parent_dir(opts.cwd)
+                if parent_path == "xxx" then
+                    -- how to i handle the restrict nav to specific dir here?/
+                end
+                log.user("<C-z> goto:", parent_path)
+                pickers.file_browser({ cwd = parent_path })
+            end,
+        },
     })
 end
 
