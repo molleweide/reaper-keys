@@ -95,7 +95,8 @@ end
 -- todo: add all_tracks
 
 pickers.all_tracks = function(meta, opts)
-    local vtt = syntax.getVerifiedTree()
+    opts = opts or {}
+    local vtt = opts.vtt or syntax.getVerifiedTree()
     local t_picker_results = vtt.track_list
     log.user("<PICKER: ALL TRACKS>")
 

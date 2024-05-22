@@ -3,9 +3,22 @@ local format = require("utils.format")
 
 local tbl = require("utils.table")
 
-local TEMPLATE_SETTINGS = {
-    envelopes = { start_delta = 0.01, end_delta = 0.01 },
-    midi_cc = { start_delta = 0.01, end_delta = 0.01 },
+-- NOTE: `type`
+-- type: envelope type: 0->Volume, 1->Volume (Pre-FX), 2->Pan, 3->Pan
+-- (Pre-FX), 4->Width, 5->Width (Pre-FX), 6->Mute, 7->Pitch, 8->Playrate,
+-- 9->Tempo map, 10->Parameter (fx??)
+
+local ENV_TYPE_MAP_TO_REAL_NAME = {
+    [0] ={  name_short = "V ", name_full = "Volume" },
+    [1] ={  name_short = "V.", name_full = "Volume (Pre-FX)" },
+    [2] ={  name_short = "P ", name_full = "Pan" },
+    [3] ={  name_short = "P.", name_full = "Pan (Pre-FX)" },
+    [4] ={  name_short = "W ", name_full = "Width" },
+    [5] ={  name_short = "W.", name_full = "Width (Pre-FX)" },
+    [6] ={  name_short = "Mt", name_full = "Mute" },
+    [7] ={  name_short = "Pr", name_full = "Playrate" },
+    [9] ={  name_short = "TM", name_full = "Tempo map" },
+    [10] ={ name_short = "FX", name_full = "Parameter (FX)" },
 }
 
 -- integer reaper.MIDIEditor_GetSetting_int( midieditor, setting_desc )
@@ -76,10 +89,38 @@ envelopes.fltr_track_envelopes = function(tr, opts)
 
     local t_envelopes = {}
 
-    for i = 0, count_envs do
-        log.user("track envelope #", i)
+    for i = 0, count_envs - 1 do
         local track_env = reaper.GetTrackEnvelope(tr, i)
-        table.insert(t_envelopes, track_env)
+        local br_env = reaper.BR_EnvAlloc(track_env, false)
+
+        -- NOTE: `type`
+        -- type: envelope type: 0->Volume, 1->Volume (Pre-FX), 2->Pan, 3->Pan
+        -- (Pre-FX), 4->Width, 5->Width (Pre-FX), 6->Mute, 7->Pitch, 8->Playrate,
+        -- 9->Tempo map, 10->Parameter (fx??)
+
+        local active, visible, armed, inLane, laneHeight, defaultShape, minValue, maxValue, centerValue, env_type, faderScaling =
+            reaper.BR_EnvGetProperties(br_env, true, true, true, true, 0, 0, 0, 0, 0, 0, true)
+
+        local _, buf_name = reaper.GetEnvelopeName(track_env)
+
+        if opts.log then
+            log.user("track envelope #", i, "name = ", buf_name, ", type = ", env_type)
+        end
+        table.insert(t_envelopes, {
+            env = track_env,
+            name = buf_name,
+            active = active,
+            armed = armed,
+            in_lane = inLane,
+            lane_height = laneHeight,
+            defaultShape = defaultShape,
+            min_val = minValue,
+            max_val = maxValue,
+            center_val = centerValue,
+            type = env_type,
+            type_name = ENV_TYPE_MAP_TO_REAL_NAME[env_type].name_short,
+            fader_scaling = faderScaling,
+        })
     end
 
     return t_envelopes
@@ -584,8 +625,8 @@ envelopes.midi_take_fltr_cc = function(opts)
 
         local _, _, cc_count = reaper.MIDI_CountEvts(opts.take)
 
-    -- NOTE: I could rewrite this as a special iterator so that I only
-    -- need to perform one single loop for all cc/insert -> filter -> transform.
+        -- NOTE: I could rewrite this as a special iterator so that I only
+        -- need to perform one single loop for all cc/insert -> filter -> transform.
         for i = 0, cc_count do
             local _, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(opts.take, i)
 
@@ -752,17 +793,14 @@ envelopes.midi_take_fltr_cc = function(opts)
     -- if insert and apply transform/removal.
 end
 
-
 envelopes.track_delete_single_envelope = function()
     -- TODO: reset all curves to default and remove the envelope curves.
 end
-
 
 envelopes.track_reset_all = function(tr)
     -- TODO: reset all curves to default and remove the envelope curves.
 end
 
-envelopes.list_all_curve_objects = function()
-end
+envelopes.list_all_curve_objects = function() end
 
 return envelopes

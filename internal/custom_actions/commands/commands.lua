@@ -9,6 +9,8 @@ local segments = require("library.segments")
 local marks = require("library.marks")
 local route = require("library.routing")
 
+local midi_utils = require("utils.midi_toolkit_funcs")
+
 local fzf = require("library.fzf")
 
 local fxu = require("library.fx")
@@ -133,16 +135,16 @@ commands.add_track_nodes_ui = function(_, opts)
     })
 end
 
-local function check_if_item_exists_or_create(track, check_start_pos, check_end_pos)
-    local items_found = containers.get_track_items_that_span_cursor_pos(track, check_start_pos, check_end_pos)
-    local target_item
-    if items_found then
-        target_item = items_found[1].ref
-    else
-        target_item = containers.create_new_item(true, track, check_start_pos, check_end_pos)
-    end
-    return target_item
-end
+-- local function check_if_item_exists_or_create(track, check_start_pos, check_end_pos)
+--     local items_found = containers.get_track_items_that_span_cursor_pos(track, check_start_pos, check_end_pos)
+--     local target_item
+--     if items_found then
+--         target_item = items_found[1].ref
+--     else
+--         target_item = containers.create_new_item(true, track, check_start_pos, check_end_pos)
+--     end
+--     return target_item
+-- end
 
 -- NOTE:
 -- A. Initially, this should only work on the focused track selection.
@@ -227,6 +229,7 @@ local em = {
     ["C-a"] = function(t)
         t.gui_ref:reset_current_selection()
     end,
+    -- [] = select all visible/filtered items
 }
 
 commands.apply_patterns_across_tracks = function()
@@ -521,9 +524,9 @@ end
 commands.rk_master_menu = function()
     local fzf = require("library.fzf")
 
-  -- NOTE: Make this the most comprehensive actions menu ever,
+    -- NOTE: Make this the most comprehensive actions menu ever,
 
-  -- TODO: Navigate around this tree recursively for the menu.
+    -- TODO: Navigate around this tree recursively for the menu.
     local rk_main_menu = {
         preferences = {
             audio_devices = {},
@@ -1090,7 +1093,6 @@ commands.picker_select_position_midi_editor_UI = function()
 end
 
 commands.picker_midi_view_show_selected_group = function()
-
     -- TODO:
     --   - for target range in time line
     --   - check which group has midi items, and collect how many tracks/items
@@ -1106,6 +1108,73 @@ commands.rename_region_at_cursor = function()
     end
 
     -- TODO: marks.set_name_for_mark  mark/region
+end
+
+-- TEST: Mapping: Cycle not-added items/only visible items/ ALL items.
+commands.picker_midi_editor_add_track_to_view = function()
+    local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+    if not ME_EXISTS then
+        return
+    end
+
+    -- TESTING: loggin midi takes attatched to ME
+    local sx = require("syntax.tracks")
+    local vtt = sx.getVerifiedTree()
+    -- local take = reaper.MIDIEditor_EnumTakes(hwnd, takeindex, editable_only)
+    for take in midi_utils.enumMIDITakes(ME.editor, false) do
+        local parent_item = reaper.GetMediaItemTake_Item(take)
+        local parent_tr = reaper.GetMediaItem_Track(parent_item)
+        local _, buf = reaper.GetTrackName(parent_tr)
+        log.user(string.format([[parent track name = %s, item = %s]], buf, tostring(parent_item)))
+    end
+
+    pickers.all_tracks(_, {
+        vtt = vtt,
+        title = "ME view manager",
+        width = 900,
+        height = 600,
+        -- x = 300,
+        -- y = 1500,
+        filter = "MCS", -- filter track_obj.class = [MCS]
+        on_select_func = function(gui)
+            local _, main_input = gui:controlGetByName("main_input")
+            if main_input then
+            end
+            local selection_of_tracks
+            if gui:has_mult_select() then
+                selection_of_tracks = gui:get_mult_select()
+            else
+                selection_of_tracks = { gui:get_on_enter_selection() }
+            end
+
+            local t_items_to_add = {}
+
+            -- ensure an item exists in new track-to-add
+            local cursor_info = tl.get_cursor_info()
+            local check_start_pos = cursor_info.msr.start
+            local check_end_pos = cursor_info.msr._end
+            for i, v in ipairs(selection_of_tracks) do
+                log.user("Tracks selected ==>", v.name, v.tr)
+                local target_item = containers.check_if_item_exists_or_create(v.tr, check_start_pos, check_end_pos)
+                if target_item then
+                    table.insert(t_items_to_add, target_item)
+                end
+            end
+
+            -- set items as visible
+            midi_editor.setItemsVisible(ME.editor, t_items_to_add, true)
+            midi_editor.setItemsEditable(ME.editor, t_items_to_add, true)
+
+            midi_editor.setActiveItem(ME.editor, t_items_to_add[1])
+
+            return true
+        end,
+        -- NOTE: set visible
+        -- ["<c-e>"] set editable
+        -- ["<c-u>"] remove from editable / visible
+        -- ["<c-a>"] set active track?
+        extended_mappings = em,
+    })
 end
 
 return commands

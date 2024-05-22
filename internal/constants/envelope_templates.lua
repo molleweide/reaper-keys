@@ -13,8 +13,11 @@ envelope_templates.TEMPLATE_POINT_COUNT_MAX = 10 -- template total becomes 22, (
 
 -- TEST: I am just gonna have to play around with this andd see what works
 -- because I dont know the limits here..
-envelope_templates.ENV_STEP_DELTA = 0.000001
 
+
+-- NOTE: Currently 10^6 -> See, what is the smallest delta fraction I can
+-- reliably use.
+envelope_templates.ENV_STEP_DELTA = 0.000001
 envelope_templates.ENV_STEP_MULT = 1000000
 
 envelope_templates.get_env_step_max = function()

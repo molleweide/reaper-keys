@@ -40,6 +40,45 @@ midi_editor.setConfig = function(new_config)
 	reaper.SNM_SetIntConfigVar("midieditor", new_config)
 end
 
+-- NOTE: prefence variable docs
+-- https://mespotin.uber.space/Ultraschall/Reaper_Config_Variables.html#miscopts
+--
+-- TODO: I need to read up on bit-operations..
+
+-- NOTE: Reaper config var: `midieditor`
+-- Several editor-settings, as set in Preferences -> MIDI Editor as well as in
+-- the menu of MIDI Editor -> Contents -> Behavior for "open items in built-in
+-- MIDI Editor" and some actions
+-----
+-- It is an integer-bitfield, preferences variable.
+-----
+-- &1 and &2, One MIDI editor per; 00=media item; 01=track; 10=project
+-----
+-- &4 and &16, Behavior for "open items in built-in MIDI editor
+--   11, Open clicked MIDI item only
+--   00, Open all selected MIDI items
+--   01, Open all MIDI on the same track
+--   10, Open all MIDI in the project
+-----
+-- &32=0/1, Close editor when the active item is deleted in the arrange view(on)/(off) - checked/unchecked
+-----
+-- &128=0/1, Active MIDI item follows selection changes in arrange view(on)/(off) - checked/unchecked
+-----
+-- &256=0/1, Only MIDI items on the same track as the active item are editable(on)/off - checked/unchecked
+-----
+-- &512=0/1, Selection is linked to editability(also MIDI-Editor-action 40891)(on)/(off) - checked/unchecked
+-----
+-- &1024=0/1, Media item selection is linked to visibility(on)/(off) - checked / unchecked
+-----
+-- &2048=0/1, All media items are editable in notation view(MIDI Editor ->
+-- Contents -> Behavior for "open items in built-in MIDI Editor")(on) - checked
+-----
+-- &4096=0/1, Make secondary items editable by default(off)/(on) - unchecked/checked
+-----
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+
+
 -- Get current MIDI editor settings
 midi_editor.getConfigTable = function(config)
 	config = config or reaper.SNM_GetIntConfigVar("midieditor", 0)
@@ -96,6 +135,7 @@ midi_editor.restoreHorizontalZoomState = function(hwnd, state)
 		zoom_start_pos = 0
 		zoom_end_pos = state.length
 	end
+
 	tl.setTimeSelection(zoom_start_pos, zoom_end_pos) -- tmp
 
 	midi_editor.zoomToProjectLoopSelection(hwnd)
@@ -232,9 +272,12 @@ midi_editor.getVisibleItems = function(hwnd)
 	-- TODO: refactor these into `midi_editor.makeTempConfig`
 	-- 	-- >>> use `changeConfigForSelectionExploit`
 	local new_config = t_config.raw
-	new_config = new_config - t_config.editor_type + 1 -- Set 'One MIDI Editor per project'
-	new_config = new_config - t_config.behavior_type -- Set behavior for opening MIDI items to 'Open all selected MIDI items'
-	new_config = new_config - t_config.editability -- Disable 'Selection is linked to visibility'
+	-- Set 'One MIDI Editor per project'
+	new_config = new_config - t_config.editor_type + 1
+	-- Set behavior for opening MIDI items to 'Open all selected MIDI items'
+	new_config = new_config - t_config.behavior_type
+	-- Disable 'Selection is linked to visibility'
+	new_config = new_config - t_config.editability
 	new_config = new_config - t_config.visibility -- Enable 'Selection is linked to visibility'
 	midi_editor.setConfig(new_config)
 
@@ -382,6 +425,10 @@ midi_editor.getItemsByState = function(hwnd, is_edit_state)
 	end
 
 	local saved_item_selection = containers.getItemSelection()
+
+	-- couldn't this be moved down to above the other calls to messing
+	-- with the config, so that I can keep all operation in one place and
+	-- then move it out into its own api.
 	local t_old_config = midi_editor.getConfigTable()
 
 	if checkConfigForActiveLink(t_old_config, is_edit_state) then
@@ -440,9 +487,14 @@ midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
 
 	reaper.PreventUIRefresh(1)
 
+	-- TODO: both the zoom saving and config stuff could go into an
+	-- intermediary func called prepare change
+
 	-- Save current horizontal zoom state
 	local hzoom_state = midi_editor.getEditorHorizontalZoomState(hwnd)
+
 	local new_config = changeConfigForSelectionExploit(t_old_config, is_edit_state)
+	-- this should be pushed into the func above
 	midi_editor.setConfig(new_config)
 
 	-- Set current editor item to be the only selected item
@@ -450,8 +502,10 @@ midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
 	midi_editor.openFromMain()
 
 	containers.setSelectionStateOfItems(items, state)
+
 	-- We toggle this setting so that arrange selection is mirrored in MIDI editor
 	midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
+	-- why is it called twice here??
 	midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
 
 	-- Restore

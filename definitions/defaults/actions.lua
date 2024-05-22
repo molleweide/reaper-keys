@@ -1135,4 +1135,6 @@ return {
   INSERT_MIDI_CC_BY_TEMPLATE = automation.picker_insert_cc_curve,
   Track_Automation_curves_ui = automation.picker_edit_track_curves_ui,
   Track_Edit_All_curves_for_current_region = automation.picker_edit_all_curve_objects_for_current_region,
+  Picker_All_curves_for_track = automation.picker_edit_track_curves_ui,
+  Picker_AddTracks_to_ME_view = commands.picker_midi_editor_add_track_to_view
 }

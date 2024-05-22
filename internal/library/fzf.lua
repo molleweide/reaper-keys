@@ -38,6 +38,9 @@ require("gui2.JGui")
 -- TODO: always open fzf at cursor/selection so that I don't need to move
 -- my eyes.
 
+-- HACK: Add a default keybind that shows the help menu legend overlayed across
+-- screen so that one can easilly study/view help files and mappings.
+
 -- TEST: PICKER PROMPT UPDATE VALUE
 -- -> Say, eg. that I am using the track manager menu and I want to update
 -- the name of select(ed) tracks, then I will fire up a new prompt, and upon

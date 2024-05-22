@@ -476,6 +476,20 @@ lib_items.unselect_items = function(t_indices)
     end
 end
 
+
+lib_items.check_if_item_exists_or_create = function(track, check_start_pos, check_end_pos)
+    local items_found = lib_items.get_track_items_that_span_cursor_pos(track, check_start_pos, check_end_pos)
+    local target_item
+    if items_found then
+        target_item = items_found[1].ref
+    else
+        target_item = lib_items.create_new_item(true, track, check_start_pos, check_end_pos)
+    end
+    return target_item
+end
+
+
+
 ------------------------------------------------------------------------------
 
 function toBits(num) -- returns a table of bits, least significant first.

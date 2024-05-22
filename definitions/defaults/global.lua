@@ -216,6 +216,8 @@ return {
         ["m"] = {
           "+midi",
           {
+            ["a"] = "Picker_AddTracks_to_ME_view",
+            ["A"] = "Picker_RemoveTracks_from_ME_view",
             ["F"] = "Midi_ChangeActiveSelection",
             ["f"] = "MIDI_EditMidiAtCurPosForTrack",
             ["r"] = "Midi_EditMidiForRegionsMarksAndSelectTrack",
@@ -276,7 +278,8 @@ return {
                 ["m"] = "Test_insert_midi_cc_points",
                 ["c"] = "Test_insert_cc",
                 ["e"] = "Track_Automation_curves_ui",
-                ["E"] = "Track_Edit_All_curves_for_current_region"
+                ["E"] = "Track_Edit_All_curves_for_current_region",
+                ["l"] = "Picker_All_curves_for_track",
               },
             },
           },

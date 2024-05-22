@@ -412,6 +412,7 @@ local function find_existing_curve_at_new_range(env, range_left, range_right)
         -- current END delta is * 2
         elseif dp == 2 then
             is_delta_node = true
+
             log.user(string.format([[END: delta = %s, step = %s]], delta, env_step_delta * 2))
             prev_end_time = time2
             if range_left < prev_end_time and prev_end_time <= range_right then
@@ -703,16 +704,46 @@ automation_actions.picker_edit_track_curves_ui = function()
     --       -> Picker single curve
     --            Custom bindings to transform each node in a curve
     --                 <C-z> to go back to all curves
-    --
-    -- HACK: This will be very interesting to see if I can use this
-    -- to easilly control and manage multiple curve shapes across
-    -- tracks.
+    -- 1. get all envelopes for track.
+    -- >>>>>>>
+    local t_foc_tr = lib_tr.get_focused_track_objects()
+
+    local tr = t_foc_tr[1].tr
+    local t_envs = envelopes.fltr_track_envelopes(tr, { log = true })
+
+    log.user("envs found:", format.block(t_envs))
+
+    if #t_envs == 0 then
+        return
+    end
+
+    -- local ENV_CONSTS = require("constants.envelope_templates")
+
+  -- TODO: Now, on envelope select -> list all curve objects.
+
+
+
+    fzf.init({
+        title = "List Curve_Objects for track = " .. "TRACK_NAME",
+        results = t_envs,
+        results_filter = "name",
+        sort_comp = "name",
+        entry_maker = { "type_name", "name", "active" },
+    })
 end
 
 automation_actions.picker_edit_all_curve_objects_for_current_region = function()
     -- TODO: Same as above but for all tracks in project.
     -- TEST: This gives me the ability to focus in on all envelopes for a given
     -- section in a more detailed manner giving me new posibilities.
+end
+
+-- NOTE: Eg. for each midi note -> add a tiny pitch bend curve.
+-- HACK: Randomize curve for each note.
+automation_actions.add_curve_to_all_events = function()
+  -- TEST: See how I can randomize and add stuff based onthe
+  -- context of each note. This is going to be quite fun because
+  -- this is what is going to add insane creativity.
 end
 
 return automation_actions
