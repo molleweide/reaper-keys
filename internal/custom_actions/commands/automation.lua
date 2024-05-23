@@ -755,6 +755,10 @@ automation_actions.picker_edit_track_curves_ui = function()
     local tr = t_foc_tr[1].tr
     local t_envs = envelopes.fltr_track_envelopes(tr, { log = true })
 
+    if not t_envs then
+        return
+    end
+
     log.user("envs found:", format.block(t_envs))
 
     if #t_envs == 0 then
@@ -801,6 +805,31 @@ automation_actions.picker_edit_track_curves_ui = function()
         end,
         sort_comp = "name",
         entry_maker = { "type_name", "name", "active" },
+        extended_mappings = {
+            ["C-u"] = function(o)
+                -- reset envelope
+                -- TODO: how do i get the entry that is highlighted here??
+                -- 1. Hitting enter is going to get the `focused` entry unless there
+                -- is mult selection allowed.
+                -- 2. >>> Therefore, there should be a func to get the currently focused
+                -- entry. This is also what is passed to `get_on_enter_selection`
+                -- 3. setting the gui scroll index should be done on every movement.
+                -- TEST: The above is what should simplify the situation of creating
+                -- binds in the future, so that I can easilly get the list of selections
+                -- etc, and transform them in the picker UI.
+                local sel = o.gui_ref:get_on_enter_selection()
+
+                local entry = o.gui_ref:get_currently_focused_entry()
+
+                log.user("======================")
+                -- for k, v in pairs(c_focused) do
+                --     if type(v) ~= "function" then
+                --         log.user(k, v)
+                --     end
+                -- end
+                log.user("entry:", format.block(entry))
+            end,
+        },
     })
 end
 
