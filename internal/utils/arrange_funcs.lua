@@ -1,6 +1,8 @@
 --@noindex
 --version: 0.16
 --  organize get in range automation items
+--
+local chunk_funcs = require("utils.chunk_functions")
 
 local M = {}
 
@@ -576,9 +578,9 @@ end
 ---Return the GUID of a envelope.
 ---@param env Envelope Envelope
 ---@return string guid Guid
-function GetEnvelopeGUID(env)
+M.GetEnvelopeGUID = function(env)
     local retval, chunk = reaper.GetEnvelopeStateChunk(env, '', false)
-    return GetChunkVal(chunk,'EGUID')
+    return chunk_funcs.get_chunk_val(chunk,'EGUID')
 end
 
 ---Return if the envelope bypass.

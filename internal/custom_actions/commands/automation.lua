@@ -808,26 +808,19 @@ automation_actions.picker_edit_track_curves_ui = function()
         extended_mappings = {
             ["C-u"] = function(o)
                 -- reset envelope
-                -- TODO: how do i get the entry that is highlighted here??
-                -- 1. Hitting enter is going to get the `focused` entry unless there
-                -- is mult selection allowed.
-                -- 2. >>> Therefore, there should be a func to get the currently focused
-                -- entry. This is also what is passed to `get_on_enter_selection`
-                -- 3. setting the gui scroll index should be done on every movement.
-                -- TEST: The above is what should simplify the situation of creating
-                -- binds in the future, so that I can easilly get the list of selections
-                -- etc, and transform them in the picker UI.
-                local sel = o.gui_ref:get_on_enter_selection()
-
                 local entry = o.gui_ref:get_currently_focused_entry()
-
-                log.user("======================")
-                -- for k, v in pairs(c_focused) do
-                --     if type(v) ~= "function" then
-                --         log.user(k, v)
-                --     end
-                -- end
                 log.user("entry:", format.block(entry))
+                local env = entry.env
+
+
+                reaper.PreventUIRefresh(1)
+                -- reaper.DeleteEnvelopePointRange(env, 0, reaper.GetProjectLength(0))
+                -- reaper.Envelope_SortPoints(env)
+        -- removing envelopes does not work.
+                require("library.delete_envelope")(entry.env)
+                reaper.PreventUIRefresh(-1)
+                reaper.UpdateArrange()
+
             end,
         },
     })

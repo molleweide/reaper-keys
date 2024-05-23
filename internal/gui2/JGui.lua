@@ -719,7 +719,13 @@ function jGui:selection_history_find(tag)
 end
 
 function jGui:get_currently_focused_entry()
-    return self.t_search_results[self.focus.focus_index - 1]
+    local idx = self.focus.focus_index - 1
+
+  -- if the main_input is focused
+    if self.focus.title == "main_input" then
+        idx = idx + 1
+    end
+    return self.t_search_results[idx]
 end
 -----------------------------------------------------------------------------
 -- Misc
