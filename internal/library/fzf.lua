@@ -254,7 +254,7 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 			n_to_remove = n_to_remove + 1
 		elseif NEW_PICKER_VIEW then
 			local b = tControls[i][1]
-			log.user(b.title)
+			-- log.user(b.title)
 			if gui.attach_mappings then
 				-- log.user("CREATE RESULT BUTTONS -> attach mappings")
 				function b:onKeyboard(key)

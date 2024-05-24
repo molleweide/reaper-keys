@@ -11,16 +11,16 @@ local tbl = require("utils.table")
 -- 9->Tempo map, 10->Parameter (fx??)
 
 local ENV_TYPE_MAP_TO_REAL_NAME = {
-    [0] ={  name_short = "V ", name_full = "Volume" },
-    [1] ={  name_short = "V.", name_full = "Volume (Pre-FX)" },
-    [2] ={  name_short = "P ", name_full = "Pan" },
-    [3] ={  name_short = "P.", name_full = "Pan (Pre-FX)" },
-    [4] ={  name_short = "W ", name_full = "Width" },
-    [5] ={  name_short = "W.", name_full = "Width (Pre-FX)" },
-    [6] ={  name_short = "Mt", name_full = "Mute" },
-    [7] ={  name_short = "Pr", name_full = "Playrate" },
-    [9] ={  name_short = "TM", name_full = "Tempo map" },
-    [10] ={ name_short = "FX", name_full = "Parameter (FX)" },
+    [0] = { name_short = "V ", name_full = "Volume" },
+    [1] = { name_short = "V.", name_full = "Volume (Pre-FX)" },
+    [2] = { name_short = "P ", name_full = "Pan" },
+    [3] = { name_short = "P.", name_full = "Pan (Pre-FX)" },
+    [4] = { name_short = "W ", name_full = "Width" },
+    [5] = { name_short = "W.", name_full = "Width (Pre-FX)" },
+    [6] = { name_short = "Mt", name_full = "Mute" },
+    [7] = { name_short = "Pr", name_full = "Playrate" },
+    [9] = { name_short = "TM", name_full = "Tempo map" },
+    [10] = { name_short = "FX", name_full = "Parameter (FX)" },
 }
 
 -- integer reaper.MIDIEditor_GetSetting_int( midieditor, setting_desc )
@@ -805,6 +805,9 @@ end
 
 envelopes.list_all_curve_objects = function() end
 
+local function round(num)
+    return math.floor(num + 0.5)
+end
 
 envelopes.enum_curve_points = function(env, start_idx)
     local i = start_idx ~= nil and (start_idx - 1) or -1
@@ -828,29 +831,59 @@ envelopes.enum_curve_points = function(env, start_idx)
 
         local delta_processed
         local delta_enlarged = delta * envelope_templates.ENV_STEP_MULT
-        local ceiled = math.ceil(delta_enlarged)
-        local ceil_diff = ceiled - delta_enlarged
-        local floored = math.floor(delta_enlarged)
-        local floor_diff = delta_enlarged - floored
-        if floor_diff < ceil_diff then
-            delta_processed = floored
-        elseif ceil_diff < floor_diff then
-            delta_processed = ceiled
-        end
-        local dp = delta_processed
-        if dp == nil or dp > 20 then
-            return "mid"
-        elseif dp == 1 then
+        local tpos_rounded = round(delta_enlarged)
+
+        -- -- log.user("DR:", round(delta_enlarged))
+        --
+        -- -- log.user("delta/delta enlarged: ", tostring(delta), tostring(delta_enlarged))
+        -- local ceiled = math.ceil(delta_enlarged)
+        -- local ceil_diff = ceiled - delta_enlarged
+        --
+        -- local floored = math.floor(delta_enlarged)
+        -- local floor_diff = delta_enlarged - floored
+        --
+        -- if floor_diff < ceil_diff then
+        --     delta_processed = floored
+        -- elseif ceil_diff < floor_diff then
+        --     delta_processed = ceiled
+        -- end
+        --
+        -- local dp = delta_processed
+
+        local node_type
+        if tpos_rounded == nil or tpos_rounded > 2 then
+            node_type = "mid"
+        elseif tpos_rounded == 1 then
             is_delta_node = true
-            return "start"
-        elseif dp == 2 then
+            node_type = "start"
+        elseif tpos_rounded == 2 then
             is_delta_node = true
-            return "end"
+            node_type = "end"
         end
+
+    --     log.user(string.format(
+    --         [[---------------------------------
+    -- type:   %s
+    -- delta:  %s
+    -- elarg:  %s
+    -- ceil:   %s
+    -- ceil_d: %s
+    -- floor:  %s
+    -- fldif:  %s
+    -- dp:     %s
+    -- ]],
+    --         node_type,
+    --         delta,
+    --         delta_enlarged,
+    --         ceil_diff,
+    --         ceil_diff,
+    --         floored,
+    --         floor_diff,
+    --         dp
+    --     ))
+
+        return node_type, time_curve_node_0, delta, i
     end
 end
-
-
-
 
 return envelopes

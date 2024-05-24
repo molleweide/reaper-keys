@@ -742,18 +742,10 @@ end
 -- end
 
 automation_actions.picker_edit_track_curves_ui = function()
-    -- TODO: Collect all envelope objects in track, (for all envelopes)
-    -- List with envelope_name | position | shape
-    --    Select curve to edit
-    --       -> Picker single curve
-    --            Custom bindings to transform each node in a curve
-    --                 <C-z> to go back to all curves
-    -- 1. get all envelopes for track.
-    -- >>>>>>>
     local t_foc_tr = lib_tr.get_focused_track_objects()
 
     local tr = t_foc_tr[1].tr
-    local t_envs = envelopes.fltr_track_envelopes(tr )
+    local t_envs = envelopes.fltr_track_envelopes(tr)
 
     if not t_envs then
         return
@@ -774,36 +766,47 @@ automation_actions.picker_edit_track_curves_ui = function()
         -- I also need an enum_curve_objs which is going to be a bit annoying to
         -- code but it is pretty simple.
 
-        log.user("?????", format.block(sel), sel.env)
+        -- log.user("?????", format.block(sel), sel.env)
         -- local env = sel.env
 
-        for t in envelopes.enum_curve_points(sel.env) do
-            log.user("t = ", t)
+        local t_curv_nodes = {}
+
+        for t, tpos, delta, pt_idx in envelopes.enum_curve_points(sel.env) do
+            table.insert(t_curv_nodes, {
+                name = t,
+                tpos = tpos,
+                delta = delta,
+                pt_idx = pt_idx,
+            })
         end
 
-        -- fzf.init({
-        --     title = "Curve objects for track = " .. "TRACK_NAME",
-        --     -- results = t_envs,
-        --     results_filter = "name",
-        --     -- on_select_func = function(gui)
-        --     --     local sel = { gui:get_on_enter_selection() }
-        --     --     picker_env_curve_objs(sel)
-        --     -- end,
-        --     sort_comp = "name",
-        --     entry_maker = { "type_name", "name", "active" },
-        -- })
+        fzf.init({
+            title = "Curve objects for track = " .. "TRACK_NAME",
+            results = t_curv_nodes,
+            results_filter = "name",
+            -- on_select_func = function(gui)
+            --     local sel = { gui:get_on_enter_selection() }
+            --     picker_env_curve_objs(sel)
+            -- end,
+            sort_comp = function(a, b)
+                return a.tpos < b.tpos
+            end,
+            -- entry_maker = { "tpos", "name", "delta" },
+            entry_maker = require("pickers.entry_makers.env_curve_node"),
+        })
     end
 
     -- list track envelopes
     fzf.init({
         title = "List Curve_Objects for track = " .. "TRACK_NAME",
-    width = 1000,
+        width = 1000,
+        height = 1000,
         results = t_envs,
         results_filter = "name",
         on_select_func = function(gui)
             local sel = gui:get_on_enter_selection()
             picker_env_curve_objs(sel)
-            return true
+            return false
         end,
         sort_comp = "name",
         entry_maker = require("pickers.entry_makers.track_envelopes"), --{ "type_name", "name", "active" },
@@ -826,13 +829,8 @@ automation_actions.picker_edit_track_curves_ui = function()
                 local selection = t.gui_ref.t_search_results[t.sel_idx]
                 selection.selected = true
                 t.gui_ref:add_to_current_selection(selection)
-                -- log.user("--- sel cur names ----")
-                -- for _, cs in ipairs(t.gui_ref.selection_current) do
-                --   log.user(cs.name)
-                -- end
             end,
             ["C-a"] = function(t)
-                log.user("??????")
                 t.gui_ref:reset_current_selection()
             end,
         },
