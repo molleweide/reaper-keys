@@ -1,7 +1,7 @@
 -- @noindex
 
 local jKeyboard = {
-  -- control_a = ,
+  control_a = 1,
   control_b = 2,
   control_c = 3,
   control_d = 4,

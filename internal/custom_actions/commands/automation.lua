@@ -753,13 +753,13 @@ automation_actions.picker_edit_track_curves_ui = function()
     local t_foc_tr = lib_tr.get_focused_track_objects()
 
     local tr = t_foc_tr[1].tr
-    local t_envs = envelopes.fltr_track_envelopes(tr, { log = true })
+    local t_envs = envelopes.fltr_track_envelopes(tr )
 
     if not t_envs then
         return
     end
 
-    log.user("envs found:", format.block(t_envs))
+    -- log.user("envs found:", format.block(t_envs))
 
     if #t_envs == 0 then
         return
@@ -794,6 +794,7 @@ automation_actions.picker_edit_track_curves_ui = function()
         -- })
     end
 
+    -- list track envelopes
     fzf.init({
         title = "List Curve_Objects for track = " .. "TRACK_NAME",
         results = t_envs,
@@ -804,7 +805,7 @@ automation_actions.picker_edit_track_curves_ui = function()
             return true
         end,
         sort_comp = "name",
-        entry_maker = { "type_name", "name", "active" },
+        entry_maker = require("pickers.entry_makers.track_envelopes"), --{ "type_name", "name", "active" },
         extended_mappings = {
             ["C-u"] = function(o)
                 -- reset envelope
@@ -812,15 +813,26 @@ automation_actions.picker_edit_track_curves_ui = function()
                 log.user("entry:", format.block(entry))
                 local env = entry.env
 
-
                 reaper.PreventUIRefresh(1)
                 -- reaper.DeleteEnvelopePointRange(env, 0, reaper.GetProjectLength(0))
                 -- reaper.Envelope_SortPoints(env)
-        -- removing envelopes does not work.
+                -- removing envelopes does not work.
                 require("library.delete_envelope")(entry.env)
                 reaper.PreventUIRefresh(-1)
                 reaper.UpdateArrange()
-
+            end,
+            ["C-s"] = function(t)
+                local selection = t.gui_ref.t_search_results[t.sel_idx]
+                selection.selected = true
+                t.gui_ref:add_to_current_selection(selection)
+                -- log.user("--- sel cur names ----")
+                -- for _, cs in ipairs(t.gui_ref.selection_current) do
+                --   log.user(cs.name)
+                -- end
+            end,
+            ["C-a"] = function(t)
+                log.user("??????")
+                t.gui_ref:reset_current_selection()
             end,
         },
     })

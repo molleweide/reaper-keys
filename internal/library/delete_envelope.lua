@@ -49,15 +49,7 @@ local function esc(str)
 end
 
 return function(env)
-    -- local window, segment, details = r.BR_GetMouseCursorContext()
-    -- local env, takeEnv = r.BR_GetMouseCursorContext_Envelope()
-    -- if takeEnv then return end
     reaper.ClearConsole()
-
-    -- if not env then
-    --     return
-    -- end
-
     if not reaper.ValidatePtr(env, "TrackEnvelope*") then
         return
     end
@@ -65,41 +57,31 @@ return function(env)
     reaper.PreventUIRefresh(1)
 
     local tr = reaper.Envelope_GetParentTrack(env)
-
-    local envs = reaper.CountTrackEnvelopes(tr)
-
-    local num
-
-  local target_guid = require("utils.arrange_funcs").GetEnvelopeGUID(env)
-
-    for i = 0, envs - 1 do
-        local tr_env = reaper.GetTrackEnvelope(tr, i)
-        if tr_env == env then
-            num = i
-            break
-        end
-    end
-
     local chunk = GetTrackChunk(tr)
 
     if not chunk then
         return
     end
 
+    local target_guid = require("utils.arrange_funcs").GetEnvelopeGUID(env)
+
+    -- TODO: here I need to check for builtins as well, eg vol/pan/route, etc.
+
+    -- local ranges = {
+    --     "PARMENV",
+    --     "VOLENV",
+    --     "PANENV",
+    --     "WIDTHENV",
+    --     "MUTEENV",
+    --     "SPEEDENV",
+    --     "PITCHENV",
+    --     "TEMPOENV",
+    -- }
+
     local x = -1
     for env_chunk in chunk:gmatch("<PARMENV.->") do
         x = x + 1
-
         local guid = chunk_functions.get_chunk_val(env_chunk, "EGUID")
-        -- log.user(num, x, env_chunk, " GUID =",guid, target_guid == guid)
-        log.user(string.format([[=========
-        %s
-        ----
-        %s
-        %s
-        %s
-        ]], env_chunk, target_guid, guid, target_guid == guid))
-
         if target_guid == guid then
             chunk = chunk:gsub(esc(env_chunk) .. "\n", "", 1)
             break

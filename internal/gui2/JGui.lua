@@ -669,9 +669,9 @@ function jGui:add_to_current_selection(sel)
 end
 
 function jGui:reset_current_selection()
-    -- for _, s in ipairs(self.selection_current) do
-    -- 	s.selected = false
-    -- end
+    for _, v in ipairs(self.selection_current) do
+        v.selected = nil
+    end
     self.selection_current = {}
     log.user("#SELECTION_CURRENT:", #self.selection_current)
 end
@@ -721,7 +721,7 @@ end
 function jGui:get_currently_focused_entry()
     local idx = self.focus.focus_index - 1
 
-  -- if the main_input is focused
+    -- if the main_input is focused
     if self.focus.title == "main_input" then
         idx = idx + 1
     end

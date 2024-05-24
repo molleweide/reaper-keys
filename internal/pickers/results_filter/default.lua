@@ -31,6 +31,9 @@ return function(filter)
 			local t_ret = {}
 			local iCount = 0
 
+			-- make the conditional statements conditional with a parm so that I can
+			-- toggle on off in the func call
+
 			-- log.user("filter:", filter, "[" .. sPattern .. "]")
 
 			for i, t in ipairs(t_results_data) do
@@ -41,14 +44,14 @@ return function(filter)
 						t_ret[#t_ret + 1] = t
 						if iMaxResults then
 							if #t_ret >= iMaxResults then -- check if we already have enough results
-								log.user(">>>>>>>", format.block(t_ret))
+								-- log.user("results filter default -> ", format.block(t_ret))
 								return t_ret
 							end
 						end
 					end
 				end
 			end
-			log.user(">>>>>>>", format.block(t_ret))
+			-- log.user("results filter default -> ", format.block(t_ret))
 
 			return t_ret
 		end

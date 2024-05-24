@@ -111,4 +111,14 @@ string_util.get_count_char_and_in_between_sub_strings = function(inputString, ch
   return count, t_res
 end
 
+string_util.makeStringLength = function(inputString, maxLength, repl_str)
+	if #inputString < maxLength then
+		local numSpacesToAdd = maxLength - #inputString
+		local spaces = string.rep(repl_str, numSpacesToAdd)
+		return inputString .. spaces
+	else
+		return inputString
+	end
+end
+
 return string_util
