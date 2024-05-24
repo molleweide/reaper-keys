@@ -812,6 +812,7 @@ end
 envelopes.enum_curve_points = function(env, start_idx)
     local i = start_idx ~= nil and (start_idx - 1) or -1
     local is_delta_node = false
+    local prev_type
     return function()
         if is_delta_node then
             i = i + 2
@@ -833,56 +834,31 @@ envelopes.enum_curve_points = function(env, start_idx)
         local delta_enlarged = delta * envelope_templates.ENV_STEP_MULT
         local tpos_rounded = round(delta_enlarged)
 
-        -- -- log.user("DR:", round(delta_enlarged))
-        --
-        -- -- log.user("delta/delta enlarged: ", tostring(delta), tostring(delta_enlarged))
-        -- local ceiled = math.ceil(delta_enlarged)
-        -- local ceil_diff = ceiled - delta_enlarged
-        --
-        -- local floored = math.floor(delta_enlarged)
-        -- local floor_diff = delta_enlarged - floored
-        --
-        -- if floor_diff < ceil_diff then
-        --     delta_processed = floored
-        -- elseif ceil_diff < floor_diff then
-        --     delta_processed = ceiled
-        -- end
-        --
-        -- local dp = delta_processed
+        local node_type, node_type_name, real_pos, tpos2
 
-        local node_type
         if tpos_rounded == nil or tpos_rounded > 2 then
-            node_type = "mid"
+            node_type = 0
+            node_type_name = "mid"
+            real_pos = time_curve_node_0
         elseif tpos_rounded == 1 then
+            node_type = 1
             is_delta_node = true
-            node_type = "start"
+            node_type_name = "start"
+            real_pos = time_curve_node_0
         elseif tpos_rounded == 2 then
+            node_type = 2
             is_delta_node = true
-            node_type = "end"
+            node_type_name = "end"
+            real_pos = time2
         end
 
-    --     log.user(string.format(
-    --         [[---------------------------------
-    -- type:   %s
-    -- delta:  %s
-    -- elarg:  %s
-    -- ceil:   %s
-    -- ceil_d: %s
-    -- floor:  %s
-    -- fldif:  %s
-    -- dp:     %s
-    -- ]],
-    --         node_type,
-    --         delta,
-    --         delta_enlarged,
-    --         ceil_diff,
-    --         ceil_diff,
-    --         floored,
-    --         floor_diff,
-    --         dp
-    --     ))
+        -- TODO: Use `prev_type` to check if the sequence of nodes is valid,
+        -- analogous to how the track syntax is parsed
+        --
 
-        return node_type, time_curve_node_0, delta, i
+        prev_type = node_type
+
+        return node_type, node_type_name, i, time_curve_node_0, i + 1, time2, delta, real_pos
     end
 end
 

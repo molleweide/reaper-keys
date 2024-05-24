@@ -771,12 +771,25 @@ automation_actions.picker_edit_track_curves_ui = function()
 
         local t_curv_nodes = {}
 
-        for t, tpos, delta, pt_idx in envelopes.enum_curve_points(sel.env) do
+        -- NOTE: Now the function is good enough for collecting cuve nodes.
+        -- Next step is to
+        -- TODO: iterate put together curve objects.
+        -- 1. Just make a list of {{start},...,{end}}
+        -- 2. Mapping -> remove curve
+
+        local count_env_pts = reaper.CountEnvelopePoints(sel.env)
+        log.user("TOTAL ENV POINT COUNT = ", count_env_pts)
+
+        for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, rp in envelopes.enum_curve_points(sel.env) do
             table.insert(t_curv_nodes, {
-                name = t,
-                tpos = tpos,
-                delta = delta,
+                name = nname,
+                type = ntype,
                 pt_idx = pt_idx,
+                tpos = tpos,
+                pt_idx2 = pt_idx2,
+                tpos2 = tpos2,
+                delta = delta,
+                real_pos = rp,
             })
         end
 

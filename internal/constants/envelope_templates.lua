@@ -14,14 +14,13 @@ envelope_templates.TEMPLATE_POINT_COUNT_MAX = 10 -- template total becomes 22, (
 -- TEST: I am just gonna have to play around with this andd see what works
 -- because I dont know the limits here..
 
-
 -- NOTE: Currently 10^6 -> See, what is the smallest delta fraction I can
 -- reliably use.
 envelope_templates.ENV_STEP_DELTA = 0.000001
 envelope_templates.ENV_STEP_MULT = 1000000
 
 envelope_templates.get_env_step_max = function()
-  return envelope_templates.ENV_STEP_DELTA * envelope_templates.TEMPLATE_POINT_COUNT_MAX
+    return envelope_templates.ENV_STEP_DELTA * envelope_templates.TEMPLATE_POINT_COUNT_MAX
 end
 
 -- NOTE: Definition describing what the delta should be for template point N,
@@ -38,59 +37,59 @@ end
 
 -- wait shouldn't this just be
 envelope_templates.LAYERED_CURVES_ENCODING = {
-  { 1, 0, 2 },
-  { 3, 4, 5 },
-  { 6, 7, 8 },
+    { 1, 0, 2 },
+    { 3, 4, 5 },
+    { 6, 7, 8 },
 }
 
 envelope_templates.TEMPLATES = {
-  {
-    name = "FLAT ----",
-    def = {
-      { val = 0.5 },
-      { val = 0.5 },
+    {
+        name = "FLAT ----",
+        def = {
+            { val = 0.5 },
+            { val = 0.5 },
+        },
     },
-  },
-  {
-    name = "UP /",
-    def = {
-      { val = 0.25 },
-      { val = 0.75 },
+    {
+        name = "UP /",
+        def = {
+            { val = 0.25 },
+            { val = 0.75 },
+        },
     },
-  },
-  {
-    name = "DOWN \\",
-    def = {
-      { val = 1 },
-      { val = 0 },
+    {
+        name = "DOWN \\",
+        def = {
+            { val = 1 },
+            { val = 0 },
+        },
     },
-  },
-  {
-    name = "UP DOWN /\\",
-    def = {
-      {},
-      { 0.5 },       -- this MID point should be inserted in the middle of the curve object.
-      {},
+    {
+        name = "UP DOWN /\\",
+        def = {
+            {},
+            { 0.5 }, -- this MID point should be inserted in the middle of the curve object.
+            {},
+        },
     },
-  },
-  {
-    name = "DOWN UP \\/",
-    def = {
-      {},
-      {},
-      {},
+    {
+        name = "DOWN UP \\/",
+        def = {
+            { val = 1 },
+            { val = 0 },
+            { val = 1 },
+        },
     },
-  },
-  {
-    name = "FIVE",
-    def = {
-      {},
-      {},
-      {},
-      {},
-      {}
+    {
+        name = "FIVE",
+        def = {
+            {},
+            {},
+            {},
+            {},
+            {},
+        },
     },
-  },
 }
 
 return envelope_templates

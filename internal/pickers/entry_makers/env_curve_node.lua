@@ -32,47 +32,55 @@ return function(tButtons, tResults)
 
 		LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
 
+		local repl
+
 		if tResults and iStart <= #tResults then
 			local item = tResults[iStart]
 
-			-- log.user(string.format("%s < %s", item.name, item.group.name))
 			local label_str = ""
 
-   --    local sel_len = 6
-			-- if item.selected then
-			-- 	local part = string.format("[%s]", item.selected and "x")
-			-- 	label_str = label_str .. su.makeStringLength(part, sel_len, "_")
-			-- 	else
-			-- 	local part = "[ ]"
-			-- 	label_str = label_str .. su.makeStringLength(part, sel_len, "_")
-			-- end
-
-			-- if item.index then
-			-- 	local part = string.format("[%s]", item.index)
-			-- 	label_str = label_str .. su.makeStringLength(part, 10, "_")
-			-- end
-			if item.pt_idx then
-				local part = string.format("#%s", item.pt_idx)
-				label_str = label_str .. su.makeStringLength(part, 8, "_")
+			if item.name == "start" then
+			  repl = "-"
+			else
+			  repl = " "
 			end
 
+			if item.pt_idx then
+				local part = string.format("#%s", item.pt_idx)
+				label_str = label_str .. su.makeStringLength(part, 8, repl)
+			end
 
+			-- if item.tpos then
+			-- 	local part = string.format("%s", item.tpos)
+			-- 	label_str = label_str .. su.makeStringLength(part, 12, repl)
+			-- end
+			--
 
-			if item.tpos then
-				local part = string.format("%s", item.tpos)
-				label_str = label_str .. su.makeStringLength(part, 12, "_")
+			if item.real_pos then
+				local part = string.format("pos:[%s]", item.real_pos)
+				label_str = label_str .. su.makeStringLength(part, 12, repl)
 			end
 
 
 			if item.name then
-				local part = string.format("name:[%s]", item.name)
-				label_str = label_str .. su.makeStringLength(part, 18, "_")
+				local part = string.format("[%s]", item.name)
+				label_str = label_str .. su.makeStringLength(part, 18, repl)
 			end
 
-			if item.delta then
-				local part = string.format("delta:[%s]", item.delta)
-				label_str = label_str .. su.makeStringLength(part, 9, "_")
+
+			if item.pt_idx and item.pt_idx2 then
+				local part = string.format("pt_idices:[%s, %s]", item.pt_idx, item.pt_idx2)
+				label_str = label_str .. su.makeStringLength(part, 20, repl)
 			end
+
+			if item.tpos and item.tpos2 then
+				local part = string.format("pt_pos:[%s, %s]", tostring(item.tpos), tostring(item.tpos2))
+				label_str = label_str .. su.makeStringLength(part, 18, repl)
+			end
+
+
+
+
 
 			b.label = label_str
 
