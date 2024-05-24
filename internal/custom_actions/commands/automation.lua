@@ -11,6 +11,8 @@ local effects = require("library.fx")
 local envelope_templates = require("constants.envelope_templates")
 local arrange_funcs = require("utils.arrange_funcs")
 
+local tbl = require("utils.table")
+
 local automation_actions = {}
 
 -- TODO: these actions should be added to `<leader>ai<key>`
@@ -743,6 +745,12 @@ end
 --     picker_curve_menu_start()
 -- end
 
+-- TODO: Add `on_focus_next = ...` select
+-- 1. the nodes of the curve and navigate cursor.
+-- 2. select the pts of the curve
+-- 3. keep a backup of orig selection/cursor position
+-- 4. on exit reset selec/cursor
+
 automation_actions.picker_edit_track_curves_ui = function()
     local t_foc_tr = lib_tr.get_focused_track_objects()
 
@@ -784,6 +792,10 @@ automation_actions.picker_edit_track_curves_ui = function()
             end,
             entry_maker = require("pickers.entry_makers.env_curve_node"),
             extended_mappings = {},
+            -- NOTE: picker: nodes for curve X :
+            -- I want to move cursor/select internal pts of each curve.
+            -- zoom IN on the selected curve
+            -- snapshot = function () end,
         })
     end
 
@@ -808,54 +820,123 @@ automation_actions.picker_edit_track_curves_ui = function()
         local count_env_pts = reaper.CountEnvelopePoints(sel_in.env)
         log.user("TOTAL ENV POINT COUNT = ", count_env_pts)
 
-        local t_curve_objs = {}
-
-        local start_count = 0
-
-        for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, rp in envelopes.enum_curve_nodes(sel_in.env) do
-            if ntype == 1 then
-                start_count = start_count + 1
-                table.insert(t_curve_objs, { name = "curve " .. start_count })
+        local function get_curve_objs()
+            local t_curve_objs = {}
+            local start_count = 0
+            for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, rp in envelopes.enum_curve_nodes(sel_in.env) do
+                if ntype == 1 then
+                    start_count = start_count + 1
+                    table.insert(t_curve_objs, { name = "curve " .. start_count, curve_index = start_count })
+                end
+                if start_count > 0 then
+                    table.insert(t_curve_objs[#t_curve_objs], {
+                        name = nname,
+                        type = ntype,
+                        pt_idx = pt_idx,
+                        tpos = tpos,
+                        pt_idx2 = pt_idx2,
+                        tpos2 = tpos2,
+                        delta = delta,
+                        real_pos = rp,
+                    })
+                end
             end
-            table.insert(t_curve_objs[#t_curve_objs], {
-                name = nname,
-                type = ntype,
-                pt_idx = pt_idx,
-                tpos = tpos,
-                pt_idx2 = pt_idx2,
-                tpos2 = tpos2,
-                delta = delta,
-                real_pos = rp,
-            })
+
+            log.user("t_curve_objs:", format.block(t_curve_objs))
+            return t_curve_objs
         end
 
-        log.user(format.block(t_curve_objs))
+        local t_co = get_curve_objs()
 
-        -- TODO: Add `on_focus_next = ...` select
-        -- 1. the nodes of the curve and navigate cursor.
-        -- 2. select the pts of the curve
-        -- 3. keep a backup of orig selection/cursor position
-        -- 4. on exit reset selec/cursor
-        --
         fzf.init({
             title = "Curve objects for track = " .. "TRACK_NAME",
-            results = t_curve_objs,
+            results = t_co,
             results_filter = "name",
             on_select_func = function(gui)
                 local sel = gui:get_on_enter_selection()
                 picker_env_curve_nodes(sel)
             end,
+            -- NOTE: this funk allow me to dynamically update the view when different
+            -- curves are selected. This can be used in any picker to specify how
+            -- the view should update dynamically.
+            on_focus_next = function(gui)
+                local entry = gui:get_currently_focused_entry()
+                -- log.user("[on_focus_next]: set position:", entry[1].real_pos)
+                reaper.SetEditCurPos(entry[1].real_pos, false, false)
+
+                reaper.PreventUIRefresh(1)
+
+                envelopes.unselect_all_points(sel_in.env)
+
+                for _, v in ipairs(entry) do
+                    if v.type == 0 then
+                        local ret = reaper.SetEnvelopePoint(sel_in.env, v.pt_idx, nil, nil, nil, nil, true, true)
+                    elseif v.type == 1 then
+                        local ret = reaper.SetEnvelopePoint(sel_in.env, v.pt_idx, nil, nil, nil, nil, true, true)
+                        local ret = reaper.SetEnvelopePoint(sel_in.env, v.pt_idx2, nil, nil, nil, nil, true, true)
+                    elseif v.type == 2 then
+                        local ret = reaper.SetEnvelopePoint(sel_in.env, v.pt_idx, nil, nil, nil, nil, true, true)
+                        local ret = reaper.SetEnvelopePoint(sel_in.env, v.pt_idx2, nil, nil, nil, nil, true, true)
+                    end
+                end
+
+                reaper.PreventUIRefresh(-1)
+
+                reaper.Envelope_SortPoints(sel_in.env)
+
+                reaper.UpdateArrange()
+
+                -- TODO: select the nodes of the curve
+            end,
             sort_comp = function(a, b)
                 return a[1].tpos < b[1].tpos
             end,
             entry_maker = require("pickers.entry_makers.env_curve_obj"),
+            -- NOTE: curve obj picker:
+            -- I want to move cursor/select START pt of each curve
+            -- snapshot = function () end,
             -- TEST: Do I need to reset/garbage collect the previous extended
             -- mappings? Ie. set new fresh binds for current picker.
             extended_mappings = {
-                ["C-r"] = function(t)
+                -- FIX: when i am deleting a curve, then i need to refresh all the indices
+                -- in following env objs
+                -- --
+                -- Can I pass `t_curve_objs` here and then use the curve index to
+                -- remove the target and then update all the indices in subsequent
+                -- curve objects.
+                ["C-r"] = function(o)
                     -- TODO: Remove selection.
                     -- 1. check if mult select?
                     -- 2. remove points by idx
+                    local entry = o.gui_ref:get_currently_focused_entry()
+
+                    -- 1. table.remove -- entry.curve_index
+
+                    -- 2.
+
+                    envelopes.delete_curve_obj(sel_in.env, entry)
+
+                    -- NOTE: this is a bit of a hacky way to get the entries to update
+                    -- but it will work for now.
+                    local _, main_input = tbl.findIndexOf(o.gui_ref.controls, "title", "main_input")
+
+                    -- resets
+                    main_input.value = " "
+                    o.gui_ref:setFocus(textBox)
+
+                    o.gui_ref.t_results_data = get_curve_objs()
+                    table.sort(o.gui_ref.t_results_data, o.gui_ref.sort_comp)
+
+                    -- -- o.gui_ref:update()
+                    -- -- o.gui_ref:refresh()
+                    -- -- o.gui_ref:loop()
+                    -- o.gui_ref:onResize()
+                    -- -- o.gui_ref:init()
+                    -- gfx.update()
+
+                    -- o.gui_ref:_resize()
+                    -- UPDATE_RESULTS = true
+                    -- t_co = get_curve_objs()
                 end,
             },
         })
@@ -865,7 +946,7 @@ automation_actions.picker_edit_track_curves_ui = function()
     fzf.init({
         title = "List Curve_Objects for track = " .. "TRACK_NAME",
         width = 1000,
-        height = 1000,
+        height = 400,
         results = t_envs,
         results_filter = "name",
         on_select_func = function(gui)
@@ -904,6 +985,14 @@ automation_actions.picker_edit_track_curves_ui = function()
                 -- 2. remove points by idx
             end,
         },
+        -- NOTE: env picker: what do I store here
+        -- zoom state arrange / midi
+        -- for each picker chain level I might zoom in on the curve.
+        -- On exit i want to zoom out to start zoom.
+        -- snapshot = function () end,
+        on_exit_callback = function(self)
+            log.user(":: PICKER EXIT ::")
+        end,
     })
 end
 

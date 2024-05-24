@@ -237,12 +237,21 @@ function jGui:setReaperFocus()
     end
 end
 
+-- NOTE: focus next / prev applies the `on_focus_next` callback that can be
+-- configured in the picker opts.
+
 function jGui:focusNext()
     self:setFocus(self:getNextFocus())
+    if self.on_focus_next then
+        self.on_focus_next(self)
+    end
 end
 
 function jGui:focusPrev()
     self:setFocus(self:getNextFocus(true))
+    if self.on_focus_next then
+        self.on_focus_next(self)
+    end
 end
 
 function jGui:setFocus(c)

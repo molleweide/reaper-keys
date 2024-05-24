@@ -809,6 +809,37 @@ local function round(num)
     return math.floor(num + 0.5)
 end
 
+envelopes.unselect_all_points = function(env)
+    local count_env_pts = reaper.CountEnvelopePoints(env)
+    for i = 0, count_env_pts, 1 do
+        -- local retval, time, value, shape, tension, selected = reaper.GetEnvelopePoint(env, i)
+        local ret = reaper.SetEnvelopePoint(env, i, nil, nil, nil, nil, false, true)
+    end
+end
+
+envelopes.delete_curve_obj = function(env, cobj)
+    reaper.PreventUIRefresh(1)
+        log.user("cobj =", format.block(cobj))
+    -- for _, v in ipairs(cobj) do
+    for i = #cobj, 1, -1 do
+        local v = cobj[i]
+        -- log.user(i, "->", format.block(v))
+
+        if v.type == 0 then
+            reaper.DeleteEnvelopePointEx(env, -1, v.pt_idx)
+        elseif v.type == 1 then
+            reaper.DeleteEnvelopePointEx(env, -1, v.pt_idx2)
+            reaper.DeleteEnvelopePointEx(env, -1, v.pt_idx)
+        elseif v.type == 2 then
+            reaper.DeleteEnvelopePointEx(env, -1, v.pt_idx2)
+            reaper.DeleteEnvelopePointEx(env, -1, v.pt_idx)
+        end
+    end
+    reaper.PreventUIRefresh(-1)
+    reaper.Envelope_SortPoints(env)
+    reaper.UpdateArrange()
+end
+
 envelopes.enum_curve_nodes = function(env, start_idx)
     local i = start_idx ~= nil and (start_idx - 1) or -1
     local is_delta_node = false

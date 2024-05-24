@@ -610,6 +610,8 @@ local function reset_new_picker(opts)
 	-- ow
 	-- log.user("#GUI.attach_mappings", format.block(GUI.attach_mappings))
 
+	GUI.on_focus_next = opts.on_focus_next
+
 	if opts.extended_mappings then
 		-- log.user("add ext map")
 		for k, v in pairs(opts.extended_mappings) do
