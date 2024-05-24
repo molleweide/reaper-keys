@@ -38,12 +38,13 @@ return function(tButtons, tResults)
 			-- log.user(string.format("%s < %s", item.name, item.group.name))
 			local label_str = ""
 
+      local sel_len = 6
 			if item.selected then
 				local part = string.format("[%s]", item.selected and "x")
-				label_str = label_str .. su.makeStringLength(part, 10, "_")
+				label_str = label_str .. su.makeStringLength(part, sel_len, "_")
 				else
 				local part = "[ ]"
-				label_str = label_str .. su.makeStringLength(part, 10, "_")
+				label_str = label_str .. su.makeStringLength(part, sel_len, "_")
 			end
 
 			-- if item.index then
@@ -53,18 +54,18 @@ return function(tButtons, tResults)
 
 			if item.type_name then
 				local part = string.format("type:[%s]", item.type_name)
-				label_str = label_str .. su.makeStringLength(part, 30, "_")
+				label_str = label_str .. su.makeStringLength(part, 16, "_")
 			end
 
 
 			if item.name then
 				local part = string.format("name:[%s]", item.name)
-				label_str = label_str .. su.makeStringLength(part, 30, "_")
+				label_str = label_str .. su.makeStringLength(part, 38, "_")
 			end
 
 			if item.active then
-				local part = string.format("active:[%s]", item.active)
-				label_str = label_str .. su.makeStringLength(part, 30, "_")
+				local part = string.format("active:[%s]", item.active and "x" or " ")
+				label_str = label_str .. su.makeStringLength(part, 5, "_")
 			end
 
 			-- if item.val then

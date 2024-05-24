@@ -303,49 +303,49 @@ automation_actions.picker_add_env_curve_for_fx_param = function()
     -- 1. Insert point at cursor for selection. <CR>
 end
 
-local function enum_curve_points(env, start_idx)
-    local i = start_idx ~= nil and (start_idx - 1) or -1
-    local is_delta_node = false
-    return function()
-        if is_delta_node then
-            i = i + 2
-            is_delta_node = false
-        else
-            i = i + 1
-        end
-
-        local retval, time_curve_node_0, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
-        local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
-
-        if not retval then
-            return
-        end
-
-        local delta = time2 - time_curve_node_0
-
-        local delta_processed
-        local delta_enlarged = delta * envelope_templates.ENV_STEP_MULT
-        local ceiled = math.ceil(delta_enlarged)
-        local ceil_diff = ceiled - delta_enlarged
-        local floored = math.floor(delta_enlarged)
-        local floor_diff = delta_enlarged - floored
-        if floor_diff < ceil_diff then
-            delta_processed = floored
-        elseif ceil_diff < floor_diff then
-            delta_processed = ceiled
-        end
-        local dp = delta_processed
-        if dp == nil or dp > 20 then
-            return "mid"
-        elseif dp == 1 then
-            is_delta_node = true
-            return "start"
-        elseif dp == 2 then
-            is_delta_node = true
-            return "end"
-        end
-    end
-end
+-- local function enum_curve_points(env, start_idx)
+--     local i = start_idx ~= nil and (start_idx - 1) or -1
+--     local is_delta_node = false
+--     return function()
+--         if is_delta_node then
+--             i = i + 2
+--             is_delta_node = false
+--         else
+--             i = i + 1
+--         end
+--
+--         local retval, time_curve_node_0, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
+--         local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
+--
+--         if not retval then
+--             return
+--         end
+--
+--         local delta = time2 - time_curve_node_0
+--
+--         local delta_processed
+--         local delta_enlarged = delta * envelope_templates.ENV_STEP_MULT
+--         local ceiled = math.ceil(delta_enlarged)
+--         local ceil_diff = ceiled - delta_enlarged
+--         local floored = math.floor(delta_enlarged)
+--         local floor_diff = delta_enlarged - floored
+--         if floor_diff < ceil_diff then
+--             delta_processed = floored
+--         elseif ceil_diff < floor_diff then
+--             delta_processed = ceiled
+--         end
+--         local dp = delta_processed
+--         if dp == nil or dp > 20 then
+--             return "mid"
+--         elseif dp == 1 then
+--             is_delta_node = true
+--             return "start"
+--         elseif dp == 2 then
+--             is_delta_node = true
+--             return "end"
+--         end
+--     end
+-- end
 
 -- NOTE: timeline: [.pt_before_L....range_left...range_right....]
 local function find_existing_curve_at_new_range(env, range_left, range_right)
@@ -777,7 +777,7 @@ automation_actions.picker_edit_track_curves_ui = function()
         log.user("?????", format.block(sel), sel.env)
         -- local env = sel.env
 
-        for t in enum_curve_points(sel.env) do
+        for t in envelopes.enum_curve_points(sel.env) do
             log.user("t = ", t)
         end
 
@@ -797,6 +797,7 @@ automation_actions.picker_edit_track_curves_ui = function()
     -- list track envelopes
     fzf.init({
         title = "List Curve_Objects for track = " .. "TRACK_NAME",
+    width = 1000,
         results = t_envs,
         results_filter = "name",
         on_select_func = function(gui)
