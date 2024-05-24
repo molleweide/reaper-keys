@@ -381,6 +381,8 @@ local function find_existing_curve_at_new_range(env, range_left, range_right)
         log.user("GET envelope point by time returned [ position == range_left ]")
     end
 
+    -- FIX: Use `envelopes.enum_curve_nodes(env)` instead.
+
     while not will_create_overlap and i < cnt do
         -- point and next consecutive point
         local retval, time_curve_node_0, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
@@ -758,9 +760,35 @@ automation_actions.picker_edit_track_curves_ui = function()
     end
 
     -- local ENV_CONSTS = require("constants.envelope_templates")
+    local function picker_env_curve_nodes(sel)
+        local results = {}
+
+        for k, v in ipairs(sel) do
+            log.user("k:", k, "v:", v)
+            table.insert(results, v)
+        end
+
+        log.user("NODES:", format.block(results))
+
+        -- TODO: tweak each node of a curve here.
+        fzf.init({
+            title = "Curve nodes for track.curve = " .. "TRACK_NAME",
+            results = results,
+            results_filter = "name",
+            -- on_select_func = function(gui)
+            --     local sel = { gui:get_on_enter_selection() }
+            --     picker_env_curve_nodes(sel)
+            -- end,
+            sort_comp = function(a, b)
+                return a.tpos < b.tpos
+            end,
+            entry_maker = require("pickers.entry_makers.env_curve_node"),
+            extended_mappings = {},
+        })
+    end
 
     -- TODO: Now, on envelope select -> list all curve objects.
-    local function picker_env_curve_objs(sel)
+    local function picker_env_curve_objs(sel_in)
         -- TODO: Modify the `find_existing_curve_at_new_range` so that it becomes
         -- `env_get_curves()`
         -- I also need an enum_curve_objs which is going to be a bit annoying to
@@ -777,11 +805,19 @@ automation_actions.picker_edit_track_curves_ui = function()
         -- 1. Just make a list of {{start},...,{end}}
         -- 2. Mapping -> remove curve
 
-        local count_env_pts = reaper.CountEnvelopePoints(sel.env)
+        local count_env_pts = reaper.CountEnvelopePoints(sel_in.env)
         log.user("TOTAL ENV POINT COUNT = ", count_env_pts)
 
-        for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, rp in envelopes.enum_curve_points(sel.env) do
-            table.insert(t_curv_nodes, {
+        local t_curve_objs = {}
+
+        local start_count = 0
+
+        for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, rp in envelopes.enum_curve_nodes(sel_in.env) do
+            if ntype == 1 then
+                start_count = start_count + 1
+                table.insert(t_curve_objs, { name = "curve " .. start_count })
+            end
+            table.insert(t_curve_objs[#t_curve_objs], {
                 name = nname,
                 type = ntype,
                 pt_idx = pt_idx,
@@ -793,19 +829,35 @@ automation_actions.picker_edit_track_curves_ui = function()
             })
         end
 
+        log.user(format.block(t_curve_objs))
+
+        -- TODO: Add `on_focus_next = ...` select
+        -- 1. the nodes of the curve and navigate cursor.
+        -- 2. select the pts of the curve
+        -- 3. keep a backup of orig selection/cursor position
+        -- 4. on exit reset selec/cursor
+        --
         fzf.init({
             title = "Curve objects for track = " .. "TRACK_NAME",
-            results = t_curv_nodes,
+            results = t_curve_objs,
             results_filter = "name",
-            -- on_select_func = function(gui)
-            --     local sel = { gui:get_on_enter_selection() }
-            --     picker_env_curve_objs(sel)
-            -- end,
-            sort_comp = function(a, b)
-                return a.tpos < b.tpos
+            on_select_func = function(gui)
+                local sel = gui:get_on_enter_selection()
+                picker_env_curve_nodes(sel)
             end,
-            -- entry_maker = { "tpos", "name", "delta" },
-            entry_maker = require("pickers.entry_makers.env_curve_node"),
+            sort_comp = function(a, b)
+                return a[1].tpos < b[1].tpos
+            end,
+            entry_maker = require("pickers.entry_makers.env_curve_obj"),
+            -- TEST: Do I need to reset/garbage collect the previous extended
+            -- mappings? Ie. set new fresh binds for current picker.
+            extended_mappings = {
+                ["C-r"] = function(t)
+                    -- TODO: Remove selection.
+                    -- 1. check if mult select?
+                    -- 2. remove points by idx
+                end,
+            },
         })
     end
 
@@ -845,6 +897,11 @@ automation_actions.picker_edit_track_curves_ui = function()
             end,
             ["C-a"] = function(t)
                 t.gui_ref:reset_current_selection()
+            end,
+            ["C-r"] = function(t)
+                -- TODO: Remove selection.
+                -- 1. check if mult select?
+                -- 2. remove points by idx
             end,
         },
     })

@@ -809,7 +809,7 @@ local function round(num)
     return math.floor(num + 0.5)
 end
 
-envelopes.enum_curve_points = function(env, start_idx)
+envelopes.enum_curve_nodes = function(env, start_idx)
     local i = start_idx ~= nil and (start_idx - 1) or -1
     local is_delta_node = false
     local prev_type
