@@ -1166,10 +1166,9 @@ commands.picker_midi_editor_add_track_to_view = function()
 end
 
 commands.sample_library_file_browser = function()
-    -- TODO: 1. First, just learn to navigate the file browser.
-    -- 2. Add opts.restrict_to_dir.
-    -- 3.
     local sample_dir_path = "/Users/hjalmarjakobsson/reaper/samples/1Shots Sampler Inst"
+                  log.clear()
+
     pickers.file_browser({
         cwd = sample_dir_path,
     })

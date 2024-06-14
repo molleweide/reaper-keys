@@ -734,7 +734,7 @@ function jGui:get_currently_focused_entry()
     if self.focus.title == "main_input" then
         idx = idx + 1
     end
-    return self.t_search_results[idx]
+    return self.t_search_results[idx], idx
 end
 -----------------------------------------------------------------------------
 -- Misc

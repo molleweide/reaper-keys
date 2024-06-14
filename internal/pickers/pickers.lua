@@ -660,6 +660,8 @@ pickers.file_browser = function(opts)
     -- TODO: ~ opts.allow_multiple_select
     -- ~ on_wav_select
 
+    -- TODO: Add opts.restrict_to_dir.
+
     if not opts.cwd then
         log.debug("picker file browser requires an `opts.start_at_path` param.")
         return
@@ -724,7 +726,8 @@ pickers.file_browser = function(opts)
     --
     --
     --
-    fzf.init({
+      fzf.init(tbl.deep_extend({
+
         title = "SAMPLE LIBRARY BROWSER",
         width = 1000,
         height = 800,
@@ -736,13 +739,15 @@ pickers.file_browser = function(opts)
             if main_input then
             end
             local sel
+
+      -- this pattern occurs so often that i should maybe add it to GUI?
             if gui:has_mult_select() then
                 sel = gui:get_mult_select()
             else
                 sel = { gui:get_on_enter_selection() }
             end
 
-            log.user(format.block(sel), sel[1].type == "dir")
+            -- log.user(format.block(sel), sel[1].type == "dir")
             -- if #sel > 1 hasFiles then
             --     get first selected wav file.
 
@@ -755,10 +760,13 @@ pickers.file_browser = function(opts)
                 return o.type == "file"
             end)
 
+
+                -- log.user("browser selection:")
+
             if #sel_files > 0 then
                 -- if opts.mult select?
                 for i, s in ipairs(sel_files) do
-                    log.user("Do something with file:", s.full_path)
+                    log.user("FILE: Do something with file:", s.full_path)
                 end
             -- if opts.on_select_files then
             --     opts.on_select_files(sel_files)
@@ -768,7 +776,7 @@ pickers.file_browser = function(opts)
                 -- TODO: This should be a callback so that one can specify what should happen
                 -- to the selection.
                 local the_sel = sel_dirs[1]
-                log.user("NEW DIR", format.block(the_sel))
+                log.user("DIR", format.block(the_sel))
                 pickers.file_browser({ cwd = the_sel.full_path })
             -- if opts.on_select_dirs then
             --     opts.on_select_dirs(sel_dirs)
@@ -794,6 +802,9 @@ pickers.file_browser = function(opts)
         -- TODO: Important to show state `selected = true/false`, so that I can
         -- show this in the picker.
         entry_maker = { "type_formatted", "name" },
+    -- NOTE: since this is the base implementation of the file browser, I should
+    -- use the `attach_mappings` instead of extend mappings
+
         -- attach_mappings = require("pickers.attach_mappings.fx_parameters"),
         extended_mappings = {
             ["C-z"] = function()
@@ -808,7 +819,7 @@ pickers.file_browser = function(opts)
                 pickers.file_browser({ cwd = parent_path })
             end,
         },
-    })
+    }, opts))
 end
 
 pickers.basic_prompt = function(opts)

@@ -907,36 +907,23 @@ automation_actions.picker_edit_track_curves_ui = function()
                 ["C-r"] = function(o)
                     -- TODO: Remove selection.
                     -- 1. check if mult select?
-                    -- 2. remove points by idx
-                    local entry = o.gui_ref:get_currently_focused_entry()
-
-                    -- 1. table.remove -- entry.curve_index
-
-                    -- 2.
+                    local entry, idx = o.gui_ref:get_currently_focused_entry()
 
                     envelopes.delete_curve_obj(sel_in.env, entry)
 
                     -- NOTE: this is a bit of a hacky way to get the entries to update
                     -- but it will work for now.
                     local _, main_input = tbl.findIndexOf(o.gui_ref.controls, "title", "main_input")
-
-                    -- resets
                     main_input.value = " "
-                    o.gui_ref:setFocus(textBox)
+                    main_input.value = ""
+
+                    -- TEST: what happes if i comment out the below.
+                    -- Do I only need to reset the main_input.value to force a
+                    -- reset?
 
                     o.gui_ref.t_results_data = get_curve_objs()
                     table.sort(o.gui_ref.t_results_data, o.gui_ref.sort_comp)
-
-                    -- -- o.gui_ref:update()
-                    -- -- o.gui_ref:refresh()
-                    -- -- o.gui_ref:loop()
-                    -- o.gui_ref:onResize()
-                    -- -- o.gui_ref:init()
-                    -- gfx.update()
-
-                    -- o.gui_ref:_resize()
-                    -- UPDATE_RESULTS = true
-                    -- t_co = get_curve_objs()
+                    o.gui_ref:setFocus(textBox)
                 end,
             },
         })
