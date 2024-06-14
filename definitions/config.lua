@@ -8,39 +8,41 @@
 -- local MACOS_KARABINER_VKB_MODE_PROFILE = MACOS_PATH_KARABINER_CLI .. " --select-profile 'Moll_NDK'"
 
 return {
-	-- should operators in visual modes reset the selection or have it persist?
-	persist_visual_timeline_selection = false,
-	persist_visual_track_selection = false,
-	-- allow timeline movement when in visual track mode?
-	allow_visual_track_timeline_movement = true,
-	-- options in decreasing verbosity: [trace debug info warn user error fatal]
-	log_level = "info",
-	repeatable_commands_action_type_match = {
-		"command",
-		"operator",
-		"meta_command",
-	},
+    -- should operators in visual modes reset the selection or have it persist?
+    persist_visual_timeline_selection = false,
+    persist_visual_track_selection = false,
+    -- allow timeline movement when in visual track mode?
+    allow_visual_track_timeline_movement = true,
+    -- options in decreasing verbosity: [trace debug info warn user error fatal]
+    log_level = "info",
+    repeatable_commands_action_type_match = {
+        "command",
+        "operator",
+        "meta_command",
+    },
 
-	-- create you custom name prefix
-	name_prefix_match_str = "^%a%:.*%:",
+    -- create you custom name prefix
+    name_prefix_match_str = "^%a%:.*%:",
 
-	-- note: this is obsolete. used with karabiner...
-	-- run_ext_cmd_on_enter_mode = {
-	-- 	normal = MACOS_PATH_KARABINER_CLI .. " --select-profile 'Molleweide'",
-	-- 	vkb = MACOS_PATH_KARABINER_CLI .. " --select-profile 'Moll_NDK'",
-	-- },
-	path_presets = {
-		massive = "~/reaper/presets/massive",
-	},
+    -- note: this is obsolete. used with karabiner...
+    -- run_ext_cmd_on_enter_mode = {
+    -- 	normal = MACOS_PATH_KARABINER_CLI .. " --select-profile 'Molleweide'",
+    -- 	vkb = MACOS_PATH_KARABINER_CLI .. " --select-profile 'Moll_NDK'",
+    -- },
+    path_presets = {
+        massive = "~/reaper/presets/massive",
+    },
 
-	symbPianoRollRange = "#",
+    symbPianoRollRange = "#",
 
-	drum_lanes_low_note_start = 24,
-	syntax = {
-		samplers = {
-			load_random_sample_if_empty = true,
-			always_reload_random_sample = false,
-			testing = true,
-		},
-	},
+    drum_lanes_low_note_start = 24,
+    syntax = {
+        samplers = {
+            load_random_sample_if_empty = true,
+            always_reload_random_sample = false,
+            testing = true,
+        },
+    },
+
+    paths = { sample_lib = "/Users/hjalmarjakobsson/reaper/samples/1Shots Sampler Inst" },
 }
