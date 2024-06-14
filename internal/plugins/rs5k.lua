@@ -79,7 +79,7 @@ rs5k.updateSample = function(tobj, fx_idx, wav_file_path)
             end
         end
 
-        log.user(string.format(
+        log.debug(string.format(
             [[rs5k.updateSample
     tobj name = %s
     tobj ncomp = %s

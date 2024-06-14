@@ -650,6 +650,8 @@ local function reset_new_picker(opts)
 
     local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
 
+  GUI:setTitle(opts.title)
+
     -- resets
     main_input.value = ""
     GUI:setFocus(textBox)

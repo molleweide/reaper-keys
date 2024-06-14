@@ -33,7 +33,9 @@ end
 --  ~ create plugin module for massive
 --  ~ save some synth patches manually
 --     >>> in a smart manner/dir/file structure
---  ~
+--  ~ filter / exclude filetypes
+--  ~ toggle live preview of sample
+--  ~ mapping programmatically preview a sample. eg. if not playback..
 
 fx_commands.pickerSelectSampleForSamplerOnSelectOrFocusedTrack = function()
   -- TODO: on up/down or change -> previow results[1] or scroll_selection.
@@ -118,6 +120,7 @@ fx_commands.pickerSelectSampleForSamplerOnSelectOrFocusedTrack = function()
 
   -- the new improved sample browser.
   require("pickers.pickers").file_browser({
+
     cwd = path_start,
 
     -- todo
@@ -125,15 +128,15 @@ fx_commands.pickerSelectSampleForSamplerOnSelectOrFocusedTrack = function()
 
     on_focus_next = function(gui)
       local entry = gui:get_currently_focused_entry()
-      log.user("[on_focus_next]: entry =", format.block(entry))
+      -- log.user("[on_focus_next]: entry =", format.block(entry))
       if path.check_file_ext(entry.full_path, "wav") then
-        log.user("is wav file")
+        -- log.user("is wav file")
       rs5k.updateSample(focus_track_obj, first_rs5k_fx_obj.idx, entry.full_path)
       end
     end,
 
     on_select_files = function(files)
-      log.user("files:", files)
+      -- log.user("files:", files)
       return true
     end,
 
@@ -142,10 +145,10 @@ fx_commands.pickerSelectSampleForSamplerOnSelectOrFocusedTrack = function()
       log.user("dirs:", dirs)
     end,
     on_exit_callback = function()
-      log.user("sample picker on exit")
+      -- log.user("sample picker on exit")
       -- restore_sample()
       if path.check_file_ext(prev_sample_path, "wav") then
-        log.user("is wav file")
+        -- log.user("is wav file")
       rs5k.updateSample(focus_track_obj, first_rs5k_fx_obj.idx, prev_sample_path)
       end
     end,

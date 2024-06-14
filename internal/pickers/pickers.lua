@@ -732,6 +732,9 @@ pickers.file_browser = function(opts)
 
   local start_dir = scan_dir(opts.cwd)
 
+local cwd_is_ceiling = opts.cwd == opts.restrict_to_dir and "^" or ""
+
+
   -- log.user(format.block(subdirs))
 
   --
@@ -739,7 +742,7 @@ pickers.file_browser = function(opts)
   --
   fzf.init(tbl.deep_extend({
 
-    title = "SAMPLE LIBRARY BROWSER",
+    title = string.format("BROWSE: %s[%s]", cwd_is_ceiling, path.trim_path_from_left(opts.cwd)),
     width = 1000,
     height = 800,
     x = 0,
@@ -835,19 +838,19 @@ pickers.file_browser = function(opts)
         local parent_path = path.get_parent_dir(opts.cwd)
         parent_path = path.trim_trailing_slash(parent_path)
 
-        log.user(string.format(
-          [[GO BACK ------------
-        CWD = %s
-
-        RESTRICTED TO = %s
-
-        PARENT PATH = %s
-
-        --]],
-          opts.cwd,
-          opts.restrict_to_dir,
-          parent_path
-        ))
+        -- log.user(string.format(
+        --   [[GO BACK ------------
+        -- CWD = %s
+        --
+        -- RESTRICTED TO = %s
+        --
+        -- PARENT PATH = %s
+        --
+        -- --]],
+        --   opts.cwd,
+        --   opts.restrict_to_dir,
+        --   parent_path
+        -- ))
 
         if opts.cwd == opts.restrict_to_dir then
           log.user("RESTRICTED / CANT MOVE UP")
