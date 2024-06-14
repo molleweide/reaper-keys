@@ -689,6 +689,8 @@ pickers.file_browser = function(opts)
   -- C-t, toggle play selected sample on change.
   --
 
+  -- add ability to exclude/filter file types
+  --
   local function enum_files(path)
     local i = -1
     return function()
@@ -777,7 +779,10 @@ pickers.file_browser = function(opts)
           log.user("FILE: Do something with file:", s.full_path)
         end
         if opts.on_select_files then
-          opts.on_select_files(sel_files)
+          local ret = opts.on_select_files(sel_files)
+          if ret then
+            return true
+          end
         end
       elseif #sel_dirs > 0 then
         -- if opts.mult select?
@@ -785,11 +790,14 @@ pickers.file_browser = function(opts)
         -- to the selection.
         local the_sel = sel_dirs[1]
         log.user("DIR", format.block(the_sel))
-        pickers.file_browser({
-          cwd = the_sel.full_path,
 
-          restrict_to_dir = opts.restrict_to_dir,
-        })
+        opts.cwd = the_sel.full_path
+        pickers.file_browser(opts)
+        -- pickers.file_browser({
+        --   cwd = the_sel.full_path,
+        --
+        --   restrict_to_dir = opts.restrict_to_dir,
+        -- })
         if opts.on_select_dirs then
           opts.on_select_dirs(sel_dirs)
         end
@@ -847,10 +855,12 @@ pickers.file_browser = function(opts)
         end
 
         -- log.user("<C-z> goto:", parent_path)
-        pickers.file_browser({
-          cwd = parent_path,
-          restrict_to_dir = opts.restrict_to_dir,
-        })
+        opts.cwd = parent_path
+        pickers.file_browser(opts)
+        -- pickers.file_browser({
+        --   cwd = parent_path,
+        --   restrict_to_dir = opts.restrict_to_dir,
+        -- })
       end,
     },
   }, opts))

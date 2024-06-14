@@ -18,6 +18,17 @@ function path.trim_trailing_slash(path)
     return path:gsub("[/\\]+$", "")
 end
 
+function path.check_file_ext(filePath, desiredExtension)
+    -- Get the file extension
+    local extension = filePath:match("%.([^%.]+)$")
+
+    -- If extension exists and matches desiredExtension
+    if extension and extension == desiredExtension then
+        return true
+    else
+        return false
+    end
+end
 
         -- local function get_parent_dir(path)
         --   return path:match("(.+)/[^/]+$")
