@@ -171,7 +171,7 @@ pickers.track_fx = function(meta, opts)
   -- log.user(opts.title, format.block(fx_results))
   fzf.init(tbl.deep_extend({
     title = "Browse track FX list",
-    width = 900,
+    width = 1300,
     height = 700,
     x = 0,
     y = 1100,
@@ -203,7 +203,9 @@ pickers.track_fx_params = function(meta, opts)
     return
   end
   local node = opts.node
+
   local t_fx_params = fx_util.get_track_fx_info(node.tr, opts.fx_index)
+
   -- log.user(format.block(t_fx_params))
   fzf.init(tbl.deep_extend({
     meta = {
@@ -219,6 +221,7 @@ pickers.track_fx_params = function(meta, opts)
     results = t_fx_params.parameters,
     on_select_func = false,
     sort_comp = "name",
+    -- TODO: show if has envelope
     entry_maker = require("pickers.entry_makers.fx_parameters"),
     attach_mappings = require("pickers.attach_mappings.fx_parameters"),
     -- since i am doing deep extend I dont think I need to have opts such as
@@ -306,6 +309,32 @@ pickers.track_routing = function()
     title = "Routing @track: <trackname>",
     results = {},
   }, opts))
+end
+
+pickers.single_track_routes = function(opts)
+  local tr_routes
+  opts = opts or {}
+
+  if not opts.result_routes then
+    local tr = reaper.GetSelectedTrack(0, 0)
+    local route = require("library.routing")
+    tr_routes = route.get_route_object_for_track(tr)
+  else
+    tr_routes = opts.result_routes
+  end
+
+  -- log.user(format.block(tr_routes))
+  fzf.init({
+    title = "Single track routes",
+    results = tr_routes,
+    on_select_func = function(gui)
+      return true
+    end,
+    sort_comp = "other_tr_name",
+    results_filter = "other_tr_name",
+    -- FIX: make the track routes entry makes nice
+    entry_maker = { "index", "type", "other_tr_idx", "other_tr_name" },
+  })
 end
 
 pickers.midi_editor_take_screensets = function()
@@ -732,8 +761,7 @@ pickers.file_browser = function(opts)
 
   local start_dir = scan_dir(opts.cwd)
 
-local cwd_is_ceiling = opts.cwd == opts.restrict_to_dir and "^" or ""
-
+  local cwd_is_ceiling = opts.cwd == opts.restrict_to_dir and "^" or ""
 
   -- log.user(format.block(subdirs))
 

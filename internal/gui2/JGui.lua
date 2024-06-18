@@ -672,7 +672,7 @@ function jGui:onExit()
 end
 
 -----------------------------------------------------------------------------
--- Selection
+-- Results entries / selection
 --
 
 function jGui:has_mult_select()
@@ -747,6 +747,18 @@ function jGui:get_currently_focused_entry()
     idx = idx + 1
   end
   return self.t_search_results[idx], idx
+end
+
+function jGui:remove_results_entries()
+  -- TODO: This function has to trigger an update of results listing.
+  -- ~ Should take a single index or a table of indices that needs to
+  --    be removed
+  --    >>> Therefore it should probably call something like jGui:force_refresh()
+  --    which ensures that we set FORCE_REFRESH = true, which ensures that results
+  --    list will be properly updated/synced.
+  -- ~ Resetting the "main_input" should probably also go into the main GUI so
+  --    that when there is new results, the cursor will be reset.
+  -- ~
 end
 
 -----------------------------------------------------------------------------

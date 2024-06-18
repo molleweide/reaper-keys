@@ -17,65 +17,68 @@ local sf = require("utils.j_string_functions")
 -- end
 
 return function(tButtons, tResults)
-	for i, cIds in ipairs(tButtons) do
-		local b = cIds[1]
-		local info = cIds[2]
-		local iStart = fu._round(i + SCROLL_RESULTS)
-		local highlights = sf.jStringExplode(textBox.value, " ")
-		local showing
+  for i, cIds in ipairs(tButtons) do
+    local b = cIds[1]
+    local info = cIds[2]
+    local iStart = fu._round(i + SCROLL_RESULTS)
+    local highlights = sf.jStringExplode(textBox.value, " ")
+    local showing
 
-		if iStart <= #tResults then
-			showing = iStart
-		else
-			showing = #tResults
-		end
+    if iStart <= #tResults then
+      showing = iStart
+    else
+      showing = #tResults
+    end
 
-		LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
+    LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
 
-		if tResults and iStart <= #tResults then
-			local item = tResults[iStart]
+    if tResults and iStart <= #tResults then
+      local item = tResults[iStart]
 
-			-- log.user(string.format("%s < %s", item.name, item.group.name))
-			local label_str = ""
+      -- log.user(string.format("%s < %s", item.name, item.group.name))
+      local label_str = ""
 
-			if item.index then
-				local part = string.format("[%s]", item.index)
-				label_str = label_str .. su.makeStringLength(part, 10, "_")
-			end
+      if item.index then
+        local part = string.format("[%s]", item.index)
+        label_str = label_str .. su.makeStringLength(part, 10, "_")
+      end
 
-			if item.name then
-				local part = string.format("parm:[%s]", item.name)
-				label_str = label_str .. su.makeStringLength(part, 30, "_")
-			end
+      if item.name then
+        local part = string.format("parm:[%s]", item.name)
+        label_str = label_str .. su.makeStringLength(part, 30, "_")
+      end
 
-			if item.val then
-			  local val_str = tostring(item.val)
+      if item.val then
+        local val_str = tostring(item.val)
 
-			  if #val_str > 5 then
-			    val_str = string.sub(val_str, 1, 5)
-			  end
+        if #val_str > 5 then
+          val_str = string.sub(val_str, 1, 5)
+        end
         if #val_str < 5 then
           local diff = 5 - #val_str
           val_str = val_str .. string.rep("0", diff)
         end
 
-				local part = string.format("val:[ %s ]", val_str)
-				label_str = label_str .. su.makeStringLength(part, 20, "_")
-			end
+        local part = string.format("val:[ %s ]", val_str)
+        label_str = label_str .. su.makeStringLength(part, 15, "_")
+      end
 
-			if item.valf then
-				local part = string.format("valf:[ %s ]", item.valf)
-				label_str = label_str .. part
-			end
+      if item.valf then
+        local part = string.format("valf:[ %s ]", item.valf)
+        label_str = label_str .. su.makeStringLength(part, 17, "_")
+      end
 
-			b.label = label_str
+      local part = string.format("env:[%s]", item.envelope and "x" or " ")
+      label_str = label_str .. su.makeStringLength(part, 20, "_")
 
-			b.visible = true
-			info.visible = true
-			b.highlight = highlights
-		else
-			b.visible = false
-			info.visible = false
-		end
-	end
+      b.label = label_str
+
+      b.visible = true
+      info.visible = true
+      b.highlight = highlights
+    else
+      b.visible = false
+      info.visible = false
+    end
+  end
 end

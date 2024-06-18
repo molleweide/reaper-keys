@@ -8,6 +8,9 @@ local fx_util = require("library.fx")
 
 local sx_tracks = require("syntax.tracks")
 
+-- NOTE: This whole file has to be strongly revised when implementing the
+-- real fx chain syntax parser.
+
 -- module variables
 local div = "_" -- move to constants, or syntax config?
 
@@ -29,7 +32,7 @@ local fx = {}
 --   return fx_tot
 -- end
 
-local function checkOldFxHasDiv(old_fx_name)
+local function check_old_fx_has_div(old_fx_name)
   -- local old_has_div = false
   if type(old_fx_name) == "string" then
     if old_fx_name:match("_A_") then
@@ -41,7 +44,7 @@ local function checkOldFxHasDiv(old_fx_name)
 end
 
 --- @return string old_tr_name, string old_rsfx_str
-local function getRSFXStrAndTrackName(old_has_div, old_fx_name)
+local function get_rsfx_str_and_track_name(old_has_div, old_fx_name)
   local old_tr_name, old_rsfx_str
   if old_has_div then
     old_tr_name = old_fx_name:sub(0, old_fx_name:find(div) - 1)
@@ -65,8 +68,8 @@ local function getPrevDataForFx(state)
   })
 
   -- log.user("##chob/old_fx_name: " .. state.trk_obj.name .. " | " .. tostring(old_fx_name))
-  local old_has_div = checkOldFxHasDiv(old_fx_name)
-  local old_tr_name, old_rsfx_str = getRSFXStrAndTrackName(old_has_div, old_fx_name)
+  local old_has_div = check_old_fx_has_div(old_fx_name)
+  local old_tr_name, old_rsfx_str = get_rsfx_str_and_track_name(old_has_div, old_fx_name)
   return old_has_div, old_tr_name, old_rsfx_str
 end
 
@@ -161,7 +164,7 @@ local function handle_syntax_fx_chain_post_fx(state)
     for _ = state.new_fx_chain_idx, state.old_fx_chain_count - 1 do
       local ofxn =
       fx_util.getSetTrackFxNameByFxChainIndex(state.trk_obj.guid, state.new_fx_chain_idx, false)
-      local old_has_div = checkOldFxHasDiv(ofxn)
+      local old_has_div = check_old_fx_has_div(ofxn)
       if old_has_div then
         fx_util.removeFxAtIndex(state.trk_obj.guid, state.new_fx_chain_idx) -- don't increment index if we remove
         -- log.user('rm excess pre')
@@ -193,7 +196,11 @@ local function apply_single_effect(state, sxfx_opts)
   end
 end
 
--- apply fx syntax to track
+---Main function that ensures/applies correct syntax/fx for a single track FX chain.
+---@param child_obj table track objects
+---@param proll_start_idx number
+---@param opt_type string eg. 'm'
+---@return boolean|nil
 function fx.track_apply_fx_configs(child_obj, proll_start_idx, opt_type) -- change to drum_map_note_start
   local tr, _ = reaper_utils.getTrackByGUID(child_obj.guid)
   if tr == nil or child_obj == nil then
