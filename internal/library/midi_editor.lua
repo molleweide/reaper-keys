@@ -19,25 +19,51 @@ local midi_editor = {}
 ----------
 
 midi_editor.activeMidiEditor = function()
-	return reaper.MIDIEditor_GetActive()
+    return reaper.MIDIEditor_GetActive()
 end
 
 midi_editor.activeTake = function(ME)
-	return reaper.MIDIEditor_GetTake(ME)
+    return reaper.MIDIEditor_GetTake(ME)
 end
 
 midi_editor.activeMediaItem = function()
-	return reaper.GetMediaItemTake_Item(activeTake())
+    return reaper.GetMediaItemTake_Item(activeTake())
 end
 
 midi_editor.activeTrack = function(take)
-	return reaper.GetMediaItemTake_Track(take)
+    return reaper.GetMediaItemTake_Track(take)
 end
 
 ----------
 
 midi_editor.setConfig = function(new_config)
-	reaper.SNM_SetIntConfigVar("midieditor", new_config)
+    reaper.SNM_SetIntConfigVar("midieditor", new_config)
+end
+
+local function config_set_temp(c)
+    midi_editor.setConfig(c)
+end
+
+local function config_restore(c)
+    midi_editor.setConfig(c)
+end
+
+local function ME_restore_state(saved)
+    if saved.config then
+        midi_editor.setConfig(saved.config.raw)
+    end
+    if saved.item_selection then
+        containers.setItemSelection(saved.item_selection)
+    end
+    if saved.hzoom_lvl and saved.editor then
+        midi_editor.restoreHorizontalZoomState(ME.editor, saved.hzoom_state)
+    end
+    if saved.visible_items then
+        midi_editor.setItemsVisible(ME.editor, saved.visible_items, true)
+    end
+    if saved.editable_items then
+        midi_editor.setItemsEditable(ME.editor, saved.editable_items, true)
+    end
 end
 
 -- NOTE: prefence variable docs
@@ -46,175 +72,216 @@ end
 -- TODO: I need to read up on bit-operations..
 
 -- NOTE: Reaper config var: `midieditor`
--- Several editor-settings, as set in Preferences -> MIDI Editor as well as in
--- the menu of MIDI Editor -> Contents -> Behavior for "open items in built-in
--- MIDI Editor" and some actions
 -----
 -- It is an integer-bitfield, preferences variable.
 -----
--- &1 and &2, One MIDI editor per; 00=media item; 01=track; 10=project
 -----
--- &4 and &16, Behavior for "open items in built-in MIDI editor
---   11, Open clicked MIDI item only
---   00, Open all selected MIDI items
---   01, Open all MIDI on the same track
---   10, Open all MIDI in the project
 -----
--- &32=0/1, Close editor when the active item is deleted in the arrange view(on)/(off) - checked/unchecked
 -----
--- &128=0/1, Active MIDI item follows selection changes in arrange view(on)/(off) - checked/unchecked
 -----
--- &256=0/1, Only MIDI items on the same track as the active item are editable(on)/off - checked/unchecked
 -----
--- &512=0/1, Selection is linked to editability(also MIDI-Editor-action 40891)(on)/(off) - checked/unchecked
 -----
--- &1024=0/1, Media item selection is linked to visibility(on)/(off) - checked / unchecked
 -----
--- &2048=0/1, All media items are editable in notation view(MIDI Editor ->
--- Contents -> Behavior for "open items in built-in MIDI Editor")(on) - checked
 -----
--- &4096=0/1, Make secondary items editable by default(off)/(on) - unchecked/checked
 -----
 -- Stored in reaper.ini under the same name in the section REAPER.
 
-
+--- Several editor-settings, as set in Preferences -> MIDI Editor as well as in
+--- the menu of MIDI Editor -> Contents -> Behavior for "open items in built-in
+--- MIDI Editor" and some actions
+midi_editor.get_ME_config_vars = function(config)
+    config = config or reaper.SNM_GetIntConfigVar("midieditor", 0)
+    return {
+        raw = config,
+        -- &1 and &2, One MIDI editor per; 00=media item; 01=track; 10=project
+        -- NOTE: Using modulo 4 extracts range lower two bits
+        editor_type = config % 4,
+        -- &4, (and &16,) Behavior for "open items in built-in MIDI editor
+        --   11, Open clicked MIDI item only
+        --   00, Open all selected MIDI items
+        --   01, Open all MIDI on the same track
+        --   10, Open all MIDI in the project
+        --   NOTE: Bitmas `&` only checks if 10100 is present or not
+        behavior_type = config & 20,
+        -- &32=0/1, Close editor when the active item is deleted in the arrange
+        -- view(on)/(off) - checked/unchecked
+        close_upon_item_deletion = config & 32,
+        -- &128=0/1, Active MIDI item follows selection changes in arrange
+        -- view(on)/(off) - checked/unchecked
+        active_item_follows_selection = config & 128,
+        -- &256=0/1, Only MIDI items on the same track as the active item are
+        -- editable(on)/off - checked/unchecked
+        other_tracks_editable = config & 256,
+        -- &512=0/1, Selection is linked to editability(also MIDI-Editor-action 40891)(on)/(off) - checked/unchecked
+        editability = config & 512,
+        -- &1024=0/1, Media item selection is linked to visibility(on)/(off)
+        visibility = config & 1024,
+        -- &2048=0/1, All media items are editable in notation view(MIDI Editor ->
+        -- Contents -> Behavior for "open items in built-in MIDI Editor")(on/off)
+        all_items_are_editable_in_notation_view = config & 2048,
+        -- &4096=0/1, Make secondary items editable by default(off)/(on) - unchecked/checked
+        secondary_items_editable_by_default = config & 4096,
+    }
+end
 
 -- Get current MIDI editor settings
 midi_editor.getConfigTable = function(config)
-	config = config or reaper.SNM_GetIntConfigVar("midieditor", 0)
-	return {
-		raw = config,
-		editor_type = config % 4,
-		behavior_type = config & 20,
-		active_item_follows_selection = config & 128,
-		other_tracks_editable = config & 256,
-		editability = config & 512,
-		visibility = config & 1024,
-	}
+    config = config or reaper.SNM_GetIntConfigVar("midieditor", 0)
+    return {
+        raw = config,
+        editor_type = config % 4, -- why does one have to use `modulo` here?
+        behavior_type = config & 20,
+        active_item_follows_selection = config & 128,
+        other_tracks_editable = config & 256,
+        editability = config & 512,
+        visibility = config & 1024,
+    }
 end
 
 midi_editor.makeTempConfig = function() end
 
-local function changeConfigForSelectionExploit(t_config, get_editable)
-	local new_config = t_config.raw
-	-- Set 'One MIDI Editor per project'
-	new_config = new_config - t_config.editor_type + 1
-	-- Set behavior for opening MIDI items to 'Open all selected MIDI items'
-	new_config = new_config - t_config.behavior_type
-	-- Diable 'Active MIDI item follows selection changes in arrange view'
-	new_config = new_config - t_config.active_item_follows_selection + 128
-	-- Disable 'Avoid automatically setting items from other tracks editable'
-	new_config = new_config - t_config.other_tracks_editable + 256
+--- This function return an ME options bitfield to be used temporarily.
+local function make_temporary_config_for_exploit(t_config, get_editable)
+    local new_config = t_config.raw
+    -- Set 'One MIDI Editor per project'
+    new_config = new_config - t_config.editor_type + 1
+    -- Set behavior for opening MIDI items to 'Open all selected MIDI items'
+    new_config = new_config - t_config.behavior_type
+    -- Diable 'Active MIDI item follows selection changes in arrange view'
+    new_config = new_config - t_config.active_item_follows_selection + 128
+    -- Disable 'Avoid automatically setting items from other tracks editable'
+    new_config = new_config - t_config.other_tracks_editable + 256
 
-	if get_editable then
-		-- Enable 'Selection is linked to editability'
-		new_config = new_config - t_config.editability
-		-- Disable 'Selection is linked to visibility'
-		new_config = new_config - t_config.visibility + 1024
-	else
-		-- Disable 'Selection is linked to editability'
-		new_config = new_config - t_config.editability + 512
-		-- Enable 'Selection is linked to visibility'
-		new_config = new_config - t_config.visibility
-	end
-	return new_config
+    if get_editable then
+        -- Enable 'Selection is linked to editability'
+        new_config = new_config - t_config.editability
+        -- Disable 'Selection is linked to visibility'
+        new_config = new_config - t_config.visibility + 1024
+    else
+        -- Disable 'Selection is linked to editability'
+        new_config = new_config - t_config.editability + 512
+        -- Enable 'Selection is linked to visibility'
+        new_config = new_config - t_config.visibility
+    end
+    return new_config
+end
+
+local function make_temp_config_for_get_visible_items(config)
+    local new_config = config.raw
+    -- Set 'One MIDI Editor per project'
+    new_config = new_config - config.editor_type + 1
+    -- Set behavior for opening MIDI items to 'Open all selected MIDI items'
+    new_config = new_config - config.behavior_type
+    -- Disable 'Selection is linked to visibility'
+    new_config = new_config - config.editability
+    new_config = new_config - config.visibility -- Enable 'Selection is linked to visibility'
+    return new_config
+end
+
+local function make_temp_config_for_get_editable_items(config)
+    local new_config = config.raw
+    new_config = new_config - config.editor_type + 1 -- Set 'One MIDI Editor per project'
+    new_config = new_config - config.behavior_type -- Set behavior for opening MIDI items to 'Open all selected MIDI items'
+    new_config = new_config - config.editability -- Disable 'Selection is linked to visibility'
+    new_config = new_config - config.visibility + 1024 -- Disable 'Selection is linked to visibility'
+    return new_config
 end
 
 local function checkConfigForActiveLink(t_config, is_edit_state)
-	-- local editor_type = config % 4
-	local mask = is_edit_state and 512 or 1024
-	-- Check if selection is already linked to visibility/editability
-	return t_config.editor_type == 1 and t_config.raw & mask == 0
+    -- local editor_type = config % 4
+    local mask = is_edit_state and 512 or 1024
+    -- Check if selection is already linked to visibility/editability
+    return t_config.editor_type == 1 and t_config.raw & mask == 0
 end
 
 midi_editor.restoreHorizontalZoomState = function(hwnd, state)
-	local sel_start_pos, sel_end_pos = tl.getTimeSelection()
-	local zoom_start_pos = state.center - state.length / 2
-	local zoom_end_pos = state.center + state.length / 2
-	if zoom_start_pos < 0 then
-		zoom_start_pos = 0
-		zoom_end_pos = state.length
-	end
+    local sel_start_pos, sel_end_pos = tl.getTimeSelection()
+    local zoom_start_pos = state.center - state.length / 2
+    local zoom_end_pos = state.center + state.length / 2
+    if zoom_start_pos < 0 then
+        zoom_start_pos = 0
+        zoom_end_pos = state.length
+    end
 
-	tl.setTimeSelection(zoom_start_pos, zoom_end_pos) -- tmp
+    tl.setTimeSelection(zoom_start_pos, zoom_end_pos) -- tmp
 
-	midi_editor.zoomToProjectLoopSelection(hwnd)
+    midi_editor.zoomToProjectLoopSelection(hwnd)
 
-	tl.setTimeSelection(sel_start_pos, sel_end_pos) -- reset
+    tl.setTimeSelection(sel_start_pos, sel_end_pos) -- reset
 
-	if zoom_start_pos == 0 then
-		-- Project selection can't be set below zero, therefore zoom in/out once
-		local zoom_mode = reaper.SNM_GetIntConfigVar("zoommode", 0)
-		local cursor_pos = reaper.GetCursorPosition()
-		reaper.SetEditCurPos(state.center, false, false)
-		-- Set horizontal zoom mode to 'Edit cursor or play cursor (default)'
-		reaper.SNM_SetIntConfigVar("zoommode", 0)
-		-- Cmd: Zoom in vertically
-		reaper.MIDIEditor_OnCommand(hwnd, 1012)
-		-- Cmd: Zoom out vertically
-		reaper.MIDIEditor_OnCommand(hwnd, 1011)
-		reaper.SNM_SetIntConfigVar("zoommode", zoom_mode)
-		reaper.SetEditCurPos(cursor_pos, false, false)
-	end
+    if zoom_start_pos == 0 then
+        -- Project selection can't be set below zero, therefore zoom in/out once
+        local zoom_mode = reaper.SNM_GetIntConfigVar("zoommode", 0)
+        local cursor_pos = reaper.GetCursorPosition()
+        reaper.SetEditCurPos(state.center, false, false)
+        -- Set horizontal zoom mode to 'Edit cursor or play cursor (default)'
+        reaper.SNM_SetIntConfigVar("zoommode", 0)
+        -- Cmd: Zoom in vertically
+        reaper.MIDIEditor_OnCommand(hwnd, 1012)
+        -- Cmd: Zoom out vertically
+        reaper.MIDIEditor_OnCommand(hwnd, 1011)
+        reaper.SNM_SetIntConfigVar("zoommode", zoom_mode)
+        reaper.SetEditCurPos(cursor_pos, false, false)
+    end
 end
 
 --- Gets the midi context for HWND or current/active midi editor.
 --
 ---@return boolean retval, table data
 midi_editor.getMidiValidContext = function(hwnd)
-	local ME = hwnd or reaper.MIDIEditor_GetActive()
+    local ME = hwnd or reaper.MIDIEditor_GetActive()
 
-	local take = reaper.MIDIEditor_GetTake(ME)
+    local take = reaper.MIDIEditor_GetTake(ME)
 
-	local editor_item = take and reaper.GetMediaItemTake_Item(take) or nil
+    local editor_item = take and reaper.GetMediaItemTake_Item(take) or nil
 
-	local retval = true
-	if not ME or (not take or not reaper.TakeIsMIDI(take)) or not reaper.ValidatePtr(take, "MediaItem_Take*") then
-		retval = false
-	end
+    local retval = true
+    if not ME or (not take or not reaper.TakeIsMIDI(take)) or not reaper.ValidatePtr(take, "MediaItem_Take*") then
+        retval = false
+    end
 
-	-- reaper.GetMediaItemTake_Track( take )
-	local tr_active, tr_guid
-	if retval then
-		tr_active = midi_editor.activeTrack(take)
-		tr_guid = reaper.GetTrackGUID(tr_active)
-	end
+    -- reaper.GetMediaItemTake_Track( take )
+    local tr_active, tr_guid
+    if retval then
+        tr_active = midi_editor.activeTrack(take)
+        tr_guid = reaper.GetTrackGUID(tr_active)
+    end
 
-	local mretval, notecnt, ccevtcnt, textsysevtcnt
-	if take then
-		mretval, notecnt, ccevtcnt, textsysevtcnt = reaper.MIDI_CountEvts(take)
-	end
+    local mretval, notecnt, ccevtcnt, textsysevtcnt
+    if take then
+        mretval, notecnt, ccevtcnt, textsysevtcnt = reaper.MIDI_CountEvts(take)
+    end
 
-	return retval,
-		{
-			editor = ME,
-			track = tr_active,
-			track_guid = tr_guid,
-			take = take,
-			item = editor_item,
-			events = take and { mretval, notecnt, ccevtcnt, textsysevtcnt } or nil,
-			note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row"),
-			cursor_pos = reaper.GetCursorPosition(),
-		}
+    return retval,
+        {
+            editor = ME,
+            track = tr_active,
+            track_guid = tr_guid,
+            take = take,
+            item = editor_item,
+            events = take and { mretval, notecnt, ccevtcnt, textsysevtcnt } or nil,
+            note_row = reaper.MIDIEditor_GetSetting_int(ME, "active_note_row"),
+            cursor_pos = reaper.GetCursorPosition(),
+        }
 end
 
 midi_editor.activateNextVisibleItem = function(hwnd)
-	reaper.MIDIEditor_OnCommand(hwnd, 40500)
+    reaper.MIDIEditor_OnCommand(hwnd, 40500)
 end
 
 -- Cmd: Open in built-in MIDI editor
 midi_editor.openFromMain = function()
-	reaper.Main_OnCommand(40153, 0)
+    reaper.Main_OnCommand(40153, 0)
 end
 
 -- Cmd: Zoom to project loop selection
 midi_editor.zoomToProjectLoopSelection = function(hwnd)
-	reaper.MIDIEditor_OnCommand(hwnd, 40726)
+    reaper.MIDIEditor_OnCommand(hwnd, 40726)
 end
 
 -- Options: Track list/media item lane follows selection changes in arrange view
 midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView = function(hwnd)
-	reaper.MIDIEditor_OnCommand(hwnd, 40826)
+    reaper.MIDIEditor_OnCommand(hwnd, 40826)
 end
 
 -- Get settings from a MIDI editor. setting_desc can be:
@@ -236,20 +303,20 @@ end
 -- end
 
 midi_editor.getVisibleTakes = function(hwnd)
-	local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
-	if not ME_EXISTS then
-		return
-	end
-	-- Cycle through visible MIDI items until the first one is reached
-	local vis_takes = { ME.take }
-	midi_editor.activateNextVisibleItem(hwnd)
-	local active_take = reaper.MIDIEditor_GetTake(hwnd)
-	while active_take ~= ME.take do
-		vis_takes[#vis_takes + 1] = active_take
-		midi_editor.activateNextVisibleItem(hwnd)
-		active_take = reaper.MIDIEditor_GetTake(hwnd)
-	end
-	return vis_takes
+    local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+    if not ME_EXISTS then
+        return
+    end
+    -- Cycle through visible MIDI items until the first one is reached
+    local vis_takes = { ME.take }
+    midi_editor.activateNextVisibleItem(hwnd)
+    local active_take = reaper.MIDIEditor_GetTake(hwnd)
+    while active_take ~= ME.take do
+        vis_takes[#vis_takes + 1] = active_take
+        midi_editor.activateNextVisibleItem(hwnd)
+        active_take = reaper.MIDIEditor_GetTake(hwnd)
+    end
+    return vis_takes
 end
 
 -- https://forum.cockos.com/showpost.php?p=2449694&postcount=51
@@ -258,80 +325,57 @@ end
 -- one line. refactor...
 --
 midi_editor.getVisibleItems = function(hwnd)
-	local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
-	if not ME_EXISTS then
-		return
-	end
+    local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+    if not ME_EXISTS then
+        return
+    end
 
-	reaper.PreventUIRefresh(1)
+    reaper.PreventUIRefresh(1)
 
-	local saved_item_selection = containers.getItemSelection()
+    local saved_item_selection = containers.getItemSelection()
 
-	local t_config = midi_editor.getConfigTable()
+    local t_config = midi_editor.getConfigTable()
 
-	-- TODO: refactor these into `midi_editor.makeTempConfig`
-	-- 	-- >>> use `changeConfigForSelectionExploit`
-	local new_config = t_config.raw
-	-- Set 'One MIDI Editor per project'
-	new_config = new_config - t_config.editor_type + 1
-	-- Set behavior for opening MIDI items to 'Open all selected MIDI items'
-	new_config = new_config - t_config.behavior_type
-	-- Disable 'Selection is linked to visibility'
-	new_config = new_config - t_config.editability
-	new_config = new_config - t_config.visibility -- Enable 'Selection is linked to visibility'
-	midi_editor.setConfig(new_config)
+    config_set_temp(make_temp_config_for_get_visible_items(t_config))
 
-	-- Set current editor item to be the only selected item
-	containers.setItemSelection(ME.item)
-	midi_editor.openFromMain()
+    -- Set current editor item to be the only selected item
+    containers.setItemSelection(ME.item)
+    midi_editor.openFromMain()
 
-	-- Save current item selection
-	local vis_items = containers.getItemSelection()
+    -- Save current item selection
+    local vis_items = containers.getItemSelection()
 
-	midi_editor.setConfig(t_config.raw)
+    config_restore(t_config.raw)
 
-	-- Restore previous item selection
-	containers.setItemSelection(saved_item_selection)
+    -- Restore previous item selection
+    containers.setItemSelection(saved_item_selection)
 
-	reaper.PreventUIRefresh(-1)
-	return vis_items
+    reaper.PreventUIRefresh(-1)
+    return vis_items
 end
 
 midi_editor.getEditableItems = function(hwnd)
-	local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
-	if not ME_EXISTS then
-		return
-	end
+    local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+    if not ME_EXISTS then
+        return
+    end
+    local saved = {
+        item_selection = containers.getItemSelection(),
+        config = midi_editor.getConfigTable(),
+    }
+    reaper.PreventUIRefresh(1)
+    midi_editor.setConfig(make_temp_config_for_get_editable_items(saved.config))
 
-	reaper.PreventUIRefresh(1)
+    -- Set current editor item to be the only selected item
+    containers.setItemSelection(ME.item)
+    midi_editor.openFromMain()
 
-	local saved_item_selection = containers.getItemSelection()
+    local editable_items = containers.getItemSelection()
 
-	local t_config = midi_editor.getConfigTable()
+    ME_restore_state(saved)
 
-	-- TODO: refactor these into `midi_editor.makeTempConfig`
-	-- >>> use `changeConfigForSelectionExploit`
-	local new_config = t_config.raw
-	new_config = new_config - t_config.editor_type + 1 -- Set 'One MIDI Editor per project'
-	new_config = new_config - t_config.behavior_type -- Set behavior for opening MIDI items to 'Open all selected MIDI items'
-	new_config = new_config - t_config.editability -- Disable 'Selection is linked to visibility'
-	new_config = new_config - t_config.visibility + 1024 -- Disable 'Selection is linked to visibility'
-	midi_editor.setConfig(new_config)
-
-	-- Set current editor item to be the only selected item
-	containers.setItemSelection(ME.item)
-	midi_editor.openFromMain()
-
-	-- Save current item selection
-	local editable_items = containers.getItemSelection()
-
-	midi_editor.setConfig(t_config.raw)
-
-	-- Restore previous item selection
-	containers.setItemSelection(saved_item_selection)
-
-	reaper.PreventUIRefresh(-1)
-	return editable_items
+    reaper.PreventUIRefresh(-1)
+    return editable_items
 end
 
 -- FIX: rename to `GetUIViewState` -> return table.
@@ -339,247 +383,233 @@ end
 ---@param hwnd userdata
 ---@return number start_pos, number end_pos, number hzoom_lvl
 midi_editor.getMIDIEditorView = function(hwnd)
-	local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
-	if not ME_EXISTS then
-		return
-	end
+    local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+    if not ME_EXISTS then
+        return
+    end
 
-	local GetProjTimeFromPPQ = reaper.MIDI_GetProjTimeFromPPQPos
+    local GetProjTimeFromPPQ = reaper.MIDI_GetProjTimeFromPPQPos
 
-	local chunk = containers.getTakeChunk(ME.take)
-	local start_ppq, hzoom_lvl = containers.getTakeChunkHZoom(chunk)
-	if not start_ppq then
-		return
-	end
+    local chunk = containers.getTakeChunk(ME.take)
+    local start_ppq, hzoom_lvl = containers.getTakeChunkHZoom(chunk)
+    if not start_ppq then
+        return
+    end
 
-	local timebase = containers.getTakeChunkTimeBase(chunk) or 0
-	-- 0 = Beats (proj) 1 = Project synced 2 = Time (proj) 4 = Beats (source)
+    local timebase = containers.getTakeChunkTimeBase(chunk) or 0
+    -- 0 = Beats (proj) 1 = Project synced 2 = Time (proj) 4 = Beats (source)
 
-	local end_ppq
-	local start_pos, end_pos
+    local end_ppq
+    local start_pos, end_pos
 
-	if reaper.JS_Window_FindChildByID then
-		local midiview = reaper.JS_Window_FindChildByID(hwnd, 0x3E9)
-		local _, width_in_pixels = reaper.JS_Window_GetClientSize(midiview)
+    if reaper.JS_Window_FindChildByID then
+        local midiview = reaper.JS_Window_FindChildByID(hwnd, 0x3E9)
+        local _, width_in_pixels = reaper.JS_Window_GetClientSize(midiview)
 
-		if timebase == 0 or timebase == 4 then
-			-- For timebase 0 and 4, hzoom_lvl is in pixel/ppq
-			end_ppq = start_ppq + width_in_pixels / hzoom_lvl
-		else
-			-- For timebase 1 and 2, hzoom_lvl is in pixel/time
-			start_pos = GetProjTimeFromPPQ(ME.take, start_ppq)
-			end_pos = start_pos + width_in_pixels / hzoom_lvl
-		end
-	else
-		if timebase == 1 then
-			-- Timebase: Toggle sync to arrange view
-			reaper.MIDIEditor_OnCommand(hwnd, 40640)
-		end
+        if timebase == 0 or timebase == 4 then
+            -- For timebase 0 and 4, hzoom_lvl is in pixel/ppq
+            end_ppq = start_ppq + width_in_pixels / hzoom_lvl
+        else
+            -- For timebase 1 and 2, hzoom_lvl is in pixel/time
+            start_pos = GetProjTimeFromPPQ(ME.take, start_ppq)
+            end_pos = start_pos + width_in_pixels / hzoom_lvl
+        end
+    else
+        if timebase == 1 then
+            -- Timebase: Toggle sync to arrange view
+            reaper.MIDIEditor_OnCommand(hwnd, 40640)
+        end
 
-		-- Cmd: Scroll view right
-		reaper.MIDIEditor_OnCommand(hwnd, 40141)
+        -- Cmd: Scroll view right
+        reaper.MIDIEditor_OnCommand(hwnd, 40141)
 
-		-- To determine the length of the editor we scroll right once.
-		-- The updated ppq position in the take chunk gives us the ppq position
-		-- at the right edge (end) of the MIDI editor window.
-		chunk = containers.getTakeChunk(ME.take)
-		end_ppq = containers.getTakeChunkHZoom(chunk)
+        -- To determine the length of the editor we scroll right once.
+        -- The updated ppq position in the take chunk gives us the ppq position
+        -- at the right edge (end) of the MIDI editor window.
+        chunk = containers.getTakeChunk(ME.take)
+        end_ppq = containers.getTakeChunkHZoom(chunk)
 
-		-- Cmd: Scroll view left
-		reaper.MIDIEditor_OnCommand(hwnd, 40140)
+        -- Cmd: Scroll view left
+        reaper.MIDIEditor_OnCommand(hwnd, 40140)
 
-		if timebase == 1 then
-			-- Timebase: Toggle sync to arrange view
-			reaper.MIDIEditor_OnCommand(hwnd, 40640)
-		end
-	end
+        if timebase == 1 then
+            -- Timebase: Toggle sync to arrange view
+            reaper.MIDIEditor_OnCommand(hwnd, 40640)
+        end
+    end
 
-	-- Convert ppq to time based units
-	start_pos = start_pos or GetProjTimeFromPPQ(ME.take, start_ppq)
-	end_pos = end_pos or GetProjTimeFromPPQ(ME.take, end_ppq)
+    -- Convert ppq to time based units
+    start_pos = start_pos or GetProjTimeFromPPQ(ME.take, start_ppq)
+    end_pos = end_pos or GetProjTimeFromPPQ(ME.take, end_ppq)
 
-	if timebase == 0 or timebase == 4 then
-		-- Convert hzoom_lvl from pixel/ppq to pixel/time
-		local width_in_pixels = (end_ppq - start_ppq) * hzoom_lvl
-		hzoom_lvl = width_in_pixels / (end_pos - start_pos)
-	end
+    if timebase == 0 or timebase == 4 then
+        -- Convert hzoom_lvl from pixel/ppq to pixel/time
+        local width_in_pixels = (end_ppq - start_ppq) * hzoom_lvl
+        hzoom_lvl = width_in_pixels / (end_pos - start_pos)
+    end
 
-	return start_pos, end_pos, hzoom_lvl
+    return start_pos, end_pos, hzoom_lvl
 end
 
 midi_editor.getEditorHorizontalZoomState = function(hwnd)
-	local start_pos, end_pos = midi_editor.getMIDIEditorView(hwnd)
-	-- A factor is necessary to convert to the size of the selection used for the action
-	-- "Zoom to project loop selection" which is smaller than the actual visible length
-	-- This might need to be tweaked and put in the user config table.
-	local factor = 0.943396226415
-	local length = end_pos - start_pos
-	local center = start_pos + length / 2
-	return { length = length * factor, center = center }
+    local start_pos, end_pos = midi_editor.getMIDIEditorView(hwnd)
+    -- A factor is necessary to convert to the size of the selection used for the action
+    -- "Zoom to project loop selection" which is smaller than the actual visible length
+    -- This might need to be tweaked and put in the user config table.
+    local factor = 0.943396226415
+    local length = end_pos - start_pos
+    local center = start_pos + length / 2
+    return { length = length * factor, center = center }
 end
 
 midi_editor.getItemsByState = function(hwnd, is_edit_state)
-	local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
-	if not ME_EXISTS then
-		return
-	end
+    local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+    if not ME_EXISTS then
+        return
+    end
 
-	local saved_item_selection = containers.getItemSelection()
+    local saved = {
+        editor = ME.editor,
+        config = midi_editor.getConfigTable(),
+        item_selection = containers.getItemSelection(),
+        hzoom_state = midi_editor.getEditorHorizontalZoomState(hwnd),
+    }
 
-	-- couldn't this be moved down to above the other calls to messing
-	-- with the config, so that I can keep all operation in one place and
-	-- then move it out into its own api.
-	local t_old_config = midi_editor.getConfigTable()
+    if checkConfigForActiveLink(saved.config, is_edit_state) then
+        -- Return selected MIDI items when selection is already linked
+        local midi_items = {}
+        for _, item in ipairs(saved.item_selection) do
+            if containers.isValidMIDIItem(item) then
+                midi_items[#midi_items + 1] = item
+            end
+        end
+        return midi_items
+    end
 
-	if checkConfigForActiveLink(t_old_config, is_edit_state) then
-		-- Return selected MIDI items when selection is already linked
-		local midi_items = {}
-		for _, item in ipairs(saved_item_selection) do
-			if containers.isValidMIDIItem(item) then
-				midi_items[#midi_items + 1] = item
-			end
-		end
-		return midi_items
-	end
+    reaper.PreventUIRefresh(1)
 
-	reaper.PreventUIRefresh(1)
+    midi_editor.setConfig(make_temporary_config_for_exploit(saved.config))
 
-	-- Save current horizontal zoom state
-	local hzoom_state = midi_editor.getEditorHorizontalZoomState(hwnd)
-	local new_config = changeConfigForSelectionExploit(t_old_config) -- second arg was set to `is_edit_state` which was undefined..
-	midi_editor.setConfig(new_config)
+    -- Set current editor item to be the only selected item
+    containers.setItemSelection(ME.item)
+    midi_editor.openFromMain()
 
-	-- Set current editor item to be the only selected item
-	containers.setItemSelection(ME.item)
-	midi_editor.openFromMain()
+    local select_items_as_per_query = containers.getItemSelection()
 
-	-- Selected items are visible/editable items
-	local ret_items = containers.getItemSelection()
+    ME_restore_state(saved)
 
-	midi_editor.setConfig(t_old_config.raw)
-
-	containers.setItemSelection(saved_item_selection)
-	midi_editor.restoreHorizontalZoomState(ME.editor, hzoom_state)
-
-	reaper.PreventUIRefresh(-1)
-	return ret_items
+    reaper.PreventUIRefresh(-1)
+    return select_items_as_per_query
 end
 
 -- TODO: pass table instead with opts instead
 midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
-	local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
-	if not ME_EXISTS then
-		return
-	end
+    local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+    if not ME_EXISTS then
+        return
+    end
 
-	local t_old_config = midi_editor.getConfigTable()
+    local saved = {
+        editor = ME.editor,
+        config = midi_editor.getConfigTable(),
+        hzoom_state = midi_editor.getEditorHorizontalZoomState(hwnd),
+    }
 
-	if checkConfigForActiveLink(t_old_config, is_edit_state) then
-		-- Select / Unselect items to change their state
-		for _, item in ipairs(items) do
-			reaper.SetMediaItemSelected(item, state)
-		end
-		reaper.UpdateArrange()
-		return
-	end
+    if checkConfigForActiveLink(saved.config, is_edit_state) then
+        -- Select / Unselect items to change their state
+        for _, item in ipairs(items) do
+            reaper.SetMediaItemSelected(item, state)
+        end
+        reaper.UpdateArrange()
+        return
+    end
 
-	local saved_item_selection = containers.getItemSelection()
+    saved.item_selection = containers.getItemSelection()
 
-	reaper.PreventUIRefresh(1)
+    reaper.PreventUIRefresh(1)
 
-	-- TODO: both the zoom saving and config stuff could go into an
-	-- intermediary func called prepare change
+    midi_editor.setConfig(make_temporary_config_for_exploit(saved.config, is_edit_state))
 
-	-- Save current horizontal zoom state
-	local hzoom_state = midi_editor.getEditorHorizontalZoomState(hwnd)
+    -- Set current editor item to be the only selected item
+    containers.setItemSelection(ME.item)
+    midi_editor.openFromMain()
 
-	local new_config = changeConfigForSelectionExploit(t_old_config, is_edit_state)
-	-- this should be pushed into the func above
-	midi_editor.setConfig(new_config)
+    containers.setSelectionStateOfItems(items, state)
 
-	-- Set current editor item to be the only selected item
-	containers.setItemSelection(ME.item)
-	midi_editor.openFromMain()
+    -- We toggle this setting so that arrange selection is mirrored in MIDI editor
+    midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
+    -- why is it called twice here??
+    midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
 
-	containers.setSelectionStateOfItems(items, state)
+    ME_restore_state(saved)
 
-	-- We toggle this setting so that arrange selection is mirrored in MIDI editor
-	midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
-	-- why is it called twice here??
-	midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
-
-	-- Restore
-	midi_editor.setConfig(t_old_config.raw)
-	containers.setItemSelection(saved_item_selection)
-	midi_editor.restoreHorizontalZoomState(ME.editor, hzoom_state)
-
-	reaper.PreventUIRefresh(-1)
+    reaper.PreventUIRefresh(-1)
 end
 
 midi_editor.getAllVisibleItems = function(hwnd)
-	return midi_editor.getItemsByState(hwnd, false)
+    return midi_editor.getItemsByState(hwnd, false)
 end
 
 midi_editor.getAllEditableItems = function(hwnd)
-	return midi_editor.getItemsByState(hwnd, true)
+    return midi_editor.getItemsByState(hwnd, true)
 end
 
 midi_editor.isItemVisible = function(hwnd, item)
-	local visible_items = midi_editor.getAllVisibleItems(hwnd)
-	if visible_items then
-		for _, visible_item in ipairs(visible_items) do
-			if item == visible_item then
-				return true
-			end
-		end
-	end
-	return false
+    local visible_items = midi_editor.getAllVisibleItems(hwnd)
+    if visible_items then
+        for _, visible_item in ipairs(visible_items) do
+            if item == visible_item then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 midi_editor.isItemEditable = function(hwnd, item)
-	local editable_items = midi_editor.getAllEditableItems(hwnd)
-	if editable_items then
-		for _, editable_item in ipairs(editable_items) do
-			if item == editable_item then
-				return true
-			end
-		end
-	end
-	return false
+    local editable_items = midi_editor.getAllEditableItems(hwnd)
+    if editable_items then
+        for _, editable_item in ipairs(editable_items) do
+            if item == editable_item then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 midi_editor.setItemsVisible = function(hwnd, items, is_visible)
-	if items then
-		for _, item in ipairs(items) do
-			if not containers.isValidMIDIItem(item) then
-				return
-			end
-		end
-		midi_editor.setItemsState(hwnd, false, items, is_visible)
-	end
+    if items then
+        for _, item in ipairs(items) do
+            if not containers.isValidMIDIItem(item) then
+                return
+            end
+        end
+        midi_editor.setItemsState(hwnd, false, items, is_visible)
+    end
 end
 
 midi_editor.setItemsEditable = function(hwnd, items, is_editable)
-	if items then
-		for _, item in ipairs(items) do
-			if not containers.isValidMIDIItem(item) then
-				return
-			end
-		end
-		midi_editor.setItemsState(hwnd, true, items, is_editable)
-	end
+    if items then
+        for _, item in ipairs(items) do
+            if not containers.isValidMIDIItem(item) then
+                return
+            end
+        end
+        midi_editor.setItemsState(hwnd, true, items, is_editable)
+    end
 end
 
 midi_editor.setItemVisible = function(hwnd, item, is_visible)
-	if containers.isValidMIDIItem(item) then
-		midi_editor.setItemsState(hwnd, false, { item }, is_visible)
-	end
+    if containers.isValidMIDIItem(item) then
+        midi_editor.setItemsState(hwnd, false, { item }, is_visible)
+    end
 end
 
 midi_editor.setItemEditable = function(hwnd, item, is_editable)
-	if containers.isValidMIDIItem(item) then
-		midi_editor.setItemsState(hwnd, true, { item }, is_editable)
-	end
+    if containers.isValidMIDIItem(item) then
+        midi_editor.setItemsState(hwnd, true, { item }, is_editable)
+    end
 end
 
 --- Makes select item the active item in HWND midi editor. This means that you
@@ -589,61 +619,56 @@ end
 --- I believe that the `item_make_active` should be `item_make_active`
 ---@param item_make_active userdata
 midi_editor.setActiveItem = function(hwnd, item_make_active, note_row)
-	local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
-	if not containers.isValidMIDIItem(item_make_active) then
-		return false
-	end
+    local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+    if not containers.isValidMIDIItem(item_make_active) then
+        return false
+    end
 
-	if not ME_EXISTS then
-		reaper.PreventUIRefresh(1)
-		containers.setItemSelection(item_make_active) -- make the only selected item
-		midi_editor.openFromMain() -- trigger midi editor refresh
-		if note_row then
-			local ME_EXISTS_2, ME_2 = midi_editor.getMidiValidContext(hwnd)
-			if ME_EXISTS_2 then
-				reaper.MIDIEditor_SetSetting_int(ME_2.editor, "active_note_row", note_row)
-			end
-		end
-		reaper.PreventUIRefresh(-1)
-		return true
-	else
-		if ME.item == item_make_active then
-			if note_row then
-				reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", note_row)
-			else
-				return
-			end
-		end
+    if not ME_EXISTS then
+        reaper.PreventUIRefresh(1)
+        containers.setItemSelection(item_make_active) -- make the only selected item
+        midi_editor.openFromMain() -- trigger midi editor refresh
+        if note_row then
+            local ME_EXISTS_2, ME_2 = midi_editor.getMidiValidContext(hwnd)
+            if ME_EXISTS_2 then
+                reaper.MIDIEditor_SetSetting_int(ME_2.editor, "active_note_row", note_row)
+            end
+        end
+        reaper.PreventUIRefresh(-1)
+        return true
+    else
+        if ME.item == item_make_active then
+            if note_row then
+                reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", note_row)
+            else
+                return
+            end
+        end
 
-		reaper.PreventUIRefresh(1)
+        reaper.PreventUIRefresh(1)
 
-		-- Save current state (visibility, editability, itemsel, hzoom, config)
-		local visible_items = midi_editor.getAllVisibleItems(ME.editor)
-		local editable_items = midi_editor.getAllEditableItems(ME.editor)
-		local sel_items = containers.getItemSelection()
-		local hzoom_state = midi_editor.getEditorHorizontalZoomState(ME.editor)
+        local saved = {
+            editor = ME.editor,
+            config = midi_editor.getConfigTable(),
+            item_selection = containers.getItemSelection(),
+            hzoom_state = midi_editor.getEditorHorizontalZoomState(ME.editor),
+            visible_items = midi_editor.getAllVisibleItems(ME.editor),
+            editable_items = midi_editor.getAllEditableItems(ME.editor),
+        }
 
-		local t_old_config = midi_editor.getConfigTable()
+        midi_editor.setConfig(make_temporary_config_for_exploit(saved.config))
 
-		local new_config = changeConfigForSelectionExploit(t_old_config) -- second arg was set to `is_edit_state` which was undefined..g
-		midi_editor.setConfig(new_config)
+        containers.setItemSelection(item_make_active) -- make the only selected item
+        midi_editor.openFromMain() -- trigger midi editor refresh
 
-		containers.setItemSelection(item_make_active) -- make the only selected item
-		midi_editor.openFromMain() -- trigger midi editor refresh
+        if note_row then
+            reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", note_row)
+        end
 
-		if note_row then
-			reaper.MIDIEditor_SetSetting_int(ME.editor, "active_note_row", note_row)
-		end
+        ME_restore_state(saved)
 
-		-- Restore saved state
-		midi_editor.setConfig(t_old_config.raw)
-		containers.setItemSelection(sel_items)
-		midi_editor.restoreHorizontalZoomState(ME.editor, hzoom_state)
-		midi_editor.setItemsVisible(ME.editor, visible_items, true)
-		midi_editor.setItemsEditable(ME.editor, editable_items, true)
-
-		reaper.PreventUIRefresh(-1)
-	end
+        reaper.PreventUIRefresh(-1)
+    end
 end
 
 -- TODO: create new item for selected mark/region
@@ -666,49 +691,49 @@ end
 ---@param new_item_start number
 ---@param new_item_end number
 midi_editor.createEditMidiItemAtPositionForTrack = function(meta, track_obj, new_item_start, new_item_end)
-	local sx = require("syntax.tracks")
-	local sx_utils = require("syntax.utils")
-	local cursor_info = tl.get_cursor_info()
-	local g_obj, _, _ = sx_utils.get_track_object_group(sx.getVerifiedTree(), track_obj)
+    local sx = require("syntax.tracks")
+    local sx_utils = require("syntax.utils")
+    local cursor_info = tl.get_cursor_info()
+    local g_obj, _, _ = sx_utils.get_track_object_group(sx.getVerifiedTree(), track_obj)
 
-	local target_tr, items_found, note_row
+    local target_tr, items_found, note_row
 
-	local check_start_pos = new_item_start or cursor_info.msr.start
-	local check_end_pos = new_item_end or cursor_info.msr._end
+    local check_start_pos = new_item_start or cursor_info.msr.start
+    local check_end_pos = new_item_end or cursor_info.msr._end
 
-	-- FIX: if there is an item that spans wider than both start/end, then
-	-- this item also needs to be found, ie. DONT create a new item if there
-	-- already exists one if it is very large
+    -- FIX: if there is an item that spans wider than both start/end, then
+    -- this item also needs to be found, ie. DONT create a new item if there
+    -- already exists one if it is very large
 
-	if sx_utils.trackObjHasOption(g_obj, "m") then -- drum lanes
-		target_tr = g_obj.tr
-		-- items_found = containers.get_track_items_in_range_time_w_data(g_obj.tr, check_start_pos, check_end_pos)
-		items_found = containers.get_track_items_that_span_cursor_pos(g_obj.tr, check_start_pos, check_end_pos)
-		note_row = sx_utils.get_drum_lane_indices(g_obj, track_obj)
+    if sx_utils.trackObjHasOption(g_obj, "m") then -- drum lanes
+        target_tr = g_obj.tr
+        -- items_found = containers.get_track_items_in_range_time_w_data(g_obj.tr, check_start_pos, check_end_pos)
+        items_found = containers.get_track_items_that_span_cursor_pos(g_obj.tr, check_start_pos, check_end_pos)
+        note_row = sx_utils.get_drum_lane_indices(g_obj, track_obj)
 
-	-- TODO: midi channelsplitters -> set channel splitter master and set active midi channel in ME
-	--
-	-- elseif track_obj.level == 4 then -- channelsplit child
-	--   target_tr = "track obj channel split parrent"
-	--   items_found = containers.get_track_items_in_range_time_w_data(
-	--     "track obj channel split parrent",
-	--     check_start_pos,
-	--     check_end_pos
-	--   )
-	else -- regular
-		target_tr = track_obj.tr
-		-- items_found = containers.get_track_items_in_range_time_w_data(track_obj.tr, check_start_pos, check_end_pos)
-		items_found = containers.get_track_items_that_span_cursor_pos(track_obj.tr, check_start_pos, check_end_pos)
-	end
+    -- TODO: midi channelsplitters -> set channel splitter master and set active midi channel in ME
+    --
+    -- elseif track_obj.level == 4 then -- channelsplit child
+    --   target_tr = "track obj channel split parrent"
+    --   items_found = containers.get_track_items_in_range_time_w_data(
+    --     "track obj channel split parrent",
+    --     check_start_pos,
+    --     check_end_pos
+    --   )
+    else -- regular
+        target_tr = track_obj.tr
+        -- items_found = containers.get_track_items_in_range_time_w_data(track_obj.tr, check_start_pos, check_end_pos)
+        items_found = containers.get_track_items_that_span_cursor_pos(track_obj.tr, check_start_pos, check_end_pos)
+    end
 
-	containers.unselect_items()
+    containers.unselect_items()
 
-	if items_found then
-		midi_editor.setActiveItem(nil, items_found[1].ref, note_row)
-	else
-		local new_item = containers.create_new_item(true, target_tr, check_start_pos, check_end_pos)
-		midi_editor.setActiveItem(nil, new_item, note_row)
-	end
+    if items_found then
+        midi_editor.setActiveItem(nil, items_found[1].ref, note_row)
+    else
+        local new_item = containers.create_new_item(true, target_tr, check_start_pos, check_end_pos)
+        midi_editor.setActiveItem(nil, new_item, note_row)
+    end
 end
 
 return midi_editor
