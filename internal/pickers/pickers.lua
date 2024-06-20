@@ -326,14 +326,16 @@ pickers.single_track_routes = function(opts)
   -- log.user(format.block(tr_routes))
   fzf.init({
     title = "Single track routes",
+    width = 900,
     results = tr_routes,
     on_select_func = function(gui)
       return true
     end,
     sort_comp = "other_tr_name",
     results_filter = "other_tr_name",
-    -- FIX: make the track routes entry makes nice
-    entry_maker = { "index", "type", "other_tr_idx", "other_tr_name" },
+    -- entry_maker = { "index", "type", "other_tr_idx", "other_tr_name" },
+    -- TODO:...
+    entry_maker = require("pickers.entry_makers.track_routes"),
   })
 end
 
