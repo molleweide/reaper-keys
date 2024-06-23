@@ -56,15 +56,172 @@ local function ME_restore_state(saved)
         containers.setItemSelection(saved.item_selection)
     end
     if saved.hzoom_lvl and saved.editor then
-        midi_editor.restoreHorizontalZoomState(ME.editor, saved.hzoom_state)
+        midi_editor.restoreHorizontalZoomState(saved.editor, saved.hzoom_state)
     end
     if saved.visible_items then
-        midi_editor.set_items_visible(ME.editor, saved.visible_items, true)
+        midi_editor.set_items_visible(saved.editor, saved.visible_items, true)
     end
     if saved.editable_items then
-        midi_editor.set_items_editable(ME.editor, saved.editable_items, true)
+        midi_editor.set_items_editable(saved.editor, saved.editable_items, true)
     end
 end
+
+-- TODO: create class table for midi config so that it becomes easier to
+-- handle Midi preferences.
+--
+-- I need:
+--
+-- ~ a __index function for accessing flags -> so that I can just call eg.
+--    [editor_type]/.editor_type in order to get the correct value for the flage
+--
+-- ~ method: toggle('flag')
+--
+
+-- NOTE: __index accessor
+--
+-- function gettable_event (table, key)
+--   local h
+--
+--   if type(table) == "table" then
+--     local v = rawget(table, key)
+--     if v ~= nil then return v end
+--     h = metatable(table).__index
+--     if h == nil then return nil end
+--
+--   else
+--     h = metatable(table).__index
+--     if h == nil then
+--       error(...)
+--     end
+--   end
+--
+--   if type(h) == "function" then
+--     return (h(table, key))     -- call the handler
+--   else
+--     return h[key]           -- or repeat operation on it
+--   end
+--
+-- end
+
+-- TODO: Refactor this into an options flag helper.
+
+local MidiConfig = {
+    -- &1 and &2, One MIDI editor per; 00=media item; 01=track; 10=project
+    -- NOTE: Using modulo 4 extracts range lower two bits
+    editor_type = { "mod", 4, { 0, 2 } }, -- how to get the value
+    -- &4, (and &16,) Behavior for "open items in built-in MIDI editor
+    --   11, Open clicked MIDI item only
+    --   00, Open all selected MIDI items
+    --   01, Open all MIDI on the same track
+    --   10, Open all MIDI in the project
+    --   NOTE: Bitmas `&` only checks if 10100 is present or not
+    behavior_type = { "and", 20, { 0, 3 } },
+    -- &32=0/1, Close editor when the active item is deleted in the arrange
+    -- view
+    close_upon_item_deletion = { "and", 32 },
+    -- &128=0/1, Active MIDI item follows selection changes in arrange
+    -- view
+    active_item_follows_selection = { "and", 128 },
+    -- &256=0/1, Only MIDI items on the same track as the active item are
+    -- editable
+    other_tracks_editable = { "and", 256 },
+    -- &512=0/1, Selection is linked to editability(also MIDI-Editor-action 40891)
+    editability = { "and", 512 },
+    -- &1024=0/1, Media item selection is linked to visibility
+    visibility = { "and", 1024 },
+    -- &2048=0/1, All media items are editable in notation view(MIDI Editor ->
+    -- Contents -> Behavior for "open items in built-in MIDI Editor")
+    all_items_are_editable_in_notation_view = { "and", 2048 },
+    -- &4096=0/1, Make secondary items editable by default
+    secondary_items_editable_by_default = { "and", 4096 },
+}
+local mt = {
+    -- is self refering to the base table here?
+    __index = function(self, key)
+        if self[key] then
+            local op = self[key][1]
+            local flag = self[key][2]
+            if op == "mod" then
+                return self.config % flag
+            elseif op == "and" then
+                return self.config & flag
+            end
+        end
+        return nil
+    end,
+    __tostring = function() end,
+}
+function MidiConfig:new()
+    local o = {}
+    setmetatable(o, mt)
+    self.__index = self
+    self.config = reaper.SNM_GetIntConfigVar("midieditor", 0)
+    return o
+end
+
+function MidiConfig:raw()
+    return self.config
+end
+
+function MidiConfig:_is_toggle(key)
+end
+
+function MidiConfig:_is_mult(key)
+end
+
+local function is_toggle(o, key)
+    return rawget(o, key)[3] == nil
+end
+local function is_mult(o, key)
+    return rawget(o, key)[3] ~= nil
+end
+
+function MidiConfig:toggle(key)
+    if is_toggle(self, key) then
+        self.config = self.config - self[key] + rawget(self, key)[2]
+        return true
+    end
+end
+
+function MidiConfig:set(key, newval)
+    -- if is_mult(self, key) then
+    -- elseif is_toggle(self, key) then
+    -- end
+end
+
+function MidiConfig:enable(key)
+    -- if is_toggle(self, key) then
+    --     -- ..
+    -- new_config = new_config - cfg.active_item_follows_selection + 128
+
+    --     return true
+    -- end
+end
+
+function MidiConfig:disable(key)
+    -- if is_toggle(self, key) then
+    --     -- ..
+    --     return true
+    -- end
+end
+
+function MidiConfig:cycle(key, do_backwards)
+    -- if is_mult(self, key) then
+    --   if not do_backwards then
+    --   -- forward
+    --   else
+    -- elseif is_toggle(self, key) then
+    --       -- backwards
+    --   end
+    -- end
+end
+
+-- NOTE: examples
+-- mc.behavior_type -> should return the value of this flag
+-- mc.set("behavior_type", )
+
+-- TODO: Make the midi config vars into a class with meta table for indices,
+-- so that I can just get stuff by ["editor_type"]
 
 --- Several editor-settings, as set in Preferences -> MIDI Editor as well as in
 --- the menu of MIDI Editor -> Contents -> Behavior for "open items in built-in
@@ -126,34 +283,39 @@ midi_editor.makeTempConfig = function() end
 -- adding does nothing.
 
 --- This function return an ME options bitfield to be used temporarily.
-local function make_temporary_config_for_exploit(t_config, get_editable)
-    local new_config = t_config.raw
+local function make_temporary_config_for_exploit(cfg, get_editable)
+    local new_config = cfg.raw
+
+    -- local function set_flag(target, add)
+    --     new_config = new_config - cfg[target] + add
+    -- end
 
     -- Set 'One MIDI Editor per project'
     -- NOTE: I don't understand how this yields binary `10`
-    new_config = new_config - t_config.editor_type + 1
+    new_config = new_config - cfg.editor_type + 1
     -- Set behavior for opening MIDI items to 'Open all selected MIDI items'
-    new_config = new_config - t_config.behavior_type
+    new_config = new_config - cfg.behavior_type
+    ----
     -- Diable 'Active MIDI item follows selection changes in arrange view'
-    new_config = new_config - t_config.active_item_follows_selection + 128
+    new_config = new_config - cfg.active_item_follows_selection + 128
     -- Disable 'Avoid automatically setting items from other tracks editable'
-    new_config = new_config - t_config.other_tracks_editable + 256
+    new_config = new_config - cfg.other_tracks_editable + 256
+    ----
 
     if get_editable then
+        -- if exploit = "get_editable" then
         -- Enable 'Selection is linked to editability'
-        new_config = new_config - t_config.editability
+        new_config = new_config - cfg.editability
         -- Disable 'Selection is linked to visibility'
-        new_config = new_config - t_config.visibility + 1024
+        new_config = new_config - cfg.visibility + 1024
     --
-    -- if get_visible...
+    -- if exploit = "get_visible" then
     -- --
     -- --
     else
-    -- if get neither ??
-        -- Disable 'Selection is linked to editability'
-        new_config = new_config - t_config.editability + 512
-        -- Enable 'Selection is linked to visibility'
-        new_config = new_config - t_config.visibility
+        -- if get neither ??
+        new_config = new_config - cfg.editability + 512 -- Disable 'Selection is linked to editability'
+        new_config = new_config - cfg.visibility -- Enable 'Selection is linked to visibility'
     end
     return new_config
 end
