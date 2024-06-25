@@ -29,9 +29,9 @@ local mt = {
             local op = self.options[key][1]
             local flag = self.options[key][2]
             if op == "mod" then
-                return self.config % flag
+                return (self.config % flag) >> flag
             elseif op == "and" then
-                return self.config & flag
+                return (self.config & flag) >> flag
             end
         end
         return nil
@@ -95,11 +95,11 @@ end
 -- WARN: only checking for [3] is a bit unsafe..
 
 function Config:_is_toggle(key)
-    return rawget(self.options, key)[3] == nil
+    return self.options[key][3] == nil
 end
 
 function Config:_is_mult(key)
-    return rawget(self.options, key)[3] ~= nil
+    return self.options[key][3] ~= nil
 end
 
 function Config:_set_single(key, newval)
@@ -116,20 +116,22 @@ function Config:_set_single(key, newval)
     end
 end
 
+--- I took this func from chat gpt
 function Config:toggle(key)
     if self:_is_toggle(key) then
-        self.config = self.config - self[key] + rawget(self, key)[2]
-        return true
+        self.config = self.config ~ (1 << self.options[key][2])
     end
 end
 
+-- FIX: safe checks!!!
+-- First verify all keys exist.
+-- Second, ensure that all values lie within correct range.
+-- Third, go ahead and set values.
 function Config:set(key, newval)
     if type(key) == "table" then
-        local t_new = key
-
-    -- TODO: first verify all keys exist.
-    -- Second, ensure that all values lie within correct range.
-    -- Third, go ahead and set values.
+        for k, v in pairs(key) do
+            self:_set_single(k, v)
+        end
     else
         self:_set_single(key, newval)
     end
@@ -137,25 +139,44 @@ end
 
 function Config:enable(key)
     if self:_is_toggle(key) then
-        new_config = new_config - cfg.active_item_follows_selection + 128
-        return true
+        self.config = self.config | (1 << self.options[key][2])
     end
 end
+
+-- FIX: [2] should be a key called position.
 
 function Config:disable(key)
     if self:_is_toggle(key) then
-        new_config = new_config - cfg.active_item_follows_selection + 128
-        return true
+        self.config = self.config & ~(1 << self.options[key][2])
     end
 end
 
-function Config:cycle(key, do_backwards)
+-- TODO: Understand how this works!!
+
+-- Function to cycle a two-bit flag at a given position
+-- @param bitfield number: The integer bitfield
+-- @param position number: The starting position of the two-bit flag (0-based)
+-- @return number: The modified bitfield with the flag cycled
+local function cycle_flag(bitfield, position) end
+
+function Config:cycle(key, reverse)
     if self:_is_mult(key) then
-    if not do_backwards then
-      -- forward
-    else
-      -- back wards
-    end
+        local position = self.options[key][2]
+        local bitfield = self.config
+        -- Extract the two-bit flag
+        local mask = 3 << position -- Mask for two bits
+        local flag = (bitfield & mask) >> position
+        -- Cycle the flag
+        if reverse then
+            flag = (flag - 1) % 3 -- Cycle through 2, 1, 0
+            if flag < 0 then
+                flag = 2
+            end
+        else
+            flag = (flag + 1) % 3 -- Cycle through 0, 1, 2
+        end
+        -- Clear the original flag and set the new flag
+        self.config = (bitfield & ~mask) | (flag << position)
     end
 end
 
