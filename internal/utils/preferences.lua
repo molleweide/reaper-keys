@@ -3,9 +3,27 @@ local format = require("utils.format")
 
 local p = {}
 
+--- Helper class making working with reaper preference variable integer
+--- bitfields easier.
+--- @class Config
+--- @field name string: The reaper preference string key.
+--- @field config number The raw integer bitfield number.
+--- @field options table Holding each option.
 local Config = {}
+
+-- config["x"] -> return real value, ie. [0, max]
+-- config:toggle('x') -> toggle x if possible
+-- config:set("x", val) -> set x to val if possible
+-- tostring(config) -> return printable list of all vars and their value.
+-- config:set({
+--     key = val,
+--     ...
+-- }) -> if all keys passed are real keys, then go ahead and set, otherwise, return false.
+-- config:cycle("x") -> try cycle increment values by one.
+-- config:to_list() is basically the same as what __tostring does.
+
 local mt = {
-    -- is self refering to the base table here?
+    -- FIX: right shift values so that I get the real preference value.
     __index = function(self, key)
         if self.options[key] then
             local op = self.options[key][1]
@@ -18,8 +36,9 @@ local mt = {
         end
         return nil
     end,
+
     __tostring = function(self)
-    -- TODO: print the real flag values, instead of 0/128
+        -- TODO: print the real flag values, instead of 0/128
         local res = {}
         for k, v in pairs(self.options) do
             local op = { name = k, value = self[k] }
@@ -28,41 +47,73 @@ local mt = {
         return format.block(res)
     end,
 }
-function Config:new(o)
-  local c = {}
-    if o.options == nil then
+
+--- Constructor
+--- @param pref_key string Name of reaper preference variable. string: The name of the person
+--- @param flags table Table with keys describing each flag
+--- @return Config
+function Config:new(pref_key, flags)
+    local c = {}
+    if c.options == nil then
         c.options = {}
     end
-    for k, v in pairs(o) do
+    for k, v in pairs(flags) do
         c.options[k] = v
     end
-    c.config = reaper.SNM_GetIntConfigVar("midieditor", 0)
+    c.config = reaper.SNM_GetIntConfigVar(pref_key, 0)
+    c.name = pref_key
+
     setmetatable(c, mt)
     self.__index = self
-  -- log.user(format.block(o))
+    -- log.user(format.block(o))
     return c
 end
 
+---Get the raw preference variable.
+---@return number: The config value
 function Config:raw()
     return self.config
 end
 
---- Returns a list of each option/flag for use with eg. pickers.
-function Config:to_list()
-    return self.config
-end
+-- Unnecessary, since __index already does this.
+-- function Config:formatted(key)
+--     -- instead of returning 0/128 it should return the real value for the
+--     -- requested preference.
+-- end
+
+-- Unnecessary, since __tostring...
+-- --- Returns a list of each option/flag for use with eg. pickers.
+-- function Config:to_list()
+--     return self.config
+-- end
 
 --- Applies the config, eg if you have made modifications to the flags
 function Config:apply()
-    reaper.SNM_SetIntConfigVar("midieditor", self.config)
+    reaper.SNM_SetIntConfigVar(self.name, self.config)
 end
 
+-- WARN: only checking for [3] is a bit unsafe..
+
 function Config:_is_toggle(key)
-    return rawget(self, key)[3] == nil
+    return rawget(self.options, key)[3] == nil
 end
 
 function Config:_is_mult(key)
-    return rawget(self, key)[3] ~= nil
+    return rawget(self.options, key)[3] ~= nil
+end
+
+function Config:_set_single(key, newval)
+    if self:_is_toggle(key) then
+        if newval == 0 or newval == 1 then
+            -- set value
+        end
+    elseif self:_is_mult(key) then
+        local min = self.options[key][3][1]
+        local max = self.options[key][3][2]
+        if min <= newval and newval <= max then
+            -- set value
+        end
+    end
 end
 
 function Config:toggle(key)
@@ -74,46 +125,45 @@ end
 
 function Config:set(key, newval)
     if type(key) == "table" then
+        local t_new = key
+
+    -- TODO: first verify all keys exist.
+    -- Second, ensure that all values lie within correct range.
+    -- Third, go ahead and set values.
     else
-        -- if is_mult(self, key) then
-        -- elseif is_toggle(self, key) then
-        -- end
+        self:_set_single(key, newval)
     end
 end
 
 function Config:enable(key)
-    -- if is_toggle(self, key) then
-    --     -- ..
-    -- new_config = new_config - cfg.active_item_follows_selection + 128
-
-    --     return true
-    -- end
+    if self:_is_toggle(key) then
+        new_config = new_config - cfg.active_item_follows_selection + 128
+        return true
+    end
 end
 
 function Config:disable(key)
-    -- if is_toggle(self, key) then
-    --     -- ..
-    --     return true
-    -- end
+    if self:_is_toggle(key) then
+        new_config = new_config - cfg.active_item_follows_selection + 128
+        return true
+    end
 end
 
 function Config:cycle(key, do_backwards)
-    -- if is_mult(self, key) then
-    --   if not do_backwards then
-    --   -- forward
-    --   else
-    -- elseif is_toggle(self, key) then
-    --       -- backwards
-    --   end
-    -- end
+    if self:_is_mult(key) then
+    if not do_backwards then
+      -- forward
+    else
+      -- back wards
+    end
+    end
 end
 
 -----------------------------------------------------------------------------
 -- wrap each preference
 
 p.midieditor = function()
-  log.user("make midi editor config")
-    return Config:new({
+    return Config:new("midieditor", {
         -- &1 and &2, One MIDI editor per; 00=media item; 01=track; 10=project
         -- NOTE: Using modulo 4 extracts range lower two bits
         editor_type = { "mod", 4, { 0, 2 } }, -- how to get the value
