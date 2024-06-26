@@ -5,6 +5,9 @@ local su = require("utils.string")
 local p = {}
 
 -----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+
 -- Use this to find how many levels there are to a bitmask.
 local function count_ones(bitmask)
     local count = 0
@@ -84,6 +87,8 @@ local function get_variable_value(bitfield, variable_positions)
 
     return value
 end
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 
 --- Helper class making working with reaper preference variable integer
@@ -215,104 +220,35 @@ function Config:_is_mult(key)
     -- return count
 end
 
----Injects a decimal int into position
-local function inject_decimal_into_bitfield(bitfield, decimal_value, pos)
-    -- Calculate the number of bits needed to represent decimal_value
-    local num_bits = math.ceil(math.log(decimal_value + 1, 2))
-
-    -- Shift the decimal_value to the desired position in the bitfield
-    local shifted_value = decimal_value << pos
-
-    -- Create a bitmask to clear the bits where decimal_value will be injected
-    local bitmask = ~(2 ^ num_bits - 1) << pos
-
-    -- Clear the bits in the bitfield at position pos
-    local cleared_bitfield = bitfield & ~bitmask
-
-    -- Inject the shifted value into the cleared bitfield
-    local result = cleared_bitfield | shifted_value
-
-    return result
-end
-
----Encode two bit decimal number into 4 + 16 = 20
--- local function encode_two_bit_decimal(decimal_number)
---     -- Validate that decimal_number is a valid two-bit number (0 to 3)
---     if decimal_number < 0 or decimal_number > 3 then
---         error("Decimal number must be between 0 and 3")
---     end
---
---     -- Start with a bitmask where positions 2 and 4 are set to 0
---     local bitmask = 0
---
---     -- Set position 2
---     if decimal_number % 2 == 1 then
---         bitmask = bitmask | 4   -- Set bit at position 2 (&4)
---     end
---
---     -- Set position 4
---     if decimal_number >= 2 then
---         bitmask = bitmask | 16   -- Set bit at position 4 (&16)
---     end
---
---     return bitmask
--- end
-
----Encode a var size decimal int into an arbitrary bitmask.
--- local function encode_decimal_into_mask(mask, decimal_number)
---     local bit_position = 0
---     while decimal_number > 0 do
---         if decimal_number % 2 == 1 then
---             mask = mask | (1 << bit_position)
---         end
---         decimal_number = math.floor(decimal_number / 2)
---         bit_position = bit_position + 1
---     end
---     return mask
--- end
-
 function Config:_set_single(key, newval)
     local mask = self.options[key].mask
 
     local function set(type)
-        local pos = find_lsb_position(mask)
-        -- self.config = self.config | (newval << pos)
-
-        -- self.config = inject_decimal_into_bitfield(self.config, newval, pos)
-        local positions = get_set_indices(mask)
-        log.user("POS -> ", format.block(positions))
-
-        self.config = set_variable_value(self.config, positions, newval)
-
-        log.user(key .. " -> ", type, " newv:", newval)
-
-        -- log.user("?", pre,self.config, newval, pos)
+        self.config = set_variable_value(self.config, get_set_indices(mask), newval)
     end
 
     if self:_is_toggle(key) then
         if newval == 0 or newval == 1 then
-            set("T")
+            set()
         end
     elseif self:_is_mult(key) then
         local max = (count_ones(mask) ^ 2) - 1
-        -- log.user("?????", key, max)
         if 0 <= newval and newval <= max then
-            set("M")
+            set()
         end
     end
 end
 
---- I took this func from chat gpt
 function Config:toggle(key)
     if self:_is_toggle(key) then
-        self.config = self.config ~ (1 << self.options[key][2])
+        if self[key] == 1 then
+            self:set(key, 0)
+        else
+            self:set(key, 1)
+        end
     end
 end
 
--- FIX: safe checks!!!
--- First verify all keys exist.
--- Second, ensure that all values lie within correct range.
--- Third, go ahead and set values.
 function Config:set(key, newval)
     if type(key) == "table" then
         for k, v in pairs(key) do
@@ -325,47 +261,37 @@ end
 
 function Config:enable(key)
     if self:_is_toggle(key) then
-        self.config = self.config | (1 << self.options[key][2])
+        self:set(key, 0)
     end
 end
-
--- FIX: [2] should be a key called position.
 
 function Config:disable(key)
     if self:_is_toggle(key) then
-        self.config = self.config & ~(1 << self.options[key][2])
+        self:set(key, 1)
     end
 end
-
--- TODO: Understand how this works!!
-
--- Function to cycle a two-bit flag at a given position
--- @param bitfield number: The integer bitfield
--- @param position number: The starting position of the two-bit flag (0-based)
--- @return number: The modified bitfield with the flag cycled
-local function cycle_flag(bitfield, position) end
 
 function Config:cycle(key, reverse)
     if self:_is_mult(key) then
-        local position = self.options[key][2]
-        local bitfield = self.config
-        -- Extract the two-bit flag
-        local mask = 3 << position -- Mask for two bits
-        local flag = (bitfield & mask) >> position
-        -- Cycle the flag
+        local mask = self.options[key].mask
+        local flag = self[key]
+        local levels = count_ones(mask) ^ 2
+
         if reverse then
-            flag = (flag - 1) % 3 -- Cycle through 2, 1, 0
+            flag = (flag - 1) % levels -- Cycle through 2, 1, 0
             if flag < 0 then
-                flag = 2
+                flag = levels
             end
         else
-            flag = (flag + 1) % 3 -- Cycle through 0, 1, 2
+            flag = (flag + 1) % levels -- Cycle through 0, 1, 2
         end
-        -- Clear the original flag and set the new flag
-        self.config = (bitfield & ~mask) | (flag << position)
+
+        self:set(key, flag)
     end
 end
 
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 -- Wrap each preference
 -----------------------------------------------------------------------------
@@ -375,15 +301,12 @@ p.midieditor = function()
 
     return Config:new("midieditor", {
         editor_type = {
-            -- &1 and &2, One MIDI editor per; 00=media item; 01=track; 10=project
-            mask = 3,
+            mask = 3, -- &1 and &2, One MIDI editor per; 00=media item; 01=track; 10=project
             name = "One MIDI editor per",
             options = { "One MIDI editor per media item", "One MIDI editor per track", "One MIDI editor per project" },
         }, -- how to get the value
         behavior_type = {
-            -- &4, (and &16,) Behavior for "open items in built-in MIDI editor
-            -- FIX: I need to implement so that this type of values also can be used.
-            mask = 20,
+            mask = 20, -- &4, (and &16,) Behavior for "open items in built-in MIDI editor
             name = "Behavior for `open items in built-in MIDI editor`",
             {
                 "Open clicked MIDI item only",
