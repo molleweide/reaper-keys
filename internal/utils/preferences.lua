@@ -2,7 +2,10 @@ local log = require("utils.log")
 local format = require("utils.format")
 local su = require("utils.string")
 
-local p = {}
+-- TODO:
+-- 1. Move Config file to its own file
+-- 2. Move bitwise operators to util
+-- 3. Move preferences to library???
 
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
@@ -140,17 +143,6 @@ Config.__tostring = function(self)
     return str
 end
 
--- config["x"] -> return real value, ie. [0, max]
--- config:toggle('x') -> toggle x if possible
--- config:set("x", val) -> set x to val if possible
--- tostring(config) -> return printable list of all vars and their value.
--- config:set({
---     key = val,
---     ...
--- }) -> if all keys passed are real keys, then go ahead and set, otherwise, return false.
--- config:cycle("x") -> try cycle increment values by one.
--- config:to_list() is basically the same as what __tostring does.
-
 local mt = {}
 
 --- Constructor
@@ -161,9 +153,9 @@ function Config:new(pref_key, flags)
     local c = {}
     if c.options == nil then
         c.options = {}
-    end
-    for k, v in pairs(flags) do
-        c.options[k] = v
+        for k, v in pairs(flags) do
+            c.options[k] = v
+        end
     end
     c.config = reaper.SNM_GetIntConfigVar(pref_key, 0)
     c.name = pref_key
@@ -180,24 +172,10 @@ function Config:raw()
     return self.config
 end
 
--- Unnecessary, since __index already does this.
--- function Config:formatted(key)
---     -- instead of returning 0/128 it should return the real value for the
---     -- requested preference.
--- end
-
--- Unnecessary, since __tostring...
--- --- Returns a list of each option/flag for use with eg. pickers.
--- function Config:to_list()
---     return self.config
--- end
-
 --- Applies the config, eg if you have made modifications to the flags
 function Config:apply()
     reaper.SNM_SetIntConfigVar(self.name, self.config)
 end
-
--- WARN: only checking for [3] is a bit unsafe..
 
 function Config:_is_toggle(key)
     -- return self.options[key][3] == nil
@@ -206,9 +184,7 @@ function Config:_is_toggle(key)
 end
 
 function Config:_is_mult(key)
-    -- return self.options[key][3] ~= nil
     local bitmask = self.options[key].mask
-
     local count = 0
     while bitmask ~= 0 do
         count = count + (bitmask & 1)
@@ -217,7 +193,6 @@ function Config:_is_mult(key)
         end
         bitmask = bitmask >> 1
     end
-    -- return count
 end
 
 function Config:_set_single(key, newval)
@@ -292,48 +267,309 @@ end
 
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
------------------------------------------------------------------------------
--- Wrap each preference
------------------------------------------------------------------------------
 
-p.midieditor = function()
-    -- FIX: rename "name" to "descr"
+local p = {}
 
-    return Config:new("midieditor", {
-        editor_type = {
-            mask = 3, -- &1 and &2, One MIDI editor per; 00=media item; 01=track; 10=project
-            name = "One MIDI editor per",
-            options = { "One MIDI editor per media item", "One MIDI editor per track", "One MIDI editor per project" },
-        }, -- how to get the value
-        behavior_type = {
-            mask = 20, -- &4, (and &16,) Behavior for "open items in built-in MIDI editor
-            name = "Behavior for `open items in built-in MIDI editor`",
-            {
-                "Open clicked MIDI item only",
-                "Open all selected MIDI items",
-                "Open all MIDI on the same track",
-                "Open all MIDI in the project",
-            },
+-------------------------------------------------------------------------------
+-- ACTIONS --------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+-- View: Toggle show media cues in items as triggered by action 40691(in sections Main, Media Explorer, MIDI Editor, MIDI Eventlist Editor, MIDI Inline Editor)
+-- It is an integer, actions variable.
+--
+-- Can be affected by the following actions:
+--   View: Toggle show media cues in items
+--
+-- >0, togglestate off
+-- >1, togglestate on
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+p.cueitems = {
+    cat = "actions",
+    mask = 5,
+}
+
+-- View: Toggle show/hide item  labels
+-- It is an integer, actions variable.
+--
+-- Can be affected by the following actions:
+--   View: Toggle show/hide item labels
+--
+-- >0, action is toggled on
+-- >1, action is toggled off
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+p.itemtexthide = {
+    cat = "actions",
+}
+
+-------------------------------------------------------------------------------
+-- ENVELOPE MANAGER -----------------------------------------------------------
+-------------------------------------------------------------------------------
+
+-- Several settings, as set in the context-menu of the envelope manager
+-- It is an integer, project variable.
+--
+-- >&1=0, Target Envelope manager when clicking track/take envelope buttons(shift+click to override) - unchecked
+-- >&1=1, Target Envelope manager when clicking track/take envelope buttons(shift+click to override) - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER, when Save as default project settings has been clicked.
+p.envmgropts = { cat = "envelope manager" }
+
+-------------------------------------------------------------------------------
+-- HELP -----------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+-- Stores the settings for the help-information-display under the TCP, as set in it's accompanying context-menu, as well the performance meter window-context menu.
+-- It is an integer/integer-bitfield, help variable.
+--
+-- >Only one of the following can be set:
+--    0, No information display
+--    1, Reaper tips
+--    2, Track/item count
+--    3, selected track/item/envelope details
+--    4, CPU/RAM use, time since last save
+--
+-- >This one can be set all the times:
+--    &65536=0, Show mouse editing-help(on), checked
+--    &65536=1, Show mouse editing-help(off), unchecked
+--
+-- >Context-menu in performane meter display:
+--    &131072=0, &262144=0, Display CPU utilization as 100% = all cores fully utilized
+--    &131072=1, &262144=0, Display CPU utilization as 1.0c = 1 core fully utilized
+--    &131072=1, &262144=1, Display CPU utilization as 1.0! = longest block is realtime (worst case)
+p.help = { cat = "help menu" }
+
+-------------------------------------------------------------------------------
+-- MISC
+-------------------------------------------------------------------------------
+--
+--
+--
+--
+--
+
+-------------------------------------------------------------------------------
+-- MISC -> MIDI
+-------------------------------------------------------------------------------
+--
+--
+
+-------------------------------------------------------------------------------
+-- PREFERENCES (reaper preferences panel UI)
+-------------------------------------------------------------------------------
+
+--
+-- PREFERENCES -> APPEARANCE
+--
+
+--
+-- PREFERENCES -> APPAERANCE-MEDIA
+--
+
+--
+-- PREFERENCES -> AUDIO
+--
+
+--
+-- PREFERENCES -> AUTOMATION
+--
+
+--
+-- PREFERENCES -> BACKUP
+--
+
+--
+-- PREFERENCES -> BUFFERING
+--
+
+--
+-- PREFERENCES -> COMPATABILITY
+--
+
+--
+-- PREFERENCES -> CONTEXT MENU
+--
+
+--
+-- PREFERENCES -> CONTROL/OSC/WEB
+--
+
+--
+-- PREFERENCES -> DEVICE
+--
+
+--
+-- PREFERENCES -> EDITING BEHAVIOR
+--
+
+--
+-- PREFERENCES -> ENVELOPE DISPLAY
+--
+
+--
+-- PREFERENCES -> FADES/CROSSFADES
+--
+
+--
+-- PREFERENCES -> GENERAL
+--
+
+--
+-- PREFERENCES -> ITEM FADE DEFAULTS
+--
+
+--
+-- PREFERENCES -> ITEM LOOP DEFAULTS
+--
+
+--
+-- PREFERENCES -> KEYBOARD/MULTITOUCH
+--
+
+--
+-- PREFERENCES -> LV2
+--
+
+--
+-- PREFERENCES -> loop recording
+--
+
+--
+-- PREFERENCES -> MIDI DEVICES
+--
+
+--
+-- PREFERENCES -> midi editor
+--
+
+--
+-- MIDI
+
+-- ^ midiccdensity
+-- Events per quarter note when drawing in CC lines-inputbox, as set in Preferences -> MIDI Editor
+-- It is an integer, preferences variable.
+-- The zoom-dependent-checkbox is signalled with a negative version of this value!
+-- >0 to 2147483647; higher values become negative; default is 32
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ midiccenv
+-- The Default shape for CC segments-dropdownlist, as set in Preferences -> MIDI Editor
+-- It is an integer, preferences variable.
+-- >0, Square
+-- >1, Linear
+-- >2, Slow start/end
+-- >3, Fast start
+-- >4, Fast end
+-- >5, Bezier
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ midiccinterp
+-- The Playback interpolation-inputbox, as set in Preferences -> MIDI Editor
+-- It is an integer, preferences variable.
+-- >0 to 2147483647 in ppq
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ mididefcolormap
+-- Default note color map-inputbox, as set in the Preferences -> MIDI Editor
+-- It is a string, preferences variable.
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- FIX: rename "name" to "descr"??
+p.midieditor = {
+    editor_type = {
+        mask = 3, -- &1 and &2, One MIDI editor per; 00=media item; 01=track; 10=project
+        name = "One MIDI editor per",
+        options = { "One MIDI editor per media item", "One MIDI editor per track", "One MIDI editor per project" },
+    }, -- how to get the value
+    behavior_type = {
+        mask = 20, -- &4, (and &16,) Behavior for "open items in built-in MIDI editor
+        name = "Behavior for `open items in built-in MIDI editor`",
+        {
+            "Open clicked MIDI item only",
+            "Open all selected MIDI items",
+            "Open all MIDI on the same track",
+            "Open all MIDI in the project",
         },
-        -- &32=0/1, Close editor when the active item is deleted in the arrange
-        -- view
-        close_upon_item_deletion = { mask = 32, name = "Close editor when the active item is deleted in the arrange" },
-        -- &128=0/1, Active MIDI item follows selection changes in arrange
-        -- view
-        active_item_follows_selection = { mask = 128 },
-        -- &256=0/1, Only MIDI items on the same track as the active item are
-        -- editable
-        other_tracks_editable = { mask = 256 },
-        -- &512=0/1, Selection is linked to editability(also MIDI-Editor-action 40891)
-        editability = { mask = 512 },
-        -- &1024=0/1, Media item selection is linked to visibility
-        visibility = { mask = 1024 },
-        -- &2048=0/1, All media items are editable in notation view(MIDI Editor ->
-        -- Contents -> Behavior for "open items in built-in MIDI Editor")
-        all_items_are_editable_in_notation_view = { mask = 2048 },
-        -- &4096=0/1, Make secondary items editable by default
-        secondary_items_editable_by_default = { mask = 4096 },
-    })
-end
+    },
+    -- &32=0/1, Close editor when the active item is deleted in the arrange
+    -- view
+    close_upon_item_deletion = { mask = 32, name = "Close editor when the active item is deleted in the arrange" },
+    -- &128=0/1, Active MIDI item follows selection changes in arrange
+    -- view
+    active_item_follows_selection = { mask = 128 },
+    -- &256=0/1, Only MIDI items on the same track as the active item are
+    -- editable
+    other_tracks_editable = { mask = 256 },
+    -- &512=0/1, Selection is linked to editability(also MIDI-Editor-action 40891)
+    editability = { mask = 512 },
+    -- &1024=0/1, Media item selection is linked to visibility
+    visibility = { mask = 1024 },
+    -- &2048=0/1, All media items are editable in notation view(MIDI Editor ->
+    -- Contents -> Behavior for "open items in built-in MIDI Editor")
+    all_items_are_editable_in_notation_view = { mask = 2048 },
+    -- &4096=0/1, Make secondary items editable by default
+    secondary_items_editable_by_default = { mask = 4096 },
+}
 
-return p
+--
+-- PREFERENCES -> midi settings
+--
+
+--
+-- PREFERENCES -> MIDI
+--
+
+--
+-- PREFERENCES -> MEDIA ITEM POSITIONONG
+--
+
+--
+-- PREFERENCES -> xx
+--
+
+--
+-- PREFERENCES -> xx
+--
+
+--
+-- PREFERENCES -> xx
+--
+
+--
+-- PREFERENCES -> xx
+--
+
+--
+-- PREFERENCES -> xx
+--
+
+--
+-- PREFERENCES -> xx
+--
+
+-------------------------------------------------------------------------------
+-- PROJECT SETTINGS
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+-- TRANSPORT
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+-- UNKNOWN
+-------------------------------------------------------------------------------
+
+
+
+-------------------------------------------------------------------------------
+-- USER INTERFACE
+-------------------------------------------------------------------------------
+
+
+
+
+
+return function(key)
+    return Config:new(key, p[key])
+end
