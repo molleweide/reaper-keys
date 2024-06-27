@@ -177,6 +177,7 @@ return {
         -- TODO: picker for all actions, including defaults and user, so that you
         -- can always get back to an action even though you have forgotten what
         -- it is called.
+        [","] = "PickerConfigVariables",
         ["X"] = "PickerAllStandaloneActions",
         ["k"] = "RK_MASTER_MENU",
         ["F"] = "RK_SAMPLE_LIB_BROWSER",

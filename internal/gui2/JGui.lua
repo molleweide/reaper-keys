@@ -83,7 +83,11 @@ jGui = {
 
 function jGui:new(o)
   o = o or {}
+  -- this means that self here is the jgui class table
   setmetatable(o, self)
+  -- and this ensures that when we try to access the object, we look in the
+  -- objects class base table for each lookup, which will track changes to
+  -- the base table
   self.__index = self
   return o
 end

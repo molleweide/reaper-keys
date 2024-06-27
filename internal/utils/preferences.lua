@@ -4,7 +4,7 @@ local su = require("utils.string")
 
 -- TODO:
 -- 1. Move Config file to its own file
--- 2. Move bitwise operators to util
+-- 2. MOve bitwise operators to util
 -- 3. Move preferences to library???
 
 -----------------------------------------------------------------------------
@@ -154,7 +154,9 @@ function Config:new(pref_key, flags)
     if c.options == nil then
         c.options = {}
         for k, v in pairs(flags) do
-            c.options[k] = v
+            if not k:match("^%_") then
+                c.options[k] = v
+            end
         end
     end
     c.config = reaper.SNM_GetIntConfigVar(pref_key, 0)
@@ -193,6 +195,10 @@ function Config:_is_mult(key)
         end
         bitmask = bitmask >> 1
     end
+end
+
+function Config:is_mult(key)
+    return self:_is_mult(key)
 end
 
 function Config:_set_single(key, newval)
@@ -284,10 +290,10 @@ local p = {}
 -- >1, togglestate on
 --
 -- Stored in reaper.ini under the same name in the section REAPER.
-p.cueitems = {
-    cat = "actions",
-    mask = 5,
-}
+-- p.cueitems = {
+--     cat = "actions",
+--     mask = 5,
+-- }
 
 -- View: Toggle show/hide item  labels
 -- It is an integer, actions variable.
@@ -299,9 +305,9 @@ p.cueitems = {
 -- >1, action is toggled off
 --
 -- Stored in reaper.ini under the same name in the section REAPER.
-p.itemtexthide = {
-    cat = "actions",
-}
+-- p.itemtexthide = {
+--     cat = "actions",
+-- }
 
 -------------------------------------------------------------------------------
 -- ENVELOPE MANAGER -----------------------------------------------------------
@@ -314,14 +320,15 @@ p.itemtexthide = {
 -- >&1=1, Target Envelope manager when clicking track/take envelope buttons(shift+click to override) - checked
 --
 -- Stored in reaper.ini under the same name in the section REAPER, when Save as default project settings has been clicked.
-p.envmgropts = { cat = "envelope manager" }
+-- p.envmgropts = { cat = "envelope manager" }
 
 -------------------------------------------------------------------------------
 -- HELP -----------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
--- Stores the settings for the help-information-display under the TCP, as set in it's accompanying context-menu, as well the performance meter window-context menu.
--- It is an integer/integer-bitfield, help variable.
+-- Stores the settings for the help-information-display under the TCP, as set
+-- in it's accompanying context-menu, as well the performance meter
+-- window-context menu. It is an integer/integer-bitfield, help variable.
 --
 -- >Only one of the following can be set:
 --    0, No information display
@@ -338,7 +345,13 @@ p.envmgropts = { cat = "envelope manager" }
 --    &131072=0, &262144=0, Display CPU utilization as 100% = all cores fully utilized
 --    &131072=1, &262144=0, Display CPU utilization as 1.0c = 1 core fully utilized
 --    &131072=1, &262144=1, Display CPU utilization as 1.0! = longest block is realtime (worst case)
-p.help = { cat = "help menu" }
+p.help = {
+    _meta = { cat = "help menu", subcat = "help" },
+    show_mouse_editing = {
+        mask = 65536,
+        name = "show mouse editing",
+    },
+}
 
 -------------------------------------------------------------------------------
 -- MISC
@@ -477,6 +490,10 @@ p.help = { cat = "help menu" }
 
 -- FIX: rename "name" to "descr"??
 p.midieditor = {
+    _meta = {
+        cat = "preferences",
+        subcat = "midi editor",
+    },
     editor_type = {
         mask = 3, -- &1 and &2, One MIDI editor per; 00=media item; 01=track; 10=project
         name = "One MIDI editor per",
@@ -560,16 +577,99 @@ p.midieditor = {
 -- UNKNOWN
 -------------------------------------------------------------------------------
 
-
-
 -------------------------------------------------------------------------------
 -- USER INTERFACE
 -------------------------------------------------------------------------------
 
+-- FIX: rename "name" to "descr"??
+p.midieditor = {
+    _meta = {
+        cat = "preferences",
+        subcat = "midi editor",
+    },
+    editor_type = {
+        mask = 3, -- &1 and &2, One MIDI editor per; 00=media item; 01=track; 10=project
+        name = "One MIDI editor per",
+        options = { "One MIDI editor per media item", "One MIDI editor per track", "One MIDI editor per project" },
+    }, -- how to get the value
+    behavior_type = {
+        mask = 20, -- &4, (and &16,) Behavior for "open items in built-in MIDI editor
+        name = "Behavior for `open items in built-in MIDI editor`",
+        {
+            "Open clicked MIDI item only",
+            "Open all selected MIDI items",
+            "Open all MIDI on the same track",
+            "Open all MIDI in the project",
+        },
+    },
+    -- &32=0/1, Close editor when the active item is deleted in the arrange
+    -- view
+    close_upon_item_deletion = { mask = 32, name = "Close editor when the active item is deleted in the arrange" },
+    -- &128=0/1, Active MIDI item follows selection changes in arrange
+    -- view
+    active_item_follows_selection = { mask = 128 },
+    -- &256=0/1, Only MIDI items on the same track as the active item are
+    -- editable
+    other_tracks_editable = { mask = 256 },
+    -- &512=0/1, Selection is linked to editability(also MIDI-Editor-action 40891)
+    editability = { mask = 512 },
+    -- &1024=0/1, Media item selection is linked to visibility
+    visibility = { mask = 1024 },
+    -- &2048=0/1, All media items are editable in notation view(MIDI Editor ->
+    -- Contents -> Behavior for "open items in built-in MIDI Editor")
+    all_items_are_editable_in_notation_view = { mask = 2048 },
+    -- &4096=0/1, Make secondary items editable by default
+    secondary_items_editable_by_default = { mask = 4096 },
+}
 
+local M = {}
 
+M.preferences_raw = p
 
-
-return function(key)
+M.make = function(key)
     return Config:new(key, p[key])
 end
+
+M.all = function()
+    local ret = {}
+    for key, _ in pairs(p) do
+        ret[key] = M.make(key)
+        -- log.user("KEY=",ret[key])
+    end
+    return ret
+end
+
+M.picker_friendly = function()
+    local ac = M.all()
+    -- log.user(format.block(ac))
+    local pickable_config_result_entries = {}
+    for key, def in pairs(p) do
+        -- log.user(format.block(ac[key]))
+        for j, cfg_var in pairs(def) do
+            if not j:match("^%_") then
+                if ac[key] then
+                    local real_val = ac[key][j]
+
+                    local is_mult = ac[key]:is_mult(j)
+
+                    table.insert(pickable_config_result_entries, {
+                        config = ac[key], -- BUG: Why is this always nil, except for maybe the first iteration?
+                        key = key,
+                        real_value = real_val,
+                        cat = def._meta.cat,
+                        subcat = def._meta.subcat,
+                        var_name = j,
+                        var_def = cfg_var,
+                        is_mult = is_mult,
+                    })
+                else
+                    log.user("No AC obj for key = ", key)
+                end
+            end
+        end
+    end
+    log.user("results", format.block(pickable_config_result_entries))
+    return pickable_config_result_entries
+end
+
+return M

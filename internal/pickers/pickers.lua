@@ -141,30 +141,6 @@ pickers.all_tracks = function(meta, opts)
 end
 pickers.all_track_objects = pickers.all_tracks
 
-pickers.browse_reaper_preferences = function()
-  -- todo: read the plugins data and
-
-  -- local RK_FZF_ENV = {
-  --   SETTINGS_INI_FILE = home .. definitions_dir .. "/fx-finder-settings.ini",
-  --   SETTINGS_DEFAULT_FILE = home .. definitions_dir .. "/defaults/fx-finder-settings-default.ini",
-  --   RK_DATA = home .. "/reaper/packages/reaper-keys/data",
-  -- }
-
-  --  	local SETTINGS_INI_FILE = env.SETTINGS_INI_FILE
-  -- local SETTINGS_DEFAULT_FILE = env.SETTINGS_DEFAULT_FILE
-  --
-  -- log.user(SETTINGS_INI_FILE, SETTINGS_DEFAULT_FILE)
-  --
-  -- settings.jSettingsCreate(SETTINGS_INI_FILE, SETTINGS_DEFAULT_FILE)
-  -- SETTINGS = assert(settings.jSettingsReadFromFile(SETTINGS_INI_FILE), "Could not open settings file.")
-
-  fzf.init(tbl.deep_extend({
-    env = RK_FZF_ENV,
-    title = "Reaper preferences",
-    results = {},
-  }, opts))
-end
-
 pickers.track_fx = function(meta, opts)
   opts = opts or {}
   local fx_results = fx_util.get_track_fx_chain_info()
