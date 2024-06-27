@@ -595,7 +595,7 @@ p.midieditor = {
     behavior_type = {
         mask = 20, -- &4, (and &16,) Behavior for "open items in built-in MIDI editor
         name = "Behavior for `open items in built-in MIDI editor`",
-        {
+        options = {
             "Open clicked MIDI item only",
             "Open all selected MIDI items",
             "Open all MIDI on the same track",

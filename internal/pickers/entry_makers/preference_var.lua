@@ -55,18 +55,27 @@ return function(tButtons, tResults)
                 add("| ")
             end
 
+            -- meta
             add(su.makeStringLength(string.format("%s -> %s", item.cat, item.subcat), 32))
             gutter()
+
+            -- key
             label_str = label_str .. su.makeStringLength(string.format("%s", item.key), 16)
             gutter()
-            label_str = label_str .. su.makeStringLength(string.format("%s", item.is_mult and "M" or " "),2)
+
+            -- variable
+            label_str = label_str .. su.makeStringLength(string.format("%s", item.var_name), 40)
             gutter()
+
+            -- -- is mult
+            -- add(su.makeStringLength(string.format("%s", item.is_mult and "M" or " "), 2))
+            -- gutter()
 
             local rv = item.real_value
             local val_fmt
 
             if item.is_mult then
-                val_fmt = rv
+                val_fmt = "<" .. tostring(rv) .. ">"
             else
                 if rv == 0 then
                     val_fmt = "On"
@@ -75,9 +84,16 @@ return function(tButtons, tResults)
                 end
             end
 
-            label_str = label_str .. su.makeStringLength(string.format("%s", val_fmt), 10)
+            label_str = label_str .. su.makeStringLength(string.format("%s", val_fmt), 6)
             gutter()
-            label_str = label_str .. su.makeStringLength(string.format("%s", item.var_name), 60)
+
+            if item.is_mult and item.var_def.options ~= nil then
+                for idx, v in ipairs(item.var_def.options) do
+                    if rv + 1 == idx then
+                        add(su.makeStringLength(string.format("%s", v), 32))
+                    end
+                end
+            end
 
             -- if item.other_tr_name and item.other_tr_idx then
             --     local ti = su.makeStringLength(tostring(item.other_tr_idx), 3)
