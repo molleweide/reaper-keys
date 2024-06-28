@@ -126,37 +126,23 @@ midi_editor.makeTempConfig = function() end
 -- adding does nothing.
 
 --- This function return an ME options bitfield to be used temporarily.
-local function make_temporary_config_for_exploit(cfg, get_editable)
+local function make_temporary_config_for_exploit(cfg, is_edit_state)
     local new_config = cfg.raw
 
     -- local function set_flag(target, add)
     --     new_config = new_config - cfg[target] + add
     -- end
 
-    -- Set 'One MIDI Editor per project'
-    -- NOTE: I don't understand how this yields binary `10`
-    new_config = new_config - cfg.editor_type + 1
+    new_config = new_config - cfg.editor_type + 1 -- Set 'One MIDI Editor per project'
     -- Set behavior for opening MIDI items to 'Open all selected MIDI items'
     new_config = new_config - cfg.behavior_type
-    ----
-    -- Diable 'Active MIDI item follows selection changes in arrange view'
-    new_config = new_config - cfg.active_item_follows_selection + 128
-    -- Disable 'Avoid automatically setting items from other tracks editable'
-    new_config = new_config - cfg.other_tracks_editable + 256
-    ----
+    new_config = new_config - cfg.active_item_follows_selection + 128 -- Disable 'Active MIDI item follows selection changes in arrange view'
+    new_config = new_config - cfg.other_tracks_editable + 256 -- Disable 'Avoid automatically setting items from other tracks editable'
 
-    if get_editable then
-        -- if exploit = "get_editable" then
-        -- Enable 'Selection is linked to editability'
-        new_config = new_config - cfg.editability
-        -- Disable 'Selection is linked to visibility'
-        new_config = new_config - cfg.visibility + 1024
-    --
-    -- if exploit = "get_visible" then
-    -- --
-    -- --
+    if is_edit_state then
+        new_config = new_config - cfg.editability -- Enable 'Selection is linked to editability'
+        new_config = new_config - cfg.visibility + 1024 -- Disable 'Selection is linked to visibility'
     else
-        -- if get neither ??
         new_config = new_config - cfg.editability + 512 -- Disable 'Selection is linked to editability'
         new_config = new_config - cfg.visibility -- Enable 'Selection is linked to visibility'
     end
@@ -268,6 +254,12 @@ end
 -- Cmd: Open in built-in MIDI editor
 midi_editor.openFromMain = function()
     reaper.Main_OnCommand(40153, 0)
+end
+
+-- midi_editor.close
+midi_editor.close = function(hwnd)
+    -- CloseWindow = { 2, midiCommand = true },
+    reaper.MIDIEditor_OnCommand(hwnd, 2)
 end
 
 -- Cmd: Zoom to project loop selection
@@ -500,7 +492,7 @@ midi_editor.getItemsByState = function(hwnd, is_edit_state)
 end
 
 -- TODO: pass table instead with opts instead
-midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
+midi_editor.setItemsState = function(hwnd, is_edit_state, items, state, hide_items)
     local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
     if not ME_EXISTS then
         return
@@ -512,17 +504,21 @@ midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
         hzoom_state = midi_editor.getEditorHorizontalZoomState(hwnd),
     }
 
-    if checkConfigForActiveLink(saved.config, is_edit_state) then
-        -- Select / Unselect items to change their state
-        for _, item in ipairs(items) do
-            reaper.SetMediaItemSelected(item, state)
-        end
-        reaper.UpdateArrange()
-        return
-    end
+    -- if checkConfigForActiveLink(saved.config, is_edit_state) then
+    --     log.user("ACTIVE LINK")
+    --     -- Select / Unselect items to change their state
+    --     for _, item in ipairs(items) do
+    --         reaper.SetMediaItemSelected(item, is_edit_state) --state)
+    --     end
+    --     reaper.UpdateArrange()
+    --     return
+    -- end
 
     saved.item_selection = containers.getItemSelection()
     reaper.PreventUIRefresh(1)
+
+  log.user("is edit:", is_edit_state)
+
     ME_set_config(make_temporary_config_for_exploit(saved.config, is_edit_state))
 
     -- Set current editor item to be the only selected item
@@ -534,7 +530,31 @@ midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
     -- We toggle this setting so that arrange selection is mirrored in MIDI editor
     -- why is it called twice here??
     midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
-    midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
+    -- midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
+
+    ME_restore_state(saved)
+    reaper.PreventUIRefresh(-1)
+end
+
+midi_editor.remove_items = function(hwnd)
+    local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+    if not ME_EXISTS then
+        return
+    end
+
+    log.user("midi_editor.remove_items")
+
+    local saved = {
+        editor = ME.editor,
+        hzoom_state = midi_editor.getEditorHorizontalZoomState(hwnd),
+    }
+
+    reaper.PreventUIRefresh(1)
+
+    midi_editor.close(ME.editor)
+    midi_editor.openFromMain()
+
+    -- TODO: here i need to re-add all existing viewed items.
 
     ME_restore_state(saved)
     reaper.PreventUIRefresh(-1)
@@ -606,6 +626,11 @@ midi_editor.set_item_visible = function(hwnd, item, is_visible)
     end
 end
 
+---Set a single item as `editable` OR unset an `editable` item one level to
+---just `visible`
+---@param hwnd any: Midi editor window pointer
+---@param item userdata: MediaItem*
+---@param is_editable boolean: If you want to add/remove `editability`
 midi_editor.set_item_editable = function(hwnd, item, is_editable)
     if containers.isValidMIDIItem(item) then
         midi_editor.setItemsState(hwnd, true, { item }, is_editable)
