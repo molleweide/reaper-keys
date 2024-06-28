@@ -17,6 +17,7 @@ local jKeyboard = {
   control_p = 16,
   control_r = 18,
   control_s = 19,
+  control_t = 20,
   control_u = 21,
   control_v = 22,
   control_w = 23,

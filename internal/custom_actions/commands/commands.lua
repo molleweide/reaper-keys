@@ -1082,82 +1082,39 @@ commands.rename_region_at_cursor = function()
     -- TODO: marks.set_name_for_mark  mark/region
 end
 
-local function inspect_midi_editor_takes(hwnd)
-    -- TODO: Log everything meticulously,
-    -- Everything about the current midi editors state should be logged here so
-    -- that I can make informed desicions.
-
-    log.user("# INSPECT START #################################")
-
-    local function log_track_for_take(input)
-        local parent_item
-        if reaper.ValidatePtr(input, "MediaItem*") then
-            parent_item = input
-        elseif reaper.ValidatePtr(input, "MediaItem_Take*") then
-            parent_item = reaper.GetMediaItemTake_Item(input)
-        else
-            return ""
+---Returns a table with the keys active, visible, and editable, which
+---hosts the GUIDs for each category of tracks.
+---@return table
+local function get_midi_editor_item_track_state(hwnd)
+    local vis_guids = {}
+    for _, it in ipairs(midi_editor.get_all_visible_items(hwnd)) do
+        local tr = reaper.GetMediaItem_Track(it)
+        local guid = reaper.GetTrackGUID(tr)
+        if not vis_guids[guid] then
+            vis_guids[guid] = true
         end
-        local item_num = reaper.GetMediaItemInfo_Value(parent_item, "IP_ITEMNUMBER")
-        local parent_tr = reaper.GetMediaItem_Track(parent_item)
-        local ptr_idx = reaper.GetMediaTrackInfo_Value(parent_tr, "IP_TRACKNUMBER")
-        local _, buf = reaper.GetTrackName(parent_tr)
-        return string.format([[Track(%s) = %s, item(%s)]], ptr_idx, buf, item_num)
+    end
+    local edit_guids = {}
+    for _, it in ipairs(midi_editor.get_all_editable_items(hwnd)) do
+        local tr = reaper.GetMediaItem_Track(it)
+        local guid = reaper.GetTrackGUID(tr)
+        if not edit_guids[guid] then
+            edit_guids[guid] = true
+            vis_guids[guid] = nil
+        end
     end
 
-    --
-    -- GET ACTIVE TAKE
-    --
-
-    -- This is the same as enum takes 0 (zero)
     local axt = reaper.MIDIEditor_GetTake(hwnd)
     local axit = reaper.GetMediaItemTake_Item(axt)
-    local axit_num = reaper.GetMediaItemInfo_Value(axit, "IP_ITEMNUMBER")
-    log.user("\n-- get active take --")
-    log.user("# axit =", log_track_for_take(axt))
+    local active_take_track = reaper.GetMediaItem_Track(axit)
+    local active_track_guid = reaper.GetTrackGUID(active_take_track)
+    edit_guids[active_track_guid] = nil
 
-    --
-    -- ENUM TAKES
-    --
-    log.user("-- enum takes --")
-    for take, i in midi_utils.enumMIDITakes(hwnd, false) do
-        local res = log_track_for_take(take)
-        if i == 0 then
-            res = s.makeStringLength("    [ACTIVE]", 16) .. res
-        else
-            res = s.makeStringLength("", 16) .. res
-        end
-        log.user(res)
-    end
-
-    --
-    -- GET ALL VISIBLE
-    --
-
-    local vt = midi_editor.get_all_visible_items(hwnd)
-
-    log.user("\n-- get visible takes --")
-    log.user(#vt) --, format.block(vt))
-
-    for i, take in ipairs(vt) do
-        local res = log_track_for_take(take)
-        res = s.makeStringLength("", 16) .. res
-        log.user(res)
-    end
-
-    --
-    -- GET ALL EDITABLE
-    --
-    local et = midi_editor.get_all_editable_items(hwnd)
-    log.user("\n-- get editable takes --")
-    log.user(#et) --, format.block(et))
-    for i, take in ipairs(et) do
-        local res = log_track_for_take(take)
-        res = s.makeStringLength("", 16) .. res
-        log.user(res)
-    end
-
-    log.user("# INSPECT END #################################\n\n")
+    return {
+        active = active_track_guid,
+        visible = vis_guids,
+        editable = edit_guids,
+    }
 end
 
 -- TEST: Mapping: Cycle not-added items/only visible items/ ALL items.
@@ -1171,63 +1128,156 @@ commands.picker_midi_editor_add_track_to_view = function()
     local vtt = sx.getVerifiedTree()
 
     log.clear()
-    inspect_midi_editor_takes(ME.editor)
+    local state = get_midi_editor_item_track_state(ME.editor)
 
-    -- NOTE: I assume that only one track can be set active.
-
-    pickers.all_tracks(_, {
-        vtt = vtt,
-        title = "ME view manager",
-        width = 900,
-        height = 600,
-        -- x = 300,
-        -- y = 1500,
-        filter = "MCS", -- filter track_obj.class = [MCS]
-        on_select_func = function(gui)
-            local _, main_input = gui:controlGetByName("main_input")
-            if main_input then
+    local function assign_ME_states_to_picker_results()
+        for _, tobj in ipairs(vtt.track_list) do
+            if tobj.guid == state.active then
+                tobj._midi_editor_active = true
             end
-            local selection_of_tracks
-            if gui:has_mult_select() then
-                selection_of_tracks = gui:get_mult_select()
-            else
-                selection_of_tracks = { gui:get_on_enter_selection() }
-            end
-
-            local t_items_to_add = {}
-
-            -- ensure an item exists in new track-to-add
-            local cursor_info = tl.get_cursor_info()
-            local check_start_pos = cursor_info.msr.start
-            local check_end_pos = cursor_info.msr._end
-            for i, v in ipairs(selection_of_tracks) do
-                log.user("Tracks selected ==>", v.name, v.tr)
-                local target_item = containers.check_if_item_exists_or_create(v.tr, check_start_pos, check_end_pos)
-                if target_item then
-                    table.insert(t_items_to_add, target_item)
+            for guid, _ in pairs(state.visible) do
+                if tobj.guid == guid then
+                    tobj._midi_editor_visible = true
                 end
             end
+            for guid, _ in pairs(state.editable) do
+                if tobj.guid == guid then
+                    tobj._midi_editor_editable = true
+                end
+            end
+        end
+    end
+    assign_ME_states_to_picker_results()
 
-            -- set items as visible
-            midi_editor.set_items_visible(ME.editor, t_items_to_add, true)
-            midi_editor.set_items_editable(ME.editor, t_items_to_add, true)
+    -- NOTE: Starts by listing ALL results.
+    -- <C-t> to cycle ALL -> VISIBLE -> HIDDEN -> ALL ...
 
-            midi_editor.setActiveItem(ME.editor, t_items_to_add[1])
+    local function picker_me_tracks(show, opts)
+        show = show or 0
 
-            return true
-        end,
-        -- NOTE: set visible
-        -- ["<c-e>"] set editable
-        -- ["<c-u>"] remove from editable / visible
-        -- ["<c-a>"] set active track?
-        extended_mappings = em,
-        columns_legend = {
-            { 15, "ast" },
-            { 15, "ast" },
-            { 15, "ast" },
-            { 15, "ast" },
-        },
-    })
+        local function title_func()
+            local str
+            if show == 0 then
+                str = "ALL"
+            elseif show == 1 then
+                str = "VISIBLE"
+            elseif show == 2 then
+                str = "HIDDEN"
+            end
+            return string.format("MIDI EDITOR -> SOURCES: [%s]", str)
+        end
+
+        pickers.all_tracks(
+            _,
+            tbl.deep_extend({
+                vtt = vtt,
+                title = title_func(),
+                width = 1500,
+                height = 600,
+                -- x = 300,
+                -- y = 1500,
+                -- filter = "MCS", -- filter track_obj.class = [MCS]
+                filter = function(tobj)
+                    if show == 0 then
+                        return s.strHasOneOfChars(tobj.class, "MCS")
+                    else
+                        local has_visibility = tobj._midi_editor_active
+                            or tobj._midi_editor_visible
+                            or tobj._midi_editor_editable
+                        if (show == 1 and has_visibility) or (show == 2 and not has_visibility) then
+                            return true
+                        end
+                        -- if show == 2 and not has_visibility then
+                        --     return true
+                        -- end
+                    end
+                end,
+
+                on_select_func = function(gui)
+                    local _, main_input = gui:controlGetByName("main_input")
+                    if main_input then
+                    end
+                    local selection_of_tracks
+                    if gui:has_mult_select() then
+                        selection_of_tracks = gui:get_mult_select()
+                    else
+                        selection_of_tracks = { gui:get_on_enter_selection() }
+                    end
+
+                    local t_items_to_add = {}
+
+                    -- ensure an item exists in new track-to-add
+                    local cursor_info = tl.get_cursor_info()
+                    local check_start_pos = cursor_info.msr.start
+                    local check_end_pos = cursor_info.msr._end
+                    for i, v in ipairs(selection_of_tracks) do
+                        log.user("Tracks selected ==>", v.name, v.tr)
+                        local target_item =
+                            containers.check_if_item_exists_or_create(v.tr, check_start_pos, check_end_pos)
+                        if target_item then
+                            table.insert(t_items_to_add, target_item)
+                        end
+                    end
+
+                    -- set items as visible
+                    midi_editor.set_items_visible(ME.editor, t_items_to_add, true)
+                    midi_editor.set_items_editable(ME.editor, t_items_to_add, true)
+
+                    midi_editor.setActiveItem(ME.editor, t_items_to_add[1])
+
+                    return true
+                end,
+                entry_maker = require("pickers.entry_makers.track_nodes_midi_editor_state"),
+                -- ~~~ ( ) mapping -> C-a make track visible
+                -- ~~~ ( ) mapping -> C-e make track editable
+                -- ~~~ ( ) mapping -> C-d make track active
+                -- ~~~ ( ) mapping -> C-u hide track from midi editor
+                -- ~~~ ( ) mapping -> C-x down cycle; editable -> visible -> hide
+                extended_mappings = {
+                    -- cycle listings filter
+                    ["C-t"] = function(t)
+                        local num = (show + 1) % 3
+                        log.user("cycle", num)
+
+                        picker_me_tracks(num)
+                    end,
+                    -- make selection visible
+                    ["C-a"] = function(t) end,
+                    -- down cycle state
+                    ["C-q"] = function(t) end,
+                    -- up cycle state
+                    ["C-w"] = function(t) end,
+                    -- make selection editable
+                    ["C-e"] = function(t) end,
+                    -- add to selection
+                    ["C-s"] = function(t)
+                        local selection = t.gui_ref.t_search_results[t.sel_idx]
+                        selection.selected = true
+                        t.gui_ref:add_to_current_selection(selection)
+                        -- log.user("--- sel cur names ----")
+                        -- for _, cs in ipairs(t.gui_ref.selection_current) do
+                        --   log.user(cs.name)
+                        -- end
+                    end,
+                    -- reset selection
+                    ["C-x"] = function(t)
+                        t.gui_ref:reset_current_selection()
+                    end,
+                    -- set selection[0] active.
+                    ["C-d"] = function(t) end,
+                    -- [] = select all visible/filtered items
+                },
+                columns_legend = {
+                    { 15, "ast" },
+                    { 15, "ast" },
+                    { 15, "ast" },
+                    { 15, "ast" },
+                },
+            }, opts)
+        )
+    end
+
+    picker_me_tracks()
 end
 
 -- this is just for testing purposes

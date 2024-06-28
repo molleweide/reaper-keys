@@ -565,16 +565,16 @@ local function build_picker(opts, on_enter)
             if k:match("^C%-") then
                 local temp = "control_" .. k:sub(3, 3)
                 local new_key = GUI.kb[temp]
-                log.user(string.format(
-                    [[ extended mappings:
-				type v: %s
-				temp: %s
-				new_key: %s
-				  ]],
-                    type(v),
-                    temp,
-                    new_key
-                ))
+    --             log.user(string.format(
+    --                 [[ extended mappings:
+				-- type v: %s
+				-- temp: %s
+				-- new_key: %s
+				--   ]],
+    --                 type(v),
+    --                 temp,
+    --                 new_key
+    --             ))
                 GUI.attach_mappings[tostring(new_key)] = v
             elseif k:match("^M%-") then
                 local temp = "meta_" .. k:sub(3, 3)

@@ -547,6 +547,9 @@ midi_editor.get_all_visible_items = function(hwnd)
     return midi_editor.getItemsByState(hwnd, false)
 end
 
+---comment
+---@param hwnd any
+---@return table
 midi_editor.get_all_editable_items = function(hwnd)
     return midi_editor.getItemsByState(hwnd, true)
 end
