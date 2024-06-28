@@ -15,7 +15,7 @@ function midi_utils.enumMIDITakes(midi_editor, editable_only)
     local i = -1
     return function()
         i = i + 1
-        return reaper.MIDIEditor_EnumTakes(midi_editor, i, editable_only)
+        return reaper.MIDIEditor_EnumTakes(midi_editor, i, editable_only), i
     end
 end
 

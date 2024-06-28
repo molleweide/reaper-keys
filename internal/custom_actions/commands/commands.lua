@@ -1083,22 +1083,81 @@ commands.rename_region_at_cursor = function()
 end
 
 local function inspect_midi_editor_takes(hwnd)
-    -- TODO: 1. List parent tracks
-    -- 2. list items for each track
-    -- 3. show visible
-    -- 4. show editable
-    -- 5. active
+    -- TODO: Log everything meticulously,
+    -- Everything about the current midi editors state should be logged here so
+    -- that I can make informed desicions.
 
-    log.user("inspect START")
+    log.user("# INSPECT START #################################")
 
-    -- local
-    for take in midi_utils.enumMIDITakes(hwnd, false) do
-        local parent_item = reaper.GetMediaItemTake_Item(take)
+    local function log_track_for_take(input)
+        local parent_item
+        if reaper.ValidatePtr(input, "MediaItem*") then
+            parent_item = input
+        elseif reaper.ValidatePtr(input, "MediaItem_Take*") then
+            parent_item = reaper.GetMediaItemTake_Item(input)
+        else
+            return ""
+        end
+        local item_num = reaper.GetMediaItemInfo_Value(parent_item, "IP_ITEMNUMBER")
         local parent_tr = reaper.GetMediaItem_Track(parent_item)
+        local ptr_idx = reaper.GetMediaTrackInfo_Value(parent_tr, "IP_TRACKNUMBER")
         local _, buf = reaper.GetTrackName(parent_tr)
-        log.user(string.format([[parent track name = %s, item = %s]], buf, tostring(parent_item)))
+        return string.format([[Track(%s) = %s, item(%s)]], ptr_idx, buf, item_num)
     end
-    log.user("inspect END")
+
+    --
+    -- GET ACTIVE TAKE
+    --
+
+    -- This is the same as enum takes 0 (zero)
+    local axt = reaper.MIDIEditor_GetTake(hwnd)
+    local axit = reaper.GetMediaItemTake_Item(axt)
+    local axit_num = reaper.GetMediaItemInfo_Value(axit, "IP_ITEMNUMBER")
+    log.user("\n-- get active take --")
+    log.user("# axit =", log_track_for_take(axt))
+
+    --
+    -- ENUM TAKES
+    --
+    log.user("-- enum takes --")
+    for take, i in midi_utils.enumMIDITakes(hwnd, false) do
+        local res = log_track_for_take(take)
+        if i == 0 then
+            res = s.makeStringLength("    [ACTIVE]", 16) .. res
+        else
+            res = s.makeStringLength("", 16) .. res
+        end
+        log.user(res)
+    end
+
+    --
+    -- GET ALL VISIBLE
+    --
+
+    local vt = midi_editor.get_all_visible_items(hwnd)
+
+    log.user("\n-- get visible takes --")
+    log.user(#vt) --, format.block(vt))
+
+    for i, take in ipairs(vt) do
+        local res = log_track_for_take(take)
+        res = s.makeStringLength("", 16) .. res
+        log.user(res)
+    end
+
+    --
+    -- GET ALL EDITABLE
+    --
+    local et = midi_editor.get_all_editable_items(hwnd)
+    log.user("\n-- get editable takes --")
+    log.user(#et) --, format.block(et))
+    for i, take in ipairs(et) do
+        local res = log_track_for_take(take)
+        res = s.makeStringLength("", 16) .. res
+        log.user(res)
+    end
+
+    log.user("# INSPECT END #################################\n\n")
 end
 
 -- TEST: Mapping: Cycle not-added items/only visible items/ ALL items.
@@ -1108,78 +1167,13 @@ commands.picker_midi_editor_add_track_to_view = function()
         return
     end
 
-    -- NOTE: This should become a fully fledged fuzzy UI for managing the
-    -- attached takes for a midi editor, so that I know that I can test all
-    -- possible actions, THEN over time let other smarter faster UIs take
-    -- form with iterations.
-
-    -- TESTING: loggin midi takes attatched to ME
     local sx = require("syntax.tracks")
     local vtt = sx.getVerifiedTree()
 
     log.clear()
-
-    -- TODO: test MidiConfigClass here.
-    local mc = preferences.make("midieditor")
-
-    log.user("RAW =", mc:raw())
-
-    -- log.user("editor type =", mc["editor_type"])
-    -- log.user("editor type =", mc["editor_type"])
-    log.user("tostring", mc)
-
-    mc:set("editor_type", 2)
-    mc:set("behavior_type", 3)
-    mc:set("close_upon_item_deletion", 1)
-    mc:set("active_item_follows_selection", 1)
-    mc:set("other_tracks_editable", 1)
-    mc:set("editability", 1)
-    mc:set("visibility", 1)
-    mc:set("all_items_are_editable_in_notation_view", 1)
-    mc:set("secondary_items_editable_by_default", 1)
-
-    -- mc:set("editor_type", 0)
-    -- mc:set("behavior_type", 0)
-    -- mc:set("close_upon_item_deletion", 0)
-    -- mc:set("active_item_follows_selection", 0)
-    -- mc:set("other_tracks_editable", 0)
-    -- mc:set("editability", 0)
-    -- mc:set("visibility", 0)
-    -- mc:set("all_items_are_editable_in_notation_view", 0)
-    -- mc:set("secondary_items_editable_by_default", 0)
-
-    -- mc:set("editor_type", 1)
-    -- mc:set("behavior_type", 1)
-    -- mc:set("close_upon_item_deletion", 1)
-    -- mc:set("active_item_follows_selection", 1)
-    -- mc:set("other_tracks_editable", 1)
-    -- mc:set("editability", 1)
-    -- mc:set("visibility", 1)
-    -- mc:set("all_items_are_editable_in_notation_view", 1)
-    -- mc:set("secondary_items_editable_by_default", 1)
-
-    log.user("RAW =", mc:raw())
-
-    log.user("tostring", mc)
-
-    -- mc:toggle("visibility")
-    -- mc:toggle("visibility")
-
-    mc:cycle("behavior_type")
-    mc:cycle("behavior_type")
-    mc:cycle("behavior_type")
-    mc:cycle("behavior_type")
-    mc:cycle("behavior_type", true)
-    log.user("tostring", mc)
-
-    local ALL_CONFIGS = preferences.all()
-    for key, value in pairs(ALL_CONFIGS) do
-        log.user("#########", value)
-    end
-
-    -- log.user(format.block(mc))
-
     inspect_midi_editor_takes(ME.editor)
+
+    -- NOTE: I assume that only one track can be set active.
 
     pickers.all_tracks(_, {
         vtt = vtt,
@@ -1227,6 +1221,12 @@ commands.picker_midi_editor_add_track_to_view = function()
         -- ["<c-u>"] remove from editable / visible
         -- ["<c-a>"] set active track?
         extended_mappings = em,
+        columns_legend = {
+            { 15, "ast" },
+            { 15, "ast" },
+            { 15, "ast" },
+            { 15, "ast" },
+        },
     })
 end
 
@@ -1240,22 +1240,66 @@ commands.sample_library_file_browser = function()
 end
 
 commands.browse_reaper_preferences = function()
-    -- ~ Build all config objects and put them in list by key
-    --    >>>> this will later become a method on the preferences module..
-    -- ~ for each config
-    --      build each varable entry
-    --        attach a key that allows me to always get back to the original
-    --        config object
     log.clear()
 
-    local results, ac = preferences.picker_friendly()
+    -- local mc = preferences.make("midieditor")
+    --
+    -- log.user("RAW =", mc:raw())
+    --
+    -- -- log.user("editor type =", mc["editor_type"])
+    -- -- log.user("editor type =", mc["editor_type"])
+    -- log.user("tostring", mc)
+    --
+    -- mc:set("editor_type", 2)
+    -- mc:set("behavior_type", 3)
+    -- mc:set("close_upon_item_deletion", 1)
+    -- mc:set("active_item_follows_selection", 1)
+    -- mc:set("other_tracks_editable", 1)
+    -- mc:set("editability", 1)
+    -- mc:set("visibility", 1)
+    -- mc:set("all_items_are_editable_in_notation_view", 1)
+    -- mc:set("secondary_items_editable_by_default", 1)
+    --
+    -- -- mc:set("editor_type", 0)
+    -- -- mc:set("behavior_type", 0)
+    -- -- mc:set("close_upon_item_deletion", 0)
+    -- -- mc:set("active_item_follows_selection", 0)
+    -- -- mc:set("other_tracks_editable", 0)
+    -- -- mc:set("editability", 0)
+    -- -- mc:set("visibility", 0)
+    -- -- mc:set("all_items_are_editable_in_notation_view", 0)
+    -- -- mc:set("secondary_items_editable_by_default", 0)
+    --
+    -- -- mc:set("editor_type", 1)
+    -- -- mc:set("behavior_type", 1)
+    -- -- mc:set("close_upon_item_deletion", 1)
+    -- -- mc:set("active_item_follows_selection", 1)
+    -- -- mc:set("other_tracks_editable", 1)
+    -- -- mc:set("editability", 1)
+    -- -- mc:set("visibility", 1)
+    -- -- mc:set("all_items_are_editable_in_notation_view", 1)
+    -- -- mc:set("secondary_items_editable_by_default", 1)
+    --
+    -- log.user("RAW =", mc:raw())
+    --
+    -- log.user("tostring", mc)
+    --
+    -- -- mc:toggle("visibility")
+    -- -- mc:toggle("visibility")
+    --
+    -- mc:cycle("behavior_type")
+    -- mc:cycle("behavior_type")
+    -- mc:cycle("behavior_type")
+    -- mc:cycle("behavior_type")
+    -- mc:cycle("behavior_type", true)
+    -- log.user("tostring", mc)
 
     fzf.init(tbl.deep_extend({
         title = "Reaper preferences",
         x = -100,
         width = 1800,
         height = 700,
-        results = results,
+        results = preferences.picker_friendly(),
         results_filter = function(t_results_data, sPattern, iMaxResults)
             local t_ret = {}
             local iCount = 0
@@ -1291,6 +1335,12 @@ commands.browse_reaper_preferences = function()
                 return false
             end
         end,
+        columns_legend = {
+            { 15, "ast" },
+            { 15, "ast" },
+            { 15, "ast" },
+            { 15, "ast" },
+        },
     }, opts))
 end
 

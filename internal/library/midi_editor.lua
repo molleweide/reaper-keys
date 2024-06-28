@@ -375,6 +375,7 @@ midi_editor.getEditableItems = function(hwnd)
 end
 
 -- FIX: rename to `GetUIViewState` -> return table.
+-- Maybe move this to its own util??
 ---
 ---@param hwnd userdata
 ---@return number start_pos, number end_pos, number hzoom_lvl
@@ -484,7 +485,7 @@ midi_editor.getItemsByState = function(hwnd, is_edit_state)
 
     reaper.PreventUIRefresh(1)
 
-    ME_set_config(make_temporary_config_for_exploit(saved.config))
+    ME_set_config(make_temporary_config_for_exploit(saved.config, is_edit_state))
 
     -- Set current editor item to be the only selected item
     containers.setItemSelection(ME.item)
@@ -539,6 +540,9 @@ midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
     reaper.PreventUIRefresh(-1)
 end
 
+---comment
+---@param hwnd any
+---@return table
 midi_editor.get_all_visible_items = function(hwnd)
     return midi_editor.getItemsByState(hwnd, false)
 end
