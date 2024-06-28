@@ -1151,6 +1151,13 @@ commands.picker_midi_editor_add_track_to_view = function()
 
     -- NOTE: Starts by listing ALL results.
     -- <C-t> to cycle ALL -> VISIBLE -> HIDDEN -> ALL ...
+    local function ext_map_get_sel(g)
+        if g:has_mult_select() then
+            return g:get_mult_select()
+        else
+            return { g.t_search_results[t.sel_idx] }
+        end
+    end
 
     local function picker_me_tracks(show, opts)
         show = show or 0
@@ -1194,34 +1201,14 @@ commands.picker_midi_editor_add_track_to_view = function()
                 end,
 
                 on_select_func = function(gui)
-                    local _, main_input = gui:controlGetByName("main_input")
-                    if main_input then
-                    end
-                    local selection_of_tracks
-                    if gui:has_mult_select() then
-                        selection_of_tracks = gui:get_mult_select()
-                    else
-                        selection_of_tracks = { gui:get_on_enter_selection() }
-                    end
-
-                    local t_items_to_add = {}
-
-                    -- ensure an item exists in new track-to-add
-                    local cursor_info = tl.get_cursor_info()
-                    local check_start_pos = cursor_info.msr.start
-                    local check_end_pos = cursor_info.msr._end
-                    for i, v in ipairs(selection_of_tracks) do
-                        log.user("Tracks selected ==>", v.name, v.tr)
-                        local target_item =
-                            containers.check_if_item_exists_or_create(v.tr, check_start_pos, check_end_pos)
-                        if target_item then
-                            table.insert(t_items_to_add, target_item)
-                        end
-                    end
-
+                    -- local _, main_input = gui:controlGetByName("main_input")
+                    -- if main_input then
+                    -- end
+                    local t_items_to_add = containers.ensure_tobjs_has_items_at_position(gui:get_selection())
                     -- set items as visible
+                    -- I could should exclude [0] here
                     midi_editor.set_items_visible(ME.editor, t_items_to_add, true)
-                    midi_editor.set_items_editable(ME.editor, t_items_to_add, true)
+                    -- midi_editor.set_items_editable(ME.editor, t_items_to_add, true)
 
                     midi_editor.setActiveItem(ME.editor, t_items_to_add[1])
 
@@ -1233,22 +1220,67 @@ commands.picker_midi_editor_add_track_to_view = function()
                 -- ~~~ ( ) mapping -> C-d make track active
                 -- ~~~ ( ) mapping -> C-u hide track from midi editor
                 -- ~~~ ( ) mapping -> C-x down cycle; editable -> visible -> hide
+                -- FIX: should i pass the selection to ext mapping? instead of just the
+                -- index.
                 extended_mappings = {
                     -- cycle listings filter
-                    ["C-t"] = function(t)
-                        local num = (show + 1) % 3
-                        log.user("cycle", num)
+                    ["C-t"] = function()
+                        picker_me_tracks((show + 1) % 3)
+                    end,
+                    -- set selection[0] active, unset previous
+                    ["C-d"] = function(t)
+                        -- FIX: handle if selection is already active
 
-                        picker_me_tracks(num)
+                        local ts = ext_map_get_sel(t.gui_ref)
+                        for _, to in ipairs(vtt.track_list) do
+                            -- log.user(to.guid, ts[1].guid)
+                            if to._midi_editor_active then
+                                to._midi_editor_active = nil
+                                to._midi_editor_visible = true
+                            end
+                            if to.guid == ts.guid then
+                                to._midi_editor_active = true
+                            end
+                        end
+                        UPDATE_RESULTS = true
+                        local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
+                        midi_editor.setActiveItem(ME.editor, t_items_to_add[1])
+                        t.gui_ref:setReaperFocus()
                     end,
                     -- make selection visible
-                    ["C-a"] = function(t) end,
+                    ["C-a"] = function(t)
+                        -- FIX: handle if selection is already active, then we cant set it to
+                        -- visible because one track needs to be active always.
+                        local ts = ext_map_get_sel(t.gui_ref)
+                        for _, to in ipairs(vtt.track_list) do
+                            -- log.user(to.guid, ts[1].guid)
+                            if to._midi_editor_active then
+                                to._midi_editor_active = nil
+                                to._midi_editor_visible = true
+                            end
+                            if to.guid == ts.guid then
+                                to._midi_editor_active = true
+                            end
+                        end
+                        -- get current selection
+                        --
+                        -- set track visible at position (reuse on_select logic..)
+                        --
+                        -- update vtt.track_list
+                        -- >> or should I update the actual list?
+                        -- ->> the picker results table should be pointing to the vtt.track_list,
+                        -- so updating a track object from either angle should not matter.
+
+                        -- midi_editor.set_item_visible = function(hwnd, item, is_visible)
+                    end,
+                    ["C-e"] = function(t)
+                        -- midi_editor.set_item_editable = function(hwnd, item, is_editable)
+                    end,
                     -- down cycle state
                     ["C-q"] = function(t) end,
                     -- up cycle state
                     ["C-w"] = function(t) end,
                     -- make selection editable
-                    ["C-e"] = function(t) end,
                     -- add to selection
                     ["C-s"] = function(t)
                         local selection = t.gui_ref.t_search_results[t.sel_idx]
@@ -1263,8 +1295,6 @@ commands.picker_midi_editor_add_track_to_view = function()
                     ["C-x"] = function(t)
                         t.gui_ref:reset_current_selection()
                     end,
-                    -- set selection[0] active.
-                    ["C-d"] = function(t) end,
                     -- [] = select all visible/filtered items
                 },
                 columns_legend = {

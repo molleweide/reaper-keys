@@ -141,15 +141,14 @@ lib_items.all_project_items_filter_transform = function(opts)
 
             -- TODO: if any sub filter fails -> exit loop immediately
 
-      -- TODO: put all filter type definitions in a table and then access this
-      -- table for each filter with the opts.filter k
-      -- ->>> so that I can keep the specifi filter implementations out of this
-      -- main loop logic
-      -- eg.
-      -- for k, v
-      --    item_fltr_defs[k](v)
-      --    --
-
+            -- TODO: put all filter type definitions in a table and then access this
+            -- table for each filter with the opts.filter k
+            -- ->>> so that I can keep the specifi filter implementations out of this
+            -- main loop logic
+            -- eg.
+            -- for k, v
+            --    item_fltr_defs[k](v)
+            --    --
 
             for k, v in pairs(opts.filter) do
                 if k == "range" then
@@ -427,7 +426,7 @@ lib_items.get_item_enclosing_range = function(track, range_start, range_end)
     for i = 0, item_cnt - 1 do
         local item_ref = reaper.GetTrackMediaItem(track, i)
         local item_info = lib_items.get_item_info(item_ref)
-        if item_info.start <= range_start and  range_end <= item_info._end then
+        if item_info.start <= range_start and range_end <= item_info._end then
             return {
                 ref = item_ref,
                 info = item_info,
@@ -436,9 +435,6 @@ lib_items.get_item_enclosing_range = function(track, range_start, range_end)
     end
     return false
 end
-
-
-
 
 lib_items.get_track_items_that_span_cursor_pos = function(track, range_start, range_end)
     local item_cnt = reaper.GetTrackNumMediaItems(track)
@@ -476,7 +472,6 @@ lib_items.unselect_items = function(t_indices)
     end
 end
 
-
 lib_items.check_if_item_exists_or_create = function(track, check_start_pos, check_end_pos)
     local items_found = lib_items.get_track_items_that_span_cursor_pos(track, check_start_pos, check_end_pos)
     local target_item
@@ -488,7 +483,25 @@ lib_items.check_if_item_exists_or_create = function(track, check_start_pos, chec
     return target_item
 end
 
-
+lib_items.ensure_tobjs_has_items_at_position = function(tobjs)
+    local t_items_to_add = {}
+  if not tobjs or #tobjs == 0 then
+    return t_items_to_add
+  end
+    local tl = require("library.timeline")
+    -- ensure an item exists at position for each target tobj
+    local cursor_info = tl.get_cursor_info()
+    local check_start_pos = cursor_info.msr.start
+    local check_end_pos = cursor_info.msr._end
+    for _, v in ipairs(tobjs) do
+        log.user("Tracks selected ==>", v.name, v.tr)
+        local target_item = lib_items.check_if_item_exists_or_create(v.tr, check_start_pos, check_end_pos)
+        if target_item then
+            table.insert(t_items_to_add, target_item)
+        end
+    end
+    return t_items_to_add
+end
 
 ------------------------------------------------------------------------------
 
