@@ -472,18 +472,20 @@ lib_items.unselect_items = function(t_indices)
     end
 end
 
-lib_items.check_if_item_exists_or_create = function(track, check_start_pos, check_end_pos)
+lib_items.check_if_item_exists_or_create = function(track, check_start_pos, check_end_pos, dont_create)
     local items_found = lib_items.get_track_items_that_span_cursor_pos(track, check_start_pos, check_end_pos)
     local target_item
     if items_found then
         target_item = items_found[1].ref
     else
-        target_item = lib_items.create_new_item(true, track, check_start_pos, check_end_pos)
+        if not dont_create then
+            target_item = lib_items.create_new_item(true, track, check_start_pos, check_end_pos)
+        end
     end
     return target_item
 end
 
-lib_items.ensure_tobjs_has_items_at_position = function(tobjs)
+lib_items.ensure_tobjs_has_items_at_position = function(tobjs, dont_create)
     local t_items_to_add = {}
     if not tobjs or #tobjs == 0 then
         return t_items_to_add
@@ -493,9 +495,10 @@ lib_items.ensure_tobjs_has_items_at_position = function(tobjs)
     local cursor_info = tl.get_cursor_info()
     local check_start_pos = cursor_info.msr.start
     local check_end_pos = cursor_info.msr._end
+
     for _, v in ipairs(tobjs) do
         log.user("Tracks selected ==>", v.name, v.tr)
-        local target_item = lib_items.check_if_item_exists_or_create(v.tr, check_start_pos, check_end_pos)
+        local target_item = lib_items.check_if_item_exists_or_create(v.tr, check_start_pos, check_end_pos, dont_create)
         if target_item then
             table.insert(t_items_to_add, target_item)
         end

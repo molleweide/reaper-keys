@@ -541,34 +541,35 @@ midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
     -- We toggle this setting so that arrange selection is mirrored in MIDI editor
     -- why is it called twice here??
     midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
+    midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
 
     ME_restore_state(saved)
     reaper.PreventUIRefresh(-1)
 end
 
-midi_editor.remove_items = function(hwnd)
-    local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
-    if not ME_EXISTS then
-        return
-    end
-
-    log.user("midi_editor.remove_items")
-
-    local saved = {
-        editor = ME.editor,
-        hzoom_state = midi_editor.getEditorHorizontalZoomState(hwnd),
-    }
-
-    reaper.PreventUIRefresh(1)
-
-    midi_editor.close(ME.editor)
-    midi_editor.openFromMain()
-
-    -- TODO: here i need to re-add all existing viewed items.
-
-    ME_restore_state(saved)
-    reaper.PreventUIRefresh(-1)
-end
+-- midi_editor.remove_items = function(hwnd)
+--     local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+--     if not ME_EXISTS then
+--         return
+--     end
+--
+--     log.user("midi_editor.remove_items")
+--
+--     local saved = {
+--         editor = ME.editor,
+--         hzoom_state = midi_editor.getEditorHorizontalZoomState(hwnd),
+--     }
+--
+--     reaper.PreventUIRefresh(1)
+--
+--     midi_editor.close(ME.editor)
+--     midi_editor.openFromMain()
+--
+--     -- TODO: here i need to re-add all existing viewed items.
+--
+--     ME_restore_state(saved)
+--     reaper.PreventUIRefresh(-1)
+-- end
 
 ---comment
 ---@param hwnd any

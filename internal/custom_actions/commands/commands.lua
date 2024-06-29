@@ -1094,11 +1094,14 @@ local function get_midi_editor_item_and_track_state(hwnd)
     local vis_guids = {}
     local t_all_vis_items = midi_editor.get_all_visible_items(hwnd)
 
-    -- NOTE: add visible items box to tracks
-    for _, item_v in ipairs(t_all_vis_items) do
+    for i, item_v in ipairs(t_all_vis_items) do
         local item_v_guid = reaper.BR_GetMediaItemGUID(item_v)
         local tr = reaper.GetMediaItem_Track(item_v)
         local tr_guid = reaper.GetTrackGUID(tr)
+        local _, tr_name = reaper.GetTrackName(tr)
+
+        log.user(">>", tr_name, " #item =", i)
+
         if not vis_guids[tr_guid] then
             vis_guids[tr_guid] = true
         end
@@ -1392,7 +1395,7 @@ commands.picker_midi_editor_add_track_to_view = function()
 
                         UPDATE_RESULTS = true
 
-                        log.user("SHOW SELECTED TRACK -> ITEMS", format.block(t_items_at_pos_to_act_upon))
+                        log.user("MAKE VISIBLE (items):", format.block(t_items_at_pos_to_act_upon))
 
                         local its = t_items_at_pos_to_act_upon
 
@@ -1464,7 +1467,7 @@ commands.picker_midi_editor_add_track_to_view = function()
 
                         UPDATE_RESULTS = true
 
-                        log.user("SHOW SELECTED TRACK -> ITEMS", format.block(t_items_at_pos_to_act_upon))
+                        log.user("MAKE EDITABLE (items):", format.block(t_items_at_pos_to_act_upon))
 
                         local its = t_items_at_pos_to_act_upon
 
@@ -1489,32 +1492,95 @@ commands.picker_midi_editor_add_track_to_view = function()
                     -- remove showing track.
                     ["C-u"] = function(t)
                         local ts = ext_map_get_sel(t)
-                        if ts[1]._midi_editor_active then
-                            log.user("Cannot change active item, you need to set a new active item instead.")
-                            return
+
+                        -- for each TRACK_SELECTION
+                        for i = #ts, 1, -1 do
+                            local tobj = ts[i]
+                            if tobj._midi_editor_active then
+                                log.user("CANNOT CHANGE ACTIVE ITEM/TRACK")
+                                table.remove(ts, i)
+                            else
+                                tobj._midi_editor_editable = nil
+                                tobj._midi_editor_visible = nil
+                            end
                         end
 
-                        local has_visibility = ts[1]._midi_editor_visible or ts[1]._midi_editor_editable
+                        local me_state = get_midi_editor_item_and_track_state(ME.editor)
 
-                        -- TODO: redo this by first getting all items visible / editable
-                        -- and then putting them into two tables, and then remove in bulk.
+                        local t_items_at_pos = containers.ensure_tobjs_has_items_at_position(ts, true)
 
-                        if ts[1]._midi_editor_visible then
-                            ts[1]._midi_editor_visible = nil
-                            UPDATE_RESULTS = true
-                            local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
-                            midi_editor.set_item_visible(ME.editor, t_items_to_add[1], false)
-                            t.gui_ref:setReaperFocus()
+                        local t_items_at_pos_to_act_upon = {
+                            hidden = {},
+                            active = {},
+                            visible = {},
+                            editable = {},
+                        }
+
+                        log.user(format.block(me_state.items))
+
+                        for _, it in ipairs(t_items_at_pos) do
+                            local it_guid = reaper.BR_GetMediaItemGUID(it)
+                            -- t_map_item_guids_at_pos[it_guid] = it
+                            local it2 = me_state.items[it_guid]
+
+                            if it2 then
+                                if it2.active then
+                                    table.insert(t_items_at_pos_to_act_upon.active, it2.item)
+                                elseif it2.visible then
+                                    table.insert(t_items_at_pos_to_act_upon.visible, it2.item)
+                                elseif it2.editable then
+                                    table.insert(t_items_at_pos_to_act_upon.editable, it2.item)
+                                end
+                            else
+                                table.insert(t_items_at_pos_to_act_upon.hidden, it)
+                            end
                         end
 
-                        if ts[1]._midi_editor_editable then
-                            ts[1]._midi_editor_editable = nil
-                            ts[1]._midi_editor_visible = true
-                            UPDATE_RESULTS = true
-                            local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
-                            midi_editor.set_item_editable(ME.editor, t_items_to_add[1], false)
-                            t.gui_ref:setReaperFocus()
+                        UPDATE_RESULTS = true
+
+                        log.user("REMOVE (items):", format.block(t_items_at_pos_to_act_upon))
+
+                        local its = t_items_at_pos_to_act_upon
+
+                        -- if #its.hidden > 0 then
+                        -- end
+
+                        if #its.visible > 0 then
+                            -- midi_editor.set_items_editable(ME.editor, its.visible, true)
+                            midi_editor.set_items_visible(ME.editor, its.visible, false)
                         end
+
+                        if #its.editable > 0 then
+                            midi_editor.set_items_editable(ME.editor, its.editable, false)
+                            midi_editor.set_items_visible(ME.editor, its.editable, false)
+                        end
+
+                        -- if #its.visible > 0 then
+                        -- end
+
+                        -- local has_visibility = ts[1]._midi_editor_visible or ts[1]._midi_editor_editable
+                        --
+                        -- -- TODO: redo this by first getting all items visible / editable
+                        -- -- and then putting them into two tables, and then remove in bulk.
+                        --
+                        -- if ts[1]._midi_editor_visible then
+                        --     ts[1]._midi_editor_visible = nil
+                        --     UPDATE_RESULTS = true
+                        --     local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
+                        --     midi_editor.set_item_visible(ME.editor, t_items_to_add[1], false)
+                        --     t.gui_ref:setReaperFocus()
+                        -- end
+                        --
+                        -- if ts[1]._midi_editor_editable then
+                        --     ts[1]._midi_editor_editable = nil
+                        --     ts[1]._midi_editor_visible = true
+                        --     UPDATE_RESULTS = true
+                        --     local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
+                        --     midi_editor.set_item_editable(ME.editor, t_items_to_add[1], false)
+                        --     t.gui_ref:setReaperFocus()
+                        -- end
+
+                        t.gui_ref:setReaperFocus()
                     end,
                     ["C-s"] = function(t)
                         local selection = t.gui_ref.t_search_results[t.sel_idx]
