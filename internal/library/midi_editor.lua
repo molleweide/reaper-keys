@@ -509,7 +509,7 @@ midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
         return
     end
 
-  log.user(string.format("is_editable = %s ; state = %s", is_edit_state, state))
+    log.user(string.format("is_editable = %s ; state = %s", is_edit_state, state))
 
     local saved = {
         editor = ME.editor,
@@ -546,30 +546,6 @@ midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
     ME_restore_state(saved)
     reaper.PreventUIRefresh(-1)
 end
-
--- midi_editor.remove_items = function(hwnd)
---     local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
---     if not ME_EXISTS then
---         return
---     end
---
---     log.user("midi_editor.remove_items")
---
---     local saved = {
---         editor = ME.editor,
---         hzoom_state = midi_editor.getEditorHorizontalZoomState(hwnd),
---     }
---
---     reaper.PreventUIRefresh(1)
---
---     midi_editor.close(ME.editor)
---     midi_editor.openFromMain()
---
---     -- TODO: here i need to re-add all existing viewed items.
---
---     ME_restore_state(saved)
---     reaper.PreventUIRefresh(-1)
--- end
 
 ---comment
 ---@param hwnd any
@@ -610,7 +586,7 @@ midi_editor.is_item_editable = function(hwnd, item)
 end
 
 midi_editor.set_items_visible = function(hwnd, items, is_visible)
-    if items then
+    if items and #items > 0 then
         for _, item in ipairs(items) do
             if not containers.isValidMIDIItem(item) then
                 return
@@ -621,7 +597,7 @@ midi_editor.set_items_visible = function(hwnd, items, is_visible)
 end
 
 midi_editor.set_items_editable = function(hwnd, items, is_editable)
-    if items then
+    if items and #items > 0 then
         for _, item in ipairs(items) do
             if not containers.isValidMIDIItem(item) then
                 return
@@ -631,6 +607,79 @@ midi_editor.set_items_editable = function(hwnd, items, is_editable)
     end
 end
 
+---Removes items from the current Me view
+---comment
+---@param hwnd any
+---@param items any
+---@param is_visible any
+midi_editor.set_items_hidden = function(hwnd, items, from_level)
+    if items and #items > 0 then
+        for _, item in ipairs(items) do
+            if not containers.isValidMIDIItem(item) then
+                return
+            end
+        end
+        if from_level == 3 then
+            -- TODO..
+        end
+        if from_level == 2 then
+            midi_editor.set_items_editable(hwnd, items, false)
+            midi_editor.set_items_visible(hwnd, items, false)
+        end
+        if from_level == 1 then
+            midi_editor.set_items_visible(hwnd, items, false)
+        end
+    end
+end
+
+---Set items to editable from a specific state level.
+---comment
+---@param hwnd any
+---@param items any
+---@param is_visible any
+midi_editor.set_items_editable_from_level = function(hwnd, items, from_level)
+    if items and #items > 0 then
+        for _, item in ipairs(items) do
+            if not containers.isValidMIDIItem(item) then
+                return
+            end
+        end
+        if from_level == 3 then
+            -- TODO..
+        end
+        if from_level == 1 then
+            midi_editor.set_items_editable(hwnd, items, true)
+        end
+        if from_level == 0 then
+            midi_editor.set_items_visible(hwnd, items, true)
+            midi_editor.set_items_editable(hwnd, items, true)
+        end
+    end
+end
+
+---Set items to visible from a specific state level.
+---comment
+---@param hwnd any
+---@param items any
+---@param is_visible any
+midi_editor.set_items_visible_from_level = function(hwnd, items, from_level)
+    if items and #items > 0 then
+        for _, item in ipairs(items) do
+            if not containers.isValidMIDIItem(item) then
+                return
+            end
+        end
+        if from_level == 3 then
+            -- TODO..
+        end
+        if from_level == 2 then
+            midi_editor.set_items_editable(hwnd, items, false)
+        end
+        if from_level == 0 then
+            midi_editor.set_items_visible(hwnd, items, true)
+        end
+    end
+end
 
 midi_editor.set_item_visible = function(hwnd, item, is_visible)
     if containers.isValidMIDIItem(item) then

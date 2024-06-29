@@ -1221,9 +1221,12 @@ commands.picker_midi_editor_add_track_to_view = function()
     end
 
     local sx = require("syntax.tracks")
+    local sxu = require("syntax.utils")
+
     local vtt = sx.getVerifiedTree()
 
     log.clear()
+
     local state = get_midi_editor_item_and_track_state(ME.editor)
 
     local function assign_ME_states_to_picker_results()
@@ -1245,14 +1248,42 @@ commands.picker_midi_editor_add_track_to_view = function()
     end
     assign_ME_states_to_picker_results()
 
-    -- NOTE: Starts by listing ALL results.
-    -- <C-t> to cycle ALL -> VISIBLE -> HIDDEN -> ALL ...
+    -- Helper to get selection in extended mappings.
     local function ext_map_get_sel(t)
         if t.gui_ref:has_mult_select() then
             return t.gui_ref:get_mult_select()
         else
             return { t.gui_ref.t_search_results[t.sel_idx] }
         end
+    end
+
+    local function make_target_items(ts, dont_create)
+        local me_state = get_midi_editor_item_and_track_state(ME.editor)
+        local t_items_at_pos = containers.ensure_tobjs_has_items_at_position(ts, dont_create)
+
+        local target_items = {
+            hidden = {},
+            active = {},
+            visible = {},
+            editable = {},
+        }
+        for _, it in ipairs(t_items_at_pos) do
+            local it_guid = reaper.BR_GetMediaItemGUID(it)
+            -- t_map_item_guids_at_pos[it_guid] = it
+            local it2 = me_state.items[it_guid]
+            if it2 then
+                if it2.active then
+                    table.insert(target_items.active, it2.item)
+                elseif it2.visible then
+                    table.insert(target_items.visible, it2.item)
+                elseif it2.editable then
+                    table.insert(target_items.editable, it2.item)
+                end
+            else
+                table.insert(target_items.hidden, it)
+            end
+        end
+        return target_items
     end
 
     local function picker_me_tracks(show, opts)
@@ -1270,8 +1301,6 @@ commands.picker_midi_editor_add_track_to_view = function()
             return string.format("MIDI EDITOR -> SOURCES: [%s]", str)
         end
 
-        local sxu = require("syntax.utils")
-
         pickers.all_tracks(
             _,
             tbl.deep_extend({
@@ -1279,9 +1308,6 @@ commands.picker_midi_editor_add_track_to_view = function()
                 title = title_func(),
                 width = 1100,
                 height = 800,
-                -- x = 0,
-                -- y = 100,
-                -- filter = "MCS", -- filter track_obj.class = [MCS]
                 filter = function(tobj)
                     -- When "all/hidden", ensure that drum lane groups only list
                     -- the Group master track.
@@ -1305,37 +1331,15 @@ commands.picker_midi_editor_add_track_to_view = function()
                                 return true
                             end
                         end
-                        -- if show == 2 and not has_visibility then
-                        --     return true
-                        -- end
                     end
                 end,
-
                 on_select_func = function(gui)
-                    -- local _, main_input = gui:controlGetByName("main_input")
-                    -- if main_input then
-                    -- end
                     local t_items_to_add = containers.ensure_tobjs_has_items_at_position(gui:get_selection())
-                    -- set items as visible
-                    -- I could should exclude [0] here
                     midi_editor.set_items_visible(ME.editor, t_items_to_add, true)
-                    -- midi_editor.set_items_editable(ME.editor, t_items_to_add, true)
-
                     midi_editor.setActiveItem(ME.editor, t_items_to_add[1])
-
                     return true
                 end,
                 entry_maker = require("pickers.entry_makers.track_nodes_midi_editor_state"),
-                -- ~~~ ( ) mapping -> C-a make track visible
-                -- ~~~ ( ) mapping -> C-e make track editable
-                -- ~~~ ( ) mapping -> C-d make track active
-                -- ~~~ ( ) mapping -> C-u hide track from midi editor
-                -- ~~~ ( ) mapping -> C-x down cycle; editable -> visible -> hide
-                -- FIX: should i pass the selection to ext mapping? instead of just the
-                -- index.
-                --
-                -- FIX: Currently, most mappings only apply to one track, or the on_enter
-                -- track
                 extended_mappings = {
                     -- cycle listings filter
                     ["C-t"] = function()
@@ -1369,6 +1373,8 @@ commands.picker_midi_editor_add_track_to_view = function()
                     ["C-a"] = function(t)
                         local ts = ext_map_get_sel(t)
 
+                        -- This initial part is very similar for every mapping, it can
+                        -- prolly be moved into a func.
                         for i = #ts, 1, -1 do
                             local tobj = ts[i]
                             if tobj._midi_editor_active then
@@ -1385,60 +1391,14 @@ commands.picker_midi_editor_add_track_to_view = function()
                             end
                         end
 
-                        local me_state = get_midi_editor_item_and_track_state(ME.editor)
-
-                        local t_items_at_pos = containers.ensure_tobjs_has_items_at_position(ts)
-
-                        local t_items_at_pos_to_act_upon = {
-                            hidden = {},
-                            active = {},
-                            visible = {},
-                            editable = {},
-                        }
-
-                        for _, it in ipairs(t_items_at_pos) do
-                            local it_guid = reaper.BR_GetMediaItemGUID(it)
-                            -- t_map_item_guids_at_pos[it_guid] = it
-                            local it2 = me_state.items[it_guid]
-                            if it2 then
-                                if it2.active then
-                                    table.insert(t_items_at_pos_to_act_upon.active, it2.item)
-                                elseif it2.visible then
-                                    table.insert(t_items_at_pos_to_act_upon.visible, it2.item)
-                                elseif it2.editable then
-                                    table.insert(t_items_at_pos_to_act_upon.editable, it2.item)
-                                end
-                            else
-                                table.insert(t_items_at_pos_to_act_upon.hidden, it)
-                            end
-                        end
-
+                        local target_items = make_target_items(ts)
+                        midi_editor.set_items_visible_from_level(ME.editor, target_items.hidden, 0)
+                        midi_editor.set_items_visible_from_level(ME.editor, target_items.editable, 2)
                         UPDATE_RESULTS = true
-
-                        log.user("MAKE VISIBLE (items):", format.block(t_items_at_pos_to_act_upon))
-
-                        local its = t_items_at_pos_to_act_upon
-
-                        if #its.hidden > 0 then
-                            midi_editor.set_items_visible(ME.editor, its.hidden, true)
-                        end
-
-                        -- if #its.visible > 0 then
-                        -- end
-
-                        if #its.editable > 0 then
-                            midi_editor.set_items_editable(ME.editor, its.editable, false)
-                        end
-
-                        -- if #its.visible > 0 then
-                        -- end
-
                         t.gui_ref:setReaperFocus()
                     end,
                     ["C-e"] = function(t)
                         local ts = ext_map_get_sel(t)
-
-                        -- for each TRACK_SELECTION
                         for i = #ts, 1, -1 do
                             local tobj = ts[i]
                             if tobj._midi_editor_active then
@@ -1455,65 +1415,15 @@ commands.picker_midi_editor_add_track_to_view = function()
                             end
                         end
 
-                        local me_state = get_midi_editor_item_and_track_state(ME.editor)
-
-                        local t_items_at_pos = containers.ensure_tobjs_has_items_at_position(ts)
-
-                        -- I get items to act upon by comparing to existing items me state
-
-                        local t_items_at_pos_to_act_upon = {
-                            hidden = {},
-                            active = {},
-                            visible = {},
-                            editable = {},
-                        }
-
-                        for _, it in ipairs(t_items_at_pos) do
-                            local it_guid = reaper.BR_GetMediaItemGUID(it)
-                            -- t_map_item_guids_at_pos[it_guid] = it
-                            local it2 = me_state.items[it_guid]
-                            if it2 then
-                                if it2.active then
-                                    table.insert(t_items_at_pos_to_act_upon.active, it2.item)
-                                elseif it2.visible then
-                                    table.insert(t_items_at_pos_to_act_upon.visible, it2.item)
-                                elseif it2.editable then
-                                    table.insert(t_items_at_pos_to_act_upon.editable, it2.item)
-                                end
-                            else
-                                table.insert(t_items_at_pos_to_act_upon.hidden, it)
-                            end
-                        end
-
+                        local target_items = make_target_items(ts)
                         UPDATE_RESULTS = true
-
-                        log.user("MAKE EDITABLE (items):", format.block(t_items_at_pos_to_act_upon))
-
-                        local its = t_items_at_pos_to_act_upon
-
-                        if #its.hidden > 0 then
-                            midi_editor.set_items_visible(ME.editor, its.hidden, true)
-                            midi_editor.set_items_editable(ME.editor, its.hidden, true)
-                            -- midi_editor.setItemsState(ME.editor, false, its.hidden, true)
-                        end
-
-                        if #its.visible > 0 then
-                            midi_editor.set_items_editable(ME.editor, its.visible, true)
-                        end
-
-                        -- if #its.editable > 0 then
-                        -- end
-
-                        -- if #its.visible > 0 then
-                        -- end
-
+                        midi_editor.set_items_editable_from_level(ME.editor, target_items.hidden, 0)
+                        midi_editor.set_items_editable_from_level(ME.editor, target_items.visible, 1)
                         t.gui_ref:setReaperFocus()
                     end,
                     -- remove showing track.
                     ["C-u"] = function(t)
                         local ts = ext_map_get_sel(t)
-
-                        -- for each TRACK_SELECTION
                         for i = #ts, 1, -1 do
                             local tobj = ts[i]
                             if tobj._midi_editor_active then
@@ -1525,61 +1435,11 @@ commands.picker_midi_editor_add_track_to_view = function()
                             end
                         end
 
-                        local me_state = get_midi_editor_item_and_track_state(ME.editor)
-
-                        local t_items_at_pos = containers.ensure_tobjs_has_items_at_position(ts, true)
-
-                        local t_items_at_pos_to_act_upon = {
-                            hidden = {},
-                            active = {},
-                            visible = {},
-                            editable = {},
-                        }
-
-                        log.user(format.block(me_state.items))
-
-                        for _, it in ipairs(t_items_at_pos) do
-                            local it_guid = reaper.BR_GetMediaItemGUID(it)
-                            -- t_map_item_guids_at_pos[it_guid] = it
-                            local it2 = me_state.items[it_guid]
-
-                            if it2 then
-                                if it2.active then
-                                    table.insert(t_items_at_pos_to_act_upon.active, it2.item)
-                                elseif it2.visible then
-                                    table.insert(t_items_at_pos_to_act_upon.visible, it2.item)
-                                elseif it2.editable then
-                                    table.insert(t_items_at_pos_to_act_upon.editable, it2.item)
-                                end
-                            else
-                                table.insert(t_items_at_pos_to_act_upon.hidden, it)
-                            end
-                        end
-
+                        local target_items = make_target_items(ts, true)
+                        midi_editor.set_items_hidden(ME.editor, target_items.visible, 1)
+                        midi_editor.set_items_hidden(ME.editor, target_items.editable, 2)
+                        t.gui_ref:setReaperFocus()
                         UPDATE_RESULTS = true
-
-                        log.user("REMOVE (items):", format.block(t_items_at_pos_to_act_upon))
-
-                        local its = t_items_at_pos_to_act_upon
-
-                        -- if #its.hidden > 0 then
-                        -- end
-
-                        if #its.visible > 0 then
-                            -- midi_editor.set_items_editable(ME.editor, its.visible, true)
-                            midi_editor.set_items_visible(ME.editor, its.visible, false)
-                        end
-
-                        if #its.editable > 0 then
-                            midi_editor.set_items_editable(ME.editor, its.editable, false)
-                            midi_editor.set_items_visible(ME.editor, its.editable, false)
-                        end
-
-                        -- if #its.visible > 0 then
-                        -- end
-
-                        t.gui_ref:setReaperFocus()
-                        t.gui_ref:setReaperFocus()
                     end,
                     ["C-s"] = function(t)
                         local selection = t.gui_ref.t_search_results[t.sel_idx]
