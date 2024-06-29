@@ -492,11 +492,24 @@ midi_editor.getItemsByState = function(hwnd, is_edit_state)
 end
 
 -- TODO: pass table instead with opts instead
-midi_editor.setItemsState = function(hwnd, is_edit_state, items, state, hide_items)
+-- Control the state of an item in the midi editor.
+-- NOTE: Rules for unsetting an item:
+-- Active -> Editable?? No, I believe it is back to visible. [?]
+-- Editable -> Visible
+-- Visible -> Hidden
+--
+---Set state of MediaItems.
+---@param hwnd userdata: Target midi editor
+---@param is_edit_state boolean: Am I operating upon items that ARE_EDITABLE??
+---@param items table: List of target MediaItem*
+---@param state boolean: Make target items visible or not. ( Enable/Disable )
+midi_editor.setItemsState = function(hwnd, is_edit_state, items, state)
     local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
     if not ME_EXISTS then
         return
     end
+
+  log.user(string.format("is_editable = %s ; state = %s", is_edit_state, state))
 
     local saved = {
         editor = ME.editor,
@@ -517,8 +530,6 @@ midi_editor.setItemsState = function(hwnd, is_edit_state, items, state, hide_ite
     saved.item_selection = containers.getItemSelection()
     reaper.PreventUIRefresh(1)
 
-  log.user("is edit:", is_edit_state)
-
     ME_set_config(make_temporary_config_for_exploit(saved.config, is_edit_state))
 
     -- Set current editor item to be the only selected item
@@ -530,7 +541,6 @@ midi_editor.setItemsState = function(hwnd, is_edit_state, items, state, hide_ite
     -- We toggle this setting so that arrange selection is mirrored in MIDI editor
     -- why is it called twice here??
     midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
-    -- midi_editor.toggle_TrackListAndMediaItemLane_FollowsSelectionChangesInArrangeView(hwnd)
 
     ME_restore_state(saved)
     reaper.PreventUIRefresh(-1)
@@ -620,12 +630,17 @@ midi_editor.set_items_editable = function(hwnd, items, is_editable)
     end
 end
 
+
 midi_editor.set_item_visible = function(hwnd, item, is_visible)
     if containers.isValidMIDIItem(item) then
         midi_editor.setItemsState(hwnd, false, { item }, is_visible)
     end
 end
 
+-- NOTE: This function can set already visible [ items -> editable ], BUT if the
+-- input items are not visible then we can't proceed and set them to editable,
+-- ie. you need to ensure items are set visible first.
+--
 ---Set a single item as `editable` OR unset an `editable` item one level to
 ---just `visible`
 ---@param hwnd any: Midi editor window pointer

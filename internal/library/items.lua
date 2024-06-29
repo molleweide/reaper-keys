@@ -485,9 +485,9 @@ end
 
 lib_items.ensure_tobjs_has_items_at_position = function(tobjs)
     local t_items_to_add = {}
-  if not tobjs or #tobjs == 0 then
-    return t_items_to_add
-  end
+    if not tobjs or #tobjs == 0 then
+        return t_items_to_add
+    end
     local tl = require("library.timeline")
     -- ensure an item exists at position for each target tobj
     local cursor_info = tl.get_cursor_info()

@@ -1256,6 +1256,23 @@ commands.picker_midi_editor_add_track_to_view = function()
                     -- make selection visible
                     ["C-a"] = function(t)
                         local ts = ext_map_get_sel(t)
+
+                        -- NOTE: make a track visible at position, implies ensuring existance of
+                        -- an item at each track. look for or create in either case
+
+                        -- TODO:
+                        --
+                        -- ~ for each selected track
+                        --
+                        -- ~ ensure sel track has an item at positiion
+                        --
+                        -- ~ compute state for all items at position.
+                        --
+                        -- ~ map each item to its current state (ax/edi/vis/hid)
+            --
+            -- apply visibility to each category
+
+                        -- for _, tobj in ipairs(ts) do
                         if ts[1]._midi_editor_active then
                             log.user("Cannot change active item, you need to set a new active item instead.")
                             return
@@ -1271,8 +1288,14 @@ commands.picker_midi_editor_add_track_to_view = function()
                                 to._midi_editor_visible = true
                             end
                         end
+                        -- end
+
                         UPDATE_RESULTS = true
                         local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
+
+                        -- TODO: I need to get the state of the target items
+                        -- before I can modify it.
+
                         midi_editor.set_item_visible(ME.editor, t_items_to_add[1], true)
                         t.gui_ref:setReaperFocus()
                     end,
@@ -1282,6 +1305,7 @@ commands.picker_midi_editor_add_track_to_view = function()
                             log.user("Cannot change active item, you need to set a new active item instead.")
                             return
                         end
+
                         if ts[1]._midi_editor_editable then
                             log.user("Already editable")
                             return
@@ -1296,7 +1320,11 @@ commands.picker_midi_editor_add_track_to_view = function()
                         UPDATE_RESULTS = true
                         local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
                         log.user("num items ->", #t_items_to_add)
+
+                        -- TODO: custom logic for setting the item state.
+
                         midi_editor.set_item_editable(ME.editor, t_items_to_add[1], true)
+
                         t.gui_ref:setReaperFocus()
                     end,
                     -- remove showing track.
@@ -1308,6 +1336,9 @@ commands.picker_midi_editor_add_track_to_view = function()
                         end
 
                         local has_visibility = ts[1]._midi_editor_visible or ts[1]._midi_editor_editable
+
+                        -- TODO: redo this by first getting all items visible / editable
+                        -- and then putting them into two tables, and then remove in bulk.
 
                         if ts[1]._midi_editor_visible then
                             ts[1]._midi_editor_visible = nil
@@ -1325,26 +1356,7 @@ commands.picker_midi_editor_add_track_to_view = function()
                             midi_editor.set_item_editable(ME.editor, t_items_to_add[1], false)
                             t.gui_ref:setReaperFocus()
                         end
-
-                        -- local has_visibility = ts[1]._midi_editor_visible or ts[1]._midi_editor_editable
-                        -- if has_visibility then
-                        --     -- TODO: for each category, re add everything, and compute the
-                        --     -- stuff.
-                        --     -- 1. close midi editor.
-                        --     -- 2. open up midi editor again.
-                        --     -- 3. re-add all track items, except for the ones i don't want.
-                        --     UPDATE_RESULTS = true
-                        --     -- local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
-                        --     -- midi_editor.remove_items(ME.editor)
-                        --     t.gui_ref:setReaperFocus()
-                        -- end
                     end,
-                    -- down cycle state
-                    ["C-q"] = function(t) end,
-                    -- up cycle state
-                    ["C-w"] = function(t) end,
-                    -- make selection editable
-                    -- add to selection
                     ["C-s"] = function(t)
                         local selection = t.gui_ref.t_search_results[t.sel_idx]
                         selection.selected = true
