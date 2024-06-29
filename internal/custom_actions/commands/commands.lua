@@ -1085,35 +1085,124 @@ end
 ---Returns a table with the keys active, visible, and editable, which
 ---hosts the GUIDs for each category of tracks.
 ---@return table
-local function get_midi_editor_item_track_state(hwnd)
+local function get_midi_editor_item_and_track_state(hwnd)
+    local t_tr_meta = {}
+    local t_item_guids_meta = {}
+
+    -- I need to do this with table keys instead
+
     local vis_guids = {}
-    for _, it in ipairs(midi_editor.get_all_visible_items(hwnd)) do
-        local tr = reaper.GetMediaItem_Track(it)
-        local guid = reaper.GetTrackGUID(tr)
-        if not vis_guids[guid] then
-            vis_guids[guid] = true
+    local t_all_vis_items = midi_editor.get_all_visible_items(hwnd)
+
+    -- NOTE: add visible items box to tracks
+    for _, item_v in ipairs(t_all_vis_items) do
+        local item_v_guid = reaper.BR_GetMediaItemGUID(item_v)
+        local tr = reaper.GetMediaItem_Track(item_v)
+        local tr_guid = reaper.GetTrackGUID(tr)
+        if not vis_guids[tr_guid] then
+            vis_guids[tr_guid] = true
         end
+
+        local tr_guid_at_key = t_tr_meta[tr_guid]
+        if not tr_guid_at_key then
+            -- does not exist. creating...
+            t_tr_meta[tr_guid] = {
+                items = {
+                    visible = { [item_v_guid] = item_v },
+                    editable = {},
+                },
+            }
+        else
+            tr_guid_at_key.items.visible[item_v_guid] = item_v
+        end
+
+        t_item_guids_meta[item_v_guid] = {
+            item = item_v,
+            visible = true,
+        }
+
+        -- if not t_tr_meta[#t_tr_meta][tr_guid] then
+        --     -- does not exist already
+        --     table.insert(t_tr_meta, {
+        --         guid = tr_guid,
+        --         tr = tr,
+        --         items = {
+        --             visible = { item_v },
+        --         },
+        --     })
+        -- else
+        --     -- exists
+        --     table.insert(t_tr_meta[#t_tr_meta].items.visible, item_v)
+        -- end
     end
+
     local edit_guids = {}
-    for _, it in ipairs(midi_editor.get_all_editable_items(hwnd)) do
-        local tr = reaper.GetMediaItem_Track(it)
-        local guid = reaper.GetTrackGUID(tr)
-        if not edit_guids[guid] then
-            edit_guids[guid] = true
-            vis_guids[guid] = nil
+    local t_all_editable_items = midi_editor.get_all_editable_items(hwnd)
+    for _, item_e in ipairs(t_all_editable_items) do
+        local item_e_guid = reaper.BR_GetMediaItemGUID(item_e)
+        local tr = reaper.GetMediaItem_Track(item_e)
+        local tr_guid = reaper.GetTrackGUID(tr)
+        if not edit_guids[tr_guid] then
+            edit_guids[tr_guid] = true
+            vis_guids[tr_guid] = nil
         end
+
+        local tr_guid_at_key = t_tr_meta[tr_guid]
+        if not tr_guid_at_key then
+            -- does not exist. creating with only editable...
+            t_tr_meta[tr_guid] = {
+                items = {
+                    editable = { [item_e_guid] = item_e },
+                },
+            }
+        else
+            tr_guid_at_key.items.visible[item_e_guid] = nil
+            tr_guid_at_key.items.editable[item_e_guid] = item_e
+        end
+
+        t_item_guids_meta[item_e_guid] = {
+            item = item_e,
+            visible = nil,
+            editable = true,
+        }
     end
 
     local axt = reaper.MIDIEditor_GetTake(hwnd)
     local axit = reaper.GetMediaItemTake_Item(axt)
     local active_take_track = reaper.GetMediaItem_Track(axit)
     local active_track_guid = reaper.GetTrackGUID(active_take_track)
+    local item_a_guid = reaper.BR_GetMediaItemGUID(axit)
     edit_guids[active_track_guid] = nil
+
+    local tr_guid_at_key = t_tr_meta[active_track_guid]
+    if not tr_guid_at_key then
+        -- does not exist. creating with only editable...
+        t_tr_meta[active_track_guid] = {
+            items = {
+                active = axit, -- is it necessary to also assign item guid??
+            },
+        }
+    else
+        if tr_guid_at_key.items.visible then
+            tr_guid_at_key.items.visible[active_track_guid] = nil
+        end
+        tr_guid_at_key.items.editable[active_track_guid] = nil
+        tr_guid_at_key.items.active = axit
+    end
+
+    t_item_guids_meta[item_a_guid] = {
+        item = axit,
+        visible = nil,
+        editable = nil,
+        active = true,
+    }
 
     return {
         active = active_track_guid,
         visible = vis_guids,
         editable = edit_guids,
+        items = t_item_guids_meta,
+        tracks = t_tr_meta,
     }
 end
 
@@ -1128,7 +1217,7 @@ commands.picker_midi_editor_add_track_to_view = function()
     local vtt = sx.getVerifiedTree()
 
     log.clear()
-    local state = get_midi_editor_item_track_state(ME.editor)
+    local state = get_midi_editor_item_and_track_state(ME.editor)
 
     local function assign_ME_states_to_picker_results()
         for _, tobj in ipairs(vtt.track_list) do
@@ -1180,9 +1269,9 @@ commands.picker_midi_editor_add_track_to_view = function()
                 vtt = vtt,
                 title = title_func(),
                 width = 1500,
-                height = 600,
+                height = 200,
                 -- x = 300,
-                -- y = 1500,
+                y = 1600,
                 -- filter = "MCS", -- filter track_obj.class = [MCS]
                 filter = function(tobj)
                     if show == 0 then
@@ -1257,73 +1346,143 @@ commands.picker_midi_editor_add_track_to_view = function()
                     ["C-a"] = function(t)
                         local ts = ext_map_get_sel(t)
 
-                        -- NOTE: make a track visible at position, implies ensuring existance of
-                        -- an item at each track. look for or create in either case
-
-                        -- TODO:
-                        --
-                        -- ~ for each selected track
-                        --
-                        -- ~ ensure sel track has an item at positiion
-                        --
-                        -- ~ compute state for all items at position.
-                        --
-                        -- ~ map each item to its current state (ax/edi/vis/hid)
-            --
-            -- apply visibility to each category
-
-                        -- for _, tobj in ipairs(ts) do
-                        if ts[1]._midi_editor_active then
-                            log.user("Cannot change active item, you need to set a new active item instead.")
-                            return
-                        end
-                        if ts[1]._midi_editor_visible then
-                            log.user("Already visible")
-                            return
-                        end
-                        for _, to in ipairs(vtt.track_list) do
-                            -- first, ensure we are not affecting the `active` track
-                            if to.guid == ts[1].guid then
-                                to._midi_editor_editable = nil
-                                to._midi_editor_visible = true
+                        for i = #ts, 1, -1 do
+                            local tobj = ts[i]
+                            if tobj._midi_editor_active then
+                                log.user("Cannot change active item, you need to set a new active item instead.")
+                                table.remove(ts, i)
+                            elseif tobj._midi_editor_visible then
+                                log.user("Already visible")
+                                table.remove(ts, i)
+                            -- Add more cases if necessary..
+                            else
+                                -- set tobj state of each affected track
+                                tobj._midi_editor_visible = true
+                                tobj._midi_editor_editable = nil
                             end
                         end
-                        -- end
+
+                        local me_state = get_midi_editor_item_and_track_state(ME.editor)
+
+                        local t_items_at_pos = containers.ensure_tobjs_has_items_at_position(ts)
+
+                        local t_items_at_pos_to_act_upon = {
+                            hidden = {},
+                            active = {},
+                            visible = {},
+                            editable = {},
+                        }
+
+                        for _, it in ipairs(t_items_at_pos) do
+                            local it_guid = reaper.BR_GetMediaItemGUID(it)
+                            -- t_map_item_guids_at_pos[it_guid] = it
+                            local it2 = me_state.items[it_guid]
+                            if it2 then
+                                if it2.active then
+                                    table.insert(t_items_at_pos_to_act_upon.active, it2.item)
+                                elseif it2.visible then
+                                    table.insert(t_items_at_pos_to_act_upon.visible, it2.item)
+                                elseif it2.editable then
+                                    table.insert(t_items_at_pos_to_act_upon.editable, it2.item)
+                                end
+                            else
+                                table.insert(t_items_at_pos_to_act_upon.hidden, it)
+                            end
+                        end
 
                         UPDATE_RESULTS = true
-                        local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
 
-                        -- TODO: I need to get the state of the target items
-                        -- before I can modify it.
+                        log.user("SHOW SELECTED TRACK -> ITEMS", format.block(t_items_at_pos_to_act_upon))
 
-                        midi_editor.set_item_visible(ME.editor, t_items_to_add[1], true)
+                        local its = t_items_at_pos_to_act_upon
+
+                        if #its.hidden > 0 then
+                            midi_editor.set_items_visible(ME.editor, its.hidden, true)
+                        end
+
+                        -- if #its.visible > 0 then
+                        -- end
+
+                        if #its.editable > 0 then
+                            midi_editor.set_items_editable(ME.editor, its.editable, false)
+                        end
+
+                        -- if #its.visible > 0 then
+                        -- end
+
                         t.gui_ref:setReaperFocus()
                     end,
                     ["C-e"] = function(t)
                         local ts = ext_map_get_sel(t)
-                        if ts[1]._midi_editor_active then
-                            log.user("Cannot change active item, you need to set a new active item instead.")
-                            return
-                        end
 
-                        if ts[1]._midi_editor_editable then
-                            log.user("Already editable")
-                            return
-                        end
-
-                        for _, to in ipairs(vtt.track_list) do
-                            if to.guid == ts[1].guid then
-                                to._midi_editor_editable = true
-                                to._midi_editor_visible = nil
+                        -- for each TRACK_SELECTION
+                        for i = #ts, 1, -1 do
+                            local tobj = ts[i]
+                            if tobj._midi_editor_active then
+                                log.user("CANNOT CHANGE ACTIVE ITEM/TRACK")
+                                table.remove(ts, i)
+                            elseif tobj._midi_editor_editable then
+                                log.user("ALREADY EDITABLE")
+                                table.remove(ts, i)
+                            -- Add more cases if necessary..
+                            else
+                                -- set tobj state of each affected track
+                                tobj._midi_editor_editable = true
+                                tobj._midi_editor_visible = nil
                             end
                         end
+
+                        local me_state = get_midi_editor_item_and_track_state(ME.editor)
+
+                        local t_items_at_pos = containers.ensure_tobjs_has_items_at_position(ts)
+
+                        -- I get items to act upon by comparing to existing items me state
+
+                        local t_items_at_pos_to_act_upon = {
+                            hidden = {},
+                            active = {},
+                            visible = {},
+                            editable = {},
+                        }
+
+                        for _, it in ipairs(t_items_at_pos) do
+                            local it_guid = reaper.BR_GetMediaItemGUID(it)
+                            -- t_map_item_guids_at_pos[it_guid] = it
+                            local it2 = me_state.items[it_guid]
+                            if it2 then
+                                if it2.active then
+                                    table.insert(t_items_at_pos_to_act_upon.active, it2.item)
+                                elseif it2.visible then
+                                    table.insert(t_items_at_pos_to_act_upon.visible, it2.item)
+                                elseif it2.editable then
+                                    table.insert(t_items_at_pos_to_act_upon.editable, it2.item)
+                                end
+                            else
+                                table.insert(t_items_at_pos_to_act_upon.hidden, it)
+                            end
+                        end
+
                         UPDATE_RESULTS = true
-                        local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
-                        log.user("num items ->", #t_items_to_add)
 
-                        -- TODO: custom logic for setting the item state.
+                        log.user("SHOW SELECTED TRACK -> ITEMS", format.block(t_items_at_pos_to_act_upon))
 
-                        midi_editor.set_item_editable(ME.editor, t_items_to_add[1], true)
+                        local its = t_items_at_pos_to_act_upon
+
+                        if #its.hidden > 0 then
+                            midi_editor.set_items_visible(ME.editor, its.hidden, true)
+                            midi_editor.set_items_editable(ME.editor, its.hidden, true)
+                            -- midi_editor.setItemsState(ME.editor, false, its.hidden, true)
+                        end
+
+                        if #its.visible > 0 then
+                            midi_editor.set_items_editable(ME.editor, its.visible, true)
+                        end
+
+                        -- if #its.editable > 0 then
+                        -- end
+
+                        -- if #its.visible > 0 then
+                        -- end
 
                         t.gui_ref:setReaperFocus()
                     end,
