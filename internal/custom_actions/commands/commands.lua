@@ -1270,25 +1270,40 @@ commands.picker_midi_editor_add_track_to_view = function()
             return string.format("MIDI EDITOR -> SOURCES: [%s]", str)
         end
 
+        local sxu = require("syntax.utils")
+
         pickers.all_tracks(
             _,
             tbl.deep_extend({
                 vtt = vtt,
                 title = title_func(),
                 width = 1500,
-                height = 200,
+                height = 900,
                 -- x = 300,
-                y = 1600,
+                -- y = 100,
                 -- filter = "MCS", -- filter track_obj.class = [MCS]
                 filter = function(tobj)
+                    -- When "all/hidden", ensure that drum lane groups only list
+          -- the Group master track.
                     if show == 0 then
-                        return s.strHasOneOfChars(tobj.class, "MCS")
+                        if (tobj.class == "M" or tobj.class == "C") and not sxu.trackObjHasOption(tobj.group, "m") then
+                            return true
+                        elseif tobj.class == "G" and sxu.trackObjHasOption(tobj, "m") then
+                            return true
+                        end
                     else
                         local has_visibility = tobj._midi_editor_active
                             or tobj._midi_editor_visible
                             or tobj._midi_editor_editable
                         if (show == 1 and has_visibility) or (show == 2 and not has_visibility) then
-                            return true
+                            -- return true
+                            if
+                                (tobj.class == "M" or tobj.class == "C") and not sxu.trackObjHasOption(tobj.group, "m")
+                            then
+                                return true
+                            elseif tobj.class == "G" and sxu.trackObjHasOption(tobj, "m") then
+                                return true
+                            end
                         end
                         -- if show == 2 and not has_visibility then
                         --     return true
