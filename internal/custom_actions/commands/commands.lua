@@ -1277,14 +1277,14 @@ commands.picker_midi_editor_add_track_to_view = function()
             tbl.deep_extend({
                 vtt = vtt,
                 title = title_func(),
-                width = 1500,
-                height = 900,
-                -- x = 300,
+                width = 1100,
+                height = 800,
+                -- x = 0,
                 -- y = 100,
                 -- filter = "MCS", -- filter track_obj.class = [MCS]
                 filter = function(tobj)
                     -- When "all/hidden", ensure that drum lane groups only list
-          -- the Group master track.
+                    -- the Group master track.
                     if show == 0 then
                         if (tobj.class == "M" or tobj.class == "C") and not sxu.trackObjHasOption(tobj.group, "m") then
                             return true
@@ -1362,6 +1362,7 @@ commands.picker_midi_editor_add_track_to_view = function()
                         UPDATE_RESULTS = true
                         local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
                         midi_editor.setActiveItem(ME.editor, t_items_to_add[1])
+
                         t.gui_ref:setReaperFocus()
                     end,
                     -- make selection visible
@@ -1575,28 +1576,6 @@ commands.picker_midi_editor_add_track_to_view = function()
                         end
 
                         -- if #its.visible > 0 then
-                        -- end
-
-                        -- local has_visibility = ts[1]._midi_editor_visible or ts[1]._midi_editor_editable
-                        --
-                        -- -- TODO: redo this by first getting all items visible / editable
-                        -- -- and then putting them into two tables, and then remove in bulk.
-                        --
-                        -- if ts[1]._midi_editor_visible then
-                        --     ts[1]._midi_editor_visible = nil
-                        --     UPDATE_RESULTS = true
-                        --     local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
-                        --     midi_editor.set_item_visible(ME.editor, t_items_to_add[1], false)
-                        --     t.gui_ref:setReaperFocus()
-                        -- end
-                        --
-                        -- if ts[1]._midi_editor_editable then
-                        --     ts[1]._midi_editor_editable = nil
-                        --     ts[1]._midi_editor_visible = true
-                        --     UPDATE_RESULTS = true
-                        --     local t_items_to_add = containers.ensure_tobjs_has_items_at_position(ts)
-                        --     midi_editor.set_item_editable(ME.editor, t_items_to_add[1], false)
-                        --     t.gui_ref:setReaperFocus()
                         -- end
 
                         t.gui_ref:setReaperFocus()
