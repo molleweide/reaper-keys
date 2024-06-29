@@ -1209,9 +1209,13 @@ local function get_midi_editor_item_and_track_state(hwnd)
     }
 end
 
--- TEST: Mapping: Cycle not-added items/only visible items/ ALL items.
+---Picker that allows you to manage what tracks are shown inside the current
+---midi editor.
+---It requires midi editor preference vars [editability linked] and [visibility
+---linked] to be OFF/Disabled. Otherwise non active items will be auto removed
+---upon next reaper GUI loop refresh.
 commands.picker_midi_editor_add_track_to_view = function()
-    local ME_EXISTS, ME = midi_editor.getMidiValidContext(hwnd)
+    local ME_EXISTS, ME = midi_editor.getMidiValidContext()
     if not ME_EXISTS then
         return
     end
@@ -1580,6 +1584,7 @@ commands.picker_midi_editor_add_track_to_view = function()
                         --     t.gui_ref:setReaperFocus()
                         -- end
 
+                        t.gui_ref:setReaperFocus()
                         t.gui_ref:setReaperFocus()
                     end,
                     ["C-s"] = function(t)

@@ -612,9 +612,15 @@ p.midieditor = {
     -- editable
     other_tracks_editable = { mask = 256 },
     -- &512=0/1, Selection is linked to editability(also MIDI-Editor-action 40891)
-    editability = { mask = 512 },
+    editability = {
+        -- NOTE: For proper Midi Editor source management, this should be OFF
+        mask = 512,
+    },
     -- &1024=0/1, Media item selection is linked to visibility
-    visibility = { mask = 1024 },
+    visibility = {
+        -- NOTE: For proper Midi Editor source management, this should be OFF
+        mask = 1024,
+    },
     -- &2048=0/1, All media items are editable in notation view(MIDI Editor ->
     -- Contents -> Behavior for "open items in built-in MIDI Editor")
     all_items_are_editable_in_notation_view = { mask = 2048 },
