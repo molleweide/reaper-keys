@@ -3,6 +3,8 @@ local format = require("utils.format")
 
 local tbl = require("utils.table")
 
+local fu = require("utils.fzf")
+
 local sf = require("utils.j_string_functions")
 local settings = require("utils.j_settings_functions")
 
@@ -55,6 +57,16 @@ require("gui2.JGui")
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
+
+-- All of these types of symbols etc. should go into a picker default config
+-- file under definitions.
+
+local picker_config = {
+    symbols = {
+        entry_selected = "x",
+        entry_separator = "|",
+    },
+}
 
 -- Remove this msg function...
 -- function msg(m)
@@ -388,6 +400,41 @@ local function gui_default_on_resize(self)
     self:controlInitAll()
 end
 
+local function entry_maker_refact_wrapper(tButtons, gui)
+    local tResults = gui.t_search_results
+    for i, cIds in ipairs(tButtons) do
+        local b = cIds[1]
+        local info = cIds[2]
+        local iStart = fu._round(i + SCROLL_RESULTS)
+        local highlights = sf.jStringExplode(textBox.value, " ")
+        local showing
+        if iStart <= #tResults then
+            showing = iStart
+        else
+            showing = #tResults
+        end
+        LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
+        if tResults and iStart <= #tResults then
+            local item = tResults[iStart]
+            local label_str = ""
+
+            -- FIX: BREAKING CHANGE -> ALL ENTRY_MAKERS have to accomodate for this.
+            label_str = gui.entry_maker(label_str, item)
+
+            if gui.mult_select_allowed then
+                label_str = "|" .. item.selected and picker_config.symbols.entry_selected or " " .. label_str
+            end
+            b.label = label_str
+            b.visible = true
+            info.visible = true
+            b.highlight = highlights
+        else
+            b.visible = false
+            info.visible = false
+        end
+    end
+end
+
 local function gui_default_update(self)
     log.debug("fzf.gui_default_update -> A. entered", UPDATE_RESULTS, NEW_PICKER_VIEW)
 
@@ -412,11 +459,9 @@ local function gui_default_update(self)
 
         if lastSearch ~= textBox.value or NEW_PICKER_VIEW then -- only search again when input changes, not on scroll
             NEW_PICKER_VIEW = false
-            --
+
             -- TODO: attach results_filter as a method on GUI inside init()
             -- so that I can call GUI.make_filter_results()
-            --
-
             self.t_search_results = self.results_filter(self.t_results_data, textBox.value, self.max_results, false)
 
             log.debug("fzf.gui_default_update -> CCC. #search_results", #self.t_search_results)
@@ -426,9 +471,10 @@ local function gui_default_update(self)
         RESULT_COUNT = #self.t_search_results
 
         --
-        -- TODO: attach as method on GUI named `make_display_results`
+        -- TODO: migrate to new entry_maker_refact_wrapper
         --
 
+        -- entry_maker_refact_wrapper(tButtons, self)
         self.entry_maker(tResultButtons, self.t_search_results)
     end
 end
@@ -565,16 +611,16 @@ local function build_picker(opts, on_enter)
             if k:match("^C%-") then
                 local temp = "control_" .. k:sub(3, 3)
                 local new_key = GUI.kb[temp]
-    --             log.user(string.format(
-    --                 [[ extended mappings:
-				-- type v: %s
-				-- temp: %s
-				-- new_key: %s
-				--   ]],
-    --                 type(v),
-    --                 temp,
-    --                 new_key
-    --             ))
+                --             log.user(string.format(
+                --                 [[ extended mappings:
+                -- type v: %s
+                -- temp: %s
+                -- new_key: %s
+                --   ]],
+                --                 type(v),
+                --                 temp,
+                --                 new_key
+                --             ))
                 GUI.attach_mappings[tostring(new_key)] = v
             elseif k:match("^M%-") then
                 local temp = "meta_" .. k:sub(3, 3)
@@ -650,7 +696,7 @@ local function reset_new_picker(opts)
 
     local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
 
-  GUI:setTitle(opts.title)
+    GUI:setTitle(opts.title)
 
     -- resets
     main_input.value = ""
@@ -686,7 +732,6 @@ local function reset_new_picker(opts)
     -- UPDATE_RESULTS = true
 
     -- GUI:refresh()
-    -- GUI.entry_maker(tResultButtons, GUI.t_search_results)
     -- GUI:refresh()
 end
 

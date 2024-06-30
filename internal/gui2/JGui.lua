@@ -67,6 +67,8 @@ jGui = {
         list = {},
     },
 
+  mult_select_allowed = true,
+
     doExit = false,
     imageId = 0,
 

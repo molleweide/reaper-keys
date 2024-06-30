@@ -1422,6 +1422,11 @@ commands.picker_midi_editor_add_track_to_view = function()
                         t.gui_ref:setReaperFocus()
                     end,
                     -- remove showing track.
+          -- TEST: Maybe `hiding` of items might be facilitaed by creating a custom
+          -- ME-temp-config for when wanting to batch hide many items, so that I
+          -- only need to run "one" midi editor function for each action, instead
+          -- of now chaining midi editor actions to hide eg "editable" items,
+          -- which might be what is causing the focus-shift or losing focus.
                     ["C-u"] = function(t)
                         local ts = ext_map_get_sel(t)
                         for i = #ts, 1, -1 do
@@ -1445,14 +1450,18 @@ commands.picker_midi_editor_add_track_to_view = function()
                         local selection = t.gui_ref.t_search_results[t.sel_idx]
                         selection.selected = true
                         t.gui_ref:add_to_current_selection(selection)
-                        -- log.user("--- sel cur names ----")
-                        -- for _, cs in ipairs(t.gui_ref.selection_current) do
-                        --   log.user(cs.name)
-                        -- end
                     end,
-                    -- reset selection
+                    -- reset selection | if every mapping was a table instead, then
+                    -- I could also add a name, and a description for the mapping, so that
+                    -- a legend can be shown
                     ["C-x"] = function(t)
                         t.gui_ref:reset_current_selection()
+                    end,
+                    ["C-g"] = function(t)
+                        -- 1. get the group for single on enter selection
+                        -- 2. hide all items || items outside of selected group
+                        -- 3. get all MC track objects from selected group
+                        -- 4. set items visible.
                     end,
                     -- [] = select all visible/filtered items
                 },
