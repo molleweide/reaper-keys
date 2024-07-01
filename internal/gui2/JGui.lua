@@ -703,6 +703,8 @@ function jGui:reset_current_selection()
         v.selected = nil
     end
     self.selection_current = {}
+  -- This should not be here. It is a temporary fix..
+    UPDATE_RESULTS = true
 end
 
 -- picker_selection_history = {

@@ -1470,10 +1470,10 @@ commands.picker_midi_editor_add_track_to_view = function()
         },
         column_legend_enabled = use_column,
         columns_legend = {
-          { 15, "A" },
-          { 15, "B" },
-          { 15, "C" },
-          { 15, "D" },
+          { 9, "ZONE" },
+          { 10, "GROUP" },
+          { 8, "STATE" },
+          { 32, "NAME" },
         },
       }, opts)
     )

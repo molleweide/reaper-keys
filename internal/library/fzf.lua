@@ -443,7 +443,7 @@ local function create_column_legend(gui)
     local x_start = 10
     local y_space = GUI.gui_spread
     local height = gui.gui_size
-    local width = gui.width - x_start *2
+    local width = gui.width - x_start * 2
 
     local accomodate_for_main_input = GUI.gui_size * 1.5
     local extra = 15
@@ -534,6 +534,20 @@ end
 ---@param tButtons any: table of control buttons
 ---@param gui any: The picker gui object itself, which hosts the search results table.
 local function entry_maker_refact_wrapper(tButtons, gui)
+    -- local function add(label_str, s)
+    --     return label_str .. s
+    -- end
+    --
+    -- local function gutter(first)
+    --     if first == 1 then
+    --         add("| ")
+    --     elseif first == 2 then
+    --         add(" |")
+    --     else
+    --         add(" | ")
+    --     end
+    -- end
+
     local tResults = gui.t_search_results
     for i, cIds in ipairs(tButtons) do
         local b = cIds[1]
@@ -551,13 +565,34 @@ local function entry_maker_refact_wrapper(tButtons, gui)
             local item = tResults[iStart]
             local label_str = ""
 
+            -- NOTE: Check if there is a fallback widhte, then use base default width.
+            -- prioritize if there is a legend definition that specifies everything.
+            --
+            -- Check if the entry maker part is a table...
+
             -- FIX: BREAKING CHANGE -> ALL ENTRY_MAKERS have to accomodate for this.
-            label_str = gui.entry_maker(label_str, item)
+            -- loop table returned from entry maker
+            local t_entry_makers_parts = gui.entry_maker(item)
+
+            -- create first one
+            label_str = label_str .. "| "
+
+            -- label_str = label_str .. table.concat({su.makeStringLength(v,GUI.columns_legend[ei][1]) for ei, v in ipairs(t_entry_makers_parts)}, " | ")
+
+            for ei, entry_def in ipairs(t_entry_makers_parts) do
+                label_str = label_str .. su.makeStringLength(entry_def, GUI.columns_legend[ei][1])
+                if ei < #t_entry_makers_parts then
+                    label_str = label_str .. " | "
+                end
+            end
+
+            label_str = label_str .. " |"
 
             if gui.mult_select_allowed then
                 local is_selected = item.selected and picker_config.symbols.entry_selected or " "
                 label_str = "|" .. is_selected .. label_str
             end
+
             b.label = label_str
             b.visible = true
             info.visible = true
