@@ -693,14 +693,16 @@ end
 --
 function jGui:add_to_current_selection(sel)
     table.insert(self.selection_current, sel)
+  -- This should not be here. It is a temporary fix..
+    UPDATE_RESULTS = true
 end
 
 function jGui:reset_current_selection()
+    log.user("Reset selection. prev was = ", #self.selection_current)
     for _, v in ipairs(self.selection_current) do
         v.selected = nil
     end
     self.selection_current = {}
-    log.user("#SELECTION_CURRENT:", #self.selection_current)
 end
 
 -- picker_selection_history = {

@@ -4,6 +4,7 @@ local format = require("utils.format")
 local tbl = require("utils.table")
 
 local fu = require("utils.fzf")
+local su = require("utils.string")
 
 local sf = require("utils.j_string_functions")
 local settings = require("utils.j_settings_functions")
@@ -194,7 +195,7 @@ end
 local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
     local height = gui.gui_size
     local x_start = 10
-    local y_space = 5
+    local y_space = GUI.gui_spread
     local n_to_remove = 0
 
     log.user(string.format(
@@ -439,10 +440,40 @@ end
 ---user input field.
 ---@param gui any
 local function create_column_legend(gui)
+    local x_start = 10
+    local y_space = GUI.gui_spread
     local height = gui.gui_size
+    local width = gui.width - x_start *2
 
     local accomodate_for_main_input = GUI.gui_size * 1.5
     local extra = 15
+
+    ---------------------------------
+    local label_str = ""
+
+    local function add(s)
+        label_str = label_str .. s
+    end
+
+    local function gutter(first)
+        if first == 1 then
+            add("| ")
+        elseif first == 2 then
+            add(" |")
+        else
+            add(" | ")
+        end
+    end
+
+    gutter(1)
+    gutter(1)
+
+    for i, v in ipairs(gui.columns_legend) do
+        add(su.makeStringLength(v[2], v[1]))
+        gutter()
+    end
+
+    ---------------------------------
 
     -- local ResultsEntryControl = jGuiHighlightControl:new({
     --     title = "results_entry_control",
@@ -460,14 +491,17 @@ local function create_column_legend(gui)
     -- create legend
     local ColumnLegend = jGuiText:new({
         title = "picker_column_legend",
-        width = gui.width,
+        width = width,
         height = height,
-        label_fontsize = math.tointeger((height - 2) / 2 + 3),
-        label = "I am a very long column that will fit just perfect into the picker.",
-        label_align = "r",
+        label_fontsize = height - 2,
+        label_font = "Courier",
+        -- label_fontsize = math.tointeger((height - 2) / 2 + 3),
+        label = label_str,
+        label_align = "l",
         label_valign = "m",
         border = true,
         -- y = ResultsEntryControl.y,
+        x = x_start,
         y = accomodate_for_main_input + extra, --y_start + (i - 1) * (height + y_space),
     })
 
@@ -521,7 +555,8 @@ local function entry_maker_refact_wrapper(tButtons, gui)
             label_str = gui.entry_maker(label_str, item)
 
             if gui.mult_select_allowed then
-                label_str = "|" .. item.selected and picker_config.symbols.entry_selected or " " .. label_str
+                local is_selected = item.selected and picker_config.symbols.entry_selected or " "
+                label_str = "|" .. is_selected .. label_str
             end
             b.label = label_str
             b.visible = true
@@ -576,8 +611,8 @@ local function gui_default_update(self)
         -- TODO: migrate to new entry_maker_refact_wrapper
         --
 
-        -- entry_maker_refact_wrapper(tButtons, self)
-        self.entry_maker(tResultButtons, self.t_search_results)
+        entry_maker_refact_wrapper(tResultButtons, self)
+        -- self.entry_maker(tResultButtons, self.t_search_results)
     end
 end
 
@@ -679,6 +714,8 @@ local function build_picker(opts, on_enter)
         -- log.user(string.format("Option [%s] (%s): %s", k, use_default, opts[k]))
     end
 
+    -- This one should be attached to the jGui object itself.
+    -- Or actually the Picker class object but I haven't impl that yet.
     tResultButtons = {}
 
     opts.on_select_func = require("pickers.selectors.default")(opts.on_select_func)
@@ -745,9 +782,7 @@ local function build_picker(opts, on_enter)
 
     local accomodate_for_main_input = GUI.gui_size * 1.5
     local extra = 15
-    BUTTON_Y_START = accomodate_for_main_input + extra + PICKER_COLUMN_LEGEND_HEIGHT
-
-    log.user("picker build ->", PICKER_COLUMN_LEGEND_HEIGHT)
+    BUTTON_Y_START = accomodate_for_main_input + extra + PICKER_COLUMN_LEGEND_HEIGHT + GUI.gui_spread
 
     -- add methods
     GUI.onResize = gui_default_on_resize
@@ -788,7 +823,7 @@ local function reset_new_picker(opts)
     -- picker view has a column legend or not.
     PICKER_COLUMN_LEGEND_HEIGHT = GUI.column_legend_enabled and GUI.gui_size or 0
     local BUTTON_Y_START_PREV = BUTTON_Y_START
-    BUTTON_Y_START = GUI.gui_size * 1.5 + 15 + PICKER_COLUMN_LEGEND_HEIGHT
+    BUTTON_Y_START = GUI.gui_size * 1.5 + 15 + PICKER_COLUMN_LEGEND_HEIGHT + GUI.gui_spread
     local button_y_diff = BUTTON_Y_START - BUTTON_Y_START_PREV
     if button_y_diff ~= 0 then
         if button_y_diff < 0 then
@@ -801,8 +836,6 @@ local function reset_new_picker(opts)
             v[1].y = v[1].y + button_y_diff
         end
     end
-
-    log.user("picker reset ->", PICKER_COLUMN_LEGEND_HEIGHT)
 
     GUI.on_focus_next = opts.on_focus_next
 
