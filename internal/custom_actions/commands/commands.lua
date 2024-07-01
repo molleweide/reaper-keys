@@ -1588,10 +1588,11 @@ commands.browse_reaper_preferences = function()
       end
     end,
     columns_legend = {
-      { 15, "ast" },
-      { 15, "ast" },
-      { 15, "ast" },
-      { 15, "ast" },
+      { 32, "cat/subcat" },
+      { 16, "key" },
+      { 40, "var name" },
+      { 6, "val" },
+      { 100, "value_string"}
     },
   }, opts))
 end
