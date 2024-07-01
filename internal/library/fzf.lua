@@ -58,10 +58,42 @@ require("gui2.JGui")
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
+-- ALL OF THE BELOW SHOULD GO INTO THE SAME CONFIG TABLE
+-- -> PUT UNDER DEFINITIONS
+
+--
+-- FIX: REQUIRED OPTS
+--
+--  ~ make results func
+--  ~ sorting_func ??
+--  ~ on_select func ??
+--
+local DEFAULT_OPTS = {
+    -- max_results = 50,
+    width = 500,
+    height = 250,
+    x = 400,
+    y = 1400,
+    window_save_state = true,
+    window_dock_state = 0,
+    -- Think of this as the line height of the picker. Increasing this option
+    -- increases the size of all elements in the picker UI.
+    gui_size = 20,
+    -- Elem separation in Y direction
+    gui_spread = 5,
+    meta = {},
+    extended_mappings = nil,
+    next = nil, -- next picker func should default to nil ie close prev picker.
+    calling_command_meta = nil,
+    column_legend_enabled = false,
+}
+
 -- All of these types of symbols etc. should go into a picker default config
 -- file under definitions.
 
 local picker_config = {
+    -- This var is redundant since `GUI.gui_size` determines the "line height".
+    column_legend_height = 50,
     symbols = {
         entry_selected = "x",
         entry_separator = "|",
@@ -92,7 +124,8 @@ fzf.reset_variables = function()
 end
 
 --
--- TODO: jscroll should be moved inside the GUI class
+-- TODO: There should be a Picker class, and the _jscroll func should be a method
+-- on this class.
 --
 
 function _jScroll(amount)
@@ -149,14 +182,26 @@ end
 -- `tResultButtons` table with them.
 --
 
+---Creates the actual button controls responsible for hosting/rendering the
+---data for result entries if there are any. It is called once when
+---initializing the picker and then for every default resize update call.
+---IE. the number of button controls depends on the size of the picker window,
+---and NOT on the number of result entries (entries returned after filtering).
+---@param gui any
+---@param tControls any
+---@param iResultsPerPage any
+---@param y_start any
 local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
     local height = gui.gui_size
     local x_start = 10
-    local y_space = 0
+    local y_space = 5
     local n_to_remove = 0
 
     log.user(string.format(
-        [[[lib.fzf#createResultButtons()]: #tctrl=%s ires=%s ------
+        [[[lib.fzf#createResultButtons()]:
+            #tControls=%s
+            iResultsPerPage=%s
+            ------
 	-- NEW_PICKER_VIEW=%s
 	-----------------------------------------------
 	]],
@@ -167,6 +212,7 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
 
     -- TODO: NEW_PICKER_VIEW_attached_mappings ??
 
+    -- Loop the largest of actual controls and number of current results.
     for i = 1, math.max(#tControls, iResultsPerPage) do
         if i > #tControls and i <= iResultsPerPage then
             -- log.user("entered buttons attach mappings")
@@ -296,6 +342,8 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
         end
     end
 
+    -- TEST: Can i remove this??
+    -- Is this even doing anything??
     for i = 1, n_to_remove do
         table.remove(tControls, #tControls)
     end
@@ -307,6 +355,10 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
     -- log.user("# tControls after creation:", #tControls)
 end
 
+---Create the main text input field for the picker
+---@param gui any
+---@param on_enter any
+---@return unknown
 local function gui_create_main_text_box(gui, on_enter)
     local text_input = jGuiTextInput:new({
         title = "main_input",
@@ -364,6 +416,12 @@ local function gui_create_main_text_box(gui, on_enter)
     return textBox
 end
 
+-- TODO: types here.
+
+---Creates the (selected/outOfTotalEntries) UI element so that user can keep
+---track of how many entries are showing at the moment.
+---@param gui any
+---@return unknown
 local function create_control_label_stats(gui)
     local ls = jGuiControl:new({
         width = 50,
@@ -377,15 +435,52 @@ local function create_control_label_stats(gui)
     return LABEL_STATS
 end
 
---
--- NOTE: gui default funcs
---
+---Create the column legend positionned above the results entries and below the
+---user input field.
+---@param gui any
+local function create_column_legend(gui)
+    local height = gui.gui_size
 
+    local accomodate_for_main_input = GUI.gui_size * 1.5
+    local extra = 15
+
+    -- local ResultsEntryControl = jGuiHighlightControl:new({
+    --     title = "results_entry_control",
+    --     height = height,
+    --     label_fontsize = height - 2,
+    --     label_align = "l",
+    --     label_font = "Courier",
+    --     border = false,
+    --     focus_index = i + 1, --gui:getFocusIndex()
+    --     border_focus = true,
+    --     x = x_start,
+    --     y = y_start + (i - 1) * (height + y_space),
+    -- })
+
+    -- create legend
+    local ColumnLegend = jGuiText:new({
+        title = "picker_column_legend",
+        width = gui.width,
+        height = height,
+        label_fontsize = math.tointeger((height - 2) / 2 + 3),
+        label = "I am a very long column that will fit just perfect into the picker.",
+        label_align = "r",
+        label_valign = "m",
+        border = true,
+        -- y = ResultsEntryControl.y,
+        y = accomodate_for_main_input + extra, --y_start + (i - 1) * (height + y_space),
+    })
+
+    return ColumnLegend
+end
+
+---comment
+---@param self any
 local function gui_default_on_resize(self)
-    log.user("GUI_DEFAULT_ON_RESIZE")
+    log.user("GUI_DEFAULT_ON_RESIZE", "button y start ==", BUTTON_Y_START, "self = type,real ->", GUI.title)
     textBox.width = self.width - 20
-    LABEL_STATS.x = GUI.width - LABEL_STATS.width - 12
-    local buttonsSpaceH = GUI.height - BUTTON_Y_START - 4
+    LABEL_STATS.x = self.width - LABEL_STATS.width - 12
+    local buttonsSpaceH = self.height - BUTTON_Y_START - 4
 
     -- NOTE: this is where the results list is created.
     -- Doesn't it make sense to add these types of option to the
@@ -395,11 +490,15 @@ local function gui_default_on_resize(self)
     RESULTS_PER_PAGE = math.tointeger(buttonsSpaceH // self.gui_size)
 
     -- msg(buttonsSpaceN)
-    createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, BUTTON_Y_START)
+    createResultButtons(self, tResultButtons, RESULTS_PER_PAGE, BUTTON_Y_START)
     UPDATE_RESULTS = true
     self:controlInitAll()
 end
 
+---Handler of rendering each picker entry. This function takes care of applying
+---or overriding defaults, and then applies custom displays.
+---@param tButtons any: table of control buttons
+---@param gui any: The picker gui object itself, which hosts the search results table.
 local function entry_maker_refact_wrapper(tButtons, gui)
     local tResults = gui.t_search_results
     for i, cIds in ipairs(tButtons) do
@@ -435,6 +534,9 @@ local function entry_maker_refact_wrapper(tButtons, gui)
     end
 end
 
+---Function for handling GUI updating. Called on every loop UI loop iteration
+---but only applies an update if checks are passed.
+---@param self any
 local function gui_default_update(self)
     log.debug("fzf.gui_default_update -> A. entered", UPDATE_RESULTS, NEW_PICKER_VIEW)
 
@@ -483,6 +585,9 @@ end
 -- means that i have to handle these variables differently. outside
 -- of the load plugins data func, and then pass them into the func.
 
+---Logic called upon exiting the picker. If picker has a custom exit callback it will be
+---ran here.
+---@param self any
 local function gui_default_on_exit(self)
     -- log.user("GUI ON DEFAULT EXIT")
 
@@ -513,6 +618,10 @@ end
 -- RESOURCES:
 --     reateam > amagalma_Toggle show editing guide line on item under mouse cursor in Main Window or in MIDI Editor.lua
 --
+--
+---Find XY coordinates of cursor. The purpose is to add the feature of having the
+---picker always initiate at position where cursor is/user keeps her eyes.
+---@return unknown
 local function get_xy_intersection()
     local windows = require("library.windows")
     local mtracks = require("library.tracks")
@@ -547,35 +656,13 @@ local function get_xy_intersection()
     return x, y
 end
 
+-- TODO: merge build AND reset into one function
 --
--- NOTE: init picker funcs below
---
-
---
--- FIX: REQUIRED OPTS
---
---  ~ make results func
---  ~ sorting_func ??
---  ~ on_select func ??
---
-
-local DEFAULT_OPTS = {
-    -- max_results = 50,
-    width = 500,
-    height = 250,
-    x = 400,
-    y = 1400,
-    window_save_state = true,
-    window_dock_state = 0,
-    gui_size = 20,
-    meta = {},
-    extended_mappings = nil,
-    next = nil, -- next picker func should default to nil ie close prev picker.
-    calling_command_meta = nil,
-}
-
--- TODO: update master title for every new picker view
-
+---Build picker UI on first initialization. Currently subsequent chained pickers
+---are loaded/reset with the `reset_new_picker()` function.
+---@param opts any
+---@param on_enter any
+---@return boolean
 local function build_picker(opts, on_enter)
     -- FIX: use these for x and y coordinates instead..
     local x, y = get_xy_intersection()
@@ -640,9 +727,27 @@ local function build_picker(opts, on_enter)
     GUI:controlAdd(gui_create_main_text_box(GUI, on_enter))
 
     GUI:controlAdd(create_control_label_stats(GUI))
-    BUTTON_Y_START = GUI.gui_size * 1.5 + 15
+
+    -- why is this commented out here??????
     -- createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, BUTTON_Y_START)
+
     GUI:setFocus(textBox)
+
+    if GUI.column_legend_enabled then
+        -- todo
+        GUI:controlAdd(create_column_legend(GUI))
+    end
+
+    -- Determines where the positioning of the Result Buttons should start on the
+    -- Y axis.
+
+    PICKER_COLUMN_LEGEND_HEIGHT = GUI.column_legend_enabled and GUI.gui_size or 0
+
+    local accomodate_for_main_input = GUI.gui_size * 1.5
+    local extra = 15
+    BUTTON_Y_START = accomodate_for_main_input + extra + PICKER_COLUMN_LEGEND_HEIGHT
+
+    log.user("picker build ->", PICKER_COLUMN_LEGEND_HEIGHT)
 
     -- add methods
     GUI.onResize = gui_default_on_resize
@@ -661,6 +766,8 @@ end
 -- FIX: refactor this into a method onto the jGui class
 --
 
+---Chain reset a picker view onto an already existing / running picker.
+---@param opts any
 local function reset_new_picker(opts)
     GUI:reset_current_selection()
 
@@ -675,6 +782,27 @@ local function reset_new_picker(opts)
     -- GUI.attach_mappings = opts.attach_mappings and opts.attach_mappings(GUI) or nil
     -- ow
     -- log.user("#GUI.attach_mappings", format.block(GUI.attach_mappings))
+
+    -- TODO: refactor into func.
+    -- This logic shifts the button positions to accomodate for if the new
+    -- picker view has a column legend or not.
+    PICKER_COLUMN_LEGEND_HEIGHT = GUI.column_legend_enabled and GUI.gui_size or 0
+    local BUTTON_Y_START_PREV = BUTTON_Y_START
+    BUTTON_Y_START = GUI.gui_size * 1.5 + 15 + PICKER_COLUMN_LEGEND_HEIGHT
+    local button_y_diff = BUTTON_Y_START - BUTTON_Y_START_PREV
+    if button_y_diff ~= 0 then
+        if button_y_diff < 0 then
+            local _, legend = tbl.findIndexOf(GUI.controls, "title", "picker_column_legend")
+            GUI:controlDelete(legend)
+        else
+            GUI:controlAdd(create_column_legend(GUI))
+        end
+        for _, v in ipairs(tResultButtons) do
+            v[1].y = v[1].y + button_y_diff
+        end
+    end
+
+    log.user("picker reset ->", PICKER_COLUMN_LEGEND_HEIGHT)
 
     GUI.on_focus_next = opts.on_focus_next
 
@@ -737,6 +865,7 @@ end
 
 -----
 
+---Function for handling the UI main loop.
 local function loop()
     if GUI:loop() then
         reaper.defer(loop)
@@ -745,6 +874,9 @@ local function loop()
     end
 end
 
+---Entry point for initializing a new picker UI window.
+---@param opts any
+---@param onenter any
 fzf.init = function(opts, onenter)
     log.debug(" ----- fzf.init()", opts.title, "-----")
 

@@ -2,7 +2,6 @@ local log = require("utils.log")
 local format = require("utils.format")
 
 local su = require("utils.string")
-
 local fu = require("utils.fzf")
 local sf = require("utils.j_string_functions")
 
