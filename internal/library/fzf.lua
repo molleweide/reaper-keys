@@ -449,6 +449,8 @@ local function create_column_legend(gui)
     local extra = 15
 
     ---------------------------------
+    -- I can replace all this code with the same pattern used in entry maker
+    -- wrapper.
     local label_str = ""
 
     local function add(s)
@@ -534,20 +536,6 @@ end
 ---@param tButtons any: table of control buttons
 ---@param gui any: The picker gui object itself, which hosts the search results table.
 local function entry_maker_refact_wrapper(tButtons, gui)
-    -- local function add(label_str, s)
-    --     return label_str .. s
-    -- end
-    --
-    -- local function gutter(first)
-    --     if first == 1 then
-    --         add("| ")
-    --     elseif first == 2 then
-    --         add(" |")
-    --     else
-    --         add(" | ")
-    --     end
-    -- end
-
     local tResults = gui.t_search_results
     for i, cIds in ipairs(tButtons) do
         local b = cIds[1]
@@ -560,33 +548,45 @@ local function entry_maker_refact_wrapper(tButtons, gui)
         else
             showing = #tResults
         end
+
+        -- why is label stats here??
         LABEL_STATS.label = "(" .. showing .. "/" .. #tResults .. ")"
+
         if tResults and iStart <= #tResults then
             local item = tResults[iStart]
             local label_str = ""
 
             -- NOTE: Check if there is a fallback widhte, then use base default width.
-            -- prioritize if there is a legend definition that specifies everything.
-            --
-            -- Check if the entry maker part is a table...
 
             -- FIX: BREAKING CHANGE -> ALL ENTRY_MAKERS have to accomodate for this.
             -- loop table returned from entry maker
             local t_entry_makers_parts = gui.entry_maker(item)
 
-            -- create first one
-            label_str = label_str .. "| "
-
-            -- label_str = label_str .. table.concat({su.makeStringLength(v,GUI.columns_legend[ei][1]) for ei, v in ipairs(t_entry_makers_parts)}, " | ")
-
+            local columns = {}
             for ei, entry_def in ipairs(t_entry_makers_parts) do
-                label_str = label_str .. su.makeStringLength(entry_def, GUI.columns_legend[ei][1])
-                if ei < #t_entry_makers_parts then
-                    label_str = label_str .. " | "
-                end
-            end
+                -- NOTE: would using multiple require creating a new text object for
+                -- every custom color segment i want?
+                -- Yes ->>> i think so but that is not a big deal. i just have to
+                -- do it a little bit later.
 
-            label_str = label_str .. " |"
+                local entry_width
+                local str_part
+
+                if type(entry_def) == "table" then
+                    str_part = entry_def[1]
+                    entry_width = entry_def[2]
+                else
+                    str_part = entry_def
+                    entry_width = 25 -- base fallback
+                end
+
+                if GUI.columns_legend then
+                    entry_width = GUI.columns_legend[ei][1]
+                end
+
+                columns[ei] = su.makeStringLength(str_part, entry_width)
+            end
+            label_str = label_str .. "| " .. table.concat(columns, " | ") .. " |"
 
             if gui.mult_select_allowed then
                 local is_selected = item.selected and picker_config.symbols.entry_selected or " "
