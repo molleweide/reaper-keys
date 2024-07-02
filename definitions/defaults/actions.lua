@@ -841,7 +841,7 @@ return {
   NudgeTrackVolumeDown = 40116,   -- 0.05 dB
   PlayAndSkipTimeSelection = 40317,
 
-  RouteUpdate = commands.routing_user_string,
+  Prompt_route_string = commands.routing_user_string,
   RouteLogSelection = lib.routing.logRoutingInfoForSelectedTracks,
   RouteRemove = lib.routing.remove,
   RouteRemoveAllSends = lib.routing.removeAllSends,

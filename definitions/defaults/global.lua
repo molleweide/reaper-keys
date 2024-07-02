@@ -438,7 +438,7 @@ return {
             ["x"] = {
               "+routing",
               {
-                ["x"] = "RouteUpdate",
+                ["x"] = "Prompt_route_string",
                 ["f"] = "OpenRoutingUI",
                 ["q"] = "RouteRemoveAllSends",
                 ["Q"] = "RouteRemoveAllRecieves",

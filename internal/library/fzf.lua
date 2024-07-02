@@ -87,6 +87,8 @@ local DEFAULT_OPTS = {
     next = nil, -- next picker func should default to nil ie close prev picker.
     calling_command_meta = nil,
     column_legend_enabled = false,
+  previewer1 = false,
+  previewer2 = false
 }
 
 -- All of these types of symbols etc. should go into a picker default config
@@ -555,26 +557,11 @@ local function entry_maker_refact_wrapper(tButtons, gui)
         if tResults and iStart <= #tResults then
             local item = tResults[iStart]
             local label_str = ""
-
-            -- NOTE: Check if there is a fallback widhte, then use base default width.
-
-            -- FIX: BREAKING CHANGE -> ALL ENTRY_MAKERS have to accomodate for this.
-            -- loop table returned from entry maker
-      log.user("ITEM", format.block(item))
             local t_entry_makers_parts = gui.entry_maker(item)
-
-      log.user("??????",t_entry_makers_parts)
-
             local columns = {}
             for ei, entry_def in ipairs(t_entry_makers_parts) do
-                -- NOTE: would using multiple require creating a new text object for
-                -- every custom color segment i want?
-                -- Yes ->>> i think so but that is not a big deal. i just have to
-                -- do it a little bit later.
-
                 local entry_width
                 local str_part
-
                 if type(entry_def) == "table" then
                     str_part = entry_def[1]
                     entry_width = entry_def[2]
@@ -582,11 +569,9 @@ local function entry_maker_refact_wrapper(tButtons, gui)
                     str_part = entry_def
                     entry_width = 25 -- base fallback
                 end
-
                 if GUI.columns_legend then
                     entry_width = GUI.columns_legend[ei][1]
                 end
-
                 columns[ei] = su.makeStringLength(str_part, entry_width)
             end
             label_str = label_str .. "| " .. table.concat(columns, " | ") .. " |"
