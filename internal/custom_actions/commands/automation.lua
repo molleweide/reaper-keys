@@ -734,7 +734,10 @@ automation_actions.picker_insert_cc_curve = function()
             end,
             results_filter = "name",
             sort_comp = "name",
-            entry_maker = "name",
+      -- FIX: move this to defaults
+            entry_maker = function(item)
+                return { item.name }
+            end,
         })
     end
 

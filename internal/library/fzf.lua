@@ -560,7 +560,10 @@ local function entry_maker_refact_wrapper(tButtons, gui)
 
             -- FIX: BREAKING CHANGE -> ALL ENTRY_MAKERS have to accomodate for this.
             -- loop table returned from entry maker
+      log.user("ITEM", format.block(item))
             local t_entry_makers_parts = gui.entry_maker(item)
+
+      log.user("??????",t_entry_makers_parts)
 
             local columns = {}
             for ei, entry_def in ipairs(t_entry_makers_parts) do
