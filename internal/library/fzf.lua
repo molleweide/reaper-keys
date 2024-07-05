@@ -194,7 +194,7 @@ end
 ---@param y_start any
 local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
     local height = gui.gui_size
-    local x_start = 10
+    local x_start = MID_LEFT + 10
     local y_space = GUI.gui_spread
     local n_to_remove = 0
 
@@ -338,7 +338,8 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
         if i <= #tControls and i <= iResultsPerPage then
             local b = tControls[i][1]
             local ResultsEntryInfo = tControls[i][2]
-            b.width = gui.width - 20
+            b.width = WIDTH_MID - 20
+            -- b.width = gui.width - 20
             ResultsEntryInfo.x = 10 + b.width - ResultsEntryInfo.width
         end
     end
@@ -361,9 +362,10 @@ end
 ---@param on_enter any
 ---@return unknown
 local function gui_create_main_text_box(gui, on_enter)
+    local x_start = MID_LEFT
     local text_input = jGuiTextInput:new({
         title = "main_input",
-        x = 10,
+        x = x_start + 10,
         y = 10,
         width = 480,
         height = math.tointeger(gui.gui_size * 1.5),
@@ -384,8 +386,8 @@ local function gui_create_main_text_box(gui, on_enter)
 
             -- event on each key press updaters
             if gui.context_helpers then
-                for _, v in ipairs(gui.context_helpers.on_key_press) do
-                    if type(v.func) == "function" then
+                for _, v in ipairs(gui.context_helpers.all) do
+                    if type(v.func) == "function" and v.on_key_press then
                         v.func(gui, lastSearch)
                     end
                 end
@@ -444,9 +446,11 @@ end
 ---@param gui any
 ---@return unknown
 local function create_control_label_stats(gui)
+    -- local x_start = MID_LEFT
+
     local ls = jGuiControl:new({
         width = 50,
-        x = gui.width - 11, --ls.width - 12,
+        x = MID_RIGHT - 11, -- gui.width - 11, --ls.width - 12,
         y = 10,
         label_fontsize = math.tointeger(gui.gui_size * 0.75),
         label_align = "r",
@@ -460,10 +464,10 @@ end
 ---user input field.
 ---@param gui any
 local function create_column_legend(gui)
-    local x_start = 10
+    local x_start = MID_LEFT + 10
     local y_space = GUI.gui_spread
     local height = gui.gui_size
-    local width = gui.width - x_start * 2
+    local width = WIDTH_MID - x_start * 2
 
     local accomodate_for_main_input = GUI.gui_size * 1.5
     local extra = 15
@@ -534,8 +538,8 @@ end
 ---@param self any
 local function gui_default_on_resize(self)
     log.user("GUI_DEFAULT_ON_RESIZE", "button y start ==", BUTTON_Y_START, "self = type,real ->", GUI.title)
-    textBox.width = self.width - 20
-    LABEL_STATS.x = self.width - LABEL_STATS.width - 12
+    textBox.width = WIDTH_MID - 20
+    LABEL_STATS.x = WIDTH_MID - LABEL_STATS.width - 12
     local buttonsSpaceH = self.height - BUTTON_Y_START - 4
 
     -- NOTE: this is where the results list is created.
@@ -647,10 +651,12 @@ local function gui_default_update(self)
             lastSearch = textBox.value
 
             -- if #self.context_helpers.on_focus_change > 0 then
-            for _, v in ipairs(self.context_helpers.on_focus_change) do
-                local on_enter_sel = self:get_on_enter_selection()
-                if type(v.func) == "function" and on_enter_sel ~= nil then
-                    v.func(self, lastSearch, on_enter_sel)
+            if self.context_helpers then
+                for _, v in ipairs(self.context_helpers.all) do
+                    local on_enter_sel = self:get_on_enter_selection()
+                    if type(v.func) == "function" and v.on_focus_change and on_enter_sel ~= nil then
+                        v.func(self, lastSearch, on_enter_sel)
+                    end
                 end
             end
             -- end
@@ -710,57 +716,84 @@ local function setup_context_helpers(gui, configs)
         on_static = {},
     }
 
-    -- for _, cfg in ipairs(configs) do
-    --   table.insert(gui.context_helpers.all, cfg)
-    -- end
-
     for _, cfg in ipairs(configs) do
-        -- log.user("?>>>",format.block(cfg))
-        if cfg.on_key_press then
-            table.insert(gui.context_helpers.on_key_press, cfg)
-        end
-        if cfg.on_focus_change then
-            table.insert(gui.context_helpers.on_focus_change, cfg)
-        end
-        if cfg.on_static then
-            table.insert(gui.context_helpers.on_static, cfg)
-        end
+        table.insert(gui.context_helpers.all, cfg)
     end
+
+    -- for _, cfg in ipairs(configs) do
+    --     -- log.user("?>>>",format.block(cfg))
+    --     if cfg.on_key_press then
+    --         table.insert(gui.context_helpers.on_key_press, cfg)
+    --     end
+    --     if cfg.on_focus_change then
+    --         table.insert(gui.context_helpers.on_focus_change, cfg)
+    --     end
+    --     if cfg.on_static then
+    --         table.insert(gui.context_helpers.on_static, cfg)
+    --     end
+    -- end
 end
 
+-- TODO: first level -> One row AND three columns, (ie. Left, Main prompt, Right)
+
+-- all of the vars will be contained within gui, so it feels like this should be
+-- a method on the jGui class insead.
+--
 ---Compute the layout grid variables for current picker configuration. So that
 ---can then render child views within this layout.
 ---@param gui any
 local function reset_layout_vars(gui)
-    -- all of the vars will be contained within gui, so it feels like this should be
-    -- a method on the jGui class insead.
-
-    -- TODO: first level -> One row AND three columns, (ie. Left, Main prompt, Right)
-
     -- What if a user supplies two windows with position = "left"??
 
     -- ! The middle width, ie. the prompt window, is the width/height params supplied
     -- in the picker opts.
 
-    gui.layout_grid = { { 0, gui.width } }
+    gui.layout_grid = { { 0, 0, gui.width, gui.width } }
 
-    if #gui.context_helpers.all > 0 then
+    -- NOTE: Because I dont have all in one big table it makes it super
+    -- annoying to do this shit
+
+    if gui.context_helpers then
         for i, v in ipairs(gui.context_helpers.all) do
             if v.position == "left" then
                 for ir, row in ipairs(gui.layout_grid) do
-                    for ic, col in ipairs(row) do
-                        row[ic] = col + v.width
-                    end
-                    table.insert(row, 1, 0)
+                    -- for ic, col in ipairs(row) do
+                    --     row[ic] = col + v.width
+                    -- end
+                    row[2] = v.width
+                    row[3] = row[2] + row[3]
                 end
             end
+
+            -- for ir, row in ipairs(gui.layout_grid) do
+            --     if v.position == "left" then
+            --         for ic, col in ipairs(row) do
+            --             row[ic] = col + v.width
+            --         end
+            --     end
+            --     table.insert(row, 1, 0)
+            -- end
+
+            -- for ir, row in ipairs(gui.layout_grid) do
+            --     table.insert(row, 1, 0)
+            -- end
+
             if v.position == "right" then
                 for ir, row in ipairs(gui.layout_grid) do
-                    table.insert(row, row[#row] + v.width)
+                    -- table.insert(row, row[#row] + v.width)
+                    row[4] = row[3] + v.width
                 end
             end
         end
     end
+
+    EDGE_LEFT = gui.layout_grid[1][1]
+    MID_LEFT = gui.layout_grid[1][2]
+    MID_RIGHT = gui.layout_grid[1][3]
+    EDGE_RIGHT = gui.layout_grid[1][4]
+
+    WIDTH_MID = MID_RIGHT - MID_LEFT
+    WIDTH_TOTAL = EDGE_RIGHT
 end
 
 -- RESOURCES:
@@ -852,7 +885,8 @@ local function build_picker(opts, on_enter)
 
     -- layout vars can only be computed after context helpers check
     reset_layout_vars(GUI)
-    log.user("PICKER LAYOUT: \n", format.block(GUI.layout_grid))
+    log.user("PICKER LAYOUT: \n", format.block(GUI.layout_grid), "\ntotal width =", WIDTH_TOTAL)
+    GUI.width = WIDTH_TOTAL
 
     if type(GUI.attach_mappings) == "function" then
         GUI.attach_mappings = GUI.attach_mappings(GUI)
@@ -948,7 +982,7 @@ local function reset_new_picker(opts)
     -- log.user("#GUI.attach_mappings", format.block(GUI.attach_mappings))
 
     -- clean up
-    if #GUI.context_helpers.all > 0 then
+    if GUI.context_helpers then
         GUI.context_helpers = nil
     end
     if opts.context_helpers then

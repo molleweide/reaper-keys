@@ -429,9 +429,11 @@ commands.MIDI_picker_tracks_edit_existing_items_at_cursor = function() end
 
 commands.routing_user_string = function()
     log.clear()
-  log.user("ROUTING USER STRING PROMPT")
+    log.user("ROUTING USER STRING PROMPT")
     pickers.basic_prompt({
         title = "Do route string, eg. [todo example]",
+        x = 500,
+        width = 500,
         callback = function(prompt_string)
             -- route.updateState(prompt_string)
             -- return true
@@ -445,7 +447,7 @@ commands.routing_user_string = function()
             {
                 on_key_press = true,
                 position = "left",
-                width = "100",
+                width = "200",
                 func = function(gui, prompt_str)
                     -- 1. dry run string
                     -- 2. get sources and dests
@@ -1579,7 +1581,7 @@ commands.browse_reaper_preferences = function()
     fzf.init(tbl.deep_extend({
         title = "Reaper preferences",
         x = -100,
-        width = 1800,
+        width = 1300,
         height = 700,
         results = preferences.picker_friendly(),
         results_filter = function(t_results_data, sPattern, iMaxResults)
