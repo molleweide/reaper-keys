@@ -428,60 +428,78 @@ end
 commands.MIDI_picker_tracks_edit_existing_items_at_cursor = function() end
 
 commands.routing_user_string = function()
+    log.clear()
+  log.user("ROUTING USER STRING PROMPT")
     pickers.basic_prompt({
         title = "Do route string, eg. [todo example]",
         callback = function(prompt_string)
-            route.updateState(prompt_string)
+            -- route.updateState(prompt_string)
+            -- return true
+            log.user("!!! working on routing prompt previewers -> dry running only..")
             return true
         end,
         -- TODO: previewers.
         --
         -- 1. Config table -> passed to make_previewer function
         -- 2. Return the previewer_func that is run for each loop update.
-        previewer1 = {
-      --
-      -- TODO: Basic outline of how this can be achieved with proper creation
-      -- and clean up between and after.
-      -- > HOW SHOULD THE PREVIEWERS BE STORED??
-      --      >> Im thinking in a table called previewers.
-      --      >>> This allows for running them all at once.
-      -- > ON SETUP PUT
-      --      >> previewers firing on each key in a sub array
-      --      >>                   on new entry focus in array
-      --      >>>>>> so that they can be run in a loop indepentendly.
-      -- > ON INIT
-      --      >> Check if there are previewers
-      --      >>> Run make_previewer funcs
-      --      >>>> Put them in their previewer.<type> arrays
-      -- > on reset
-      --      >> remove previous previewers and cleanup
-      -- > IN J_KEYBOARD FILE
-      --      >> on each key check for existence of previewers.on_key_press
-      -- > IN ON_NEXT_FOCUS
-      --      >> if #previewers.on_new_focus then call func(entry )
-      --      --
-      -- > If I use "new" windows for previewers, how do i ensure that they're
-      --      removed/cleaned up when cycling pickers OR exiting.
-      -- > Add key showing = boolean to the main gui object.
-      --      >> Also, do this with jgui.column.showig = boolean
-      --
-            -- > Re run for each if
-            -- >> if input ~= GUI.prev_preview.string
+        context_helpers = {
+            {
+                --
+                -- TODO: Basic outline of how this can be achieved with proper creation
+                -- and clean up between and after.
+                -- > HOW SHOULD THE PREVIEWERS BE STORED??
+                --      >> Im thinking in a table called previewers.
+                --      >>> This allows for running them all at once.
+                -- > ON SETUP PUT (started..)
+                --      >> previewers firing on each key in a sub array
+                --      >>                   on new entry focus in array
+                --      >>>>>> so that they can be run in a loop indepentendly.
+                -- > ON INIT (started..)
+                --      >> Check if there are previewers
+                --      >>> Run make_previewer funcs
+                --      >>>> Put them in their previewer.<type> arrays
+                -- > on reset (started..)
+                --      >> remove previous previewers and cleanup
+                -- > IN J_KEYBOARD FILE (todo..)
+                --      >> on each key check for existence of previewers.on_key_press
+                -- > IN ON_NEXT_FOCUS (todo..)
+                --      >> if #previewers.on_new_focus then call func(entry )
+                --      --
+                -- > If I use "new" windows for previewers, how do i ensure that they're
+                --      removed/cleaned up when cycling pickers OR exiting.
+                -- > Add key showing = boolean to the main gui object.
+                --      >> Also, do this with jgui.column.showig = boolean
+                --
+                --  NOTE: It is the easiest to just use a preview diff variable, and
+                --      then compute everything in the jGui window.
+                --      Then just have picker LEFT, RIGHT, BELOW, ABOVE.
+                --      Create my own little stupid layout system.
+                --
+                --
+                -- > Re run for each if
+                -- >> if input ~= GUI.prev_preview.string
 
-            on_key_press = true,
-            position = "left",
-            func = function(input)
-                -- 1. dry run string
-                -- 2. get sources and dests
-                -- 3.
-                -- return table of lines that should be printed to the previewer.
-            end,
-        },
-        --
-        previewer2 = {
-            on_key_press = true,
-            position = "right",
-            func = function(input) end,
+                on_key_press = true,
+                position = "left",
+                width = "100",
+                func = function(gui, prompt_str)
+                    -- 1. dry run string
+                    -- 2. get sources and dests
+                    -- 3.
+                    -- return table of lines that should be printed to the previewer.
+                    local _, main_input = tbl.findIndexOf(GUI.controls, "title", "main_input")
+                    log.user("`on_key_press` [LEFT] previewer func -> ", prompt_str)
+                end,
+            },
+            {
+                on_focus_change = true,
+                position = "right",
+                width = "200",
+                func = function(gui)
+                    local _, main_input = tbl.findIndexOf(gui.controls, "title", "main_input")
+                    log.user("main input from `on_focus_change` [RIGHT] previewer func")
+                end,
+            },
         },
     })
 end
@@ -1642,6 +1660,17 @@ commands.browse_reaper_preferences = function()
             { 40, "var name" },
             { 6, "val" },
             { 100, "value_string" },
+        },
+        context_helpers = {
+            {
+                on_focus_change = true,
+                position = "right",
+                width = "200",
+                func = function(gui)
+                    local _, main_input = tbl.findIndexOf(gui.controls, "title", "main_input")
+                    log.user("main input from `on_focus_change` [RIGHT] previewer func")
+                end,
+            },
         },
     }, opts))
 end
