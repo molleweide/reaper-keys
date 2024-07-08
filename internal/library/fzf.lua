@@ -386,9 +386,10 @@ local function gui_create_main_text_box(gui, on_enter)
 
             -- event on each key press updaters
             if gui.context_helpers then
-                for _, v in ipairs(gui.context_helpers.all) do
-                    if type(v.func) == "function" and v.on_key_press then
-                        v.func(gui, lastSearch)
+                for _, xh in ipairs(gui.context_helpers.all) do
+                    if type(xh.func) == "function" and xh.on_key_press then
+                        local elem = gui.context_helpers.elements[xh.position]
+                        xh.func(gui, textBox.value, elem)
                     end
                 end
 
@@ -530,6 +531,8 @@ local function create_column_legend(gui)
         x = x_start,
         y = accomodate_for_main_input + extra, --y_start + (i - 1) * (height + y_space),
     })
+
+    -- TODO: gui:
 
     return ColumnLegend
 end
@@ -706,7 +709,9 @@ local function gui_default_on_exit(self)
     end
 end
 
-local function render_context_helper(gui) end
+local function render_context_helper(gui)
+    -- CONTEXT_HELPERS =
+end
 
 local function setup_context_helpers(gui, configs)
     gui.context_helpers = {
@@ -732,6 +737,75 @@ local function setup_context_helpers(gui, configs)
     --         table.insert(gui.context_helpers.on_static, cfg)
     --     end
     -- end
+end
+
+local function render_context_helpers(gui)
+    gui.context_helpers.elements = {}
+
+    -- gui.context_helpers = {
+    --     all = {},
+    -- }
+
+    -- Create text field for each xh table.
+    --
+    -- The update functions have to target the correct textfields.
+    --
+    -- Attach context helper UI Elements Windows by a specific key in `gui.context_helpers.elements = {<key>}`
+    -- I could:
+    -- 1. Attach the updater functions in a table by the key of the id by which
+    -- the UI elements are stored in jGui, ie.
+    -- gui.context_helpers.elements = {key = elem}
+    -- gui.context_helpers.observers = {key = func}
+    --
+    -- The same key has to be used -> So that I can super quickly iterate over
+    -- and update stuff without having to incur multiple ipair loops for each
+    -- key press. only one single pairs() over like max 10 elems
+    --
+    -- They key to use is the positioning arg of each context window.
+    --
+    --
+    -- !!! The fuzzy picker ui controls are added with :controlAdd but these
+    -- new context windows dont need to be written in that manner.
+
+    local font_size = gui.gui_size *1.1 /2 -- 2
+
+    for _, xh in ipairs(gui.context_helpers.all) do
+        log.user(format.block(xh))
+
+        local x_start
+        local y_start = 10
+        local width = xh.width
+        local height = gui.height
+
+        if xh.position == "left" then
+            x_start = EDGE_LEFT
+        end
+
+        if xh.position == "right" then
+            x_start = MID_RIGHT
+            -- height = 100
+        end
+
+        local ctxh = jGuiText:new({
+            title = "ctxh_" .. xh.position,
+            width = width - 2 * 10,
+            height = height - 2 * 10,
+            x = x_start + 10,
+            y = y_start,
+            label_fontsize = font_size,
+            label_align = "l",
+            label_valign = "m",
+            border = true,
+        })
+
+        gui:controlAdd(ctxh)
+        gui.context_helpers.elements[xh.position] = ctxh
+    end
+
+    -- TODO: modify this and see if i can make a larger text field with a custom
+    -- color background.
+
+    -- TODO: gui:controlAdd(column)
 end
 
 -- TODO: first level -> One row AND three columns, (ie. Left, Main prompt, Right)
@@ -881,10 +955,11 @@ local function build_picker(opts, on_enter)
     if opts.context_helpers then
         setup_context_helpers(GUI, opts.context_helpers)
     end
-    log.user("CTXH ->", format.block(GUI.context_helpers))
+    -- log.user("CTXH ->", format.block(GUI.context_helpers))
 
     -- layout vars can only be computed after context helpers check
     reset_layout_vars(GUI)
+
     log.user("PICKER LAYOUT: \n", format.block(GUI.layout_grid), "\ntotal width =", WIDTH_TOTAL)
     GUI.width = WIDTH_TOTAL
 
@@ -945,6 +1020,9 @@ local function build_picker(opts, on_enter)
     local accomodate_for_main_input = GUI.gui_size * 1.5
     local extra = 15
     BUTTON_Y_START = accomodate_for_main_input + extra + PICKER_COLUMN_LEGEND_HEIGHT + GUI.gui_spread
+
+    -- create context helpers
+    render_context_helpers(GUI)
 
     -- add methods
     GUI.onResize = gui_default_on_resize

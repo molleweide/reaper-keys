@@ -430,39 +430,47 @@ commands.MIDI_picker_tracks_edit_existing_items_at_cursor = function() end
 commands.routing_user_string = function()
     log.clear()
     log.user("ROUTING USER STRING PROMPT")
+
+
+  -- TODO: This snippet computes the screen dimensions
+    local retval, left, top, right, bottom = reaper.JS_Window_GetClientRect(reaper.GetMainHwnd())
+    local monitor_left, monitor_top, monitor_right, monitor_bottom =
+        reaper.my_getViewport(0, 0, 0, 0, left, top, right, bottom, false)
+  local width = monitor_right - monitor_left
+    log.user(monitor_left, monitor_top, monitor_right, monitor_bottom, width)
+
+
     pickers.basic_prompt({
         title = "Do route string, eg. [todo example]",
-        x = 500,
-        width = 500,
+        x = -177,
+        height = 1000,
+        width = 700,
         callback = function(prompt_string)
             -- route.updateState(prompt_string)
             -- return true
             log.user("!!! working on routing prompt previewers -> dry running only..")
         end,
-        -- TODO: previewers.
-        --
         -- 1. Config table -> passed to make_previewer function
         -- 2. Return the previewer_func that is run for each loop update.
         context_helpers = {
             {
                 on_key_press = true,
                 position = "left",
-                width = "200",
-                func = function(gui, prompt_str)
-                    -- 1. dry run string
-                    -- 2. get sources and dests
-                    -- 3.
-                    -- return table of lines that should be printed to the previewer.
-                    log.user("`Left previewer func; -> ", prompt_str)
+                width = "600",
+                func = function(gui, prompt_str, elem)
+                    local rc = route.updateState(prompt_str, false, false, true)
+                    -- log.user("`L CXH: `"..prompt_str.."`-> `", #rc.src_guids, "`\n", format.block(rc.src_guids))
+                    elem.label = format.block(rc)
                 end,
             },
             {
                 on_key_press = true,
                 position = "right",
-                width = "200",
-                func = function(gui)
-                    local _, main_input = tbl.findIndexOf(gui.controls, "title", "main_input")
-                    log.user("Right previewer func")
+                width = "600",
+                func = function(gui, prompt_str, elem)
+                    -- log.user("Right previewer func")
+                    local rc = route.updateState(prompt_str, false, false, true)
+                    elem.label = format.block(rc)
                 end,
             },
         },
@@ -1631,6 +1639,7 @@ commands.browse_reaper_preferences = function()
                 on_focus_change = true,
                 position = "right",
                 width = "200",
+                -- TODO: show alternatives
                 func = function(gui, prompt_str, on_ente_sel)
                     log.user("previewer -> entry (type) =", type(on_ente_sel))
                 end,

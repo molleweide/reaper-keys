@@ -49,7 +49,7 @@ local div = "\n##########################################\n\n"
 --      - mute
 --      - flip phase
 
-function routing.updateState(route_str, coded_sources, coded_dests)
+function routing.updateState(route_str, coded_sources, coded_dests, dry_run)
     -- log.clear()
 
     -- get default route configs
@@ -64,13 +64,13 @@ function routing.updateState(route_str, coded_sources, coded_dests)
     --  This is really wierd. Anyways, luckilly it works by setting it here
     t_route_opts.remove_routes = false -- ??
 
-    log.user("!!!!!!!!", route_str)
+    -- log.user("!!!!!!!!", route_str)
 
     -- route_str is passed explicitly to the function if
     -- you are embeddig this function. If nil, then user
     -- will be prompted to input a string manually.
     -- kind of like command mode in vim.
-    if route_str == nil then
+    if route_str == nil or not dry_run then
         t_route_opts.user_input = true
         _, route_str = reaper.GetUserInputs("ENTER ROUTE STRING:", 1, route_help_str, input_placeholder)
         if not _ then
@@ -89,6 +89,8 @@ function routing.updateState(route_str, coded_sources, coded_dests)
         return
     end -- something went wrong
 
+  -- log.user("# >", format.block(t_route_opts))
+
     -- embedded targets. overwrits targets comming from
     -- route string.
     -- targets can be one of
@@ -105,25 +107,28 @@ function routing.updateState(route_str, coded_sources, coded_dests)
         ret, t_route_opts = rlib_targets.setRouteTargetGuids(t_route_opts, "dst_guids", coded_dests)
     end
 
-    -- execute and update route state. Either remove routes,
-    -- add new, or add new routes with confirmation.
-    --
-    -- TODO
-    --
-    -- update action type (add/rm/log)
-    -- if t_route_opts.action_next == "log" >> log...
-    -- elseif t_route_opts.action_next == "rm"
-    -- elseif t_route_opts.action_next == "add"
-    if t_route_opts.remove_routes then
-        rlib.handleRemoval(t_route_opts)
-    elseif not t_route_opts.user_input then
-        -- NOTE: this means that we called api
-        rlib.targetLoop(t_route_opts)
-    elseif rlib.confirmRouteCreation(t_route_opts) then
-        rlib.targetLoop(t_route_opts)
-    else
-        log.debug("<ROUTE COMMAND ABORTED>")
+    if not dry_run then
+        -- execute and update route state. Either remove routes,
+        -- add new, or add new routes with confirmation.
+        --
+        -- TODO
+        --
+        -- update action type (add/rm/log)
+        -- if t_route_opts.action_next == "log" >> log...
+        -- elseif t_route_opts.action_next == "rm"
+        -- elseif t_route_opts.action_next == "add"
+        if t_route_opts.remove_routes then
+            rlib.handleRemoval(t_route_opts)
+        elseif not t_route_opts.user_input then
+            -- NOTE: this means that we called api
+            rlib.targetLoop(t_route_opts)
+        elseif rlib.confirmRouteCreation(t_route_opts) then
+            rlib.targetLoop(t_route_opts)
+        else
+            log.debug("<ROUTE COMMAND ABORTED>")
+        end
     end
+    return t_route_opts
 end
 
 -- TODO rename to trackRouteOfType(????)

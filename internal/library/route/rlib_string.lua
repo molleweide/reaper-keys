@@ -130,10 +130,17 @@ end
 
 rlib_string.ensure_src_dst_nodes = function(t_route_opts, str, src_tr_data, dst_tr_data)
   local ret
-  ret, src_tr_data, dst_tr_data, str = str_util.extract_parenthesis(str) -- extractParenthesisTargets(str)
+
+  -- log.user("???:", format.block(src_tr_data), format.block(dst_tr_data))
+
+  -- ret, src_tr_data, dst_tr_data, str = str_util.extract_parenthesis(str) -- extractParenthesisTargets(str)
+
+
+
   -- Ensure source nodes
   if src_tr_data ~= nil then
     local src_tr_split = str_util.getStringSplitPattern(src_tr_data, USER_INPUT_TARGETS_DIV)
+
     ret, t_route_opts = rlib_targets.setRouteTargetGuids(t_route_opts, "src_guids", src_tr_split)
   elseif r.isSel() then
     -- defaults to setting selected tracks as `sources` to pull from if no
@@ -148,6 +155,7 @@ rlib_string.ensure_src_dst_nodes = function(t_route_opts, str, src_tr_data, dst_
   -- Ensure dest nodes.
   if dst_tr_data ~= nil then
     local dst_tr_split = str_util.getStringSplitPattern(dst_tr_data, USER_INPUT_TARGETS_DIV)
+    -- log.user("dst_tr_split:", format.block(dst_tr_split))
     ret, t_route_opts = rlib_targets.setRouteTargetGuids(t_route_opts, "dst_guids", dst_tr_split)
   end
   return ret
@@ -182,6 +190,9 @@ function rlib_string.extractParamsFromString(t_route_opts, str)
   end
 
   local ret, src_tr_data, dst_tr_data, str = str_util.extract_parenthesis(str) -- extractParenthesisTargets(str)
+
+  -- log.user("src/dst:",src_tr_data, dst_tr_data)
+
   rlib_string.ensure_src_dst_nodes(t_route_opts, str, src_tr_data, dst_tr_data)
 
   -- what is b ??

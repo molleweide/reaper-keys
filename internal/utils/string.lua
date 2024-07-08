@@ -1,3 +1,6 @@
+local log = require("utils.log")
+local format = require("utils.format")
+
 local string_util = {}
 
 -- return string split by pattern
@@ -7,6 +10,7 @@ function string_util.getStringSplitPattern(pString, pPattern)
   local fpat = "(.-)" .. pPattern
   local last_end = 1
   local s, e, cap = pString:find(fpat, 1)
+  log.user(pString:match(fpat))
   while s do
     if s ~= 1 or cap ~= "" then
       table.insert(Table, cap)
@@ -81,6 +85,7 @@ string_util.extract_parenthesis = function(str)
       break
     end
   end
+
   str = string_util.remove_brackets_of_type(str, "()")
   return retval, pSrc, pDest, str
 end

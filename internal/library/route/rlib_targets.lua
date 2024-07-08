@@ -17,6 +17,8 @@ function targets.setRouteTargetGuids(rp, key, new_tracks_data)
 	local log_str = "new_tracks_data >>> "
 	local tr_guids = {}
 
+	-- log.user("ROUTE: setRouteTargetGuids", format.block(new_tracks_data))
+
 	if type(new_tracks_data) == "string" then -- NOT TABLE ::::::::::::::
 		-- single name str
 		if r.getMatchedTrackGUIDs(new_tracks_data) then
