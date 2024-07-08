@@ -736,7 +736,7 @@ end
 -- ->> I should probably redo this so that I never have to think about this
 -- manual wrapping with { ... }.
 function jGui:get_on_enter_selection()
-    log.user(string.format("#tres = %s, lastidx = %s", #self.t_search_results, self:get_last_selection_idx()))
+    -- log.user(string.format("#tres = %s, lastidx = %s", #self.t_search_results, self:get_last_selection_idx()))
     return self.t_search_results[self:get_last_selection_idx()]
 end
 

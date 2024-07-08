@@ -431,19 +431,17 @@ commands.routing_user_string = function()
     log.clear()
     log.user("ROUTING USER STRING PROMPT")
 
-
-  -- TODO: This snippet computes the screen dimensions
+    -- TODO: This snippet computes the screen dimensions
     local retval, left, top, right, bottom = reaper.JS_Window_GetClientRect(reaper.GetMainHwnd())
     local monitor_left, monitor_top, monitor_right, monitor_bottom =
         reaper.my_getViewport(0, 0, 0, 0, left, top, right, bottom, false)
-  local width = monitor_right - monitor_left
+    local width = monitor_right - monitor_left
     log.user(monitor_left, monitor_top, monitor_right, monitor_bottom, width)
-
 
     pickers.basic_prompt({
         title = "Do route string, eg. [todo example]",
         x = -177,
-        height = 1000,
+        height = 700,
         width = 700,
         callback = function(prompt_string)
             -- route.updateState(prompt_string)
@@ -456,21 +454,33 @@ commands.routing_user_string = function()
             {
                 on_key_press = true,
                 position = "left",
-                width = "600",
+                width = "500",
                 func = function(gui, prompt_str, elem)
                     local rc = route.updateState(prompt_str, false, false, true)
-                    -- log.user("`L CXH: `"..prompt_str.."`-> `", #rc.src_guids, "`\n", format.block(rc.src_guids))
-                    elem.label = format.block(rc)
+                    -- log.user("`L CXH: `" .. prompt_str .. "`-> `", format.block(rc.new_params))
+
+                    local str = ""
+
+                    str = str .. string.format("-- %s -----------------------\n", "SRC GUIDS")
+
+                    if #rc.src_guids > 0 then
+                        for i, s in ipairs(rc.src_guids) do
+                            str = str .. "    " .. s.name .. "\n"
+                        end
+                    end
+
+                    elem.label = str --format.block(rc)
                 end,
             },
             {
                 on_key_press = true,
                 position = "right",
-                width = "600",
+                width = "500",
                 func = function(gui, prompt_str, elem)
-                    -- log.user("Right previewer func")
                     local rc = route.updateState(prompt_str, false, false, true)
-                    elem.label = format.block(rc)
+
+                    -- log.user(prompt_str, ">>", format.block(rc.dst_guids))
+                    elem.label = format.block(rc.dst_guids)
                 end,
             },
         },

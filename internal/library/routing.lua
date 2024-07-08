@@ -4,6 +4,8 @@ local format = require("utils.format")
 local rc = require("definitions.routing")
 local df = rc.default_params
 
+local tbl = require("utils.table")
+
 local rlib = require("library.route.rlib")
 local rlib_log = require("library.route.rlib_log")
 local rlib_targets = require("library.route.rlib_targets")
@@ -53,7 +55,8 @@ function routing.updateState(route_str, coded_sources, coded_dests, dry_run)
     -- log.clear()
 
     -- get default route configs
-    local t_route_opts = rc
+
+    local t_route_opts = tbl.copy(rc)
     local _
 
     -- TODO: attach route_str to t_route_opts
