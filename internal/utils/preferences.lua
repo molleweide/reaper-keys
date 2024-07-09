@@ -861,6 +861,540 @@ p.envlanes = {}
 -- Stored in reaper.ini under the same name in the section REAPER.
 p.griddot = {}
 
+
+-- ^ griddot
+-- Show dotted grid lines-checkbox, as set in Preferences -> Appearance
+-- It is an integer, preferences variable.
+--
+-- >0, don't show dotted grid-line(off) - unchecked
+-- >1, don't show dotted grid-line(on) - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ gridinbg
+-- Grid line Z order-dropdownlist, as set in Preferences -> Appearance
+-- It is an integer, preferences variable.
+--
+-- >0, Over items
+-- >1, Through items
+-- >2, Under items
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ gridinbg2
+-- Marker line Z order-dropdownlist, as set in Preferences -> Appearance
+-- It is an integer, preferences variable.
+--
+-- >0, Over items
+-- >1, Through items
+-- >2, Under items
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+
+-- ^ guidelines2
+-- Show guide lines when editing-checkbox, as set in Preferences -> Appearance
+-- It is an integer, preferences variable.
+--
+-- >0, don't show guide lines(off) - unchecked
+-- >1, show guide lines(on) - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ itemvolmode
+-- Item volume control-dropdownlist, as set in Preferences -> Media
+-- This is not(!) located in Preferences -> Appearance-Media!
+-- When setting &16384 of config variable itemicons, you can set knob-representation
+-- It is an integer, preferences variable.
+--
+-- >0, Handle: +0dB is top of item
+-- >1, Handle: +0dB is center of item
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ maxitemlanes
+-- Maximum number of lanes, when showing overlapping items in lanes-inputbox, as set in Preferences -> Appearance
+-- It is an integer, preferences variable.
+--
+-- >1 to 2147483647; in lanes
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ nativedrawtext
+-- Faster text rendering (reduces antialiasing)-checkbox, as set in Preferences -> Appearance
+-- It is an integer, preferences variable.
+--
+-- >0, Faster text rendering(on) - checked
+-- >1, don't use faster text rendering(off) - unchecked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ peaks_minheight
+-- The minimum height-inputbox as set in Preferences -> Appearance -> Peaks/Waveforms.
+-- It is an integer, preferences variable.
+--
+--   >0 to 999 pixels
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ playcursormode
+-- Play cursor width-inputbox, as set in Preferences -> Appearance
+-- It is an integer, preferences variable.
+--
+-- >1 to 2147483647; in pixels
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ rulerlabelspacing
+-- Ruler label spacing-slider, as set in Preferences -> Appearance
+-- It is an integer, preferences variable.
+--
+-- >0 to 100
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ rulerlayout
+-- The ruler layout-settings, as set in the Ruler layout-section of the Ruler context-menu as well as in Preferences -> Appearance and
+-- with actions in the actions-dialog
+-- It is an integer-bitfield, preferences variable.
+--
+-- Can be affected by the following actions:
+--   Ruler: Display project regions in lanes
+--   Ruler: Display project markers in lanes
+--   Ruler: Display tempo and time signature changes in separate lanes (when size permits)
+--   Ruler: Display tempo changes
+--   Ruler: Display time signature changes
+--   Ruler: Display project regions/markers as gridlines in arrange view
+--   Ruler: Display time signature changes as gridlines in arrange view
+--   Ruler: Display region number even if region is named
+--   Ruler: Display region number/name when region edge is not visible
+--
+-- >&1=0, Display project regions in lanes(on) - checked
+-- >&1=1, Display project regions in lanes(off) - unchecked
+--
+-- >&2=0, Display project markers in lanes(on) - checked
+-- >&2=1, Display project markers in lanes(off) - unchecked
+--
+-- >&4=0, Display tempo and time signature changes in separate lanes(off) - unchecked
+-- >&4=1, Display tempo and time signature changes in separate lanes(on) - checked
+--
+-- >&8=0, Display tempo changes(on) - checked
+-- >&8=1, Display tempo changes(off) - unchecked
+--
+-- >&16=0, Display time signature changes(on) - checked
+-- >&16=1, Display time signature changes(off) - unchecked
+--
+-- >&32=0, Show project regions/markers in grid(Preferences -> Appearance)(action 42328) (state on) - checked
+-- >&32=1, Show project regions/markers in grid(Preferences -> Appearance)(action 42328) (state off) - unchecked
+--
+-- >&64=0, Show time signature changes in grid(Preferences -> Appearance) (action 42329) (state on) - checked
+-- >&64=1, Show time signature changes in grid(Preferences -> Appearance) (action 42329) (state off) - unchecked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+
+
+
+-- ^ showlastundo
+-- Show last undo point in menu bar-checkbox, as set in Preferences -> Appearance
+-- It is an integer, preferences variable.
+--
+-- >0, don't show last undo point(off) - unchecked
+-- >1, show last undo point(on) - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ showpeaksbuild
+-- The Show status window-checkbox, as set in Preferences -> Media
+-- This is not(!) located in Preferences -> Appearance-Media!
+-- It is an integer, preferences variable.
+--
+-- >0, don't show peaks build status
+-- >1, show peaks build status window
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ textflags
+-- Draw vertical text bottom-up-checkbox, as set in Preferences -> Appearance
+-- It is an integer
+--
+-- >0, don't draw vertical text bottom-up(off) - unchecked
+-- >1, don't draw vertical text bottom-up(on) - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ timeseledge
+-- Solid edge-settings, as set in Preferences -> Appearance
+-- It is an integer-bitfield
+--
+-- >&1=0, Solid edge on time selection highlight(off) - unchecked
+-- >&1=1, Solid edge on time selection highlight(on) - checked
+--
+-- >&2=0, Solid edge in loop selection(off) - unchecked
+-- >&2=1, Solid edge in loop selection(on) - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ tooltipdelay
+-- Tooltip delay-slider in Preferences -> Appearance
+-- The variable is updated, when dragging the slider, but the reaper.ini-entry is only updated when hitting apply or ok!
+-- It is an integer, preferences variable.
+--
+-- >200 to 1000; probably milliseconds
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ tooltips
+-- Several settings about tooltips, as set in Preferences -> Appearance
+-- It is an integer-bitfield, preferences variable.
+--
+-- >&1=0, Tooltips for items/envelopes(on) - checked
+-- >&1=1, Tooltips for items/envelopes(off) - unchecked
+--
+-- >&2=0, Tooltips for UI elements(on) - checked
+-- >&2=1, Tooltips for UI elements(off) - unchecked
+--
+-- >&4=0, Envelope tooltips on hover(on) - checked
+-- >&4=1, Envelope tooltips on hover(off) - unchecked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ trackgapmax
+-- Visual track spacer size-inputbox, as set in Preferences -> Appearance
+-- It is an integer, preferences variable.
+--
+-- >0-2147483647
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ trackitemgap
+-- Pixels between items on adjacent tracks-inputbox, as set in Preferences -> Appearance
+-- It is an integer, preferences variable.
+--
+-- >0 to 2147483647; in pixels; higher values become negative
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ vgrid
+-- Divide arrange view vertically every-checkbox AND inpubox, as set in Preferences -> Appearance
+-- It is an integer-bitfield, preferences variable.
+--
+-- Can be affected by the following actions:
+--   Grid: Divide arrange view vertically by measures
+--
+-- >0, zoom dependent
+-- >1 to 4095; measures
+--
+-- >&4096=0, checkbox(off) - unchecked
+-- >&4096=1, checkbox(on) - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ applyfxtail
+-- Tail length when using Apply FX to items in milliseconds, as set in Preferences -> Media
+-- This is not(!) located in Preferences -> Appearance-Media!
+-- The accompanying entry in the reaper.ini is always config-var-setting+1.
+-- It is an integer
+--
+-- >0 to 2147483647; higher values become negative
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ copyimpmedia
+-- Some checkboxes in the Media Settings-section, as set in Preferences -> Media
+-- This is not(!) located in Preferences -> Appearance-Media!
+-- It is an integer-bitfield, preferences variable.
+--
+-- Can be affected by the following actions:
+--   Options: When importing, copy imported media to project media directory
+--
+-- >&1=0, Copy imported media to project media directory - unchecked
+-- >&1=1, Copy imported media to project media directory - checked
+--
+-- >&2=0, Automatically name unnamed tracks on media import - checked
+-- >&2=1, Automatically name unnamed tracks on media import - unchecked
+--
+-- >&4=0, Removing trailing numbers - checked
+-- >&4=1, Removing trailing numbers - unchecked
+--
+-- >&8=0, Allow drag-import to insert tracks - unchecked
+-- >&8=1, Allow drag-import to insert tracks - checked
+--
+-- >&16=0, Also copy media when pasting into project - unchecked
+-- >&16=1, Also copy media when pasting into project - unchecked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ allstereopairs
+-- Show non-standard stereo channel pairs(i.e Input2/Input3 etc)-checkbox in the Channel naming/mapping-section, as set in Preferences -> Audio
+-- It is an integer, Preferences setting
+--
+-- >0, don't show non standard stereo channel pairs(off) - unchecked
+-- >1, show non standard stereo channel pairs(on) - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ audiocloseinactive
+-- Several settings regarding closing audio-devices, as set in Preferences -> Audio
+-- It's an integer-bitfield, preferences variable.
+--
+-- >&1=0, Close audio device when stopped and application is inactive(off) - unchecked
+-- >&1=1, Close audio device when stopped and application is inactive(on) - checked
+--
+-- >&2=0, Close audio device when inactive and tracks are record armed(off) - unchecked
+-- >&2=1, Close audio device when inactive and tracks are record armed(on) - checked
+--
+-- >&4=0, Close audio device when inactive and ReWire devices are open(off) - unchecked
+-- >&4=1, Close audio device when inactive and ReWire devices are open(on) - checked
+--
+-- >&8=0, Close control surface device when stopped and not active applications, as set in Preferences -> Control/OSC/web, unchecked
+-- >&8=1, Close control surface device when stopped and not active applications, as set in Preferences -> Control/OSC/web, checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ audioclosestop
+-- Close audio device when stopped and active(less responsive)-checkbox, as set in Preferences -> Audio
+-- It's an integer, preferences variable.
+--
+-- >0, don't close audio when stopped - unchecked
+-- >1, close audio device when stopped - checked
+--
+-- Stored in reaper.ini under the same in the section REAPER.
+
+-- ^ errnowarn
+-- Several error-messages, that shall be shown, as set in several dialogs, as well as in Preferences -> Audio and in Preferences -> Recording and Preferences -> Track/Send Defaults
+-- It's an integer-bitfield, preferences variable.
+--
+-- >&1=0, Warn when unable to open audio devices(Preferences -> Audio)(on) - checked
+-- >&1=1, Warn when unable to open audio devices(Preferences -> Audio)(off) - unchecked
+--
+-- >&2=0, MIDI devices-checkbox(Preferences -> Audio)(on) - checked
+-- >&2=1, MIDI devices-checkbox(Preferences -> Audio)(off) - unchecked
+--
+-- >&4=0, Warn when errors opening surface MIDI devices(Preferences -> Control/OSC/web) - unchecked
+-- >&4=1, Warn when errors opening surface MIDI devices(Preferences -> Control/OSC/web) - checked
+--
+-- >&8=0, Warn when recording without tracks armed(Prompt)(Prevent recording from starting when no tracks armed)(off) - unchecked
+-- >&8=1, Warn when recording without tracks armed(Prompt)(Prevent recording from starting when no tracks armed)(on) - checked
+--
+-- >&16=0, Warn when changing volume envelope scaling will change envelope sound(Preferences -> Track/Send Defaults)(on) - checked
+-- >&16=1, Warn when changing volume envelope scaling will change envelope sound(Preferences -> Track/Send Defaults)(off) - unchecked
+--
+-- >&32=0, Warn when enabled MIDI devices are not present - checked
+-- >&32=1, Warn when enabled MIDI devices are not present - unchecked
+--
+-- >&4096=0, Stop processing audio while warning of failed disk writes/disk full - unchecked
+-- >&4096=1, Stop processing audio while warning of failed disk writes/disk full - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+
+
+-- ^ hwfadex
+-- Tiny-fade-checkboxes, as set in Preferences -> Audio
+-- It is an integer-bitfield, preferences variable.
+--
+-- >&1=0, Tiny fade out on playback stop(off) - unchecked
+-- >&1=1, Tiny fade out on playback stop(on) - checked
+--
+-- >&2=0, Tiny fade out on playback stop(off) - unchecked
+-- >&2=1, Tiny fade in on playback start(on) - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ metronome_defout
+-- Default metronome output-dropdownlist in the Channel naming/mapping-section, as set in Preferences -> Audio
+-- The track-number; set &1024=1 additional to select only mono-channels
+-- It is an integer-bitfield, preferences variable.
+--
+-- >-1, Use all project master outs
+-- >0 to 62, stereo pairs channel 1/2 to 63/64(maybe higher possible?)
+-- >1024 to 1087, channel 1 to 64(maybe higher possible?)
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ optimizesilence
+-- Reduce CPU use of silent tracks during playback (experimental)-checkbox, as set in Preferences -> Audio  as well as
+-- Disable FX auto-bypass when using offline render/apply FX/render stems-checkbox, as set in Preferences -> Rendering
+-- It is an integer, preferences variable.
+--
+-- >&1=0, Reduce CPU use of silent tracks during playback (experimental)-checkbox - unchecked
+-- >&1=1, Reduce CPU use of silent tracks during playback (experimental)-checkbox - checked
+--
+-- >&4=0, Auto-bypass FX (when set via project or manual setting) even when FX configuration is open-checkbox - unchecked
+-- >&4=1, Auto-bypass FX (when set via project or manual setting) even when FX configuration is open-checkbox - checked
+--
+-- >&8=0, Disable FX auto-bypass when using offline render/apply FX/render stems-checkbox - unchecked
+-- >&8=1, Disable FX auto-bypass when using offline render/apply FX/render stems-checkbox - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ useinnc
+-- The Input/Output-channel name aliasing-checkboxes in the section Channel naming/mapping  as set in Preferences -> Audio
+-- It is an integer-bitfield, preferences variable.
+--
+-- >&1=0, Input channel name aliasing/remapping-checkbox(off) - unchecked
+-- >&1=1, Input channel name aliasing/remapping-checkbox(on) - checked
+--
+-- >&2=0, Input channel name aliasing/remapping-checkbox(off) - unchecked
+-- >&2=1, Input channel name aliasing/remapping-checkbox(on) - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ autoreturntime
+-- Automation recording return speed-inputbox, as set in Preferences -> Automation
+-- It is given in seconds.
+-- It is a double-float preferences variable.
+--
+-- >0 to 100000000000000.00000000; higher values are possible but produce weird values stored.
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ autoreturntime_action
+-- Automation transition time-inputbox, as set in Preferences -> Automation
+-- It is given in seconds.
+-- It is a double-float preferences variable.
+--
+-- >0 to 100000000000000.00000000; higher values are possible but produce weird values stored.
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ env_autoadd
+-- Several settings from the Automation-section, as set in Preferences -> Automation.
+-- It is an integer-bitfield, preferences variable.
+--
+-- >&1=0, Automatically add envelopes when tweaking parameters in automation write modes(off) - unchecked
+-- >&1=1, Automatically add envelopes when tweaking parameters in automation write modes(on) - checked
+--
+-- >&2=0, Hidden envelopes: Display read automation feedback(on) - checked
+-- >&2=1, Hidden envelopes: Display read automation feedback(off) - unchecked
+--
+-- >&4=0, Hidden envelopes: Allow writing automation(off) - unchecked
+-- >&4=1, Hidden envelopes: Allow writing automation(on) - checked
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ env_options
+-- Several settings from the Automation-section, as set in Preferences -> Automation as well as the Envelope Manager-context menu.
+-- It is an integer-bitfield, preferences variable.
+--
+-- >&1=0, Reset latch state when looping(on) - checked
+-- >&1=1, Reset latch state when looping(off) - unchecked
+--
+-- >&2=0, Default: All FX parameters expanded
+-- >&2=1, Default: All FX parameters collapsed
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ envtrimadjmode
+-- When adding volume/pan envelopes, apply trim to envelope and reset trim-dropdownlist from the Automation-section, as set in Preferences -> Automation.
+-- It is an integer-bitfield, preferences variable.
+--
+-- >&1 and &2, the dropdownlist
+--
+--   >> 0 0, Always
+--   >> 1 0, In read/write
+--   >> 0 1, Never
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ envwritepasschg
+-- When adding volume/pan envelopes, apply trim to envelope and reset trim-dropdownlist from the Automation-section, as set in Preferences -> Automation.
+-- It is an integer, preferences variable.
+--
+-- >0, Switch to trim/read mode
+-- >1, Switch to read mode
+-- >2, Switch to touch mode
+-- >3, Remain in write mode
+-- >4, Switch to latch mode
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ pooledenvtranstime
+-- Default edge transition time for new automation items ms(max 200)-inputbox, as set in Preferences -> Automation -> Automation items
+-- It is a double, preferences variable.
+--
+--   0 to 200(though higher values can be set)
+--
+-- Stored in reaper.ini under the same name in the section REAPER, but with higher precision.
+
+-- ^ autosavebackuplimit
+-- Limit auto-saved backups to most recent-inputbox, as set in Preferences -> Backups
+-- It is an integer, preferences variable.
+--
+-- >0 - 2147483647 days
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+-- ^ autosaveint
+-- Auto-save interval-inputbox from the Auto save-section, as set in Preferences -> Backups.
+-- It is an integer preferences variable.
+--
+-- >0 to 2147483647; in seconds; higher values become negative
+--
+-- Stored in reaper.ini under the same name in the section REAPER.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 --
 -- PREFERENCES -> APPAERANCE-MEDIA
 --
