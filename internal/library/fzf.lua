@@ -52,7 +52,12 @@ local DEFAULT_OPTS = {
     height = 250,
     x = 400,
     y = 1400,
-    window_save_state = true,
+
+  -- fix: (deprecated) This option has to be removed because now that the picker is
+  -- general purpose, this means that we cannot expect a `saved` state to
+  -- make sense.
+    -- window_save_state = true,
+
     window_dock_state = 0,
     -- Think of this as the line height of the picker. Increasing this option
     -- increases the size of all elements in the picker UI.
@@ -666,24 +671,23 @@ local function gui_default_on_exit(self)
         -- because func is not created inside jGui, i need to pass self..
         self.onExitUserCallback(self)
     end
-    if self.window_save_state then
-        local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
-        local dockstr = string.format("%d", dockstate)
 
-        -- TODO: is this a good location for this??..
-        --
-        -- maybe i should have custom save state for each picker by name/key?
 
-        if self.env then
-            settings.jSettingsWriteToFileMultiple(self.env.SETTINGS_INI_FILE, {
-                { "gui", "window_x", math.tointeger(wx) },
-                { "gui", "window_y", math.tointeger(wy) },
-                { "gui", "window_width", math.tointeger(ww) },
-                { "gui", "window_height", math.tointeger(wh) },
-                { "gui", "window_dock_state", dockstr },
-            }, true)
-        end
-    end
+  -- FIX: this should be moved to the picker definition for `add_fx`
+  -- NOTE: What happens: if save state -> write names to picker settings file.
+    -- if self.window_save_state then
+    --     local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
+    --     local dockstr = string.format("%d", dockstate)
+    --     if self.env then
+    --         settings.jSettingsWriteToFileMultiple(self.env.SETTINGS_INI_FILE, {
+    --             { "gui", "window_x", math.tointeger(wx) },
+    --             { "gui", "window_y", math.tointeger(wy) },
+    --             { "gui", "window_width", math.tointeger(ww) },
+    --             { "gui", "window_height", math.tointeger(wh) },
+    --             { "gui", "window_dock_state", dockstr },
+    --         }, true)
+    --     end
+    -- end
 end
 
 local function render_context_helper(gui)

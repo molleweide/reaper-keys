@@ -3,7 +3,7 @@
 -- SEND
 --
 
-JSend = {}
+local JSend = {}
 JSend.mt = {}
 JSend.prototype = {iSend = false, category = 0, _parent = false}
 
@@ -13,6 +13,9 @@ function JSend:new(o)
     return o
 end
 
+---
+---
+---
 JSend.mt.__index = function (self, key)
     if TRACK_SEND_GET_INFO_VALUES[key] ~= nil then
         if not self.iSend then
@@ -32,6 +35,9 @@ JSend.mt.__index = function (self, key)
 
 end
 
+---
+---
+---
 JSend.mt.__newindex = function (self, key, value)
     if TRACK_SEND_SET_INFO_VALUES[key] ~= nil then
         if not self.iSend then
@@ -47,14 +53,23 @@ JSend.mt.__newindex = function (self, key, value)
 	end
 end
 
+---
+---
+---
 function JSend.prototype:getTrack() -- Returns the track the send belongs to
 	return self._parent -- This used to return self._partent.pTrack but its better if it just returns the track instead of the pTrack
 end
 
+---
+---
+---
 function JSend.prototype:getDestTrack()
 	return JTrack:new(reaper.BR_GetMediaTrackSendInfo_Track(self:getTrack():getReaperTrack(), 0, self.iSend, 1))
 end
 
+---
+---
+---
 function JSend.prototype:delete()
 	local r = reaper.RemoveTrackSend(self:getTrack():getReaperTrack(), self.category, self.iSend)
 	if not r then
@@ -63,3 +78,4 @@ function JSend.prototype:delete()
 	return r
 end
 
+return JSend

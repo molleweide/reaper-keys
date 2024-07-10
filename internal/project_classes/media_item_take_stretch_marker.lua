@@ -2,7 +2,7 @@
 -- MEDIA ITEM TAKE STRETCH MARKER
 --
 
-JStretchMarker = {}
+local JStretchMarker = {}
 JStretchMarker.prototype = {iStretchMarker = false, pos = false, srcpos = false, _parentTake = false}
 JStretchMarker.mt = {}
 
@@ -55,3 +55,4 @@ end
 ]]
 
 
+return JStretchMarker

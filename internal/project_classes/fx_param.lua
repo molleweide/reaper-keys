@@ -40,4 +40,4 @@ function JParam.prototype:setNormalized(value)
 	return reaper.TrackFX_SetParamNormalized(self:getTrack():getReaperTrack(), self:getFx(), self.iParam, value)
 end
 
-
+return JParam

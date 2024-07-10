@@ -5,6 +5,16 @@ local fzfutils = require("utils.fzf")
 
 local settings = require("utils.j_settings_functions")
 
+local home = os.getenv("HOME")
+local definitions_dir = "/reaper/packages/reaper-keys/definitions"
+
+-- move this to definitions dir
+local RK_FZF_ENV = {
+  SETTINGS_INI_FILE = home .. definitions_dir .. "/fx-finder-settings.ini",
+  SETTINGS_DEFAULT_FILE = home .. definitions_dir .. "/defaults/fx-finder-settings-default.ini",
+  RK_DATA = home .. "/reaper/packages/reaper-keys/data",
+}
+
 
 local data_loaders = {}
 
@@ -61,10 +71,10 @@ function data_loaders.jGetActions()
 end
 
 
-function data_loaders.load_plugins_data(env)
+function data_loaders.load_plugins_data()
 
-	local SETTINGS_INI_FILE = env.SETTINGS_INI_FILE
-	local SETTINGS_DEFAULT_FILE = env.SETTINGS_DEFAULT_FILE
+	local SETTINGS_INI_FILE = RK_FZF_ENV.SETTINGS_INI_FILE
+	local SETTINGS_DEFAULT_FILE = RK_FZF_ENV.SETTINGS_DEFAULT_FILE
 
 	log.user(SETTINGS_INI_FILE, SETTINGS_DEFAULT_FILE)
 
@@ -155,7 +165,7 @@ function data_loaders.load_plugins_data(env)
 		JSFX_INI_FILE = fzfutils._jPath(
 			reaper.GetResourcePath() .. "/" .. settings.jSettingsGet(SETTINGS, "jsfx_ini_file", "string")
 		),
-		DATA_INI_FILE = fzfutils._jPath(env.RK_DATA .. "/" .. settings.jSettingsGet(SETTINGS, "fx_finder_data_file", "string")),
+		DATA_INI_FILE = fzfutils._jPath(RK_FZF_ENV.RK_DATA .. "/" .. settings.jSettingsGet(SETTINGS, "fx_finder_data_file", "string")),
 		PREFER_VST3 = settings.jSettingsGet(SETTINGS, "prefer_vst3", "boolean"),
 		ITEM_SHOW_FLAG = settings.jSettingsGet(SETTINGS, "item_show_flag", "number"),
 		TRACK_SHOW_FLAG = settings.jSettingsGet(SETTINGS, "track_show_flag", "number"),
