@@ -1,8 +1,9 @@
+local JTake = require("project_classes.media_item_take")
 -----------------------------------------------------------------------------
 -- MEDIA ITEM
 --
 
-JItem = {}
+local JItem = {}
 JItem.prototype = {pItem = false}
 JItem.mt = {}
 
@@ -128,4 +129,4 @@ function JItem.prototype:setStateChunk(newChunk)
 	return r
 end
 
-
+return JItem

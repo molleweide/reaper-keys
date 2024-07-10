@@ -3,7 +3,7 @@
 -- This is a Track "class". It can be created by a Project class and is linked to a track in reaper by its MediaTrack pointer.
 --
 
-JTrack = {fx = {}}
+local JTrack = {fx = {}}
 JTrack.prototype = {pTrack = false, _parentProject = false}
 JTrack.mt = {}
 
@@ -417,4 +417,4 @@ function JTrack.prototype:setStateChunk(strIn, bIsUndo)
 	return retval
 end
 
-
+return JTrack

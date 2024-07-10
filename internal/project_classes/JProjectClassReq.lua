@@ -3,8 +3,12 @@
 @version 0.7.0
 @noindex
 --]]
+--
+local M = {}
 
-MEDIA_TRACK_GET_INFO_VALUES = {
+-----------------------------------------------------------------------------
+-- TRACKS
+M.MEDIA_TRACK_GET_INFO_VALUES = {
     mute = "B_MUTE",
     phase = "B_PHASE",
     tracknumber = "IP_TRACKNUMBER",
@@ -43,7 +47,7 @@ MEDIA_TRACK_GET_INFO_VALUES = {
     --F_MCP_SENDRGN_SCALE : float * : scale of send area as proportion of the fx+send total area (0=min allow, 1=max)
 }
 
-MEDIA_TRACK_SET_INFO_VALUES = {
+M.MEDIA_TRACK_SET_INFO_VALUES = {
     mute = "B_MUTE",
     phase = "B_PHASE",
     solo = "I_SOLO",
@@ -79,158 +83,183 @@ MEDIA_TRACK_SET_INFO_VALUES = {
     --"F_MCP_SENDRGN_SCALE",float * : scale of send area as proportion of the fx+send total area (0=min allow, 1=max)
 }
 
-MEDIA_TRACK_GET_SET_INFO_STRINGS = {
+M.MEDIA_TRACK_GET_SET_INFO_STRINGS = {
     name = "P_NAME",
     icon = "P_ICON",
     mcp_layout = "P_MCP_LAYOUT",
-    tcp_layout = "P_TCP_LAYOUT"
+    tcp_layout = "P_TCP_LAYOUT",
 }
 
-MEDIA_ITEM_GET_INFO_VALUES = {
-	mute = 'B_MUTE', -- : bool * to muted state
-	-- B_LOOPSRC : bool * to loop source
-	-- B_ALLTAKESPLAY : bool * to all takes play
-	select = 'B_UISEL', -- : bool * to ui selected
-	-- C_BEATATTACHMODE : char * to one char of beat attached mode, -1=def, 0=time, 1=allbeats, 2=beatsosonly
-	-- C_LOCK : char * to one char of lock flags (&1 is locked, currently)
-	vol = "D_VOL", 				-- : double * of item volume (volume bar)
-	position = "D_POSITION", 	-- : double * of item position (seconds)
-	length = "D_LENGTH", 		-- : double * of item length (seconds)
-	-- D_SNAPOFFSET : double * of item snap offset (seconds)
-	fadeinlen = "D_FADEINLEN", 	-- : double * of item fade in length (manual, seconds)
-	fadeoutlen = "D_FADEOUTLEN",-- : double * of item fade out length (manual, seconds)
-	fadeindir = "D_FADEINDIR",	-- : double * of item fade in curve [-1; 1]
-	fadeoutdir = "D_FADEOUTDIR",-- : double * of item fade out curve [-1; 1]
-	fadeinlen_auto = "D_FADEINLEN_AUTO",-- : double * of item autofade in length (seconds, -1 for no autofade set)
-	fadeoutlen_auto = "D_FADEOUTLEN_AUTO",-- : double * of item autofade out length (seconds, -1 for no autofade set)
-	fadeinshape = "C_FADEINSHAPE", -- : int * to fadein shape, 0=linear, ...
-	fadeoutshape = "C_FADEOUTSHAPE", -- : int * to fadeout shape
-	-- I_GROUPID : int * to group ID (0 = no group)
-	-- I_LASTY : int * to last y position in track (readonly)
-	-- I_LASTH : int * to last height in track (readonly)
-	-- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x100000 (i.e. ColorToNative(r,g,b)|0x100000). If you do not |0x100000, then it will not be used (though will store the color anyway).
-	-- I_CURTAKE : int * to active take
-	number = "IP_ITEMNUMBER", --: int, item number within the track (read-only, returns the item number directly)
-	-- F_FREEMODE_Y : float * to free mode y position (0..1)
-	-- F_FREEMODE_H : float * to free mode height (0..1)
-	track = "P_TRACK" --: MediaTrack * (read only)
+-----------------------------------------------------------------------------
+-- ITEMS
+
+M.MEDIA_ITEM_GET_INFO_VALUES = {
+    mute = "B_MUTE", -- : bool * to muted state
+    -- B_LOOPSRC : bool * to loop source
+    -- B_ALLTAKESPLAY : bool * to all takes play
+    select = "B_UISEL", -- : bool * to ui selected
+    -- C_BEATATTACHMODE : char * to one char of beat attached mode, -1=def, 0=time, 1=allbeats, 2=beatsosonly
+    -- C_LOCK : char * to one char of lock flags (&1 is locked, currently)
+    vol = "D_VOL", -- : double * of item volume (volume bar)
+    position = "D_POSITION", -- : double * of item position (seconds)
+    length = "D_LENGTH", -- : double * of item length (seconds)
+    -- D_SNAPOFFSET : double * of item snap offset (seconds)
+    fadeinlen = "D_FADEINLEN", -- : double * of item fade in length (manual, seconds)
+    fadeoutlen = "D_FADEOUTLEN", -- : double * of item fade out length (manual, seconds)
+    fadeindir = "D_FADEINDIR", -- : double * of item fade in curve [-1; 1]
+    fadeoutdir = "D_FADEOUTDIR", -- : double * of item fade out curve [-1; 1]
+    fadeinlen_auto = "D_FADEINLEN_AUTO", -- : double * of item autofade in length (seconds, -1 for no autofade set)
+    fadeoutlen_auto = "D_FADEOUTLEN_AUTO", -- : double * of item autofade out length (seconds, -1 for no autofade set)
+    fadeinshape = "C_FADEINSHAPE", -- : int * to fadein shape, 0=linear, ...
+    fadeoutshape = "C_FADEOUTSHAPE", -- : int * to fadeout shape
+    -- I_GROUPID : int * to group ID (0 = no group)
+    -- I_LASTY : int * to last y position in track (readonly)
+    -- I_LASTH : int * to last height in track (readonly)
+    -- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x100000 (i.e. ColorToNative(r,g,b)|0x100000). If you do not |0x100000, then it will not be used (though will store the color anyway).
+    -- I_CURTAKE : int * to active take
+    number = "IP_ITEMNUMBER", --: int, item number within the track (read-only, returns the item number directly)
+    -- F_FREEMODE_Y : float * to free mode y position (0..1)
+    -- F_FREEMODE_H : float * to free mode height (0..1)
+    track = "P_TRACK", --: MediaTrack * (read only)
 }
 
-MEDIA_ITEM_SET_INFO_VALUES = {
-	mute = "B_MUTE", -- : bool * to muted state
-	-- B_LOOPSRC : bool * to loop source
-	-- B_ALLTAKESPLAY : bool * to all takes play
-	select = 'B_UISEL', -- : bool * to ui selected
-	-- C_BEATATTACHMODE : char * to one char of beat attached mode, -1=def, 0=time, 1=allbeats, 2=beatsosonly
-	-- C_LOCK : char * to one char of lock flags (&1 is locked, currently)
-	vol = "D_VOL", --: double * of item volume (volume bar)
-	position = "D_POSITION", -- : double * of item position (seconds)
-	length = "D_LENGTH", -- : double * of item length (seconds)
-	-- D_SNAPOFFSET : double * of item snap offset (seconds)
-	fadeinlen = "D_FADEINLEN", 	-- : double * of item fade in length (manual, seconds)
-	fadeoutlen = "D_FADEOUTLEN",-- : double * of item fade out length (manual, seconds)
-	fadeindir = "D_FADEINDIR",	-- : double * of item fade in curve [-1; 1]
-	fadeoutdir = "D_FADEOUTDIR",-- : double * of item fade out curve [-1; 1]
-	fadeinlen_auto = "D_FADEINLEN_AUTO",-- : double * of item autofade in length (seconds, -1 for no autofade set)
-	fadeoutlen_auto = "D_FADEOUTLEN_AUTO",-- : double * of item autofade out length (seconds, -1 for no autofade set)
-	fadeinshape = "C_FADEINSHAPE", -- : int * to fadein shape, 0=linear, ...
-	fadeoutshape = "C_FADEOUTSHAPE", -- : int * to fadeout shape
-	-- I_GROUPID : int * to group ID (0 = no group)
-	-- I_LASTY : int * to last y position in track (readonly)
-	-- I_LASTH : int * to last height in track (readonly)
-	-- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x100000 (i.e. ColorToNative(r,g,b)|0x100000). If you do not |0x100000, then it will not be used (though will store the color anyway).
-	-- I_CURTAKE : int * to active take
-	-- F_FREEMODE_Y : float * to free mode y position (0..1)
-	freemode_h = "F_FREEMODE_H" -- : float * to free mode height (0..1)
+M.MEDIA_ITEM_SET_INFO_VALUES = {
+    mute = "B_MUTE", -- : bool * to muted state
+    -- B_LOOPSRC : bool * to loop source
+    -- B_ALLTAKESPLAY : bool * to all takes play
+    select = "B_UISEL", -- : bool * to ui selected
+    -- C_BEATATTACHMODE : char * to one char of beat attached mode, -1=def, 0=time, 1=allbeats, 2=beatsosonly
+    -- C_LOCK : char * to one char of lock flags (&1 is locked, currently)
+    vol = "D_VOL", --: double * of item volume (volume bar)
+    position = "D_POSITION", -- : double * of item position (seconds)
+    length = "D_LENGTH", -- : double * of item length (seconds)
+    -- D_SNAPOFFSET : double * of item snap offset (seconds)
+    fadeinlen = "D_FADEINLEN", -- : double * of item fade in length (manual, seconds)
+    fadeoutlen = "D_FADEOUTLEN", -- : double * of item fade out length (manual, seconds)
+    fadeindir = "D_FADEINDIR", -- : double * of item fade in curve [-1; 1]
+    fadeoutdir = "D_FADEOUTDIR", -- : double * of item fade out curve [-1; 1]
+    fadeinlen_auto = "D_FADEINLEN_AUTO", -- : double * of item autofade in length (seconds, -1 for no autofade set)
+    fadeoutlen_auto = "D_FADEOUTLEN_AUTO", -- : double * of item autofade out length (seconds, -1 for no autofade set)
+    fadeinshape = "C_FADEINSHAPE", -- : int * to fadein shape, 0=linear, ...
+    fadeoutshape = "C_FADEOUTSHAPE", -- : int * to fadeout shape
+    -- I_GROUPID : int * to group ID (0 = no group)
+    -- I_LASTY : int * to last y position in track (readonly)
+    -- I_LASTH : int * to last height in track (readonly)
+    -- I_CUSTOMCOLOR : int * : custom color, OS dependent color|0x100000 (i.e. ColorToNative(r,g,b)|0x100000). If you do not |0x100000, then it will not be used (though will store the color anyway).
+    -- I_CURTAKE : int * to active take
+    -- F_FREEMODE_Y : float * to free mode y position (0..1)
+    freemode_h = "F_FREEMODE_H", -- : float * to free mode height (0..1)
 }
 
-MEDIA_ITEM_GET_SET_INFO_STRINGS = {
-	notes = "P_NOTES", 	-- : char * : item note text (do not write to returned pointer, use setNewValue to update)
-	guid = "GUID" 		-- : GUID * : 16-byte GUID, can query or update. If using a _String() function, GUID is a string {xyz-...}.
+M.MEDIA_ITEM_GET_SET_INFO_STRINGS = {
+    notes = "P_NOTES", -- : char * : item note text (do not write to returned pointer, use setNewValue to update)
+    guid = "GUID", -- : GUID * : 16-byte GUID, can query or update. If using a _String() function, GUID is a string {xyz-...}.
 }
 
-MEDIA_ITEM_TAKE_GET_INFO_VALUES = {
-	startoffs = "D_STARTOFFS", --: double *, start offset in take of item
-	vol = "D_VOL", --: double *, take volume
-	-- D_PAN : double *, take pan
-	-- D_PANLAW : double *, take pan law (-1.0=default, 0.5=-6dB, 1.0=+0dB, etc)
-	playrate =  "D_PLAYRATE", -- : double *, take playrate (1.0=normal, 2.0=doublespeed, etc)
-	pitch = "D_PITCH", --: double *, take pitch adjust (in semitones, 0.0=normal, +12 = one octave up, etc)
-	-- B_PPITCH, bool *, preserve pitch when changing rate
-	-- I_CHANMODE, int *, channel mode (0=normal, 1=revstereo, 2=downmix, 3=l, 4=r)
-	-- I_PITCHMODE, int *, pitch shifter mode, -1=proj default, otherwise high word=shifter low word = parameter
-	-- I_CUSTOMCOLOR : int *, custom color, OS dependent color|0x100000 (i.e. ColorToNative(r,g,b)|0x100000). If you do not |0x100000, then it will not be used (though will store the color anyway).
-	number = "IP_TAKENUMBER", -- : int, take number within the item (read-only, returns the take number directly)
-	-- P_TRACK : pointer to MediaTrack (read-only)
-	-- P_ITEM : pointer to MediaItem (read-only)
-	-- P_SOURCE : PCM_source *. Note that if setting this, you should first retrieve the old source, set the new, THEN delete the old.
+M.all_item_props = function()
+    local tbl = require("utils.table")
+    local res = {}
+
+    for k, v in pairs(M.MEDIA_ITEM_GET_INFO_VALUES) do
+        res[k] = v
+    end
+    for k, v in pairs(M.MEDIA_ITEM_GET_SET_INFO_STRINGS) do
+        res[k] = v
+    end
+    return res
+end
+
+-----------------------------------------------------------------------------
+-- TAKES
+M.MEDIA_ITEM_TAKE_GET_INFO_VALUES = {
+    startoffs = "D_STARTOFFS", --: double *, start offset in take of item
+    vol = "D_VOL", --: double *, take volume
+    -- D_PAN : double *, take pan
+    -- D_PANLAW : double *, take pan law (-1.0=default, 0.5=-6dB, 1.0=+0dB, etc)
+    playrate = "D_PLAYRATE", -- : double *, take playrate (1.0=normal, 2.0=doublespeed, etc)
+    pitch = "D_PITCH", --: double *, take pitch adjust (in semitones, 0.0=normal, +12 = one octave up, etc)
+    -- B_PPITCH, bool *, preserve pitch when changing rate
+    -- I_CHANMODE, int *, channel mode (0=normal, 1=revstereo, 2=downmix, 3=l, 4=r)
+    -- I_PITCHMODE, int *, pitch shifter mode, -1=proj default, otherwise high word=shifter low word = parameter
+    -- I_CUSTOMCOLOR : int *, custom color, OS dependent color|0x100000 (i.e. ColorToNative(r,g,b)|0x100000). If you do not |0x100000, then it will not be used (though will store the color anyway).
+    number = "IP_TAKENUMBER", -- : int, take number within the item (read-only, returns the take number directly)
+    -- P_TRACK : pointer to MediaTrack (read-only)
+    -- P_ITEM : pointer to MediaItem (read-only)
+    -- P_SOURCE : PCM_source *. Note that if setting this, you should first retrieve the old source, set the new, THEN delete the old.
 }
 
-MEDIA_ITEM_TAKE_SET_INFO_VALUES = {
-	startoffs = "D_STARTOFFS", --: double *, start offset in take of item
-	vol = "D_VOL", --: double *, take volume
-	-- D_PAN : double *, take pan
-	-- D_PANLAW : double *, take pan law (-1.0=default, 0.5=-6dB, 1.0=+0dB, etc)
-	playrate = "D_PLAYRATE", -- : double *, take playrate (1.0=normal, 2.0=doublespeed, etc)
-	pitch = "D_PITCH" --: double *, take pitch adjust (in semitones, 0.0=normal, +12 = one octave up, etc)
-	-- B_PPITCH, bool *, preserve pitch when changing rate
-	-- I_CHANMODE, int *, channel mode (0=normal, 1=revstereo, 2=downmix, 3=l, 4=r)
-	-- I_PITCHMODE, int *, pitch shifter mode, -1=proj default, otherwise high word=shifter low word = parameter
-	-- I_CUSTOMCOLOR : int *, custom color, OS dependent color|0x100000 (i.e. ColorToNative(r,g,b)|0x100000). If you do not |0x100000, then it will not be used (though will store the color anyway).
-	-- IP_TAKENUMBER : int, take number within the item (read-only, returns the take number directly)
+M.MEDIA_ITEM_TAKE_SET_INFO_VALUES = {
+    startoffs = "D_STARTOFFS", --: double *, start offset in take of item
+    vol = "D_VOL", --: double *, take volume
+    -- D_PAN : double *, take pan
+    -- D_PANLAW : double *, take pan law (-1.0=default, 0.5=-6dB, 1.0=+0dB, etc)
+    playrate = "D_PLAYRATE", -- : double *, take playrate (1.0=normal, 2.0=doublespeed, etc)
+    pitch = "D_PITCH", --: double *, take pitch adjust (in semitones, 0.0=normal, +12 = one octave up, etc)
+    -- B_PPITCH, bool *, preserve pitch when changing rate
+    -- I_CHANMODE, int *, channel mode (0=normal, 1=revstereo, 2=downmix, 3=l, 4=r)
+    -- I_PITCHMODE, int *, pitch shifter mode, -1=proj default, otherwise high word=shifter low word = parameter
+    -- I_CUSTOMCOLOR : int *, custom color, OS dependent color|0x100000 (i.e. ColorToNative(r,g,b)|0x100000). If you do not |0x100000, then it will not be used (though will store the color anyway).
+    -- IP_TAKENUMBER : int, take number within the item (read-only, returns the take number directly)
 }
 
-MEDIA_ITEM_TAKE_GET_SET_INFO_STRINGS = {
-	name = "P_NAME", 	-- : char * to take name
-	guid = "GUID" 		-- : GUID * : 16-byte GUID, can query or update. If using a _String() function, GUID is a string {xyz-...}.
+M.MEDIA_ITEM_TAKE_GET_SET_INFO_STRINGS = {
+    name = "P_NAME", -- : char * to take name
+    guid = "GUID", -- : GUID * : 16-byte GUID, can query or update. If using a _String() function, GUID is a string {xyz-...}.
 }
 
-TRACK_SEND_GET_INFO_VALUES = {
-	mute = "B_MUTE", -- : returns bool *
-	phase = "B_PHASE", --: returns bool *, true to flip phase
-	mono = "B_MONO", --: returns bool *
-	vol = "D_VOL", -- : returns double *, 1.0 = +0dB etc
-	pan = "D_PAN", --: returns double *, -1..+1
-	panlaw = "D_PANLAW", --: returns double *,1.0=+0.0db, 0.5=-6dB, -1.0 = projdef etc
-	sendmode = "I_SENDMODE", --: returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
-	automode = "I_AUTOMODE", --: returns int * : automation mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
-	srcchan = "I_SRCCHAN", --: returns int *, index,&1024=mono, -1 for none
-	dstchan = "I_DSTCHAN", --: returns int *, index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
-	midiflags = "I_MIDIFLAGS", --: returns int *, low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chanP_DESTTRACK : read only, returns MediaTrack *, destination track, only applies for sends/recvs
-	srctrack = "P_SRCTRACK", --: read only, returns MediaTrack *, source track, only applies for sends/recvs
-	env = "P_ENV" -- : read only, returns TrackEnvelope *, setNewValue=<VOLENV, <PANENV, etc
+-----------------------------------------------------------------------------
+-- SENDS
 
+M.TRACK_SEND_GET_INFO_VALUES = {
+    mute = "B_MUTE", -- : returns bool *
+    phase = "B_PHASE", --: returns bool *, true to flip phase
+    mono = "B_MONO", --: returns bool *
+    vol = "D_VOL", -- : returns double *, 1.0 = +0dB etc
+    pan = "D_PAN", --: returns double *, -1..+1
+    panlaw = "D_PANLAW", --: returns double *,1.0=+0.0db, 0.5=-6dB, -1.0 = projdef etc
+    sendmode = "I_SENDMODE", --: returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
+    automode = "I_AUTOMODE", --: returns int * : automation mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
+    srcchan = "I_SRCCHAN", --: returns int *, index,&1024=mono, -1 for none
+    dstchan = "I_DSTCHAN", --: returns int *, index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
+    midiflags = "I_MIDIFLAGS", --: returns int *, low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chanP_DESTTRACK : read only, returns MediaTrack *, destination track, only applies for sends/recvs
+    srctrack = "P_SRCTRACK", --: read only, returns MediaTrack *, source track, only applies for sends/recvs
+    env = "P_ENV", -- : read only, returns TrackEnvelope *, setNewValue=<VOLENV, <PANENV, etc
 }
 
-TRACK_SEND_SET_INFO_VALUES = {
-	mute = "B_MUTE", -- : returns bool *
-	phase = "B_PHASE", --: returns bool *, true to flip phase
-	mono = "B_MONO", --: returns bool *
-	vol = "D_VOL", -- : returns double *, 1.0 = +0dB etc
-	pan = "D_PAN", --: returns double *, -1..+1
-	panlaw = "D_PANLAW", --: returns double *,1.0=+0.0db, 0.5=-6dB, -1.0 = projdef etc
-	sendmode = "I_SENDMODE", --: returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
-	automode = "I_AUTOMODE", --: returns int * : automation mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
-	srcchan = "I_SRCCHAN", --: returns int *, index,&1024=mono, -1 for none
-	dstchan = "I_DSTCHAN", --: returns int *, index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
-	midiflags = "I_MIDIFLAGS" --: returns int *, low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chanSee CreateTrackSend, RemoveTrackSend, GetTrackNumSends.
+M.TRACK_SEND_SET_INFO_VALUES = {
+    mute = "B_MUTE", -- : returns bool *
+    phase = "B_PHASE", --: returns bool *, true to flip phase
+    mono = "B_MONO", --: returns bool *
+    vol = "D_VOL", -- : returns double *, 1.0 = +0dB etc
+    pan = "D_PAN", --: returns double *, -1..+1
+    panlaw = "D_PANLAW", --: returns double *,1.0=+0.0db, 0.5=-6dB, -1.0 = projdef etc
+    sendmode = "I_SENDMODE", --: returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
+    automode = "I_AUTOMODE", --: returns int * : automation mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
+    srcchan = "I_SRCCHAN", --: returns int *, index,&1024=mono, -1 for none
+    dstchan = "I_DSTCHAN", --: returns int *, index, &1024=mono, otherwise stereo pair, hwout:&512=rearoute
+    midiflags = "I_MIDIFLAGS", --: returns int *, low 5 bits=source channel 0=all, 1-16, next 5 bits=dest channel, 0=orig, 1-16=chanSee CreateTrackSend, RemoveTrackSend, GetTrackNumSends.
 }
 ------------------------------------------------
 -- ERROR FUNCTION
-J_ERROR_NOTICE = 1
-J_ERROR_WARNING = 2
-J_ERROR_ERROR = 3
+M.J_ERROR_NOTICE = 1
+M.J_ERROR_WARNING = 2
+M.J_ERROR_ERROR = 3
 
-J_ERROR_LEVEL = 0 -- Show all
+M.J_ERROR_LEVEL = 0 -- Show all
 
-function jError(msg, level)
-	if level < J_ERROR_LEVEL then return false end
-	level_msgs = {}
-	level_msgs[1] = "*** J ERROR NOTICE : "
-	level_msgs[2] = "*** J ERROR WARNING: "
-	level_msgs[3] = "*** J ERROR !!!!!!!: "
+function M.jError(msg, level)
+    if level < J_ERROR_LEVEL then
+        return false
+    end
+    level_msgs = {}
+    level_msgs[1] = "*** J ERROR NOTICE : "
+    level_msgs[2] = "*** J ERROR WARNING: "
+    level_msgs[3] = "*** J ERROR !!!!!!!: "
 
-	reaper.ShowConsoleMsg(level_msgs[level])
-	reaper.ShowConsoleMsg(tostring(msg))
-	reaper.ShowConsoleMsg("\n")
+    reaper.ShowConsoleMsg(level_msgs[level])
+    reaper.ShowConsoleMsg(tostring(msg))
+    reaper.ShowConsoleMsg("\n")
 end
+
+----
+return M

@@ -1,50 +1,27 @@
 local log = require("utils.log")
 local format = require("utils.format")
-
 local tbl = require("utils.table")
-
 local fu = require("utils.fzf")
 local su = require("utils.string")
-
 local sf = require("utils.j_string_functions")
 local settings = require("utils.j_settings_functions")
-
 require("gui2.JGui")
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
--- TODO: entries columen header display bar. -> add an entry title for each column,
-
 -- TODO: move all picker variables to GUI
 
--- TODO: start using pluginsData
-
--- TODO: Add a master title for the current picker when initiating the
--- UI, then i create a jGui class function that can update the window title.
--- --
--- I can update the window name with ` reaper.JS_Window_SetTitle( windowHWND, title )`
--- This should go into the jGui class file.
---
--- FIX: user control over whether or not to reset the text input if the on_select_func
--- returns false. Eg. this is not wanted when writing add track node strings,
--- since we might just want to correct a minor typo.
-
--- TODO: if using multi-select -> always show initial column with `[ ]` and fill
--- with `x` if item is selected.
+-- TODO: start using pluginsData ???
 
 -- TODO: Show prev picker in left upper corner if there is a previous picker,
 
--- TODO: prefix title with current UI master title
--- >>>> dynamically update the name of the sub-picker title upon each picker/view
--- change.
-
--- TODO: always open fzf at cursor/selection so that I don't need to move
--- my eyes.
-
 -- HACK: Add a default keybind that shows the help menu legend overlayed across
 -- screen so that one can easilly study/view help files and mappings.
+-- ~ toggle
+-- ~ show new GFX window
+-- ~ loop binds and print grid
 
 -- TEST: PICKER PROMPT UPDATE VALUE
 -- -> Say, eg. that I am using the track manager menu and I want to update
@@ -886,6 +863,21 @@ local function get_xy_intersection()
     local windows = require("library.windows")
     local mtracks = require("library.tracks")
     local tl = require("library.timeline")
+
+    -- TODO: This snippet computes the screen dimensions
+  --
+  -- This snippet teaches about how to get the proper XY coordinates.
+    local retval, left, top, right, bottom = reaper.JS_Window_GetClientRect(reaper.GetMainHwnd())
+    local monitor_left, monitor_top, monitor_right, monitor_bottom =
+        reaper.my_getViewport(0, 0, 0, 0, left, top, right, bottom, false)
+    local width = monitor_right - monitor_left
+    log.user(monitor_left, monitor_top, monitor_right, monitor_bottom, width)
+-------------------------------------------------------
+
+
+
+
+
 
     local cursor_info = tl.get_cursor_info()
 

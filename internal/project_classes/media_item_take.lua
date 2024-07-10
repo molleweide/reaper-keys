@@ -2,7 +2,7 @@
 -- MEDIA ITEM TAKE
 --
 
-JTake = {}
+local JTake = {}
 JTake.prototype = {pTake = false, _parentItem = false}
 JTake.mt = {}
 
@@ -121,3 +121,4 @@ function JTake.prototype:addFx(sFxName)
 end
 
 
+return JTake

@@ -178,6 +178,7 @@ return {
         -- can always get back to an action even though you have forgotten what
         -- it is called.
         [","] = "PickerConfigVariables",
+        ["."] = "Picker_test_rpp_classes",
         ["X"] = "PickerAllStandaloneActions",
         ["k"] = "RK_MASTER_MENU",
         ["F"] = "RK_SAMPLE_LIB_BROWSER",

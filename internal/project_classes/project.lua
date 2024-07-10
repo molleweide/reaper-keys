@@ -1,8 +1,11 @@
+local req = require("project_classes.JProjectClassReq")
+local JTrack = require("project_classes.track")
+local JItem =require("project_classes.media_item")
 -----------------------------------------------------------------------------
 -- PROJECT
 --
 
-JProject = {}
+local JProject = {}
 JProject.prototype = {pId = 0}
 JProject.mt = {}
 
@@ -23,16 +26,16 @@ JProject.mt.__index = function (table, key)
 	elseif JProject.prototype[key] ~= nil then
 		return JProject.prototype[key]
 	else
-		jError("JProject key: ''" .. key .. "'' is not a GET property", J_ERROR_ERROR)
+		req.jError("JProject key: ''" .. key .. "'' is not a GET property", J_ERROR_ERROR)
 		return false
 	end
 
 end
 
-function JProject.prototype:tracks(start, num)
 	-- Iterator to go through all the tracks in the project
 	-- start: index of the track to start at
 	-- num: (maximum) amount of track to return
+function JProject.prototype:tracks(start, num)
 	local i = start or 0
 	local n = 0
 	if num and i + num <= self.trackcount then
@@ -49,11 +52,11 @@ function JProject.prototype:tracks(start, num)
 	end
 end
 
-function JProject.prototype:selectedTracks(start, num, bReturnAll)
 	-- Iterator to go through all the SELECTED tracks in the project
 	-- start: nth selected track to start at to start at. First one is 0.
 	-- num: (maximum) amount of track to return, set to 0 for ALL.
 	-- bReturnAll: set to true to get a table.
+function JProject.prototype:selectedTracks(start, num, bReturnAll)
 	local i = start or 0
 	local n = 0
 	if num and num > 0 and i + num <= self.selectedtrackcount then
@@ -88,13 +91,13 @@ function JProject.prototype:unselectAllTracks()
 	end
 end
 
-function JProject.prototype:getTrack(idx)
 	-- Return's the track at index position idx for the project. First track is 0
 	-- If there is no such track then it returns false
+function JProject.prototype:getTrack(idx)
 	local idx = idx or 0
 	local t = JTrack:new({pTrack = reaper.GetTrack(self.pId, idx), _parentProject = self})
 	if not t.pTrack then
-		jError("project:getTrack(idx), no track idx: " .. tostring(i), J_ERROR_NOTICE)
+		req.jError("project:getTrack(idx), no track idx: " .. tostring(i), J_ERROR_NOTICE)
 		return false
 	end
 	return t
@@ -108,7 +111,7 @@ function JProject.prototype:getSelectedTrack(i)
 	t.pTrack = reaper.GetSelectedTrack2(self.pId, i, true)
 	t._parentProject = self
 	if not t.pTrack then
-		jError("project:getSelectedTrack(), no selected track i: " .. tostring(i), J_ERROR_NOTICE)
+		req.jError("project:getSelectedTrack(), no selected track i: " .. tostring(i), J_ERROR_NOTICE)
 		return false
 	end
     return t
@@ -123,12 +126,18 @@ function JProject.prototype:getId()
 	return self.pId
 end
 
+--
 -- ITEM FUNCTIONS
+--
 
 function JProject.prototype:getItem(idx)
 	local idx = idx or 0
 	local it = JItem:new({pItem = reaper.GetMediaItem(self.pId, idx)})
 	return it
+end
+
+function JProject.prototype:items()
+-- TODO: iterator :items()
 end
 
 function JProject.prototype:getSelectedItem(i)
@@ -138,10 +147,10 @@ function JProject.prototype:getSelectedItem(i)
 	return it
 end
 
-function JProject.prototype:selectedItems(start, num, bWantTable)
 	-- Iterator to go through all the SELECTED items in the project
 	-- start: nth selected item to start at to start at. First one is 0.
 	-- num: (maximum) amount of items to return
+function JProject.prototype:selectedItems(start, num, bWantTable)
 	local i = start or 0
 	local bWantTable = false or bWantTable
 	local n = 0
@@ -192,7 +201,7 @@ function JProject.prototype:getTracksByName(sPattern, iInstance, find_init, find
     local iCount = 0
 
 	if type(iInstance) == "number" and iInstance <= 0 then
-		jError("project:getTracksByName(), instance <= 0. First instance is 1! iInstance: " .. tostring(iInstance), J_ERROR_ERROR)
+		req.jError("project:getTracksByName(), instance <= 0. First instance is 1! iInstance: " .. tostring(iInstance), J_ERROR_ERROR)
 		return false
 	end
 
@@ -232,3 +241,4 @@ function JProject.prototype:getMaster()
 	return t
 end
 
+return JProject
