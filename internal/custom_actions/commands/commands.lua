@@ -490,6 +490,9 @@ end
 commands.track_fx_ui = function(meta, opts)
     local tr_node, fx_results = get_focus_track_with_fx_chain_info()
 
+  log.user("# # # # # # # # # # # ")
+        log.user(format.block(fx_results))
+
     local function track_fx_ui(not_first)
         pickers.track_fx(_, {
             master_title = "TRACK FX UI",

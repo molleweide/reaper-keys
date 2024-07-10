@@ -28,8 +28,7 @@ local data_loaders = require("pickers.data.load_plugins_data")
 local pickers = {}
 
 pickers.add_track_fx = function(meta)
-
-  -- Creates a global table with plugins data...
+    -- Creates a global table with plugins data...
     local ok, plugins_data = data_loaders.load_plugins_data()
 
     if not ok then
@@ -152,7 +151,13 @@ pickers.track_fx = function(meta, opts)
         end,
         next_is_picker = opts.next_is_picker or false,
         sort_comp = "idx",
-        entry_maker = { "idx", "name", "pname" },
+        entry_maker = function(item)
+            return {
+                item.idx,
+                item.name,
+                item.pname,
+            }
+        end,
         results_filter = require("pickers.results_filter.track_fx"),
     }, opts))
 end

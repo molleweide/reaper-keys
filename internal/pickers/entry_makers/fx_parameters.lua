@@ -1,4 +1,5 @@
 return function(item)
+  -- log.user("fx_param entry makers", item)
     local val_str
     if item.val then
         val_str = tostring(item.val)

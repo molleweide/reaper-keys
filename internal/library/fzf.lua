@@ -564,8 +564,11 @@ local function entry_maker_refact_wrapper(tButtons, gui)
         if tResults and iStart <= #tResults then
             local item = tResults[iStart]
             local label_str = ""
-            local t_entry_makers_parts = type(gui.entry_maker) == "function" and gui.entry_maker(item)
-                or gui.entry_maker
+            local t_entry_makers_parts
+
+            -- entry_maker has to return a function
+                t_entry_makers_parts = gui.entry_maker(item)
+
             local columns = {}
             for ei, entry_def in ipairs(t_entry_makers_parts) do
                 local entry_width
