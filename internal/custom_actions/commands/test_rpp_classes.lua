@@ -11,35 +11,24 @@ M.picker = function()
 
     log.user("id =", proj:getId())
 
-  -- items
+    log.user("\n# TRACK PROPS #################################\n")
 
-    for i in proj:selectedItems() do
-        local take = i:getActiveTake()
-        -- local r = take:addFx(fxString)
-        -- if r >= 0 then
-        -- 	reaper.TakeFX_Show(take:getReaperTake(), r, pluginsData.ITEM_SHOW_FLAG) -- show FX
-        -- end
-        log.user("active take for item #", i)
+    local track_n = proj:getTrack(50)
+    for k, v in pairs(req.all_track_props()) do
+        log.user("    " .. string.format("%s -> %s", v, track_n[k]))
     end
 
-  local item_n = proj:getItem(10)
-
-  log.user(format.block(item_n))
-
-  -- local tot = tbl.tableConicat(req.MEDIA_ITEM_GET_INFO_VALUES, req.MEDIA_ITEM_GET_SET_INFO_STRINGS)
-
-  for k,v in pairs(req.all_item_props()) do
-    log.user(string.format("%s -> %s", v ,item_n[k]))
-  end
-
-
-
-  -- tracks
-    local count = 0
-    for i in proj:tracks() do
-        count = count + 1
+    log.user("\n# ITEM PROPS #################################\n")
+    local item_n = proj:getItem(10)
+    for k, v in pairs(req.all_item_props()) do
+        log.user("    " .. string.format("%s -> %s", v, item_n[k]))
     end
-    log.user("count=", count)
+
+    log.user("\n# ITEM TAKE #################################\n")
+    local take_n = item_n:getActiveTake()
+    for k, v in pairs(req.all_take_props()) do
+        log.user("    " .. string.format("%s -> %s", v, take_n[k]))
+    end
 end
 
 return M

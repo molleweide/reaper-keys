@@ -90,6 +90,17 @@ M.MEDIA_TRACK_GET_SET_INFO_STRINGS = {
     tcp_layout = "P_TCP_LAYOUT",
 }
 
+M.all_track_props = function()
+    local res = {}
+    for k, v in pairs(M.MEDIA_TRACK_GET_INFO_VALUES) do
+        res[k] = v
+    end
+    for k, v in pairs(M.MEDIA_TRACK_GET_SET_INFO_STRINGS) do
+        res[k] = v
+    end
+    return res
+end
+
 -----------------------------------------------------------------------------
 -- ITEMS
 
@@ -157,9 +168,7 @@ M.MEDIA_ITEM_GET_SET_INFO_STRINGS = {
 }
 
 M.all_item_props = function()
-    local tbl = require("utils.table")
     local res = {}
-
     for k, v in pairs(M.MEDIA_ITEM_GET_INFO_VALUES) do
         res[k] = v
     end
@@ -206,6 +215,17 @@ M.MEDIA_ITEM_TAKE_GET_SET_INFO_STRINGS = {
     name = "P_NAME", -- : char * to take name
     guid = "GUID", -- : GUID * : 16-byte GUID, can query or update. If using a _String() function, GUID is a string {xyz-...}.
 }
+
+M.all_take_props = function()
+    local res = {}
+    for k, v in pairs(M.MEDIA_ITEM_TAKE_GET_INFO_VALUES) do
+        res[k] = v
+    end
+    for k, v in pairs(M.MEDIA_ITEM_TAKE_GET_SET_INFO_STRINGS) do
+        res[k] = v
+    end
+    return res
+end
 
 -----------------------------------------------------------------------------
 -- SENDS
