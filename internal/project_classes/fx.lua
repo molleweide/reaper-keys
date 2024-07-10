@@ -1,3 +1,5 @@
+  local log = require("utils.log")
+  local JParam = require("project_classes.fx_param")
 -----------------------------------------------------------------------------
 -- FX
 -- This is an FX class. It can be created bt a Track class. It holds a
@@ -14,7 +16,7 @@
 
 local JFx = {}
 JFx.mt = {}
-JFx.prototype = { iFx = false, _parent = false }
+JFx.prototype = { type="JFx", iFx = false, _parent = false }
 
 function JFx:new(o)
     local o = o or {}
@@ -64,8 +66,8 @@ function JFx.prototype:hide()
     return true
 end
 
-    -- Get an fx parameter by number, 0 for the first
-    -- Returns number retval, number minval, number maxval
+-- Get an fx parameter by number, 0 for the first
+-- Returns number retval, number minval, number maxval
 function JFx.prototype:getParam(iParam)
     --[[ SAFETY CHECK?
 	if iParam >= self.paramcount then
@@ -101,6 +103,14 @@ function JFx.prototype:params(start, num)
             return self:getParam(i - 1)
         end
     end
+end
+
+function JFx.prototype:get_all_fx_params()
+    local res = {}
+    for t in self:params(1, 20) do
+        table.insert(res, t)
+    end
+    return res
 end
 
 function JFx.prototype:getParamsByName(sPattern, iInstance, find_init, find_plain)

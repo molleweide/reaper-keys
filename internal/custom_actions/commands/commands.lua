@@ -431,13 +431,6 @@ commands.routing_user_string = function()
     log.clear()
     log.user("ROUTING USER STRING PROMPT")
 
-    -- TODO: This snippet computes the screen dimensions
-    local retval, left, top, right, bottom = reaper.JS_Window_GetClientRect(reaper.GetMainHwnd())
-    local monitor_left, monitor_top, monitor_right, monitor_bottom =
-        reaper.my_getViewport(0, 0, 0, 0, left, top, right, bottom, false)
-    local width = monitor_right - monitor_left
-    log.user(monitor_left, monitor_top, monitor_right, monitor_bottom, width)
-
     pickers.basic_prompt({
         title = "Do route string, eg. [todo example]",
         x = -177,

@@ -1,3 +1,4 @@
+local JFx = require("project_classes.fx")
 -----------------------------------------------------------------------------
 -- TRACK
 -- This is a Track "class". It can be created by a Project class and is linked
