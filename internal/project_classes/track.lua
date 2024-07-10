@@ -34,6 +34,9 @@ JTrack.mt.__index = function(self, key)
         end
         local _, r = reaper.GetSetMediaTrackInfo_String(self.pTrack, MEDIA_TRACK_GET_SET_INFO_STRINGS[key], "", false)
         return r
+    elseif key == "name" then
+    -- needs an equivalent setter
+        return reaper.GetTrackName(self.pTrack)
     elseif key == "fxcount" then
         return reaper.TrackFX_GetCount(self.pTrack)
     elseif key == "sendcount" then
@@ -261,6 +264,16 @@ function JTrack.prototype:fx(start, num)
     end
 end
 
+function JTrack.prototype:get_all_fx()
+  local res = {}
+    for t in self:fx() do
+        table.insert(res, t)
+    end
+    return res
+end
+
+
+
 ---Iterator to go through all the sends on the track
 ---start: index of the track to start at
 ---num: (maximum) amount of track to return
@@ -313,6 +326,15 @@ function JTrack.prototype:items(start, num, returnTable)
         end
     end
 end
+
+function JTrack.prototype:get_all_items()
+  local res = {}
+    for t in self:items() do
+        table.insert(res, t)
+    end
+    return res
+end
+
 
 ---
 ---

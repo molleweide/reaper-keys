@@ -2,6 +2,7 @@ local log = require("utils.log")
 local format = require("utils.format")
 local tbl = require("utils.table")
 
+local fzf = require("library.fzf")
 local req = require("project_classes.JProjectClassReq")
 
 local M = {}
@@ -34,48 +35,26 @@ M.picker = function()
 
     -------------------------------------------------------------------------------
 
-    -- pickers.all_tracks = function(meta, opts)
-    --     opts = opts or {}
-    --     local vtt = opts.vtt or syntax.getVerifiedTree()
-    --     local t_picker_results = vtt.track_list
-    --     log.user("<PICKER: ALL TRACKS>")
-    --
-    --     -- TODO: Add
-    --     -- a. Tracks that HAVE items in CURRENT region
-    --     -- a2. Tracks that DO NOT HAVE items in CURRENT region
-    --     -- b. Tracks that HAVE items CROSSING edit cursor
-    --
-    --     -- TODO: should the filter be passed as a param to syntax.get_list_of_track_objects(filter)
-    --     if opts.filter then
-    --         if type(opts.filter) == "string" then
-    --             t_picker_results = tbl.filter(vtt.track_list, function(o)
-    --                 return str.strHasOneOfChars(o.class, opts.filter)
-    --             end)
-    --         elseif type(opts.filter) == "function" then
-    --             t_picker_results = tbl.filter(vtt.track_list, opts.filter)
-    --         end
-    --     end
-    --
-    --     -- log.user(format.block(t_track_objects))
-    --     fzf.init(tbl.deep_extend({
-    --         title = opts.title or "All Tracks (Default)",
-    --         results = t_picker_results,
-    --         -- move into module
-    --         on_select_func = function(self, i)
-    --             local selection = self.t_search_results[i]
-    --             if opts.next then
-    --                 opts.next(meta, {
-    --                     selection = selection,
-    --                 })
-    --             end
-    --             return true
-    --         end,
-    --         sort_comp = "name",
-    --
-    --         -- TODO: add zone/group name before each track name
-    --         entry_maker = require("pickers.entry_makers.track_nodes"),
-    --     }, opts))
-    -- end
+    -- fzf.init({
+    --     title = "TRACKS",
+    --     results = proj:get_all_tracks(),
+    --     results_filter = "name",
+    --     sort_comp = "name",
+    --     entry_maker = function(item)
+    --         return { item.name }
+    --     end,
+    -- })
+
+    fzf.init({
+        title = "fx for track = "..track_n.name,
+        results = track_n:get_all_fx(),
+        results_filter = "name",
+        sort_comp = "name",
+        entry_maker = function(item)
+            return { item.name, item.paramcount, item.enabled  }
+        end,
+    })
+
 end
 
 return M

@@ -57,8 +57,14 @@ function JProject.prototype:tracks(start, num)
     end
 end
 
----Iterator for JTracks
-function JProject.prototype:track_objects(start, num) end
+function JProject.prototype:get_all_tracks()
+    local res = {}
+    for t in self:tracks() do
+        table.insert(res, t)
+    end
+
+    return res
+end
 
 -- TODO: 1. option return all JTracks
 -- 2. tracks by filters
@@ -104,7 +110,8 @@ function JProject.prototype:unselectAllTracks()
     end
 end
 
--- Return's the track at index position idx for the project. First track is 0
+-- Return's the track at index position idx for the project.
+-- First track is 0.
 -- If there is no such track then it returns false
 function JProject.prototype:getTrack(idx)
     local idx = idx or 0
@@ -150,7 +157,24 @@ function JProject.prototype:getItem(idx)
 end
 
 function JProject.prototype:items()
-    -- TODO: iterator :items()
+    -- Code taken from Tracks iterator
+    --
+    --
+    --
+    --   local i = start or 0
+    -- local n = 0
+    -- if num and i + num <= self.trackcount then
+    --     n = i + num
+    -- else
+    --     n = self.trackcount
+    -- end
+    --
+    -- return function()
+    --     i = i + 1
+    --     if i <= n then
+    --         return self:getTrack(i - 1)
+    --     end
+    -- end
 end
 
 function JProject.prototype:getSelectedItem(i)

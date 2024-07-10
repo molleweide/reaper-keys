@@ -64,9 +64,9 @@ function JFx.prototype:hide()
     return true
 end
 
-function JFx.prototype:getParam(iParam)
     -- Get an fx parameter by number, 0 for the first
     -- Returns number retval, number minval, number maxval
+function JFx.prototype:getParam(iParam)
     --[[ SAFETY CHECK?
 	if iParam >= self.paramcount then
 		jError("JFx:getParam(), effect param not found, iParam: " .. tostring(iParam), J_ERROR_WARNING)

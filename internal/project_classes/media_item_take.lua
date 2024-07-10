@@ -60,6 +60,10 @@ function JTake.prototype:getItem()
 	return self._parentItem
 end
 
+-------------------------------------------------------------------------------
+-- TAKE -> STRETCH MARKERS
+--
+
 function JTake.prototype:getStretchMarker(idx)
 	local idx = idx or 0
 	local retval, pos, srcpos = reaper.GetTakeStretchMarker(self.pTake, idx)

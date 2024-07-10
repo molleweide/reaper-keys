@@ -77,10 +77,10 @@ function JItem.prototype:getActiveTake()
 	return ta
 end
 
+	---Iterator to go through all the takes in the item
+	---start: nth selected item to start at to start at. First one is 0.
+	---num: (maximum) amount of items to return
 function JItem.prototype:getTakes(start, num)
-	-- Iterator to go through all the takes in the item
-	-- start: nth selected item to start at to start at. First one is 0.
-	-- num: (maximum) amount of items to return
 	local i = start or 0
 	local n = 0
 	if num and i + num <= self.takecount then

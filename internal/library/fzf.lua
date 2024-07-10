@@ -53,9 +53,9 @@ local DEFAULT_OPTS = {
     x = 400,
     y = 1400,
 
-  -- fix: (deprecated) This option has to be removed because now that the picker is
-  -- general purpose, this means that we cannot expect a `saved` state to
-  -- make sense.
+    -- fix: (deprecated) This option has to be removed because now that the picker is
+    -- general purpose, this means that we cannot expect a `saved` state to
+    -- make sense.
     -- window_save_state = true,
 
     window_dock_state = 0,
@@ -564,7 +564,8 @@ local function entry_maker_refact_wrapper(tButtons, gui)
         if tResults and iStart <= #tResults then
             local item = tResults[iStart]
             local label_str = ""
-            local t_entry_makers_parts = gui.entry_maker(item)
+            local t_entry_makers_parts = type(gui.entry_maker) == "function" and gui.entry_maker(item)
+                or gui.entry_maker
             local columns = {}
             for ei, entry_def in ipairs(t_entry_makers_parts) do
                 local entry_width
@@ -579,7 +580,7 @@ local function entry_maker_refact_wrapper(tButtons, gui)
                 if GUI.columns_legend then
                     entry_width = GUI.columns_legend[ei][1]
                 end
-                columns[ei] = su.makeStringLength(str_part, entry_width)
+                columns[ei] = su.makeStringLength(tostring(str_part), entry_width)
             end
             label_str = label_str .. "| " .. table.concat(columns, " | ") .. " |"
 
@@ -672,9 +673,8 @@ local function gui_default_on_exit(self)
         self.onExitUserCallback(self)
     end
 
-
-  -- FIX: this should be moved to the picker definition for `add_fx`
-  -- NOTE: What happens: if save state -> write names to picker settings file.
+    -- FIX: this should be moved to the picker definition for `add_fx`
+    -- NOTE: What happens: if save state -> write names to picker settings file.
     -- if self.window_save_state then
     --     local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
     --     local dockstr = string.format("%d", dockstate)
@@ -748,7 +748,7 @@ local function render_context_helpers(gui)
     -- !!! The fuzzy picker ui controls are added with :controlAdd but these
     -- new context windows dont need to be written in that manner.
 
-    local font_size = gui.gui_size *1.1 /2 -- 2
+    local font_size = gui.gui_size * 1.1 / 2 -- 2
 
     for _, xh in ipairs(gui.context_helpers.all) do
         log.user(format.block(xh))
@@ -869,19 +869,14 @@ local function get_xy_intersection()
     local tl = require("library.timeline")
 
     -- TODO: This snippet computes the screen dimensions
-  --
-  -- This snippet teaches about how to get the proper XY coordinates.
+    --
+    -- This snippet teaches about how to get the proper XY coordinates.
     local retval, left, top, right, bottom = reaper.JS_Window_GetClientRect(reaper.GetMainHwnd())
     local monitor_left, monitor_top, monitor_right, monitor_bottom =
         reaper.my_getViewport(0, 0, 0, 0, left, top, right, bottom, false)
     local width = monitor_right - monitor_left
     log.user(monitor_left, monitor_top, monitor_right, monitor_bottom, width)
--------------------------------------------------------
-
-
-
-
-
+    -------------------------------------------------------
 
     local cursor_info = tl.get_cursor_info()
 
@@ -1018,7 +1013,9 @@ local function build_picker(opts, on_enter)
     BUTTON_Y_START = accomodate_for_main_input + extra + PICKER_COLUMN_LEGEND_HEIGHT + GUI.gui_spread
 
     -- create context helpers
-    render_context_helpers(GUI)
+    if opts.context_helpers then
+        render_context_helpers(GUI)
+    end
 
     -- add methods
     GUI.onResize = gui_default_on_resize
