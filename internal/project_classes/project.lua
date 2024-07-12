@@ -178,9 +178,10 @@ function JProject.prototype:items()
 end
 
 function JProject.prototype:getSelectedItem(i)
-    local i = i or 0
-    local it = JItem:new()
-    it.pItem = reaper.GetSelectedMediaItem(self.pId, i)
+    i = i or 0
+    local item = reaper.GetSelectedMediaItem(self.pId, i)
+    local track = JTrack:new({ pTrack = reaper.GetMediaItem_Track(item), _parentProject = self })
+    local it = JItem:new({ pItem = item, _parent = track })
     return it
 end
 

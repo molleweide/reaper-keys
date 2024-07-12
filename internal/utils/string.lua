@@ -131,6 +131,9 @@ end
   ---Insert line break at closest word end of Nth char.
   ---IE. make paragraph...
 string_util.insert_linebreak_at_nth_chart_closest_word_end = function(str, n)
+  if not str then
+    return false
+  end
         local result = ""
         local line = ""
         local words = {}
