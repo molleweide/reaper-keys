@@ -177,6 +177,7 @@ function JProject.prototype:items()
     -- end
 end
 
+-- FIX: Getting the parent needs to be a method on
 function JProject.prototype:getSelectedItem(i)
     i = i or 0
     local item = reaper.GetSelectedMediaItem(self.pId, i)

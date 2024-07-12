@@ -1142,5 +1142,6 @@ return {
 
   Picker_test_rpp_classes = require("custom_actions.commands.test_rpp_classes") .picker,
   Picker_track_info_params = commands.picker_track_info_params,
-  Picker_media_info_params = commands.picker_media_item_info_params
+  Picker_media_item_info_params = commands.picker_media_item_info_params,
+  Picker_media_item_take_info_params = commands.picker_media_item_take_info_params
 }

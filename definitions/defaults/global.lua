@@ -168,7 +168,8 @@ return {
         ["e"] = "ToggleEnvelopePointsMoveWithItems",
         ["c"] = "CycleRippleEditMode",
         ["f"] = "ResetFeedbackWindow",
-        ["i"] ="Picker_media_info_params",
+        ["i"] ="Picker_media_item_info_params",
+        ["T"] ="Picker_media_item_take_info_params",
       },
     },
     ["<SPC>"] = {
