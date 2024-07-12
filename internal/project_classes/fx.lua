@@ -107,7 +107,7 @@ end
 
 function JFx.prototype:get_all_fx_params()
     local res = {}
-    for t in self:params(1, 20) do
+    for t in self:params() do
         table.insert(res, t)
     end
     return res

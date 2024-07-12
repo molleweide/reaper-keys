@@ -10,7 +10,7 @@ function string_util.getStringSplitPattern(pString, pPattern)
   local fpat = "(.-)" .. pPattern
   local last_end = 1
   local s, e, cap = pString:find(fpat, 1)
-  log.user(pString:match(fpat))
+  -- log.user(pString:match(fpat))
   while s do
     if s ~= 1 or cap ~= "" then
       table.insert(Table, cap)

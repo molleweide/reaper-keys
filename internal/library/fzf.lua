@@ -69,6 +69,8 @@ local DEFAULT_OPTS = {
     next = nil, -- next picker func should default to nil ie close prev picker.
     calling_command_meta = nil,
     column_legend_enabled = false,
+    columns_ignore_last_sep = false,
+  context_helper_font_size = false,
 }
 
 -- All of these types of symbols etc. should go into a picker default config
@@ -567,7 +569,7 @@ local function entry_maker_refact_wrapper(tButtons, gui)
             local t_entry_makers_parts
 
             -- entry_maker has to return a function
-                t_entry_makers_parts = gui.entry_maker(item)
+            t_entry_makers_parts = gui.entry_maker(item)
 
             local columns = {}
             for ei, entry_def in ipairs(t_entry_makers_parts) do
@@ -585,7 +587,11 @@ local function entry_maker_refact_wrapper(tButtons, gui)
                 end
                 columns[ei] = su.makeStringLength(tostring(str_part), entry_width)
             end
-            label_str = label_str .. "| " .. table.concat(columns, " | ") .. " |"
+            label_str = label_str .. "| " .. table.concat(columns, " | ")
+
+            if not gui.columns_ignore_last_sep then
+                label_str = label_str .. " |"
+            end
 
             if gui.mult_select_allowed then
                 local is_selected = item.selected and picker_config.symbols.entry_selected or " "
@@ -644,7 +650,9 @@ local function gui_default_update(self)
                 for _, v in ipairs(self.context_helpers.all) do
                     local on_enter_sel = self:get_on_enter_selection()
                     if type(v.func) == "function" and v.on_focus_change and on_enter_sel ~= nil then
-                        v.func(self, lastSearch, on_enter_sel)
+                        local elem = self.context_helpers.elements[v.position]
+
+                        v.func(self, lastSearch, elem)
                     end
                 end
             end
@@ -751,7 +759,13 @@ local function render_context_helpers(gui)
     -- !!! The fuzzy picker ui controls are added with :controlAdd but these
     -- new context windows dont need to be written in that manner.
 
-    local font_size = gui.gui_size * 1.1 / 2 -- 2
+    local font_size
+
+  if gui.context_helper_font_size then
+    font_size =gui.context_helper_font_size
+  else
+    font_size = gui.gui_size * 1.1 / 2 -- 2
+  end
 
     for _, xh in ipairs(gui.context_helpers.all) do
         log.user(format.block(xh))

@@ -141,6 +141,8 @@ tracks.get_focused_track_objects = function()
 
     local vtt = sx.getVerifiedTree()
 
+  log.user("?????")
+
     local focused_track_objects = {}
 
     if context == "midi" then

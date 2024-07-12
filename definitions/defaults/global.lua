@@ -436,6 +436,7 @@ return {
                 ["4"] = "InsertTrackFromTemplateSlot4",
               },
             },
+            ["I"] = "Picker_track_info_params",
             ["x"] = {
               "+routing",
               {
