@@ -318,10 +318,8 @@ sx_tracks.getVerifiedTree = function(sx_list)
     local vtt
 
     if sx_list then
-        log.user("A")
-        vtt =sx_tracks.make_tree(sx_list)
+        vtt = sx_tracks.make_tree(sx_list)
     else
-        log.user("B")
         vtt = sx_tracks.make_tree(sx_tracks.get_list_of_track_objects())
     end
 

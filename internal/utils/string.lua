@@ -128,4 +128,34 @@ string_util.makeStringLength = function(inputString, maxLength, repl_str)
 	end
 end
 
+  ---Insert line break at closest word end of Nth char.
+  ---IE. make paragraph...
+string_util.insert_linebreak_at_nth_chart_closest_word_end = function(str, n)
+        local result = ""
+        local line = ""
+        local words = {}
+
+        -- Split the string into words
+        for word in str:gmatch("%S+") do
+            table.insert(words, word)
+        end
+
+        for i, word in ipairs(words) do
+            -- Check if adding the current word exceeds n characters
+            if #line + #word > n then
+                -- If adding the word exceeds n, start a new line
+                result = result .. line .. "\n"
+                line = word .. " " -- Start new line with the current word
+            else
+                -- Otherwise, add the word to the current line
+                line = line .. word .. " "
+            end
+        end
+
+        -- Add any remaining text to the result
+        result = result .. line
+
+        return result
+    end
+
 return string_util

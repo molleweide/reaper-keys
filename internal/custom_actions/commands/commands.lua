@@ -1660,33 +1660,6 @@ commands.picker_track_info_params = function()
     local to = focused_track_objects[1]
     local _to = require("library.fltr_track_info_params").get_array(to)
 
-    local function insertLineBreaks(str, n)
-        local result = ""
-        local line = ""
-        local words = {}
-
-        -- Split the string into words
-        for word in str:gmatch("%S+") do
-            table.insert(words, word)
-        end
-
-        for i, word in ipairs(words) do
-            -- Check if adding the current word exceeds n characters
-            if #line + #word > n then
-                -- If adding the word exceeds n, start a new line
-                result = result .. line .. "\n"
-                line = word .. " " -- Start new line with the current word
-            else
-                -- Otherwise, add the word to the current line
-                line = line .. word .. " "
-            end
-        end
-
-        -- Add any remaining text to the result
-        result = result .. line
-
-        return result
-    end
 
     -- log.user(format.block(_to))
     fzf.init({
@@ -1723,13 +1696,67 @@ commands.picker_track_info_params = function()
                     local descr = gui:get_on_enter_selection().description
                     log.user("previewer -> descr", descr)
 
-                    descr = insertLineBreaks(descr, 50)
+                    descr = s.insert_linebreak_at_nth_chart_closest_word_end(descr, 50)
 
                     elem.label = descr --format.block(descr)
                 end,
             },
         },
     })
+end
+
+commands.picker_media_item_info_params = function()
+
+    -- log.clear()
+    -- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+    -- local to = focused_track_objects[1]
+    -- local _to = require("library.fltr_track_info_params").get_array(to)
+
+    -- fzf.init({
+    --     title = string.format("Track Info Params for track = (%s) %s", to.trackIndex, to.name),
+    --     x = 0,
+    --     width = 600,
+    --     height = 700,
+    --     results = _to,
+    --     results_filter = "name",
+    --     sort_comp = "name",
+    --     -- This option has to be movend into a columns subtable
+    --     columns_ignore_last_sep = true,
+    --     columns_legend = {
+    --         { 16, "type" },
+    --         { 16, "name" },
+    --         { 16, "value" },
+    --     },
+    --     entry_maker = function(item)
+    --   local unit=""
+    --   if item.unit then
+    --     unit =" ("..item.unit..")"
+    --   end
+    --         return { item.type, item.name, item.value .. unit }
+    --     end,
+    --     -- on_select_func = function(gui) end,
+    --     -- This also has to go into a context helper subtable
+    --     context_helper_font_size = 20,
+    --     context_helpers = {
+    --         {
+    --             on_focus_change = true,
+    --             position = "right",
+    --             width = "700",
+    --             func = function(gui, prompt_str, elem)
+    --                 local descr = gui:get_on_enter_selection().description
+    --                 log.user("previewer -> descr", descr)
+    --
+    --                 descr = s.insert_linebreak_at_nth_chart_closest_word_end(descr, 50)
+    --
+    --                 elem.label = descr --format.block(descr)
+    --             end,
+    --         },
+    --     },
+    -- })
+end
+
+--- Picker for item's active take info params
+commands.picker_media_item_take_info_params = function()
 end
 
 return commands
