@@ -290,14 +290,17 @@ function jGui:setFocus(c)
         self.focus = false
     end
 
-    if c and self.context_helpers then
-        if self.context_helpers.on_focus_change and c.title == "results_entry_control" then
-            log.user("c.title ->", c.title)
-            for _, v in ipairs(self.context_helpers.on_focus_change) do
+    if c and self.context_helpers and c.title == "results_entry_control"then
+        -- if self.context_helpers.on_focus_change and c.title == "results_entry_control" then
+            -- log.user("c.title ->", c.title)
+            for _, v in ipairs(self.context_helpers.all) do
                 -- The second value passed should be relevant results entry
-                v.func(self, lastSearch, self:get_on_enter_selection())
+                if type(v.func) == "function" and v.on_focus_change then
+                    local elem = self.context_helpers.elements[v.position]
+                    v.func(self, lastSearch, elem)
+                end
             end
-        end
+        -- end
     end
 
     -- todo: Here, set

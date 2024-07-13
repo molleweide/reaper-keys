@@ -872,4 +872,52 @@ pickers.basic_prompt = function(opts)
     }, opts))
 end
 
+pickers.info_params = function(opts)
+    local s = require("utils.string")
+
+    log.user("pickers.info_params")
+
+    local title = opts.title or "INFO PARAMS"
+
+    fzf.init(tbl.deep_extend({
+        title = title,
+        x = 0,
+        width = 600,
+        height = 700,
+        results = opts.results,
+        results_filter = "name",
+        sort_comp = "name",
+        -- This option has to be movend into a columns subtable
+        columns_ignore_last_sep = true,
+        columns_legend = {
+            { 16, "type" },
+            { 16, "name" },
+            { 16, "value" },
+        },
+        entry_maker = function(item)
+            local unit = ""
+            if item.unit then
+                unit = " (" .. item.unit .. ")"
+            end
+            return { item.type, item.name, item.value .. unit }
+        end,
+        -- on_select_func = function(gui) end,
+        -- This also has to go into a context helper subtable
+        context_helper_font_size = 20,
+        context_helpers = {
+            {
+                on_focus_change = true,
+                position = "right",
+                width = "700",
+                func = function(gui, prompt_str, elem)
+                    local descr = gui:get_currently_focused_entry().description
+                    descr = s.insert_linebreak_at_nth_chart_closest_word_end(descr, 50)
+          log.user("->", type(descr), format.block(descr))
+                    elem.label = descr or "" --format.block(descr)
+                end,
+            },
+        },
+    }, opts))
+end
+
 return pickers
