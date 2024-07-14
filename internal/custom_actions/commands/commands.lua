@@ -1661,188 +1661,48 @@ commands.picker_track_info_params = function()
     local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
     local to = focused_track_objects[1]
     local _to = require("library.media_track_info_params").get_array(to)
-
-  pickers.info_params({
+    pickers.info_params({
         title = string.format("[ TRACK ] Info Params for track = (%s) %s", to.trackIndex, to.name),
         results = _to,
-  })
-
-    -- -- log.user(format.block(_to))
-    -- fzf.init({
-    --     title = string.format("[ TRACK ] Info Params for track = (%s) %s", to.trackIndex, to.name),
-    --     x = 0,
-    --     width = 600,
-    --     height = 700,
-    --     results = _to,
-    --     results_filter = "name",
-    --     sort_comp = "name",
-    --     -- This option has to be movend into a columns subtable
-    --     columns_ignore_last_sep = true,
-    --     columns_legend = {
-    --         { 16, "type" },
-    --         { 16, "name" },
-    --         { 16, "value" },
-    --     },
-    --     entry_maker = function(item)
-    --         local unit = ""
-    --         if item.unit then
-    --             unit = " (" .. item.unit .. ")"
-    --         end
-    --         return { item.type, item.name, item.value .. unit }
-    --     end,
-    --     -- on_select_func = function(gui) end,
-    --     -- This also has to go into a context helper subtable
-    --     context_helper_font_size = 20,
-    --     context_helpers = {
-    --         {
-    --             on_focus_change = true,
-    --             position = "right",
-    --             width = "700",
-    --             func = function(gui, prompt_str, elem)
-    --                 local descr = gui:get_on_enter_selection().description
-    --                 log.user("previewer -> descr", descr)
-    --
-    --                 descr = s.insert_linebreak_at_nth_chart_closest_word_end(descr, 50)
-    --
-    --                 elem.label = descr --format.block(descr)
-    --             end,
-    --         },
-    --     },
-    -- })
+    })
 end
 
 commands.picker_media_item_info_params = function()
     log.clear()
     local proj = require("project_classes.project"):new()
-    -- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
-    -- local to = focused_track_objects[1]
-    -- local _to = require("library.fltr_track_info_params").get_array(to)
     local item = proj:getSelectedItem()
-
-    -- log.user(format.block(item))
-
     if not item then
         return
     end
-
     local arr = require("library.media_item_info_params").get_array(item.pItem)
-
-    -- local to = item:getTrack()
-
-  pickers.info_params({
-        title = string.format("[ ACTIVE TAKE ] Info Params for track = (%s) %s", item._parent.tracknumber, item._parent.name),
+    pickers.info_params({
+        title = string.format(
+            "[ ACTIVE TAKE ] Info Params for track = (%s) %s",
+            item._parent.tracknumber,
+            item._parent.name
+        ),
         results = arr,
-  })
-
-
-  -- -- I want to work with my own proper track syntax props instead.
-  -- -- -> I need to customize the project classes so that they look for and
-  -- -- create tools for getting to my own syntax info, such as get current group
-  -- -- for track/item/etc...
-  --   fzf.init({
-  --       title = string.format("[ ITEM ] Info Params for track = (%s) %s", item._parent.tracknumber, item._parent.name),
-  --       x = 0,
-  --       width = 600,
-  --       height = 700,
-  --       results = arr,
-  --       results_filter = "name",
-  --       sort_comp = "name",
-  --       -- This option has to be movend into a columns subtable
-  --       columns_ignore_last_sep = true,
-  --       columns_legend = {
-  --           { 16, "type" },
-  --           { 16, "name" },
-  --           { 16, "value" },
-  --       },
-  --       entry_maker = function(item)
-  --           local unit = ""
-  --           if item.unit then
-  --               unit = " (" .. item.unit .. ")"
-  --           end
-  --           return { item.type, item.name, item.value .. unit }
-  --       end,
-  --       -- on_select_func = function(gui) end,
-  --       -- This also has to go into a context helper subtable
-  --       context_helper_font_size = 20,
-  --       context_helpers = {
-  --           {
-  --               on_focus_change = true,
-  --               position = "right",
-  --               width = "700",
-  --               func = function(gui, prompt_str, elem)
-  --                   local descr = gui:get_on_enter_selection().description
-  --                   -- log.user("previewer -> descr", descr)
-  --                   descr = s.insert_linebreak_at_nth_chart_closest_word_end(descr, 50)
-  --                   elem.label = descr or "" --format.block(descr)
-  --               end,
-  --           },
-  --       },
-  --   })
-
+    })
 end
 
 --- Picker for item's active take info params
 commands.picker_media_item_take_info_params = function()
-
     log.clear()
     local proj = require("project_classes.project"):new()
-    -- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
-    -- local to = focused_track_objects[1]
-    -- local _to = require("library.fltr_track_info_params").get_array(to)
     local item = proj:getSelectedItem()
-  local take = item:getTake()
-
+    local take = item:getTake()
     if not take then
         return
     end
-
     local arr = require("library.media_item_take_info_params").get_array(take.pTake)
-
-  pickers.info_params({
-        title = string.format("[ ACTIVE TAKE ] Info Params for track = (%s) %s", item._parent.tracknumber, item._parent.name),
+    pickers.info_params({
+        title = string.format(
+            "[ ACTIVE TAKE ] Info Params for track = (%s) %s",
+            item._parent.tracknumber,
+            item._parent.name
+        ),
         results = arr,
-  })
-
-    -- fzf.init({
-    --     title = string.format("[ ACTIVE TAKE ] Info Params for track = (%s) %s", item._parent.tracknumber, item._parent.name),
-    --     x = 0,
-    --     width = 600,
-    --     height = 700,
-    --     results = arr,
-    --     results_filter = "name",
-    --     sort_comp = "name",
-    --     -- This option has to be movend into a columns subtable
-    --     columns_ignore_last_sep = true,
-    --     columns_legend = {
-    --         { 16, "type" },
-    --         { 16, "name" },
-    --         { 16, "value" },
-    --     },
-    --     entry_maker = function(item)
-    --         local unit = ""
-    --         if item.unit then
-    --             unit = " (" .. item.unit .. ")"
-    --         end
-    --         return { item.type, item.name, item.value .. unit }
-    --     end,
-    --     -- on_select_func = function(gui) end,
-    --     -- This also has to go into a context helper subtable
-    --     context_helper_font_size = 20,
-    --     context_helpers = {
-    --         {
-    --             on_focus_change = true,
-    --             position = "right",
-    --             width = "700",
-    --             func = function(gui, prompt_str, elem)
-    --                 local descr = gui:get_on_enter_selection().description
-    --                 -- log.user("previewer -> descr", descr)
-    --                 descr = s.insert_linebreak_at_nth_chart_closest_word_end(descr, 50)
-    --                 elem.label = descr or "" --format.block(descr)
-    --             end,
-    --         },
-    --     },
-    -- })
-
+    })
 end
 
 return commands
