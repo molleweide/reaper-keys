@@ -11,6 +11,8 @@ require("gui2.JGui")
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
+-- TODO: Show `current selection` in title-bar
+
 -- TODO: move all picker variables to GUI
 
 -- TODO: start using pluginsData ???

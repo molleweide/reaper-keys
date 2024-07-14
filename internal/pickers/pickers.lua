@@ -879,13 +879,64 @@ pickers.info_params = function(opts)
 
     log.user("pickers.info_params")
 
+    local function handle_keys(t, direction)
+
+
+    -- TODO: check if main prompt OR focus control -> determines how I
+    -- should get the entry object.
+        local sel = t.gui_ref:get_on_enter_selection()
+
+
+
+
+        log.user("value pre =", sel.value)
+
+        if sel.type == "bool" then
+            local newval = sel.value == 0 and 1 or 0
+            log.user("bool -> newval =", newval)
+        end
+
+        if type(sel.value) == "number" then
+        end
+
+        if sel.type == "int" then
+            -- sel.max is a proxy for whether or not param can be cycled / has range.
+            if sel.max then
+                local reverse = direction
+                local oldval = sel.value
+                local newval
+                if reverse then
+                    newval = (oldval - 1) % sel.max -- Cycle through 2, 1, 0
+                    if newval < 0 then
+                        newval = sel.max
+                    end
+                else
+                    newval = (oldval + 1) % sel.max -- Cycle through 0, 1, 2
+                end
+            end
+        end
+
+        if sel.type == "double" then
+            local newval = sel.value + 0.1
+            if newval > sel.max then
+                newval = sel.max
+            end
+        end
+
+        if sel.type == "char" then
+        end
+
+        if sel.type == "float" then
+        end
+    end
+
     local title = opts.title or "INFO PARAMS"
 
     fzf.init(tbl.deep_extend({
         title = title,
         x = 0,
         width = 600,
-        height = 700,
+        height = 1000,
         results = opts.results,
         results_filter = "name",
         sort_comp = "name",
@@ -920,48 +971,56 @@ pickers.info_params = function(opts)
             },
         },
         extended_mappings = {
+
+            ["C-d"] = function(t)
+                handle_keys(t, true)
+            end,
+
+            -- refactor this into a function that can take a direction param, so that I
+            -- can use it for both up and down binds
             ["C-f"] = function(t)
-                local sel = t.gui_ref:get_on_enter_selection()
-
-                log.user("value pre =", sel.value)
-
-                if sel.type == "bool" then
-                    local newval = sel.value == 0 and 1 or 0
-                    log.user("bool -> newval =", newval)
-                end
-
-                if type(sel.value) == "number" then
-                end
-
-                if sel.type == "int" then
-                    -- sel.max is a proxy for whether or not param can be cycled / has range.
-                    if sel.max then
-                        local reverse = false
-                        local oldval = sel.value
-                        local newval
-                        if reverse then
-                            newval = (oldval - 1) % sel.max -- Cycle through 2, 1, 0
-                            if newval < 0 then
-                                newval = sel.max
-                            end
-                        else
-                            newval = (oldval + 1) % sel.max -- Cycle through 0, 1, 2
-                        end
-                    end
-                end
-
-                if sel.type == "double" then
-                    local newval = sel.value + 0.1
-                    if newval > sel.max then
-                        newval = sel.max
-                    end
-                end
-
-                if sel.type == "char" then
-                end
-
-                if sel.type == "float" then
-                end
+                handle_keys(t)
+                -- local sel = t.gui_ref:get_on_enter_selection()
+                --
+                -- log.user("value pre =", sel.value)
+                --
+                -- if sel.type == "bool" then
+                --     local newval = sel.value == 0 and 1 or 0
+                --     log.user("bool -> newval =", newval)
+                -- end
+                --
+                -- if type(sel.value) == "number" then
+                -- end
+                --
+                -- if sel.type == "int" then
+                --     -- sel.max is a proxy for whether or not param can be cycled / has range.
+                --     if sel.max then
+                --         local reverse = false
+                --         local oldval = sel.value
+                --         local newval
+                --         if reverse then
+                --             newval = (oldval - 1) % sel.max -- Cycle through 2, 1, 0
+                --             if newval < 0 then
+                --                 newval = sel.max
+                --             end
+                --         else
+                --             newval = (oldval + 1) % sel.max -- Cycle through 0, 1, 2
+                --         end
+                --     end
+                -- end
+                --
+                -- if sel.type == "double" then
+                --     local newval = sel.value + 0.1
+                --     if newval > sel.max then
+                --         newval = sel.max
+                --     end
+                -- end
+                --
+                -- if sel.type == "char" then
+                -- end
+                --
+                -- if sel.type == "float" then
+                -- end
             end,
         },
     }, opts))
