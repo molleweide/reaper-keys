@@ -872,6 +872,8 @@ pickers.basic_prompt = function(opts)
   }, opts))
 end
 
+-- TODO: result entries passed need to have their categories assigned so
+-- that I can have reusable mappings.
 pickers.info_params = function(opts)
   local s = require("utils.string")
 
