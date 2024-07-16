@@ -7,14 +7,13 @@ function route_util.get_num_routes_by_category(tr, cat)
     return reaper.GetTrackNumSends(tr, cat)
 end
 
-local T_route_info_params = {
+local T_ROUTE_INFO_PARAMS = {
     B_MUTE = {
         type = "bool",
         name = "B_MUTE",
     },
     B_PHASE = { type = "bool", name = "B_PHASE", description = "True to flip the phase." },
     B_MONO = { type = "bool", name = "B_MONO" },
-    -- D_VOL : double * : 1.0 = +0dB etc
     D_VOL = { type = "double", name = "D_VOL", description = "1.0 = +0dB etc" },
     -- D_PAN : double * : -1..+1
     D_PAN = { type = "double", name = "D_PAN", description = "-1...+1", min = -1, max = 1 },
@@ -60,6 +59,21 @@ local T_route_info_params = {
     },
 }
 
+local function get_info_for_route(tr, cat, si)
+    local res = {}
+    for k, v in pairs(T_ROUTE_INFO_PARAMS) do
+        v.value = reaper.GetTrackSendInfo_Value(tr, cat, si, v.name)
+        v._meta = {
+            type = "info_param",
+            cat = "route",
+        }
+        v.key = v.name
+        -- table.insert(res, v)
+        res[k] = v
+    end
+    return res
+end
+
 function route_util.get_routes_table_by_category(tr, cat, rtype)
     local count_routes_by_cat = route_util.get_num_routes_by_category(tr, cat)
 
@@ -71,32 +85,17 @@ function route_util.get_routes_table_by_category(tr, cat, rtype)
 
     for si = 0, count_routes_by_cat - 1 do
         if cat <= 0 then -- REGULAR SENDS ////////////////////////////////////////////
+            local t_route_single = {}
+
+            local info_params = get_info_for_route(tr, cat, si)
+
             -- OTHER TRACK
             local other_tr, other_tr_idx = getOtherTrack(tr, cat, si)
             local _, other_tr_name = reaper.GetTrackName(other_tr)
 
-            -- get all info params
-            local b_mute = reaper.GetTrackSendInfo_Value(tr, cat, si, "I_SRCCHAN")
-
             local src_chan = reaper.GetTrackSendInfo_Value(tr, cat, si, "I_SRCCHAN")
             local dst_chan = reaper.GetTrackSendInfo_Value(tr, cat, si, "I_DSTCHAN")
             local midi_flags = reaper.GetTrackSendInfo_Value(tr, cat, si, "I_MIDIFLAGS")
-
-            -- B_MUTE : bool *
-            -- B_PHASE : bool * : true to flip phase
-            -- B_MONO : bool *
-            -- D_VOL : double * : 1.0 = +0dB etc
-            -- D_PAN : double * : -1..+1
-            -- D_PANLAW : double * : 1.0=+0.0db, 0.5=-6dB, -1.0 = projdef etc
-            -- I_SENDMODE : int * : 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
-            -- I_AUTOMODE : int * : automation mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
-            -- I_SRCCHAN : int * : -1 for no audio send. Low 10 bits specify channel offset, and higher bits specify channel count. (srcchan>>10) == 0 for stereo, 1 for mono, 2 for 4 channel, 3 for 6 channel, etc.
-            -- I_DSTCHAN : int * : low 10 bits are destination index, &1024 set to mix to mono.
-            -- I_MIDIFLAGS : int * : low 5 bits=source channel 0=all, 1-16, 31=MIDI send disabled, next 5 bits=dest channel, 0=orig, 1-16=chan. &1024 for faders-send MIDI vol/pan. (>>14)&255 = src bus (0 for all, 1 for normal, 2+). (>>22)&255=destination bus (0 for all, 1 for normal, 2+)
-            -- P_DESTTRACK : MediaTrack * : destination track, only applies for sends/recvs (read-only)
-            -- P_SRCTRACK : MediaTrack * : source track, only applies for sends/recvs (read-only)
-            -- P_ENV:<envchunkname : TrackEnvelope * : call with :<VOLENV, :<PANENV, etc appended (read-only)
-            -- See CreateTrackSend, RemoveTrackSend, GetTrackNumSends.
 
             -- extra processing
             local midi_flags_send = midi_util.get_send_flags_src(midi_flags)
@@ -113,7 +112,6 @@ function route_util.get_routes_table_by_category(tr, cat, rtype)
                 midi_flags_send,
                 midi_flags_dest
             )
-            log.user()
 
             table.insert(t_routes, {
                 type = rtype,
@@ -127,6 +125,7 @@ function route_util.get_routes_table_by_category(tr, cat, rtype)
                 midi_flags = midi_flags,
                 midi_flags_send = midi_flags_send,
                 midi_flags_dst = midi_flags_dest,
+                info_params = info_params,
             })
         elseif cat > 0 then -- HARDWARE /////////////////////////////////////
         end

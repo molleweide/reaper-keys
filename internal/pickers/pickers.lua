@@ -290,13 +290,14 @@ pickers.single_track_routes = function(opts)
     -- log.user(format.block(tr_routes))
     fzf.init({
         title = "Single track routes",
-        x = 100,
+        x = -100,
         -- y = 0,
-        width = 1300,
+        width = 1700,
         height = 450,
         results = tr_routes,
         on_select_func = function(gui)
-            return true
+            log.user(format.block(gui:get_on_enter_selection()))
+            return false
         end,
         sort_comp = "other_tr_name",
         results_filter = "other_tr_name",
@@ -308,6 +309,13 @@ pickers.single_track_routes = function(opts)
             { 24, "other_name" },
             { 12, "src_ch" },
             { 12, "dst_ch" },
+            { 1, "mute" },
+            { 1, "phase" },
+            { 1, "Mono" },
+            { 6, "vol" },
+            { 6, "sendmode" },
+            { 6, "automode" },
+            { 6, "midiflags" },
         },
         entry_maker = function(item)
             local ti = str.makeStringLength(tostring(item.other_tr_idx), 3)
@@ -316,35 +324,33 @@ pickers.single_track_routes = function(opts)
                 ti = "0" .. ti
             end
             local other = string.format("(#%s) %s", ti, item.other_tr_name)
+
+            local mute = item.info_params.B_MUTE.value
+            mute = mute == 1 and "x" or " "
+
+            local phase = item.info_params.B_PHASE.value
+            phase = phase == 1 and "x" or " "
+
+            local mono = item.info_params.B_MONO.value
+            mono = mono == 1 and "x" or " "
+
+            local vol = item.info_params.D_VOL.value
+            -- vol = vol == 1 and "x" or " "
             return {
                 item.index,
                 item.type == "recieve" and "recieving from" or "sending to",
                 other,
                 item.src_chan, -- if -1 -> <no_audio>
                 item.dst_chan,
+                mute,
+                phase,
+                mono,
+                -- sendmode,
+                -- automode,
+                -- midiflags
+                vol,
             }
         end,
-
-        -- NOTE: Each of these params need to be modifiable
-        -- Get send/receive/hardware output numerical-value attributes.
-        -- category is <0 for receives, 0=sends, >0 for hardware outputs
-        -- parameter names:
-        -- B_MUTE : bool *
-        -- B_PHASE : bool * : true to flip phase
-        -- B_MONO : bool *
-        -- D_VOL : double * : 1.0 = +0dB etc
-        -- D_PAN : double * : -1..+1
-        -- D_PANLAW : double * : 1.0=+0.0db, 0.5=-6dB, -1.0 = projdef etc
-        -- I_SENDMODE : int * : 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
-        -- I_AUTOMODE : int * : automation mode (-1=use track automode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
-        -- I_SRCCHAN : int * : -1 for no audio send. Low 10 bits specify channel offset, and higher bits specify channel count. (srcchan>>10) == 0 for stereo, 1 for mono, 2 for 4 channel, 3 for 6 channel, etc.
-        -- I_DSTCHAN : int * : low 10 bits are destination index, &1024 set to mix to mono.
-        -- I_MIDIFLAGS : int * : low 5 bits=source channel 0=all, 1-16, 31=MIDI send disabled, next 5 bits=dest channel, 0=orig, 1-16=chan. &1024 for faders-send MIDI vol/pan. (>>14)&255 = src bus (0 for all, 1 for normal, 2+). (>>22)&255=destination bus (0 for all, 1 for normal, 2+)
-        -- P_DESTTRACK : MediaTrack * : destination track, only applies for sends/recvs (read-only)
-        -- P_SRCTRACK : MediaTrack * : source track, only applies for sends/recvs (read-only)
-        -- P_ENV:<envchunkname : TrackEnvelope * : call with :<VOLENV, :<PANENV, etc appended (read-only)
-        -- See CreateTrackSend, RemoveTrackSend, GetTrackNumSends.
-
         extended_mappings = {
             ["C-w"] = function(t) end,
             ["C-e"] = function(t) end,
