@@ -66,6 +66,9 @@ local DEFAULT_OPTS = {
     gui_size = 20,
     -- Elem separation in Y direction
     gui_spread = 5,
+  -- `meta` is used to make data from the initial command func accessible to the
+  -- picker mapping callbacks, so that, eg, a media item if one is running a picker
+  -- whose data pertain to that specific media item.
     meta = {},
     extended_mappings = nil,
     next = nil, -- next picker func should default to nil ie close prev picker.

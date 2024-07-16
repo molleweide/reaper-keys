@@ -1036,6 +1036,7 @@ end
 --
 
 commands.picker_list_routes_for_track = function()
+  log.user("?????????????????????????????????")
     -- log.user("::: route list for track :::")
     -- local tr = reaper.GetSelectedTrack(0, 0)
     -- local tr_routes = route.get_route_object_for_track(tr)
@@ -1662,6 +1663,7 @@ commands.picker_track_info_params = function()
     local to = focused_track_objects[1]
     local _to = require("library.media_track_info_params").get_array(to)
     pickers.info_params({
+        meta = { track = to.tr },
         title = string.format("[ TRACK ] Info Params for track = (%s) %s", to.trackIndex, to.name),
         results = _to,
     })
@@ -1676,6 +1678,7 @@ commands.picker_media_item_info_params = function()
     end
     local arr = require("library.media_item_info_params").get_array(item.pItem)
     pickers.info_params({
+        meta = { item = item.pItem },
         title = string.format(
             "[ ACTIVE TAKE ] Info Params for track = (%s) %s",
             item._parent.tracknumber,
@@ -1696,6 +1699,7 @@ commands.picker_media_item_take_info_params = function()
     end
     local arr = require("library.media_item_take_info_params").get_array(take.pTake)
     pickers.info_params({
+        meta = { take = take.pTake },
         title = string.format(
             "[ ACTIVE TAKE ] Info Params for track = (%s) %s",
             item._parent.tracknumber,

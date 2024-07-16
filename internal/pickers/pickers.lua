@@ -880,14 +880,18 @@ pickers.info_params = function(opts)
 
     ---comment
     ---@param t table
-    ---@param direction boolean move value up or down. nudge/cycle/shift..
     ---@param amount number The value by which floats/doubles should b shifted.
-    local function handle_keys(t, direction, amount)
+    ---@param direction boolean|nil move value up or down. nudge/cycle/shift..
+    local function handle_keys(t, amount, direction)
         -- TODO: check if main prompt OR focus control -> determines how I
         -- should get the entry object.
         -- local sel = t.gui_ref:get_on_enter_selection()
 
-        local sel = t.gui_ref:get_currently_focused_entry()
+        local gui = t.gui_ref
+
+        log.user(">>>>>>>>>", format.block(gui.meta))
+
+        local sel = gui:get_currently_focused_entry()
 
         local dir_mult = direction and -1 or 1
 
@@ -899,8 +903,6 @@ pickers.info_params = function(opts)
 
         if sel.type == "int" or sel.type == "char" then
             local int_shift_amount = 1
-
-            -- NOTE:sel.max is a proxy for whether or not param can be cycled / has range.
             if sel.max or sel.min then
                 local reverse = direction
                 local oldval = sel.value
@@ -910,8 +912,6 @@ pickers.info_params = function(opts)
                         newval = sel.max
                     end
                 else
-                    -- TEST: Maybe I should use sel.min here instead of 0 since some params might cycle
-                    -- an interval that does not include zero.
                     newval = (oldval + int_shift_amount) % sel.max -- Cycle through 0, 1, 2
                 end
             else
@@ -920,19 +920,15 @@ pickers.info_params = function(opts)
         end
 
         if sel.type == "double" or sel.type == "float" then
-            local amount = 0.1
             local nudge = dir_mult * amount
-
             if sel.compute then
                 newval = sel.compute(sel.value, nudge)
             else
                 newval = sel.value + nudge
             end
-
             if newval > sel.max then
                 newval = sel.max
             end
-
             if newval < sel.min then
                 newval = sel.min
             end
@@ -940,12 +936,20 @@ pickers.info_params = function(opts)
 
         log.user(string.format("[%s]: %s -> %s", sel.type, sel.value, newval))
 
-        if newval and not sel.read_only then
-            local lib_tr = require("library.tracks")
-            local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
-            local to = focused_track_objects[1]
-            -- TODO: set value here.
-            -- reaper.SetMediaTrackInfo_Value(to.tr, sel.name, newval)
+        if newval and not sel.read_only and not sel.wip then
+            log.user(".meta = ", format.block(t.gui_ref.meta))
+            if sel._meta.cat == "track" then
+                reaper.SetMediaTrackInfo_Value(gui.meta.track, sel.key, newval)
+            end
+            if sel._meta.cat == "item" then
+                reaper.SetMediaItemInfo_Value(gui.meta.item, sel.key, value)
+            end
+            if sel._meta.cat == "take" then
+                reaper.SetMediaItemTakeInfo_Value(gui.meta.take, sel.key, newval)
+            end
+
+            sel.value = newval
+            UPDATE_RESULTS = true
         end
 
         --
@@ -956,7 +960,7 @@ pickers.info_params = function(opts)
     fzf.init(tbl.deep_extend({
         title = title,
         x = 0,
-        width = 600,
+        width = 800,
         height = 1000,
         results = opts.results,
         results_filter = "name",
@@ -965,15 +969,22 @@ pickers.info_params = function(opts)
         columns_ignore_last_sep = true,
         columns_legend = {
             { 16, "type" },
-            { 16, "name" },
-            { 16, "value" },
+            { 20, "name" },
+            { 8, "value" },
+            { 16, "formatted" },
         },
         entry_maker = function(item)
             local unit = ""
             if item.unit then
                 unit = " (" .. item.unit .. ")"
             end
-            return { item.type, item.name, item.value .. unit }
+            local val_out = s.makeStringLength(tostring(item.value), 6)
+            local val_fmt_out = ""
+            if item.formatted then
+                val_fmt_out = tostring(item.formatted(item.value)) .. unit
+            end
+
+            return { item.type, item.name, val_out, val_fmt_out }
         end,
         -- on_select_func = function(gui) end,
         -- This also has to go into a context helper subtable
@@ -1011,10 +1022,11 @@ pickers.info_params = function(opts)
             end,
             -- BIG UP/DOWN
             ["C-f"] = function(t)
-                handle_keys(t)
+                handle_keys(t, 0.1)
             end,
             ["C-b"] = function(t)
-                handle_keys(t, true)
+                -- log.user(format.block(t))
+                handle_keys(t, 0.1, true)
             end,
         },
     }, opts))

@@ -1,14 +1,11 @@
 local track_info = {}
 
--- NOTE: If I want:
--- the value of all params then i just call the function to obtain all track info
--- params of type.
--- I could even have a fltr.track_info helper to make it possible to more easilly
--- manage these types of values. And then I won't have to think about it more
--- in the future because this will be good enough to handle all cases.
-
--- TEST: Each info entry could have a function attached which handles something
--- about how you set the value.
+local function to_volume(db)
+    return 10 ^ (0.05 * db)
+end
+local function to_decibel(vol)
+    return 20 * math.log(vol, 10)
+end
 
 local T_TRACK_INFO_PARAMS = {
     B_MUTE = { type = "bool", name = "B_MUTE" },
@@ -118,6 +115,7 @@ local T_TRACK_INFO_PARAMS = {
         type = "int",
         name = "I_NCHAN",
         description = "Number of track channels, 2-128, even numbers only",
+        wip = true,
         min = 2,
         max = 128,
         compute = function(value_in, shift_amount, is_hard_set)
@@ -223,6 +221,8 @@ local T_TRACK_INFO_PARAMS = {
             locking)]],
     },
     D_VOL = {
+        -- FIX: The entry maker has to have a column that shows the real
+        -- DECIBEL value instead of the lua float number.
         type = "double",
         name = "D_VOL",
         unit = "dB",
@@ -234,13 +234,10 @@ local T_TRACK_INFO_PARAMS = {
         -- shift by an amount, which is default.
         compute = function(volume_pre_in, db_nudge_value, is_hard_set)
             -- these funcs will be reused, but i could duplicate them for now.
-            local function to_volume(db)
-                return 10 ^ (0.05 * db)
-            end
-            local function to_decibel(vol)
-                return 20 * math.log(vol, 10)
-            end
             return to_volume(to_decibel(volume_pre_in) + db_nudge_value)
+        end,
+        formatted = function(vol_in)
+            return to_decibel(vol_in)
         end,
     },
     D_PAN = { type = "double", name = "D_PAN", description = "trim pan of track, -1..1", min = -1, max = 1 },
