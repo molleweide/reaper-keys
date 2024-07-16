@@ -876,27 +876,22 @@ end
 -- that I can have reusable mappings.
 pickers.info_params = function(opts)
     local s = require("utils.string")
-
     log.user("pickers.info_params")
 
+    ---comment
+    ---@param t table
+    ---@param direction boolean move value up or down. nudge/cycle/shift..
     local function handle_keys(t, direction)
-
-
-    -- TODO: check if main prompt OR focus control -> determines how I
-    -- should get the entry object.
+        -- TODO: check if main prompt OR focus control -> determines how I
+        -- should get the entry object.
         local sel = t.gui_ref:get_on_enter_selection()
 
+        local dir_mult = direction and -1 or 1
 
-
-
-        log.user("value pre =", sel.value)
+        local newval
 
         if sel.type == "bool" then
-            local newval = sel.value == 0 and 1 or 0
-            log.user("bool -> newval =", newval)
-        end
-
-        if type(sel.value) == "number" then
+            newval = sel.value == 0 and 1 or 0
         end
 
         if sel.type == "int" then
@@ -904,7 +899,6 @@ pickers.info_params = function(opts)
             if sel.max then
                 local reverse = direction
                 local oldval = sel.value
-                local newval
                 if reverse then
                     newval = (oldval - 1) % sel.max -- Cycle through 2, 1, 0
                     if newval < 0 then
@@ -917,7 +911,15 @@ pickers.info_params = function(opts)
         end
 
         if sel.type == "double" then
-            local newval = sel.value + 0.1
+            local amount = 0.1
+            local nudge = dir_mult * amount
+
+            if sel.compute then
+                newval = sel.compute(sel.value, nudge)
+            else
+                newval = sel.value + nudge
+            end
+
             if newval > sel.max then
                 newval = sel.max
             end
@@ -928,6 +930,16 @@ pickers.info_params = function(opts)
 
         if sel.type == "float" then
         end
+
+        log.user(string.format("[%s]: %s -> %s", sel.type, sel.value, newval))
+
+        -- -- TODO: set value here.
+        -- local lib_tr = require("library.tracks")
+        -- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+        -- local to = focused_track_objects[1]
+        -- reaper.SetMediaTrackInfo_Value(to.tr, sel.name, newval)
+
+        --
     end
 
     local title = opts.title or "INFO PARAMS"
@@ -971,56 +983,27 @@ pickers.info_params = function(opts)
             },
         },
         extended_mappings = {
-
-            ["C-d"] = function(t)
-                handle_keys(t, true)
+            -- NOTE: all binds that change a value will flip a boolean toggle param.
+            -- SMALL UP/DOWN
+            ["C-w"] = function(t)
+                -- handle_keys(t)
             end,
-
-            -- refactor this into a function that can take a direction param, so that I
-            -- can use it for both up and down binds
+            ["C-e"] = function(t)
+                -- handle_keys(t)
+            end,
+            -- MEDIUM UP/DOWN
+            ["C-d"] = function(t)
+                -- handle_keys(t)
+            end,
+            ["C-u"] = function(t)
+                -- handle_keys(t)
+            end,
+            -- BIG UP/DOWN
             ["C-f"] = function(t)
                 handle_keys(t)
-                -- local sel = t.gui_ref:get_on_enter_selection()
-                --
-                -- log.user("value pre =", sel.value)
-                --
-                -- if sel.type == "bool" then
-                --     local newval = sel.value == 0 and 1 or 0
-                --     log.user("bool -> newval =", newval)
-                -- end
-                --
-                -- if type(sel.value) == "number" then
-                -- end
-                --
-                -- if sel.type == "int" then
-                --     -- sel.max is a proxy for whether or not param can be cycled / has range.
-                --     if sel.max then
-                --         local reverse = false
-                --         local oldval = sel.value
-                --         local newval
-                --         if reverse then
-                --             newval = (oldval - 1) % sel.max -- Cycle through 2, 1, 0
-                --             if newval < 0 then
-                --                 newval = sel.max
-                --             end
-                --         else
-                --             newval = (oldval + 1) % sel.max -- Cycle through 0, 1, 2
-                --         end
-                --     end
-                -- end
-                --
-                -- if sel.type == "double" then
-                --     local newval = sel.value + 0.1
-                --     if newval > sel.max then
-                --         newval = sel.max
-                --     end
-                -- end
-                --
-                -- if sel.type == "char" then
-                -- end
-                --
-                -- if sel.type == "float" then
-                -- end
+            end,
+            ["C-b"] = function(t)
+                handle_keys(t, true)
             end,
         },
     }, opts))

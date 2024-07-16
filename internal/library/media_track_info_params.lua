@@ -191,6 +191,19 @@ local T_TRACK_INFO_PARAMS = {
         min = 0,
         max = 2,
         description = "trim volume of track, 0=-inf, 0.5=-6dB, 1=+0dB, 2=+6dB, etc",
+        -- db_nudge_value is the value by which i want to shift up or down. eg 1 up or down.
+        -- NOTE: the hard set param is used for computing a specific value rather than
+        -- shift by an amount, which is default.
+        compute = function(volume_pre_in, db_nudge_value, is_hard_set)
+            -- these funcs will be reused, but i could duplicate them for now.
+            local function to_volume(db)
+                return 10 ^ (0.05 * db)
+            end
+            local function to_decibel(vol)
+                return 20 * math.log(vol, 10)
+            end
+            return to_volume(to_decibel(volume_pre_in) + db_nudge_value)
+        end,
     },
     D_PAN = { type = "double", name = "D_PAN", description = "trim pan of track, -1..1", min = -1, max = 1 },
     D_WIDTH = { type = "double", name = "D_WIDTH", description = "width of track, -1..1", min = -1, max = 1 },
@@ -297,11 +310,15 @@ local T_TRACK_INFO_PARAMS = {
         type = "float",
         name = "F_MCP_FXSEND_SCALE",
         description = "scale of fx+send area in MCP (0=minimum allowed, 1=maximum allowed)",
+        min = 0,
+        max = 1,
     },
     F_MCP_FXPARM_SCALE = {
         type = "float",
         name = "F_MCP_FXPARM_SCALE",
         description = "scale of fx parameter area in MCP (0=minimum allowed, 1=maximum allowed)",
+        min = 0,
+        max = 1,
     },
     F_MCP_SENDRGN_SCALE = {
         type = "float",
@@ -346,6 +363,7 @@ track_info.get_array = function(to)
             type = "info_param",
             cat = "track",
         }
+    v.key = v.name
         table.insert(res, v)
     end
     return res
