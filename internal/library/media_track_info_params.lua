@@ -236,6 +236,7 @@ local T_TRACK_INFO_PARAMS = {
             -- these funcs will be reused, but i could duplicate them for now.
             return to_volume(to_decibel(volume_pre_in) + db_nudge_value)
         end,
+    -- use this in entry maker to make the value formatted
         formatted = function(vol_in)
             return to_decibel(vol_in)
         end,

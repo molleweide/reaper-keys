@@ -192,6 +192,10 @@ function routing.logRoutingInfoForSelectedTracks()
     end
 end
 
+
+-- TODO: rename with `s` for plural.
+--
+---This is the main func for getting all route objects for a single track.
 function routing.get_route_object_for_track(tr)
     -- loop all categories above and return them as a unified table.
     local route_types = {
