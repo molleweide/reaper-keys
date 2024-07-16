@@ -270,6 +270,8 @@ local T_TRACK_INFO_PARAMS = {
         type = "char",
         name = "C_MAINSEND_NCH",
         description = "channel count of track send to parent (0=use all child track channels, 1=use one channel only)",
+        min = 0,
+        max = 1,
     },
     I_FREEMODE = {
         type = "int",
@@ -289,6 +291,8 @@ local T_TRACK_INFO_PARAMS = {
         type = "char",
         name = "C_LANESCOLLAPSED",
         description = "fixed lane collapse state (1=lanes collapsed, 2=track displays as non-fixed-lanes but hidden lanes exist)",
+        min = 1,
+        max = 2,
     },
     C_LANEPLAYS = {
         type = "char",
@@ -297,6 +301,8 @@ local T_TRACK_INFO_PARAMS = {
         description = [[In fixed lane tracks, 0=lane N does not play, 1=lane N plays exclusively,
     2=lane N plays and other lanes also play (fine to call with setNewValue,
     but returned value is read-only)]],
+        min = 0,
+        max = 2,
     },
     C_BEATATTACHMODE = {
         type = "char",
@@ -305,6 +311,8 @@ local T_TRACK_INFO_PARAMS = {
             track timebase, -1=project default, 0=time, 1=beats (position,
             length, rate), 2=beats (position only)
             ]],
+        min = -1,
+        max = 2,
     },
     F_MCP_FXSEND_SCALE = {
         type = "float",
@@ -324,11 +332,15 @@ local T_TRACK_INFO_PARAMS = {
         type = "float",
         name = "F_MCP_SENDRGN_SCALE",
         description = "scale of send area as proportion of the fx+send total area (0=minimum allowed, 1=maximum allowed)",
+        min = 0,
+        max = 1,
     },
     F_TCP_FXPARM_SCALE = {
         type = "float",
         name = "F_TCP_FXPARM_SCALE",
         description = "scale of TCP parameter area when TCP FX are embedded (0=min allowed, default, 1=max allowed)",
+        min = 0,
+        max = 1,
     },
     I_PLAY_OFFSET_FLAG = {
         type = "int",
@@ -363,7 +375,7 @@ track_info.get_array = function(to)
             type = "info_param",
             cat = "track",
         }
-    v.key = v.name
+        v.key = v.name
         table.insert(res, v)
     end
     return res

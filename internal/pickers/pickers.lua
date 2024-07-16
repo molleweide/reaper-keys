@@ -881,10 +881,13 @@ pickers.info_params = function(opts)
     ---comment
     ---@param t table
     ---@param direction boolean move value up or down. nudge/cycle/shift..
-    local function handle_keys(t, direction)
+    ---@param amount number The value by which floats/doubles should b shifted.
+    local function handle_keys(t, direction, amount)
         -- TODO: check if main prompt OR focus control -> determines how I
         -- should get the entry object.
-        local sel = t.gui_ref:get_on_enter_selection()
+        -- local sel = t.gui_ref:get_on_enter_selection()
+
+        local sel = t.gui_ref:get_currently_focused_entry()
 
         local dir_mult = direction and -1 or 1
 
@@ -894,23 +897,29 @@ pickers.info_params = function(opts)
             newval = sel.value == 0 and 1 or 0
         end
 
-        if sel.type == "int" then
-            -- sel.max is a proxy for whether or not param can be cycled / has range.
-            if sel.max then
+        if sel.type == "int" or sel.type == "char" then
+            local int_shift_amount = 1
+
+            -- NOTE:sel.max is a proxy for whether or not param can be cycled / has range.
+            if sel.max or sel.min then
                 local reverse = direction
                 local oldval = sel.value
                 if reverse then
-                    newval = (oldval - 1) % sel.max -- Cycle through 2, 1, 0
-                    if newval < 0 then
+                    newval = (oldval - int_shift_amount) % sel.max -- Cycle through 2, 1, 0
+                    if newval < sel.min then
                         newval = sel.max
                     end
                 else
-                    newval = (oldval + 1) % sel.max -- Cycle through 0, 1, 2
+                    -- TEST: Maybe I should use sel.min here instead of 0 since some params might cycle
+                    -- an interval that does not include zero.
+                    newval = (oldval + int_shift_amount) % sel.max -- Cycle through 0, 1, 2
                 end
+            else
+                newval = sel.value + dir_mult * int_shift_amount
             end
         end
 
-        if sel.type == "double" then
+        if sel.type == "double" or sel.type == "float" then
             local amount = 0.1
             local nudge = dir_mult * amount
 
@@ -923,12 +932,10 @@ pickers.info_params = function(opts)
             if newval > sel.max then
                 newval = sel.max
             end
-        end
 
-        if sel.type == "char" then
-        end
-
-        if sel.type == "float" then
+            if newval < sel.min then
+                newval = sel.min
+            end
         end
 
         log.user(string.format("[%s]: %s -> %s", sel.type, sel.value, newval))
@@ -985,6 +992,8 @@ pickers.info_params = function(opts)
         extended_mappings = {
             -- NOTE: all binds that change a value will flip a boolean toggle param.
             -- SMALL UP/DOWN
+            -- TODO: prompt -> custom set value
+            -- TODO: add specific values to each binding.
             ["C-w"] = function(t)
                 -- handle_keys(t)
             end,
