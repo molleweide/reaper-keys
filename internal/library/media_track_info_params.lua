@@ -37,14 +37,16 @@ local T_TRACK_INFO_PARAMS = {
         name = "B_SOLO_DEFEAT",
         description = "when set, if anything else is soloed and this track is not muted, this track acts soloed",
     },
-    I_FXEN = { type = "int", name = "I_FXEN", description = "fx enabled, 0=bypassed, !0=fx active" },
+    I_FXEN = { type = "int", name = "I_FXEN", description = "fx enabled, 0=bypassed, !0=fx active", min = 0, max = 1 },
     I_RECARM = {
         type = "int",
         name = "I_RECARM",
         description = "record armed, 0=not record armed, 1=record armed",
+        min = 0,
+        max = 1,
     },
     I_RECINPUT = {
-        type = "int",
+        type = "bitfield",
         name = "I_RECINPUT",
         description = [[
             record input, <0=no input. if 4096 set, input is MIDI and low 5
@@ -55,27 +57,37 @@ local T_TRACK_INFO_PARAMS = {
             channel count), or if 1024 is set, input is stereo input, otherwise
             input is mono.
             ]],
+        min = 0,
+        max = 1,
     },
     I_RECMODE = {
         type = "int",
         name = "I_RECMODE",
         description = "record mode, 0=input, 1=stereo out, 2=none, 3=stereo out w/latency compensation, 4=midi output, 5=mono out, 6=mono out w/ latency compensation, 7=midi overdub, 8=midi replace",
+        min = 0,
+        max = 8,
     },
     I_RECMODE_FLAGS = {
         type = "int",
         name = "I_RECMODE_FLAGS",
         description = "record mode flags, &3=output recording mode (0=post fader, 1=pre-fx, 2=post-fx/pre-fader)",
+        min = 0,
+        max = 2,
     },
 
     I_RECMON = {
         type = "int",
         name = "I_RECMON",
         description = "record monitoring, 0=off, 1=normal, 2=not when playing (tape style)",
+        min = 0,
+        max = 2,
     },
     I_RECMONITEMS = {
         type = "int",
         name = "I_RECMONITEMS",
         description = "monitor items while recording, 0=off, 1=on",
+        min = 0,
+        max = 1,
     },
     B_AUTO_RECARM = {
         type = "bool",
@@ -86,7 +98,7 @@ local T_TRACK_INFO_PARAMS = {
             ]],
     },
     I_VUMODE = {
-        type = "int",
+        type = "bitfield",
         name = "I_VUMODE",
         description = [[
             track vu mode, &1:disabled, &30==0:stereo peaks,
@@ -99,14 +111,38 @@ local T_TRACK_INFO_PARAMS = {
         type = "int",
         name = "I_AUTOMODE",
         description = "track automation mode, 0=trim/off, 1=read, 2=touch, 3=write, 4=latch",
+        min = 0,
+        max = 4,
     },
-    I_NCHAN = { type = "int", name = "I_NCHAN", description = "Number of track channels, 2-128, even numbers only" },
-    I_SELECTED = { type = "int", name = "I_SELECTED", description = "track selected, 0=unselected, 1=selected" },
+    I_NCHAN = {
+        type = "int",
+        name = "I_NCHAN",
+        description = "Number of track channels, 2-128, even numbers only",
+        min = 2,
+        max = 128,
+        compute = function(value_in, shift_amount, is_hard_set)
+            -- TODO: ensure that return value is EVEN
+            return newval
+        end,
+    },
+    I_SELECTED = {
+        type = "int",
+        name = "I_SELECTED",
+        description = "track selected, 0=unselected, 1=selected",
+        min = 0,
+        max = 1,
+    },
     I_WNDH = {
         type = "int",
         read_only = true,
         name = "I_WNDH",
         description = "current TCP window height in pixels including envelopes (read-only)",
+        -- min = 0,
+        -- max = 1,
+        compute = function()
+            -- get screen dimensions etc...
+            return newval
+        end,
     },
     I_TCPH = {
         type = "int",
@@ -154,9 +190,11 @@ local T_TRACK_INFO_PARAMS = {
         type = "int",
         name = "I_FOLDERCOMPACT",
         description = "folder collapsed state (only valid on folders), 0=normal, 1=collapsed, 2=fully collapsed",
+        min = 0,
+        max = 2,
     },
     I_MIDIHWOUT = {
-        type = "int",
+        type = "bitfield",
         name = "I_MIDIHWOUT",
         description = "track midi hardware output index, <0=disabled, low 5 bits are which channels (0=all, 1-16), next 5 bits are output device index (0-31)",
     },
@@ -166,7 +204,7 @@ local T_TRACK_INFO_PARAMS = {
         description = "track performance flags, &1=no media buffering, &2=no anticipative FX",
     },
     I_CUSTOMCOLOR = {
-        type = "int",
+        type = "int", -- bitfield
         name = "I_CUSTOMCOLOR",
         description = [[custom color, OS dependent color|0x1000000 (i.e.
             ColorToNative(r,g,b)|0x1000000). If you do not |0x1000000, then it
@@ -225,6 +263,7 @@ local T_TRACK_INFO_PARAMS = {
         type = "int",
         name = "I_PANMODE",
         description = "pan mode, 0=classic 3.x, 3=new balance, 5=stereo pan, 6=dual pan",
+        options = { 0, 3, 5, 6 },
     },
     D_PANLAW = {
         type = "double",

@@ -940,11 +940,13 @@ pickers.info_params = function(opts)
 
         log.user(string.format("[%s]: %s -> %s", sel.type, sel.value, newval))
 
-        -- -- TODO: set value here.
-        -- local lib_tr = require("library.tracks")
-        -- local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
-        -- local to = focused_track_objects[1]
-        -- reaper.SetMediaTrackInfo_Value(to.tr, sel.name, newval)
+        if newval and not sel.read_only then
+            local lib_tr = require("library.tracks")
+            local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+            local to = focused_track_objects[1]
+            -- TODO: set value here.
+            -- reaper.SetMediaTrackInfo_Value(to.tr, sel.name, newval)
+        end
 
         --
     end
