@@ -1,3 +1,4 @@
+local convert = require("utils.conversion")
 local track_info = {}
 
 local function to_volume(db)
@@ -234,11 +235,11 @@ local T_TRACK_INFO_PARAMS = {
         -- shift by an amount, which is default.
         compute = function(volume_pre_in, db_nudge_value, is_hard_set)
             -- these funcs will be reused, but i could duplicate them for now.
-            return to_volume(to_decibel(volume_pre_in) + db_nudge_value)
+            return convert.to_volume(convert.to_decibel(volume_pre_in) + db_nudge_value)
         end,
         -- use this in entry maker to make the value formatted
         formatted = function(vol_in)
-            return to_decibel(vol_in)
+            return convert.to_decibel(vol_in)
         end,
     },
     D_PAN = { type = "double", name = "D_PAN", description = "trim pan of track, -1..1", min = -1, max = 1 },

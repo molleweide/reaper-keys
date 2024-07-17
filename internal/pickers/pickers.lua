@@ -277,6 +277,8 @@ end
 
 -- TODO: mapping -> cycle pickers -> rec | send | hw | all |
 pickers.single_track_routes = function(opts)
+    local convert = require("utils.conversion")
+
     local tr_routes
     opts = opts or {}
 
@@ -313,7 +315,8 @@ pickers.single_track_routes = function(opts)
             { 4, "mute" },
             { 4, "phase" },
             { 4, "mono" },
-            { 5, "vol" },
+            { 5, "v_raw" },
+            { 5, "v_dB" },
             { 4, "S_m" },
             { 4, "A_m" },
             { 6, "m_fl" },
@@ -341,6 +344,15 @@ pickers.single_track_routes = function(opts)
 
             -- todo: Reuse logic from info_params -> convert to unit = dB..
             local vol = item.info_params.D_VOL.value
+            local unit = ""
+            if item.unit then
+                unit = " (" .. item.unit .. ")"
+            end
+            local vol_fmt_out = ""
+            local fmt = item.info_params.D_VOL.formatted
+            if fmt then
+                vol_fmt_out = tostring(fmt(item.info_params.D_VOL.value)) .. unit
+            end
 
             local sendmode = tostring(item.info_params.I_SENDMODE.value):match(int_pattern)
             local automode = tostring(item.info_params.I_AUTOMODE.value):match(int_pattern)
@@ -356,6 +368,7 @@ pickers.single_track_routes = function(opts)
                 phase,
                 mono,
                 vol,
+                vol_fmt_out,
                 sendmode,
                 automode,
                 midiflags,

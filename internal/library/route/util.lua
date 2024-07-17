@@ -1,6 +1,8 @@
 local log = require("utils.log")
 local midi_util = require("utils.midi")
 
+local convert = require("utils.conversion")
+
 local route_util = {}
 
 function route_util.get_num_routes_by_category(tr, cat)
@@ -14,7 +16,22 @@ local T_ROUTE_INFO_PARAMS = {
     },
     B_PHASE = { type = "bool", name = "B_PHASE", description = "True to flip the phase." },
     B_MONO = { type = "bool", name = "B_MONO" },
-    D_VOL = { type = "double", name = "D_VOL", description = "1.0 = +0dB etc" },
+    D_VOL = {
+        type = "double",
+        name = "D_VOL",
+        unit = "dB",
+        description = "1.0 = +0dB etc",
+        min = 0,
+        max = 2,
+        compute = function(volume_pre_in, db_nudge_value, is_hard_set)
+            -- these funcs will be reused, but i could duplicate them for now.
+            return convert.to_volume(convert.to_decibel(volume_pre_in) + db_nudge_value)
+        end,
+        -- use this in entry maker to make the value formatted
+        formatted = function(vol_in)
+            return convert.to_decibel(vol_in)
+        end,
+    },
     -- D_PAN : double * : -1..+1
     D_PAN = { type = "double", name = "D_PAN", description = "-1...+1", min = -1, max = 1 },
     -- D_PANLAW : double * :
