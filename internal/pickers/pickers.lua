@@ -275,6 +275,7 @@ pickers.track_routing = function()
     }, opts))
 end
 
+-- TODO: mapping -> cycle pickers -> rec | send | hw | all |
 pickers.single_track_routes = function(opts)
     local tr_routes
     opts = opts or {}
@@ -307,15 +308,15 @@ pickers.single_track_routes = function(opts)
             { 3, "#" },
             { 16, "type/index" },
             { 24, "other_name" },
-            { 12, "src_ch" },
-            { 12, "dst_ch" },
-            { 1, "mute" },
-            { 1, "phase" },
-            { 1, "Mono" },
-            { 6, "vol" },
-            { 6, "sendmode" },
-            { 6, "automode" },
-            { 6, "midiflags" },
+            { 4, "src_ch" },
+            { 4, "dst_ch" },
+            { 4, "mute" },
+            { 4, "phase" },
+            { 4, "mono" },
+            { 5, "vol" },
+            { 4, "S_m" },
+            { 4, "A_m" },
+            { 6, "m_fl" },
         },
         entry_maker = function(item)
             local ti = str.makeStringLength(tostring(item.other_tr_idx), 3)
@@ -324,6 +325,10 @@ pickers.single_track_routes = function(opts)
                 ti = "0" .. ti
             end
             local other = string.format("(#%s) %s", ti, item.other_tr_name)
+
+            local int_pattern = "^%-?%d+"
+            local src_chan = tostring(item.src_chan):match(int_pattern) --:sub(1,1) -- if -1 -> <no_audio>
+            local dst_chan = tostring(item.dst_chan):match(int_pattern)
 
             local mute = item.info_params.B_MUTE.value
             mute = mute == 1 and "x" or " "
@@ -334,21 +339,26 @@ pickers.single_track_routes = function(opts)
             local mono = item.info_params.B_MONO.value
             mono = mono == 1 and "x" or " "
 
+            -- todo: Reuse logic from info_params -> convert to unit = dB..
             local vol = item.info_params.D_VOL.value
-            -- vol = vol == 1 and "x" or " "
+
+            local sendmode = tostring(item.info_params.I_SENDMODE.value):match(int_pattern)
+            local automode = tostring(item.info_params.I_AUTOMODE.value):match(int_pattern)
+            local midiflags = tostring(item.info_params.I_MIDIFLAGS.value):match(int_pattern)
+
             return {
                 item.index,
                 item.type == "recieve" and "recieving from" or "sending to",
                 other,
-                item.src_chan, -- if -1 -> <no_audio>
-                item.dst_chan,
+                src_chan, -- if -1 -> <no_audio>
+                dst_chan,
                 mute,
                 phase,
                 mono,
-                -- sendmode,
-                -- automode,
-                -- midiflags
                 vol,
+                sendmode,
+                automode,
+                midiflags,
             }
         end,
         extended_mappings = {
