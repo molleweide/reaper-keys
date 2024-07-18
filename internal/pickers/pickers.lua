@@ -8,6 +8,8 @@ local fu = require("utils.fzf")
 local tbl = require("utils.table")
 local str = require("utils.string")
 
+local ip = require("library.info_params")
+
 local fx_util = require("library.fx")
 local lib_items = require("library.items")
 local marks = require("utils.marks_regions")
@@ -282,16 +284,17 @@ pickers.single_track_routes = function(opts)
     local tr_routes
     opts = opts or {}
 
-    if not opts.result_routes then
-        local tr = reaper.GetSelectedTrack(0, 0)
-        local route = require("library.routing")
-        tr_routes = route.get_route_object_for_track(tr)
-    else
-        tr_routes = opts.result_routes
-    end
+    -- if not opts.result_routes then
+    local tr = reaper.GetSelectedTrack(0, 0)
+    local route = require("library.routing")
+    tr_routes = route.get_route_object_for_track(tr)
+    -- else
+    --     tr_routes = opts.result_routes
+    -- end
 
     -- log.user(format.block(tr_routes))
     fzf.init({
+        meta = { track = tr },
         title = "Single track routes",
         x = -100,
         -- y = 0,
@@ -307,19 +310,19 @@ pickers.single_track_routes = function(opts)
         -- having to set enabled here is a bit stupid
         column_legend_enabled = true,
         columns_legend = {
-            { 3, "#" },
-            { 16, "type/index" },
+            { 2, "#" },
+            { 14, "type/index" },
             { 24, "other_name" },
             { 4, "src_ch" },
             { 4, "dst_ch" },
-            { 4, "mute" },
-            { 4, "phase" },
-            { 4, "mono" },
-            { 5, "v_raw" },
-            { 5, "v_dB" },
-            { 4, "S_m" },
-            { 4, "A_m" },
-            { 6, "m_fl" },
+            { 1, "m" },
+            { 1, "p" },
+            { 1, "M" },
+            { 4, "vol" },
+            { 4, "dB" },
+            { 3, "S_m" },
+            { 3, "A_m" },
+            { 5, "m_fl" },
         },
         entry_maker = function(item)
             local ti = str.makeStringLength(tostring(item.other_tr_idx), 3)
@@ -377,10 +380,17 @@ pickers.single_track_routes = function(opts)
         extended_mappings = {
             ["C-w"] = function(t) end,
             ["C-e"] = function(t) end,
+            ["C-t"] = function(t)
+                ip.handle_keys(t, _, _, "B_MUTE")
+            end,
             ["C-d"] = function(t) end,
             ["C-u"] = function(t) end,
-            ["C-f"] = function(t) end,
-            ["C-b"] = function(t) end,
+            ["C-f"] = function(t)
+                ip.handle_keys(t, 0.1, _, "D_VOL")
+            end,
+            ["C-b"] = function(t)
+                ip.handle_keys(t, 0.1, true, "D_VOL")
+            end,
         },
     })
 end
@@ -960,82 +970,82 @@ pickers.info_params = function(opts)
     local s = require("utils.string")
     log.user("pickers.info_params")
 
-    ---comment
-    ---@param t table
-    ---@param amount number The value by which floats/doubles should b shifted.
-    ---@param direction boolean|nil move value up or down. nudge/cycle/shift..
-    local function handle_keys(t, amount, direction)
-        -- TODO: check if main prompt OR focus control -> determines how I
-        -- should get the entry object.
-        -- local sel = t.gui_ref:get_on_enter_selection()
-
-        local gui = t.gui_ref
-
-        log.user(">>>>>>>>>", format.block(gui.meta))
-
-        local sel = gui:get_currently_focused_entry()
-
-        local dir_mult = direction and -1 or 1
-
-        local newval
-
-        if sel.type == "bool" then
-            newval = sel.value == 0 and 1 or 0
-        end
-
-        if sel.type == "int" or sel.type == "char" then
-            local int_shift_amount = 1
-            if sel.max or sel.min then
-                local reverse = direction
-                local oldval = sel.value
-                if reverse then
-                    newval = (oldval - int_shift_amount) % sel.max -- Cycle through 2, 1, 0
-                    if newval < sel.min then
-                        newval = sel.max
-                    end
-                else
-                    newval = (oldval + int_shift_amount) % sel.max -- Cycle through 0, 1, 2
-                end
-            else
-                newval = sel.value + dir_mult * int_shift_amount
-            end
-        end
-
-        if sel.type == "double" or sel.type == "float" then
-            local nudge = dir_mult * amount
-            if sel.compute then
-                newval = sel.compute(sel.value, nudge)
-            else
-                newval = sel.value + nudge
-            end
-            if newval > sel.max then
-                newval = sel.max
-            end
-            if newval < sel.min then
-                newval = sel.min
-            end
-        end
-
-        log.user(string.format("[%s]: %s -> %s", sel.type, sel.value, newval))
-
-        if newval and not sel.read_only and not sel.wip then
-            log.user(".meta = ", format.block(t.gui_ref.meta))
-            if sel._meta.cat == "track" then
-                reaper.SetMediaTrackInfo_Value(gui.meta.track, sel.key, newval)
-            end
-            if sel._meta.cat == "item" then
-                reaper.SetMediaItemInfo_Value(gui.meta.item, sel.key, value)
-            end
-            if sel._meta.cat == "take" then
-                reaper.SetMediaItemTakeInfo_Value(gui.meta.take, sel.key, newval)
-            end
-
-            sel.value = newval
-            UPDATE_RESULTS = true
-        end
-
-        --
-    end
+    -- ---comment
+    -- ---@param t table
+    -- ---@param amount number The value by which floats/doubles should b shifted.
+    -- ---@param direction boolean|nil move value up or down. nudge/cycle/shift..
+    -- local function handle_keys(t, amount, direction)
+    --     -- TODO: check if main prompt OR focus control -> determines how I
+    --     -- should get the entry object.
+    --     -- local sel = t.gui_ref:get_on_enter_selection()
+    --
+    --     local gui = t.gui_ref
+    --
+    --     log.user(">>>>>>>>>", format.block(gui.meta))
+    --
+    --     local sel = gui:get_currently_focused_entry()
+    --
+    --     local dir_mult = direction and -1 or 1
+    --
+    --     local newval
+    --
+    --     if sel.type == "bool" then
+    --         newval = sel.value == 0 and 1 or 0
+    --     end
+    --
+    --     if sel.type == "int" or sel.type == "char" then
+    --         local int_shift_amount = 1
+    --         if sel.max or sel.min then
+    --             local reverse = direction
+    --             local oldval = sel.value
+    --             if reverse then
+    --                 newval = (oldval - int_shift_amount) % sel.max -- Cycle through 2, 1, 0
+    --                 if newval < sel.min then
+    --                     newval = sel.max
+    --                 end
+    --             else
+    --                 newval = (oldval + int_shift_amount) % sel.max -- Cycle through 0, 1, 2
+    --             end
+    --         else
+    --             newval = sel.value + dir_mult * int_shift_amount
+    --         end
+    --     end
+    --
+    --     if sel.type == "double" or sel.type == "float" then
+    --         local nudge = dir_mult * amount
+    --         if sel.compute then
+    --             newval = sel.compute(sel.value, nudge)
+    --         else
+    --             newval = sel.value + nudge
+    --         end
+    --         if newval > sel.max then
+    --             newval = sel.max
+    --         end
+    --         if newval < sel.min then
+    --             newval = sel.min
+    --         end
+    --     end
+    --
+    --     log.user(string.format("[%s]: %s -> %s", sel.type, sel.value, newval))
+    --
+    --     if newval and not sel.read_only and not sel.wip then
+    --         log.user(".meta = ", format.block(t.gui_ref.meta))
+    --         if sel._meta.cat == "track" then
+    --             reaper.SetMediaTrackInfo_Value(gui.meta.track, sel.key, newval)
+    --         end
+    --         if sel._meta.cat == "item" then
+    --             reaper.SetMediaItemInfo_Value(gui.meta.item, sel.key, value)
+    --         end
+    --         if sel._meta.cat == "take" then
+    --             reaper.SetMediaItemTakeInfo_Value(gui.meta.take, sel.key, newval)
+    --         end
+    --
+    --         sel.value = newval
+    --         UPDATE_RESULTS = true
+    --     end
+    --
+    --     --
+    -- end
 
     local title = opts.title or "INFO PARAMS"
 
@@ -1104,11 +1114,11 @@ pickers.info_params = function(opts)
             end,
             -- BIG UP/DOWN
             ["C-f"] = function(t)
-                handle_keys(t, 0.1)
+                ip.handle_keys(t, 0.1)
             end,
             ["C-b"] = function(t)
                 -- log.user(format.block(t))
-                handle_keys(t, 0.1, true)
+                ip.handle_keys(t, 0.1, true)
             end,
         },
     }, opts))

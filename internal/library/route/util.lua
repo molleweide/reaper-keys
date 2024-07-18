@@ -1,6 +1,8 @@
 local log = require("utils.log")
 local midi_util = require("utils.midi")
 
+local tbl = require("utils.table")
+
 local convert = require("utils.conversion")
 
 local route_util = {}
@@ -76,15 +78,26 @@ local T_ROUTE_INFO_PARAMS = {
     },
 }
 
+-- TODO: This has to be merged with all the other info_param getter funcs so that I
+-- only need to manage things in one location. DRY...
+--
 local function get_info_for_route(tr, cat, si)
     local res = {}
     for k, v in pairs(T_ROUTE_INFO_PARAMS) do
+        v = tbl.copy(v)
         v.value = reaper.GetTrackSendInfo_Value(tr, cat, si, v.name)
         v._meta = {
             type = "info_param",
             cat = "route",
         }
+
+        -- with routes where we attach all info params to each route, the structure
+        -- is different from track/item/take and so the name key does not apply.
+        -- However, if I create a two step picker, where I first select which
+        -- route to change, AND then look at all info params for a single route,
+        -- then it makes sense.
         v.key = v.name
+
         -- table.insert(res, v)
         res[k] = v
     end

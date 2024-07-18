@@ -786,6 +786,19 @@ function jGui:get_currently_focused_entry()
     return self.t_search_results[idx], idx
 end
 
+
+    -- tResultButtons = {}
+function jGui:get_currently_focused_control()
+    local idx = self.focus.focus_index - 1
+    -- if the main_input is focused
+    if self.focus.title == "main_input" then
+        idx = idx + 1
+    end
+    return tResultButtons[idx], idx
+end
+
+
+
 function jGui:remove_results_entries()
     -- TODO: This function has to trigger an update of results listing.
     -- ~ Should take a single index or a table of indices that needs to
