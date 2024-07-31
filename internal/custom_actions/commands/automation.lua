@@ -192,13 +192,15 @@ local function generate_points_for_insertion(sel, range_left, range_right, midi_
 
     pos_key_name_string = "ppqpos"
     val_key_name_string = "val"
-    range_left = reaper.MIDI_GetPPQPosFromProjTime(midi_take, range_left)
-    range_right = reaper.MIDI_GetPPQPosFromProjTime(midi_take, range_right)
+    -- range_left = reaper.MIDI_GetPPQPosFromProjTime(midi_take, range_left)
+    -- range_right = reaper.MIDI_GetPPQPosFromProjTime(midi_take, range_right)
   end
 
-  local function convert_if_necessary(pos, midi_take)
-    if midi_take then
-      return reaper.MIDI_GetPPQPosFromProjTime(midi_take, pos)
+  log.user("L/R", range_left, range_right)
+
+  local function convert_if_necessary(pos, take)
+    if take then
+      return reaper.MIDI_GetPPQPosFromProjTime(take, pos)
     end
     return pos
   end
@@ -774,17 +776,18 @@ automation_actions.picker_insert_cc_curve = function()
           end
         end
 
-        local cursor_info = tl.get_cursor_info()
-        local ms = cursor_info.msr.start
-        local me = cursor_info.msr._end
-        local cp = cursor_info.cursor_pos
-        ms = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, ms)
-        me = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, me)
-        local cp_ppq = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, cp)
-        local cp_ppq_and_qn = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, cp + 0.5)
+        if opts.cc then
+          local cursor_info = tl.get_cursor_info()
+          local ms = cursor_info.msr.start
+          local me = cursor_info.msr._end
+          local cp = cursor_info.cursor_pos
+          ms = reaper.MIDI_GetPPQPosFromProjTime(midi_target_take, ms)
+          me = reaper.MIDI_GetPPQPosFromProjTime(midi_target_take, me)
+          -- local cp_ppq = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, cp)
+          -- local cp_ppq_and_qn = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, cp + 0.5)
 
-        log.user("MEASURE PPQ:", ms, me)
-
+          log.user("MEASURE PPQ:", ms, me)
+        end
 
         -- TODO: For MIDI, generate PPQ events instead and use the constants
         -- ~ if cc -> need to assign which cc number.

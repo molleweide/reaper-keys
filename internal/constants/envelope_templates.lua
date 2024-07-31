@@ -53,8 +53,8 @@ envelope_templates.TEMPLATES = {
     {
         name = "UP /",
         def = {
-            { val = 0.25 },
-            { val = 0.75 },
+            { val = 0.05 },
+            { val = 0.95 },
         },
     },
     {
