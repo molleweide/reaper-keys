@@ -233,6 +233,8 @@ automation_actions.test = function()
   local msr_end_pos = cursor_info.msr._end
   local cursor_position = cursor_info.cursor_pos
 
+  log.clear()
+
   local BUILTIN_ENVELOPE_NAMES = {
     volume_pre_fx = { name = "Volume (Pre-FX)", search_string = "<VOLENV" },
     pan = { name = "Pan", search_string = "<PANENV" },
@@ -249,6 +251,8 @@ automation_actions.test = function()
 
   local all_builtin_envs = envelopes.track_get_all_builtin_envs(tr)
 
+  log.user("all built in envs:", format.block(all_builtin_envs))
+
   -- if t_envs == nil or #t_envs == 0 then
   --     log.user("No envelopes found")
   --     return
@@ -256,59 +260,59 @@ automation_actions.test = function()
 
   log.user("automation test -> t_envs:", format.block(t_envs))
 
+  -- --
+  -- -- Insert points to volume curve and see what happens.
+  -- --
+  -- log.user("# TEST INSERT")
+  -- envelopes.fltr_single_envelope({
+  --   target_env = volenv,
+  --   insert = { { position = cursor_position, param_val = 0.5 } },
+  -- })
   --
-  -- Insert points to volume curve and see what happens.
+  -- --
+  -- -- Remove points
+  -- --
+  -- log.user("# TEST RM MSR")
+  -- envelopes.fltr_single_envelope({
+  --   target_env = volenv,
+  --   remove = { { msr_start_pos, msr_end_pos } }, -- TODO: pass the range in which to remove
+  -- })
   --
-  log.user("# TEST INSERT")
-  envelopes.fltr_single_envelope({
-    target_env = volenv,
-    insert = { { position = cursor_position, param_val = 0.5 } },
-  })
-
+  -- --
+  -- -- Insert multiple points
+  -- --
+  -- log.user("# TEST insert mult points")
+  -- envelopes.fltr_single_envelope({
+  --   target_env = volenv,
+  --   insert = {
+  --     { position = cursor_position + 2.5, param_val = 0.4 },
+  --     { position = cursor_position + 3,   param_val = 0.6 },
+  --   },
+  -- })
   --
-  -- Remove points
+  -- --
+  -- -- Transform notes
+  -- --
+  -- log.user("# TEST transform points before cursor ")
+  -- envelopes.fltr_single_envelope({
+  --   target_env = volenv,
+  --   filter = function(point)
+  --     return point.position < cursor_position
+  --   end,
+  --   transform = { param_val = 300 },
+  --   -- transform = { param_val = { 200, "force"} },
+  -- })
   --
-  log.user("# TEST RM MSR")
-  envelopes.fltr_single_envelope({
-    target_env = volenv,
-    remove = { { msr_start_pos, msr_end_pos } }, -- TODO: pass the range in which to remove
-  })
-
-  --
-  -- Insert multiple points
-  --
-  log.user("# TEST insert mult points")
-  envelopes.fltr_single_envelope({
-    target_env = volenv,
-    insert = {
-      { position = cursor_position + 2.5, param_val = 0.4 },
-      { position = cursor_position + 3,   param_val = 0.6 },
-    },
-  })
-
-  --
-  -- Transform notes
-  --
-  log.user("# TEST transform points before cursor ")
-  envelopes.fltr_single_envelope({
-    target_env = volenv,
-    filter = function(point)
-      return point.position < cursor_position
-    end,
-    transform = { param_val = 300 },
-    -- transform = { param_val = { 200, "force"} },
-  })
-
-  -- TEST: Transform in time
-  log.user("# TEST transform points in time.")
-  envelopes.fltr_single_envelope({
-    target_env = volenv,
-    filter = function(point)
-      return point.position > cursor_position
-    end,
-    -- This should move events forward by one measure/ four QNs.
-    transform = { position = 2 },
-  })
+  -- -- TEST: Transform in time
+  -- log.user("# TEST transform points in time.")
+  -- envelopes.fltr_single_envelope({
+  --   target_env = volenv,
+  --   filter = function(point)
+  --     return point.position > cursor_position
+  --   end,
+  --   -- This should move events forward by one measure/ four QNs.
+  --   transform = { position = 2 },
+  -- })
 
   -- --   --
   -- -- 6. TODO: picker select fx param insert env points
@@ -579,16 +583,13 @@ automation_actions.picker_insert_cc_curve = function()
 
   -- The picker action depends on having a range target for insertion,
   -- ie. this actions as a regular "command" is not yet supported.
-
   if not range_left or not range_right then
     return
   end
 
-
   log.user("state.context = ", format.block(context))
 
-  -- local is_main, is_midi
-
+  local is_main, is_midi
   local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
   local trobj = focused_track_objects[1]
   if not trobj then
@@ -657,6 +658,8 @@ automation_actions.picker_insert_cc_curve = function()
     there_are_env_enabled_fx = true
   end
 
+  -- TODO: Move this function to outside.
+  --
   ---Huge conditional that handles each envelope target type (sel.code attr) accordingly
   local function apply_env_temp_picker(opts)
     -- log.user("[ func apply_env_temp_picker() ]; opts =", format.block(opts))
@@ -668,20 +671,22 @@ automation_actions.picker_insert_cc_curve = function()
         local target_env
         local t_pts_to_insert
 
+        -- log.user(
+        --   string.format("FX curve, fx = %s, fx_param = %s", opts.fx_idx, format.block(opts.fx_param))
+        -- )
+
         if opts.code == "fx" then
-          log.user(
-            string.format("FX curve, fx = %s, fx_param = %s", opts.fx_idx, format.block(opts.fx_param))
-          )
           target_env = reaper.GetFXEnvelope(trobj.tr, opts.fx_idx, opts.fx_param.index, true)
-        elseif opts.code == "volume" then
-          log.user("VOLUME curve")
-          -- TODO: get volume envelope
-        elseif opts.code == "pan" then
-          log.user("PAN curve")
-        elseif opts.code == "pitch_bend" then
-          log.user("PITCH BEND curve")
-        elseif opts.code:match("^cc_") then
-          log.user("CC curve")
+        else
+          -- if opts.code == "volume" then
+          -- elseif opts.code == "pan" then
+          -- elseif opts.code == "pitch_bend" then
+          -- elseif opts.code:match("^cc_") then
+          if opts.cc then
+            -- TODO: get CC envelope
+          else
+            -- TODO: Get built in env
+          end
         end
 
         -- 2. Ensure we can safely inject data.
@@ -726,7 +731,6 @@ automation_actions.picker_insert_cc_curve = function()
             sort_comp = require("pickers.sorters.default")("name"),
             entry_maker = require("pickers.entry_makers.fx_parameters"),
             attach_mappings = nil,
-
             -- extended_mappings = {
             --     ["C-z"] = function()
             --         track_fx_ui(true)
@@ -743,25 +747,27 @@ automation_actions.picker_insert_cc_curve = function()
 
   log.clear()
 
+  log.user(format.block(t_curve_results))
+
   local function picker_curve_menu_start()
     fzf.init({
       title = "Picker: Curve menu start",
       results = t_curve_results,
       x = 200,
-      width = 900,
+      width = 1400,
       height = 600,
 
       -- FIX: Upon hitting Enter> there is an error `attempt to index a nil value`
       on_select_func = function(gui)
         log.user("!!!!!!")
         local sel = gui:get_on_enter_selection()
-        log.user(format.block(sel))
+        log.user("picker curve menu start ->",format.block(sel))
 
         if sel.custom_next_menu and type(sel.custom_next_menu) == "function" then
           log.user("???")
           sel.custom_next_menu()
         else
-          apply_env_temp_picker({ code = sel.code })
+          apply_env_temp_picker(sel)
         end
 
         return false
@@ -770,7 +776,7 @@ automation_actions.picker_insert_cc_curve = function()
       sort_comp = "name",
       -- FIX: move this to defaults
       entry_maker = function(item)
-        return { item.name }
+        return { { item.name, 125 } }
       end,
     })
   end
@@ -803,7 +809,7 @@ automation_actions.picker_edit_track_curves_ui = function()
   local tr = t_foc_tr[1].tr
 
   -- get list of all envs
-  local t_envs = envelopes.fltr_track_envelopes(tr)
+  local t_envs = envelopes.fltr_track_envelopes(tr, { log = true })
 
   -- log.user("envs found:", format.block(t_envs))
 
@@ -993,11 +999,12 @@ automation_actions.picker_edit_track_curves_ui = function()
 
   -- list track envelopes
   fzf.init({
-    title = "List Curve_Objects for track = " .. "TRACK_NAME",
+    title = "List envelopes for track =" .. "TRACK_NAME (<CR> to inspect an env's curve_objects)",
     width = 1000,
     height = 400,
     results = t_envs,
     results_filter = "name",
+    -- On <CR> inspect selected envelops curve objects.
     on_select_func = function(gui)
       picker_env_curve_objs(gui:get_on_enter_selection())
       return false

@@ -76,11 +76,45 @@ constants.patterns = {
   extension_wav = "%.[wW][aA][vV]$"
 }
 
+
+-- "<VOLENV") )
+-- "<PANENV") )
+-- "<VOLENV2")
+-- "<PANENV2")
+-- "<WIDTHENV")
+-- "<WIDTHENV2"
+-- "<VOLENV3")
+-- "<MUTEENV")
+
 constants.BUILTIN_ENVELOPES = {
-  volume = { name = "Volume", search_string = "<VOLENV2" },
-  volume_pre_fx = { name = "Volume (Pre-FX)", search_string = "<VOLENV" },
-  pan = { name = "Pan", search_string = "<PANENV2" },
-  pan_pre_fx = { name = "Pan (Pre-FX)", search_string = "<PANENV" },
+  volume = {
+    id             = 0,
+    name           = "volume",
+    name_formatted = "Volume",
+    search_string
+                   = "<VOLENV2"
+  },
+  volume_pre_fx = {
+    id = 1,
+    name = "volume_pre_fx",
+    name_formatted = "Volume (Pre-FX)",
+    search_string = "<VOLENV"
+  },
+  pan = { id = 2, name = "Pan", search_string = "<PANENV2" },
+  pan_pre_fx = { id = 3, name = "Pan (Pre-FX)", search_string = "<PANENV" },
+  width = {
+    id = 4,
+    name = "width",
+    name_formatted = "Width",
+    search_string =
+    "<WIDTHENV2"
+  },
+  width_pre_fx = { id = 5, name = "width_pre_fx", name_formatted = "Width (Pre-FX)", search_string = "<WIDTHENV" },
+  mute = { id = 6, name = "mute", name_formatted = "Mute", search_string = "<MUTEENV" },
+  -- pitch = { id = 7, name = "Pitch", search_string = "<PANENV" },
+  -- playrate = { id = 8, name = "Playrate", search_string = "<PANENV" },
+  -- tempo_map = { id = 9, name = "Tempo map", search_string = "<PANENV" },
+  -- parameter = { id = 10, name = "Parameter", search_string = "<PANENV" },
 }
 
 
