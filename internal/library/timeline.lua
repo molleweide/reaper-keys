@@ -2,6 +2,8 @@ local tl = {}
 
 -- default to cursor, but can be any position
 
+
+-- TODO: this one should return a class EditCursor()
 tl.get_cursor_info = function(pos)
     pos = pos or reaper.GetCursorPosition()
     -- convert a time into beats.

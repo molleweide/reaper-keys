@@ -4,7 +4,7 @@ description:
 authors: hjalmarjakobsson
 categories:
 created: 2024-07-31T10:06:53-0500
-updated: 2024-07-31T10:12:01-0500
+updated: 2024-07-31T11:54:24-0500
 version: 1.1.1
 @end
 
@@ -33,7 +33,9 @@ reaper.BR_EnvGetProperties( envelope )
 -- defaultShape: default point shape: 0->Linear, 1->Square, 2->Slow start/end, 3->Fast start, 4->Fast end, 5->Bezier
 -- minValue: minimum envelope value
 -- maxValue: maximum envelope value
--- type: envelope type: 0->Volume, 1->Volume (Pre-FX), 2->Pan, 3->Pan (Pre-FX), 4->Width, 5->Width (Pre-FX), 6->Mute, 7->Pitch, 8->Playrate, 9->Tempo map, 10->Parameter
+-- type: envelope type: 0->Volume, 1->Volume (Pre-FX), 2->Pan, 3->Pan (Pre-FX),
+--      4->Width, 5->Width (Pre-FX), 6->Mute, 7->Pitch, 8->Playrate, 9->Tempo map,
+--        10->Parameter
 -- faderScaling: true if envelope uses fader scaling
 -- automationItemsOptions: -1->project default, &1=0->don't attach to underl. env., &1->attach to underl. env. on right side, &2->attach to underl. env. on both sides, &4: bypass underl. env.
 ------

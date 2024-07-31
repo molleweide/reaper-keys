@@ -163,34 +163,88 @@ local function find_existing_curve_at_new_range(env, range_left, range_right)
 end
 
 
-local function generate_points_for_insertion(sel, range_left, range_right)
+--   ms = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, ms)
+--   -> Use this to get PPQ points for new
+
+local function generate_points_for_insertion(sel, range_left, range_right, midi_take, midi_type, cc_num)
+  local is_midi = midi_take and true
+
   local t_pts_to_insert = {}
   -- local env_temps = envelope_templates.TEMPLATES
   local layer_encoder_def = envelope_templates.LAYERED_CURVES_ENCODING[1]
-  local env_step_delta = envelope_templates.ENV_STEP_DELTA
+
+  local env_step_delta = is_midi and 1 or envelope_templates.ENV_STEP_DELTA
+
   local range_length = range_right - range_left
   local cnt_mid_points = 0
+
+  -- using these two variables is a bit retarded but it is because I have used
+  -- two different names in regular evn fltr and midi cc fltr and I need to fix
+  -- this so that i can remove this.
+  local pos_key_name_string = "position"
+  local val_key_name_string = "param_val"
+
+
+  if is_midi then
+    -- if not == real take then
+    --   return
+    --   end
+
+    pos_key_name_string = "ppqpos"
+    val_key_name_string = "val"
+    range_left = reaper.MIDI_GetPPQPosFromProjTime(midi_take, range_left)
+    range_right = reaper.MIDI_GetPPQPosFromProjTime(midi_take, range_right)
+  end
+
+  local function convert_if_necessary(pos, midi_take)
+    if midi_take then
+      return reaper.MIDI_GetPPQPosFromProjTime(midi_take, pos)
+    end
+    return pos
+  end
+
   for i, pt in ipairs(sel.def) do
-    if not pt.val then
-      pt.val = 0.5
+    -- shift values to range 127
+    --
+
+    local point_value = pt.val or 0.5
+
+    if midi_type == "cc" then
+      point_value = math.floor(point_value * 127)
+    end
+    if midi_type == "pitch" then
+      point_value = math.floor(point_value * 8192)
     end
 
     if i == 1 then
       log.user("startpoint")
-      table.insert(t_pts_to_insert, { name = "start", position = range_left, param_val = pt.val })
+      local pos_val = convert_if_necessary(range_left, midi_take)
+      table.insert(t_pts_to_insert,
+        {
+          name = "start",
+          [pos_key_name_string] = pos_val,
+          [val_key_name_string] = point_value,
+          cc = cc_num
+        })
       table.insert(t_pts_to_insert, {
         name = "start_post_sig",
-        position = range_left + 1 * env_step_delta,
-        param_val = pt.val,
+        [pos_key_name_string] = pos_val + 1 * env_step_delta,
+        [val_key_name_string] = point_value,
+        cc = cc_num
       })
+      --
     elseif i == #t_pts_to_insert then
       log.user("endpoint")
+      local pos_val = convert_if_necessary(range_right, midi_take)
       table.insert(t_pts_to_insert, {
         name = "end_pre_sig",
-        position = range_right - 2 * env_step_delta,
-        param_val = pt.val,
+        [pos_key_name_string] = pos_val - 2 * env_step_delta,
+        [val_key_name_string] = point_value,
+        cc = cc_num
       })
-      table.insert(t_pts_to_insert, { name = "end", position = range_right, param_val = pt.val })
+      table.insert(t_pts_to_insert,
+        { name = "end", [pos_key_name_string] = pos_val, [val_key_name_string] = point_value, cc = cc_num })
+      --
     else
       log.user("midpoint")
       cnt_mid_points = cnt_mid_points + 1
@@ -212,7 +266,12 @@ local function generate_points_for_insertion(sel, range_left, range_right)
 
       table.insert(
         t_pts_to_insert,
-        { name = "mid", position = normalized_curve_position, param_val = pt.val }
+        {
+          name = "mid",
+          [pos_key_name_string] = convert_if_necessary(normalized_curve_position, midi_take),
+          [val_key_name_string] = point_value,
+          cc = cc_num
+        }
       )
     end
   end
@@ -599,7 +658,7 @@ automation_actions.picker_insert_cc_curve = function()
   -- Check if there are possible midi take targets
   -- This variable hosts possible midi item targets - this can vary depending on
   -- whether or not context == main/midi..
-  local target_midi_take
+  local midi_target_take
   if context == "main" then
     is_main = true
     local enclosing_item = lib_items.get_item_enclosing_range(trobj.tr, range_left, range_right)
@@ -608,13 +667,13 @@ automation_actions.picker_insert_cc_curve = function()
 
     if enclosing_item then
       local take = reaper.GetMediaItemTake(enclosing_item.ref, 0)
-      target_midi_take = reaper.TakeIsMIDI(take) and take
+      midi_target_take = reaper.TakeIsMIDI(take) and take
     end
     log.user("items_in_range = ", format.block(enclosing_item))
   elseif context == "midi" then
     is_midi = true
     local ret, ctxm = require("library.midi_editor").getMidiValidContext()
-    target_midi_take = ret and ctxm.take
+    midi_target_take = ret and ctxm.take
   end
 
   --
@@ -622,13 +681,14 @@ automation_actions.picker_insert_cc_curve = function()
   --
 
   local t_curve_results = {
-    { name = "(env) Volume", code = "volume" },
-    { name = "(env) Pan",    code = "pan" },
+    { name = "(env) Volume",        code = "volume" },
+    { name = "(env) Volume Pre-FX", code = "volume_pre_fx" },
+    { name = "(env) Pan",           code = "pan" },
   }
 
   -- Vol/Pan should always be visible here.
 
-  if target_midi_take then
+  if midi_target_take then
     table.insert(t_curve_results, {
       name = "(midi) Pitch",
       code = "pitch_bend",
@@ -662,49 +722,94 @@ automation_actions.picker_insert_cc_curve = function()
   --
   ---Huge conditional that handles each envelope target type (sel.code attr) accordingly
   local function apply_env_temp_picker(opts)
-    -- log.user("[ func apply_env_temp_picker() ]; opts =", format.block(opts))
+    log.user("[ func apply_env_temp_picker() ]; opts =", format.block(opts))
     pickers.envelope_templates({
       on_select_func = function(gui)
         local sel = gui:get_on_enter_selection()
-        -- log.user("envelope_templates sel:", format.block(sel))
+        log.user("envelope_templates sel:", format.block(sel))
 
+        local target_tr = trobj.tr
         local target_env
         local t_pts_to_insert
+
 
         -- log.user(
         --   string.format("FX curve, fx = %s, fx_param = %s", opts.fx_idx, format.block(opts.fx_param))
         -- )
 
+        --
+        -- GET TARGET TRACK ENVELOPES IF NECESSARY
+        --
+
         if opts.code == "fx" then
           target_env = reaper.GetFXEnvelope(trobj.tr, opts.fx_idx, opts.fx_param.index, true)
-        else
-          -- if opts.code == "volume" then
-          -- elseif opts.code == "pan" then
-          -- elseif opts.code == "pitch_bend" then
-          -- elseif opts.code:match("^cc_") then
-          if opts.cc then
-            -- TODO: get CC envelope
-          else
-            -- TODO: Get built in env
-          end
+        elseif not opts.cc then
+          target_env = reaper.GetTrackEnvelopeByChunkName(trobj.tr,
+            constants.BUILTIN_ENVELOPES[opts.code].search_string)
         end
 
         -- 2. Ensure we can safely inject data.
-        -- This func has to work with both regular and midi
-        local creates_overlap = find_existing_curve_at_new_range(target_env, range_left, range_right)
-        if creates_overlap then
-          return true
+        -- FIX: This func has to work with both regular and midi
+        if not opts.cc then
+          local creates_overlap = find_existing_curve_at_new_range(target_env, range_left, range_right)
+          if creates_overlap then
+            return true
+          end
         end
 
-        t_pts_to_insert = generate_points_for_insertion(sel, range_left, range_right)
+        local target_midi_type
+        local cc_num
+
+        if opts.code == "pitch_bend" then
+          target_midi_type = "pitch"
+        elseif opts.code:match("^cc_") then
+          target_midi_type = "cc"
+
+          cc_num = tonumber(opts.code:match("_(%d+)$"))
+
+          log.user("!! CC NUM ->", cc_num)
+
+          if not cc_num then
+            cc_num = 1
+          end
+        end
+
+        local cursor_info = tl.get_cursor_info()
+        local ms = cursor_info.msr.start
+        local me = cursor_info.msr._end
+        local cp = cursor_info.cursor_pos
+        ms = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, ms)
+        me = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, me)
+        local cp_ppq = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, cp)
+        local cp_ppq_and_qn = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, cp + 0.5)
+
+        log.user("MEASURE PPQ:", ms, me)
+
+
+        -- TODO: For MIDI, generate PPQ events instead and use the constants
+        -- ~ if cc -> need to assign which cc number.
+        -- ~ convert values to PPQ
+        t_pts_to_insert = generate_points_for_insertion(sel, range_left, range_right, midi_target_take, target_midi_type,
+          cc_num)
         log.user("[picker_insert_cc_curve]: computed curve nodes:", format.block(t_pts_to_insert))
 
-        -- 4. Inject generated points
-        -- This chunk can be moved out of the conditional and placed last.
-        envelopes.fltr_single_envelope({
-          target_env = target_env,
-          insert = t_pts_to_insert,
-        })
+        --
+        -- INSERT ENVELOPE POINTS
+        --
+
+        if not opts.cc then
+          envelopes.fltr_single_envelope({
+            target_env = target_env,
+            insert = t_pts_to_insert,
+          })
+        else
+          envelopes.midi_take_fltr_cc({
+            take = midi_target_take,
+            insert = {
+              [target_midi_type] = t_pts_to_insert,
+            },
+          })
+        end
 
         return true
       end,
@@ -720,7 +825,7 @@ automation_actions.picker_insert_cc_curve = function()
         custom_next_menu = function()
           pickers.track_fx_params(_, {
             node = trobj,
-            target_midi_take = target_midi_take,
+            target_midi_take = midi_target_take,
             -- i dont think this one is used.
             targeting_fx_param = true,
             fx_index = fx_unit.idx, -- this is being save
@@ -761,13 +866,13 @@ automation_actions.picker_insert_cc_curve = function()
       on_select_func = function(gui)
         log.user("!!!!!!")
         local sel = gui:get_on_enter_selection()
-        log.user("picker curve menu start ->",format.block(sel))
+        log.user("picker curve menu start ->", format.block(sel))
 
         if sel.custom_next_menu and type(sel.custom_next_menu) == "function" then
           log.user("???")
           sel.custom_next_menu()
         else
-          apply_env_temp_picker(sel)
+          apply_env_temp_picker({ code = sel.code, cc = sel.cc, search_string = sel.search_string })
         end
 
         return false

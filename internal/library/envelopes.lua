@@ -505,6 +505,8 @@ local CC_CONSTANTS = {
 -- fltr api. i will have to add a type parameter.
 --
 -- TODO: target focused track if no target is passed??
+--
+---Fltr a midi take.
 envelopes.midi_take_fltr_cc = function(opts)
   opts = opts or {}
   if not opts.take or not reaper.TakeIsMIDI(opts.take) then   -- or midi take...
@@ -703,6 +705,7 @@ envelopes.midi_take_fltr_cc = function(opts)
   log.user("Len t_cc =", #t_cc)
 
   if opts.remove and not opts.insert then
+    -- REMOVE EVENTS
     reaper.PreventUIRefresh(1)
     for i, evt in ipairs(t_cc) do
       local ret = reaper.MIDI_DeleteCC(opts.take, evt.index)
@@ -710,6 +713,7 @@ envelopes.midi_take_fltr_cc = function(opts)
     reaper.PreventUIRefresh(-1)
     reaper.MIDI_Sort(opts.take)
   elseif cc_updated > 0 then
+    -- UPDATE EVENTS
     reaper.PreventUIRefresh(1)
     for i, evt in ipairs(t_cc) do
       log.user("Set evt:", format.block(evt))
@@ -729,6 +733,7 @@ envelopes.midi_take_fltr_cc = function(opts)
     reaper.PreventUIRefresh(-1)
     reaper.MIDI_Sort(opts.take)
   elseif opts.insert and not opts.dry_run then
+    -- INSERT NEW EVENTS
     reaper.PreventUIRefresh(1)
 
     -- if not opts.insert then
