@@ -128,8 +128,10 @@ envelopes.fltr_track_envelopes = function(tr, opts)
     return t_envelopes
 end
 
----This function operatos on a single Envelope object for a track.
---NOTE: requires you to pass a target envelope
+-- NOTE: requires you to pass a target envelope
+--
+---This function operatos on a single Envelope object for a track and allows
+---one to fltr envelope points.
 envelopes.fltr_single_envelope = function(opts)
     opts = opts or {}
 
@@ -340,7 +342,7 @@ end
 -- I_HWOUT_IDX : int : 1-based index of hardware output in P_TRACK or 0 if not a hardware output
 -- I_RECV_IDX : int : 1-based index of receive in P_DESTTRACK or 0 if not a send/receive
 
-function enumEnvelopePoints()
+local function enumEnvelopePoints()
     local pi = 0
     local count = reaper.CountEnvelopePoints(state.env)
     return function()
