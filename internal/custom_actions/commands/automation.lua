@@ -28,176 +28,219 @@ local automation_actions = {}
 -- ~ Move cursor to next/prev template start.
 -- ~
 
--- NOTE: timeline: [.pt_before_L....range_left...range_right....]
--- This functions makes sure the area is clear and safe to inject new env data
--- at.
-local function find_existing_curve_at_new_range(env, range_left, range_right)
-  local cnt = reaper.CountEnvelopePointsEx(env, -1)
+-- -- NOTE: timeline: [.pt_before_L....range_left...range_right....]
+-- -- This functions makes sure the area is clear and safe to inject new env data
+-- -- at.
+-- local function find_existing_curve_at_new_range_OLD(env, range_left, range_right)
+--   local cnt = reaper.CountEnvelopePointsEx(env, -1)
+--
+--   if cnt <= 2 then
+--     return
+--   end
+--
+--   local will_create_overlap = false
+--
+--   -- TODO: Instead of i = 0, -> always get/start two env points before `range_left`, so that we
+--   -- iterate over the fewest number of points possible.
+--   local pt_before_or_equal = reaper.GetEnvelopePointByTimeEx(env, -1, range_left)
+--   local i = pt_before_or_equal
+--   log.user("starting @ i =", i)
+--
+--   local env_step_delta = envelope_templates.ENV_STEP_DELTA
+--   local prev_start_time, prev_end_time, prev_mid_time
+--
+--   -- log.user(string.format(
+--   --   [[#######
+--   --   single = %s
+--   --   double = %s
+--   --   #########]],
+--   --   env_step_delta,
+--   --   env_step_delta * 2
+--   -- ))
+--
+--   log.user("GET envelope point by time returned [ position == range_left ]:", pt_before_or_equal == range_left)
+--
+--   -- NOTE: enum_curve_nodes takes second arg `start_idx`
+--   -- 1. Initially I can do this without using a specific start_idx.
+--   --      After all, it should work as intended regardless of where you start
+--
+--   -- FIX: Use `envelopes.enum_curve_nodes(env)` instead.
+--
+--   -- local t_curve_objs = {}
+--   -- local start_count = 0
+--   -- for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, rp in envelopes.enum_curve_nodes(sel_in.env) do
+--   --   -- NOTE: Depending on what node type that is examined, we decide on what
+--   --   -- idx/pos values to use when computing `creates_overlap`
+--   --   if ntype == 1 then
+--   --     start_count = start_count + 1
+--   --     table.insert(t_curve_objs, { name = "curve " .. start_count, curve_index = start_count })
+--   --   end
+--   --   if start_count > 0 then
+--   --     table.insert(t_curve_objs[#t_curve_objs], {
+--   --       name = nname,
+--   --       type = ntype,
+--   --       pt_idx = pt_idx,
+--   --       tpos = tpos,
+--   --       pt_idx2 = pt_idx2,
+--   --       tpos2 = tpos2,
+--   --       delta = delta,
+--   --       real_pos = rp,
+--   --     })
+--   --   end
+--   -- end
+--
+--   while not will_create_overlap and i < cnt do
+--     -- point and next consecutive point
+--     local retval, time_curve_node_0, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
+--     local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
+--
+--     log.user("RETVALS:", retval, retval2)
+--
+--     -- it is the last point and touching
+--     if not retval2 then
+--       if time_curve_node_0 == range_left then
+--         return false
+--       end
+--     end
+--
+--     log.user("--------------------------------------------")
+--     log.user("time_0 = ", time_curve_node_0)
+--
+--     -- The `_0` should always be the "first" point of every coded curve node.
+--     local delta = time2 - time_curve_node_0
+--
+--     local is_delta_node = false
+--
+--     local env_pt_node_type
+--
+--     local delta_max = envelope_templates.get_env_step_max()
+--
+--     local delta_processed
+--
+--     local delta_enlarged = delta * envelope_templates.ENV_STEP_MULT
+--
+--     log.user(string.format("delta = %s, delta mult = %s", delta, delta_enlarged))
+--
+--     local ceiled = math.ceil(delta_enlarged)
+--     local floored = math.floor(delta_enlarged)
+--
+--     local ceil_diff = ceiled - delta_enlarged
+--     local floor_diff = delta_enlarged - floored
+--
+--     log.user(string.format([[ceiled = %s, floored = %s]], ceiled, floored))
+--
+--     if floor_diff < ceil_diff then
+--       delta_processed = floored
+--     elseif ceil_diff < floor_diff then
+--       delta_processed = ceiled
+--     end
+--
+--     log.user("delta_processed = ", delta_processed)
+--
+--     -- log.user(string.format([[delta=%s, step1=%s, step2=%s, delta==step1 ? (%s)]], delta, env_step_delta,
+--     --   env_step_delta * 2, delta == env_step_delta))
+--     local dp = delta_processed
+--
+--     if i == 0 and dp == nil then
+--       --  I realized that there is always a "first" env point inserted
+--       -- at time zero for each envelope!! This has to be considered!!
+--       log.user("point idx == 0")
+--     elseif dp == nil or dp > 20 then
+--       log.user(string.format([[MID: delta=%s]], delta, env_step_delta))
+--       prev_mid_time = time_curve_node_0
+--       if range_left <= prev_mid_time and prev_mid_time <= range_right then
+--         will_create_overlap = true
+--       end
+--       -- current start delta is * 1
+--     elseif dp == 1 then
+--       log.user(string.format([[START: delta = %s, step = %s]], delta, env_step_delta))
+--       is_delta_node = true
+--       prev_start_time = time_curve_node_0
+--       -- log.user("pt time == range left:", range_left == prev_start_time)
+--
+--       if range_left <= prev_start_time and prev_start_time < range_right then
+--         will_create_overlap = true
+--       end
+--       -- current END delta is * 2
+--     elseif dp == 2 then
+--       is_delta_node = true
+--
+--       log.user(string.format([[END: delta = %s, step = %s]], delta, env_step_delta * 2))
+--       prev_end_time = time2
+--       if range_left < prev_end_time and prev_end_time <= range_right then
+--         will_create_overlap = true
+--       end
+--       --
+--     end
+--
+--     if is_delta_node then
+--       i = i + 2
+--     else
+--       i = i + 1
+--     end
+--   end
+--
+--   log.user("will create overlap = ", will_create_overlap)
+--
+--   return will_create_overlap
+-- end
 
-  if cnt <= 2 then
-    return
-  end
+local function curve_obj_already_exists_at_position(env, range_left, range_right)
+  local curve_obj_count = 0
 
-  local will_create_overlap = false
-
-  -- TODO: Instead of i = 0, -> always get/start two env points before `range_left`, so that we
-  -- iterate over the fewest number of points possible.
   local pt_before_or_equal = reaper.GetEnvelopePointByTimeEx(env, -1, range_left)
-
   local i = pt_before_or_equal
-  log.user("starting @ i =", i)
+  log.user("Starting @ i =", i)
 
-  local env_step_delta = envelope_templates.ENV_STEP_DELTA
+  i = i -1
+
   local prev_start_time, prev_end_time, prev_mid_time
 
-  -- log.user(string.format(
-  --   [[#######
-  --   single = %s
-  --   double = %s
-  --   #########]],
-  --   env_step_delta,
-  --   env_step_delta * 2
-  -- ))
 
-  log.user("GET envelope point by time returned [ position == range_left ]:", pt_before_or_equal == range_left)
+  -- notice that we pass an explicit start index for the iterator.
+  for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, rp in envelopes.enum_curve_nodes(env, i) do
 
-  -- NOTE: enum_curve_nodes takes second arg `start_idx`
-  -- 1. Initially I can do this without using a specific start_idx.
-  --      After all, it should work as intended regardless of where you start
-
-  -- FIX: Use `envelopes.enum_curve_nodes(env)` instead.
-
-  -- local t_curve_objs = {}
-  -- local start_count = 0
-  -- for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, rp in envelopes.enum_curve_nodes(sel_in.env) do
-  --   -- NOTE: Depending on what node type that is examined, we decide on what
-  --   -- idx/pos values to use when computing `creates_overlap`
-  --   if ntype == 1 then
-  --     start_count = start_count + 1
-  --     table.insert(t_curve_objs, { name = "curve " .. start_count, curve_index = start_count })
-  --   end
-  --   if start_count > 0 then
-  --     table.insert(t_curve_objs[#t_curve_objs], {
-  --       name = nname,
-  --       type = ntype,
-  --       pt_idx = pt_idx,
-  --       tpos = tpos,
-  --       pt_idx2 = pt_idx2,
-  --       tpos2 = tpos2,
-  --       delta = delta,
-  --       real_pos = rp,
-  --     })
-  --   end
-  -- end
-
-  while not will_create_overlap and i < cnt do
-    -- point and next consecutive point
-    local retval, time_curve_node_0, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
-    local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
-
-    log.user("RETVALS:", retval, retval2)
-
-    -- it is the last point and touching
-    if not retval2 then
-      if time_curve_node_0 == range_left then
-        return false
-      end
+    if tpos > range_right then
+      -- This means we have iterated over and beyond the range interval, ie.
+      -- there should not be a conflict.
+      return false
     end
 
-    log.user("--------------------------------------------")
-    log.user("time_0 = ", time_curve_node_0)
 
-    -- The `_0` should always be the "first" point of every coded curve node.
-    local delta = time2 - time_curve_node_0
+    if ntype == 1 then
+      curve_obj_count = curve_obj_count + 1
 
-    local is_delta_node = false
-
-    local env_pt_node_type
-
-    local delta_max = envelope_templates.get_env_step_max()
-
-    local delta_processed
-
-    local delta_enlarged = delta * envelope_templates.ENV_STEP_MULT
-
-    log.user(string.format("delta = %s, delta mult = %s", delta, delta_enlarged))
-
-    local ceiled = math.ceil(delta_enlarged)
-    local floored = math.floor(delta_enlarged)
-
-    local ceil_diff = ceiled - delta_enlarged
-    local floor_diff = delta_enlarged - floored
-
-    log.user(string.format([[ceiled = %s, floored = %s]], ceiled, floored))
-
-    if floor_diff < ceil_diff then
-      delta_processed = floored
-    elseif ceil_diff < floor_diff then
-      delta_processed = ceiled
-    end
-
-    log.user("delta_processed = ", delta_processed)
-
-    -- log.user(string.format([[delta=%s, step1=%s, step2=%s, delta==step1 ? (%s)]], delta, env_step_delta,
-    --   env_step_delta * 2, delta == env_step_delta))
-    local dp = delta_processed
-
-    if i == 0 and dp == nil then
-      --  I realized that there is always a "first" env point inserted
-      -- at time zero for each envelope!! This has to be considered!!
-      log.user("point idx == 0")
-    elseif dp == nil or dp > 20 then
-      log.user(string.format([[MID: delta=%s]], delta, env_step_delta))
-      prev_mid_time = time_curve_node_0
-      if range_left <= prev_mid_time and prev_mid_time <= range_right then
-        will_create_overlap = true
-      end
-      -- current start delta is * 1
-    elseif dp == 1 then
-      log.user(string.format([[START: delta = %s, step = %s]], delta, env_step_delta))
-      is_delta_node = true
-      prev_start_time = time_curve_node_0
-      -- log.user("pt time == range left:", range_left == prev_start_time)
-
+      prev_start_time = tpos
       if range_left <= prev_start_time and prev_start_time < range_right then
-        will_create_overlap = true
+        return true
       end
-      -- current END delta is * 2
-    elseif dp == 2 then
-      is_delta_node = true
-
-      log.user(string.format([[END: delta = %s, step = %s]], delta, env_step_delta * 2))
-      prev_end_time = time2
-      if range_left < prev_end_time and prev_end_time <= range_right then
-        will_create_overlap = true
-      end
-      --
     end
 
-    if is_delta_node then
-      i = i + 2
-    else
-      i = i + 1
+    if ntype == 2 then
+      prev_end_time = tpos2
+      if range_left < prev_end_time and prev_end_time <= range_right then
+        return true
+      end
+    end
+
+    if ntype == 0 then
+      prev_mid_time = tpos
+      if range_left <= prev_mid_time and prev_mid_time <= range_right then
+        return true
+      end
     end
   end
-
-  log.user("will create overlap = ", will_create_overlap)
-
-  return will_create_overlap
-end
-
-local function find_existing_curve_at_new_range_2(env, range_left, range_right)
 end
 
 --   ms = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, ms)
 --   -> Use this to get PPQ points for new
 
-local function generate_points_for_insertion(sel, range_left, range_right, midi_take, midi_type, cc_num)
-  local is_midi = midi_take and true
-
+local function generate_points_for_insertion(sel, range_left, range_right, is_midi, midi_take, midi_type, cc_num)
   local t_pts_to_insert = {}
   -- local env_temps = envelope_templates.TEMPLATES
   local layer_encoder_def = envelope_templates.LAYERED_CURVES_ENCODING[1]
+
+  log.user("MIDI TYPE from generate points =", midi_type)
 
   local env_step_delta = is_midi and 1 or envelope_templates.ENV_STEP_DELTA
 
@@ -225,7 +268,7 @@ local function generate_points_for_insertion(sel, range_left, range_right, midi_
   log.user("L/R", range_left, range_right)
 
   local function convert_if_necessary(pos, take)
-    if take then
+    if is_midi and take then
       return reaper.MIDI_GetPPQPosFromProjTime(take, pos)
     end
     return pos
@@ -238,9 +281,11 @@ local function generate_points_for_insertion(sel, range_left, range_right, midi_
     local point_value = pt.val or 0.5
 
     if midi_type == "cc" then
+      log.user("Are we getting into CC??")
       point_value = math.floor(point_value * 127)
     end
     if midi_type == "pitch" then
+      log.user("Are we getting into PITCH??")
       point_value = math.floor(point_value * 8192)
     end
 
@@ -783,7 +828,9 @@ automation_actions.picker_insert_cc_curve = function()
         -- 2. Ensure we can safely inject data.
         -- FIX: This func has to work with both regular and midi
         if not opts.cc then
-          local creates_overlap = find_existing_curve_at_new_range(target_env, range_left, range_right)
+          -- local creates_overlap = find_existing_curve_at_new_range(target_env, range_left, range_right)
+          local creates_overlap = curve_obj_already_exists_at_position(target_env, range_left, range_right)
+          log.user("CREATES_OVERLAP:", creates_overlap)
           if creates_overlap then
             return true
           end
@@ -819,7 +866,7 @@ automation_actions.picker_insert_cc_curve = function()
         -- TODO: For MIDI, generate PPQ events instead and use the constants
         -- ~ if cc -> need to assign which cc number.
         -- ~ convert values to PPQ
-        t_pts_to_insert = generate_points_for_insertion(sel, range_left, range_right, midi_target_take, target_midi_type,
+        t_pts_to_insert = generate_points_for_insertion(sel, range_left, range_right,opts.cc, midi_target_take, target_midi_type,
           cc_num)
         log.user("[picker_insert_cc_curve]: computed curve nodes:", format.block(t_pts_to_insert))
 

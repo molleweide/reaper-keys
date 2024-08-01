@@ -1,5 +1,6 @@
 local log = require("utils.log")
 local format = require("utils.format")
+local s = require("utils.string")
 
 local envelope_templates = require("constants.envelope_templates")
 local constants = require("constants.constants")
@@ -885,6 +886,9 @@ envelopes.enum_curve_nodes = function(env, start_idx)
   local is_delta_node = false
   local prev_type
 
+  -- NOTE: If there aren't enough points in the envelope then we should return
+  -- early and tell user that envelope doesnt have enough points to iter.
+
   return function()
     -- The incrementation is made before instead of after.
     if is_delta_node then
@@ -894,17 +898,28 @@ envelopes.enum_curve_nodes = function(env, start_idx)
       i = i + 1
     end
 
-    local retval, time_curve_node_0, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
+    local retval, time1, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
     local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
 
     if not retval then
       return
     end
 
-    local delta = time2 - time_curve_node_0
+    if time1 == time2 then
+      log.user("SHIFT FWD >>> due to pos A == pos B")
+      -- This means that we started at the second point of and `end` node.
+      --
+      -- This means that we should want to jump forward to the next "expected to be"
+      --     start point
+      i = i + 1
+      retval, time1, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
+      retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
+    end
+
+    local delta = time2 - time1
     local node_type = 0
     local node_type_name = "mid"
-    local real_pos = time_curve_node_0
+    local real_pos = time1
     local tpos2
     local tpos_rounded = compute_step_delta(delta)
     -- I dont know if this is useful...
@@ -925,9 +940,10 @@ envelopes.enum_curve_nodes = function(env, start_idx)
       end
     end
 
+
     -- Validate sequences
     if prev_type then
-      log.user(string.format([[%s -> %s]], prev_type, node_type))
+      -- log.user(string.format([[%s -> %s]], prev_type, node_type))
       if
       -- mid -> can be followed by another mid_0 or end_2
           (prev_type == 0 and node_type == 0) or (prev_type == 0 and node_type == 2) or
@@ -936,18 +952,31 @@ envelopes.enum_curve_nodes = function(env, start_idx)
           -- end -> can be followed by start_1 only
           (prev_type == 2 and node_type == 1)
       then
-        log.user("good")
+        -- log.user("good")
       else
-        log.user("!!!")
+        log.user("<err>")
       end
     else
       -- the first node can be mid if the first curve starts later than zero or
       -- it can be 1 if a curve starts at zero.
-      log.user("first; no prev_type, node_type =", node_type, "(expects 1 or 0)")
+      log.user(":: First; no prev_type, node_type =", node_type, "(expects 1 or 0)")
+      if node_type == 0 then
+        log.user(":: Node_type = 1 which implies DELAYED first curve start.")
+      else
+        log.user(":: First curve starts at zero")
+      end
     end
 
-    prev_type = node_type
 
+    log.user(string.format([[(%s %s) -> %s;%s | %s;%s >> prev = %s]], node_type,
+      s.makeStringLength(node_type_name, 6),
+      s.makeStringLength(tostring(i), 4),
+      s.makeStringLength(tostring(i + 1), 4),
+      s.makeStringLength(tostring(time1), 5),
+      s.makeStringLength(tostring(time2), 5),
+      prev_type))
+
+    prev_type = node_type
 
     -- node_type        number: 0 = mid, 1 = start, 2 = end
     -- node_type_name   string: start|mid|end
@@ -957,7 +986,11 @@ envelopes.enum_curve_nodes = function(env, start_idx)
     --              And if there are to curves that touch, acjacent, then the end
     --              point of the first one will be the start point of the second
     --              one.
-    return node_type, node_type_name, i, time_curve_node_0, i + 1, time2, delta, real_idx, real_pos
+    return node_type, node_type_name,
+        --
+        i, time1, i + 1, time2,
+        --
+        delta, real_idx, real_pos, prev_type
   end
 end
 
