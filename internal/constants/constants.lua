@@ -130,6 +130,15 @@ constants.CC_CONSTANTS = {
   },
 }
 
+constants.CC_SHAPES = {
+  square = { id = 0 },
+  linear = { id = 1 },
+  slow_start_end = { id = 2 },
+  fast_start = { id = 3 },
+  fast_end = { id = 4 },
+  bezier = { id = 5 }
+}
+
 
 
 return constants

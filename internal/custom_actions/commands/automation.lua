@@ -45,33 +45,57 @@ local function find_existing_curve_at_new_range(env, range_left, range_right)
   local pt_before_or_equal = reaper.GetEnvelopePointByTimeEx(env, -1, range_left)
 
   local i = pt_before_or_equal
-
   log.user("starting @ i =", i)
 
   local env_step_delta = envelope_templates.ENV_STEP_DELTA
   local prev_start_time, prev_end_time, prev_mid_time
 
-  log.user(string.format(
-    [[#######
-    single = %s
-    double = %s
-    #########]],
-    env_step_delta,
-    env_step_delta * 2
-  ))
+  -- log.user(string.format(
+  --   [[#######
+  --   single = %s
+  --   double = %s
+  --   #########]],
+  --   env_step_delta,
+  --   env_step_delta * 2
+  -- ))
 
-  if pt_before_or_equal == range_left then
-    log.user("GET envelope point by time returned [ position == range_left ]")
-  end
+  log.user("GET envelope point by time returned [ position == range_left ]:", pt_before_or_equal == range_left)
+
+  -- NOTE: enum_curve_nodes takes second arg `start_idx`
+  -- 1. Initially I can do this without using a specific start_idx.
+  --      After all, it should work as intended regardless of where you start
 
   -- FIX: Use `envelopes.enum_curve_nodes(env)` instead.
+
+  -- local t_curve_objs = {}
+  -- local start_count = 0
+  -- for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, rp in envelopes.enum_curve_nodes(sel_in.env) do
+  --   -- NOTE: Depending on what node type that is examined, we decide on what
+  --   -- idx/pos values to use when computing `creates_overlap`
+  --   if ntype == 1 then
+  --     start_count = start_count + 1
+  --     table.insert(t_curve_objs, { name = "curve " .. start_count, curve_index = start_count })
+  --   end
+  --   if start_count > 0 then
+  --     table.insert(t_curve_objs[#t_curve_objs], {
+  --       name = nname,
+  --       type = ntype,
+  --       pt_idx = pt_idx,
+  --       tpos = tpos,
+  --       pt_idx2 = pt_idx2,
+  --       tpos2 = tpos2,
+  --       delta = delta,
+  --       real_pos = rp,
+  --     })
+  --   end
+  -- end
 
   while not will_create_overlap and i < cnt do
     -- point and next consecutive point
     local retval, time_curve_node_0, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
     local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
 
-    log.user("retvals:", retval, retval2)
+    log.user("RETVALS:", retval, retval2)
 
     -- it is the last point and touching
     if not retval2 then
@@ -162,6 +186,8 @@ local function find_existing_curve_at_new_range(env, range_left, range_right)
   return will_create_overlap
 end
 
+local function find_existing_curve_at_new_range_2(env, range_left, range_right)
+end
 
 --   ms = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, ms)
 --   -> Use this to get PPQ points for new
@@ -233,6 +259,8 @@ local function generate_points_for_insertion(sel, range_left, range_right, midi_
         [pos_key_name_string] = pos_val + 1 * env_step_delta,
         [val_key_name_string] = point_value,
         cc = cc_num
+        ,
+        shape = "linear"
       })
       --
     elseif i == #t_pts_to_insert then
@@ -273,6 +301,8 @@ local function generate_points_for_insertion(sel, range_left, range_right, midi_
           [pos_key_name_string] = convert_if_necessary(normalized_curve_position, midi_take),
           [val_key_name_string] = point_value,
           cc = cc_num
+          ,
+          shape = "linear"
         }
       )
     end
@@ -766,28 +796,25 @@ automation_actions.picker_insert_cc_curve = function()
           target_midi_type = "pitch"
         elseif opts.code:match("^cc_") then
           target_midi_type = "cc"
-
           cc_num = tonumber(opts.code:match("_(%d+)$"))
-
-          log.user("!! CC NUM ->", cc_num)
-
+          -- log.user("!! CC NUM ->", cc_num)
           if not cc_num then
             cc_num = 1
           end
         end
 
-        if opts.cc then
-          local cursor_info = tl.get_cursor_info()
-          local ms = cursor_info.msr.start
-          local me = cursor_info.msr._end
-          local cp = cursor_info.cursor_pos
-          ms = reaper.MIDI_GetPPQPosFromProjTime(midi_target_take, ms)
-          me = reaper.MIDI_GetPPQPosFromProjTime(midi_target_take, me)
-          -- local cp_ppq = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, cp)
-          -- local cp_ppq_and_qn = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, cp + 0.5)
-
-          log.user("MEASURE PPQ:", ms, me)
-        end
+        -- remove this...
+        -- if opts.cc then
+        --   local cursor_info = tl.get_cursor_info()
+        --   local ms = cursor_info.msr.start
+        --   local me = cursor_info.msr._end
+        --   local cp = cursor_info.cursor_pos
+        --   ms = reaper.MIDI_GetPPQPosFromProjTime(midi_target_take, ms)
+        --   me = reaper.MIDI_GetPPQPosFromProjTime(midi_target_take, me)
+        --   -- local cp_ppq = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, cp)
+        --   -- local cp_ppq_and_qn = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, cp + 0.5)
+        --   log.user("MEASURE PPQ:", ms, me)
+        -- end
 
         -- TODO: For MIDI, generate PPQ events instead and use the constants
         -- ~ if cc -> need to assign which cc number.
@@ -995,7 +1022,7 @@ automation_actions.picker_edit_track_curves_ui = function()
     local function get_curve_objs()
       local t_curve_objs = {}
       local start_count = 0
-      for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, rp in envelopes.enum_curve_nodes(sel_in.env) do
+      for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, ri, rp in envelopes.enum_curve_nodes(sel_in.env) do
         if ntype == 1 then
           start_count = start_count + 1
           table.insert(t_curve_objs, { name = "curve " .. start_count, curve_index = start_count })
@@ -1009,6 +1036,7 @@ automation_actions.picker_edit_track_curves_ui = function()
             pt_idx2 = pt_idx2,
             tpos2 = tpos2,
             delta = delta,
+            real_idx = ri,
             real_pos = rp,
           })
         end

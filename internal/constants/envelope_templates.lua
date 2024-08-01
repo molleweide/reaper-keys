@@ -60,8 +60,8 @@ envelope_templates.TEMPLATES = {
     {
         name = "DOWN \\",
         def = {
-            { val = 1 },
-            { val = 0 },
+            { val = 0.95 },
+            { val = 0.05 },
         },
     },
     {

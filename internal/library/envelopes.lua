@@ -2,6 +2,7 @@ local log = require("utils.log")
 local format = require("utils.format")
 
 local envelope_templates = require("constants.envelope_templates")
+local constants = require("constants.constants")
 
 local tbl = require("utils.table")
 
@@ -199,7 +200,7 @@ envelopes.fltr_single_envelope = function(opts)
       end
     elseif type(filter) == "function" then
       log.user("?????????")
-      t_envp = tbl.filter(t_envp, filter)       -- pass filter func
+      t_envp = tbl.filter(t_envp, filter) -- pass filter func
     end
   end
 
@@ -217,26 +218,26 @@ envelopes.fltr_single_envelope = function(opts)
 
         if type(v) == "boolean" then
           log.trace("midi take transform: set bool:", i, point[k], "->", v)
-          point[k] = v           -- set bool value
+          point[k] = v -- set bool value
           update = true
         elseif type(v) == "number" then
           log.user("fltr env transform: shift num:", i, point[k], "->", point[k] + v)
-          point[k] = point[k] + v           -- shift by number
+          point[k] = point[k] + v -- shift by number
           update = true
         elseif type(v) == "table" then
           log.trace("midi take transform: force const:", i, point[k], "->", v[1])
-          point[k] = v[2] == "force" and v[1]           -- { number, "force"} means force all notes to value
+          point[k] = v[2] == "force" and v[1] -- { number, "force"} means force all notes to value
           update = true
         elseif type(v) == "function" then
           log.trace("midi take transform: func:", i, point[k], "->", v(point))
-          point[k] = v(point)           -- apply function transform per point
+          point[k] = v(point) -- apply function transform per point
           update = true
         end
         if update then
           -- i am not sure if this is useful to keep a counter
           env_pts_updated = env_pts_updated + 1
         end
-      end       -- transform.notes -> k, v
+      end -- transform.notes -> k, v
     end
   end
 
@@ -350,7 +351,7 @@ local function enumEnvelopePoints()
   local count = reaper.CountEnvelopePoints(state.env)
   return function()
     local point = { reaper.GetEnvelopePoint(state.env, pi) }
-    if point[1] then     -- retval
+    if point[1] then -- retval
       point[1] = pi
       pi = pi + 1
       return point
@@ -361,7 +362,7 @@ end
 function getSelectedPoints()
   local points = {}
   for point in enumEnvelopePoints() do
-    if point[6] then     -- selected
+    if point[6] then -- selected
       table.insert(points, point)
     end
   end
@@ -375,18 +376,18 @@ envelopes.loop_track_envelopes = function()
     selected_tracks_count = reaper.CountSelectedTracks(0)
     for i = 0, selected_tracks_count - 1 do
       -- GET THE TRACK
-      track = reaper.GetSelectedTrack(0, i)       -- Get selected track i
+      track = reaper.GetSelectedTrack(0, i) -- Get selected track i
       -- LOOP THROUGH ENVELOPES
       env_count = reaper.CountTrackEnvelopes(track)
       for j = 0, env_count - 1 do
         -- GET THE ENVELOPE
         env = reaper.GetTrackEnvelope(track, j)
         -- AddPoints(env)
-      end       -- ENDLOOP through envelopes
-    end         -- ENDLOOP through selected tracks
+      end -- ENDLOOP through envelopes
+    end   -- ENDLOOP through selected tracks
   else
     -- AddPoints(env)
-  end   -- endif sel envelope
+  end -- endif sel envelope
 end
 
 envelopes.single_get_properties = function(br_env)
@@ -443,7 +444,7 @@ local function IterateAllMIDI(MIDIstring, filter_midiend)
       iteration_stringPos = stringPos
       offset_count = offset + offset_count
       return offset, offset_count, flags, msg, stringPos
-    else     -- Ends the iteration
+    else -- Ends the iteration
       return nil
     end
   end
@@ -463,13 +464,13 @@ local function UnpackMIDIMessage(msg)
   -- 176 >> 4 = 11
   local msg_type = msg:byte(1) >> 4
   local msg_ch = (msg:byte(1) & 0x0F) +
-  1                                         --msg:byte(1)&0x0F -- 0x0F = 0000 1111 in binary. this is a bitmask. +1 to be 1 based
+      1 --msg:byte(1)&0x0F -- 0x0F = 0000 1111 in binary. this is a bitmask. +1 to be 1 based
   local text
   if msg_type == 15 then
     text = msg:sub(3)
   end
   local val1 = msg:byte(2)
-  local val2 = (msg_type ~= 15) and msg:byte(3)   -- return nil if is text
+  local val2 = (msg_type ~= 15) and msg:byte(3) -- return nil if is text
   return msg_type, msg_ch, val1, val2, text, msg
 end
 
@@ -479,12 +480,12 @@ end
 ---@return boolean muted is muted
 ---@return integer curve_shape curve type 0square, 1linear, 2slow start/end, 3fast start, 4fast end, 5bezier
 local function UnpackFlags(flag)
-  local selected = flag & 1 == 1   -- AND operation with  1 (1 in binary) (return the first bit val)
+  local selected = flag & 1 == 1 -- AND operation with  1 (1 in binary) (return the first bit val)
   local muted = flag & 2 ==
-  2                                -- AND operation with 10 (2 in binary) (return the second bit val + 1 bit as 0 I could also move it to the void)
+      2                          -- AND operation with 10 (2 in binary) (return the second bit val + 1 bit as 0 I could also move it to the void)
   -- cc_string
   local curve_shape = flag >>
-  4                                -- Void the first 4 bits as they dont matter for cc curve and get the value. If is flags from something without curve shape like notes will just return 0, as square
+      4 -- Void the first 4 bits as they dont matter for cc curve and get the value. If is flags from something without curve shape like notes will just return 0, as square
   return selected, muted, curve_shape
 end
 
@@ -494,7 +495,7 @@ local CC_CONSTANTS = {
     ---       Program Change = 12; Channel Pressure = 13; Pitch Vend = 14; text = 15.
     --     note_off = ,
     -- note_on = ,
-    cc = 176,     -- 176
+    cc = 176, -- 176
     pitch = 224,
     -- pitch =
   },
@@ -509,7 +510,7 @@ local CC_CONSTANTS = {
 ---Fltr a midi take.
 envelopes.midi_take_fltr_cc = function(opts)
   opts = opts or {}
-  if not opts.take or not reaper.TakeIsMIDI(opts.take) then   -- or midi take...
+  if not opts.take or not reaper.TakeIsMIDI(opts.take) then -- or midi take...
     log.debug("No take was supplied to midi.midi_take_filter_transform")
     return
   end
@@ -669,7 +670,7 @@ envelopes.midi_take_fltr_cc = function(opts)
     log.user("enter filter...")
     if type(filter) == "function" then
       log.user("[midi_take_fltr_cc] filter = function()")
-      t_cc = tbl.filter(t_cc, filter)       -- pass filter func
+      t_cc = tbl.filter(t_cc, filter) -- pass filter func
     end
   end
 
@@ -704,6 +705,7 @@ envelopes.midi_take_fltr_cc = function(opts)
 
   log.user("Len t_cc =", #t_cc)
 
+
   if opts.remove and not opts.insert then
     -- REMOVE EVENTS
     reaper.PreventUIRefresh(1)
@@ -733,6 +735,16 @@ envelopes.midi_take_fltr_cc = function(opts)
     reaper.PreventUIRefresh(-1)
     reaper.MIDI_Sort(opts.take)
   elseif opts.insert and not opts.dry_run then
+    local _, _, cc_count = reaper.MIDI_CountEvts(opts.take)
+
+    local function set_shape_of_last_event(shape)
+      reaper.MIDI_SetCCShape(opts.take, cc_count - 1, constants.CC_SHAPES[shape].id, 0, true)
+      log.user(string.format([[shape = %s, count = %s]], shape, cc_count - 1))
+    end
+
+
+
+
     -- INSERT NEW EVENTS
     reaper.PreventUIRefresh(1)
 
@@ -758,11 +770,15 @@ envelopes.midi_take_fltr_cc = function(opts)
             evt.selected and evt.selected or false,
             evt.muted and evt.muted or false,
             evt.ppqpos >= 0 and evt.ppqpos or 400,
-            CC_CONSTANTS.type[k],               -- CC = 11
+            CC_CONSTANTS.type[k],   -- CC = 11
             evt.chan and evt.chan or 0,
-            evt.cc and evt.cc or 1,             -- which cc curve to target.
+            evt.cc and evt.cc or 1, -- which cc curve to target.
             evt.val and evt.val or 64
           )
+          cc_count = cc_count + 1
+          if evt.shape then
+            set_shape_of_last_event(evt.shape)
+          end
         end
       elseif k == "pitch" then
         -- NOTE: "Please enter a value from -8192 through 8191"
@@ -782,20 +798,13 @@ envelopes.midi_take_fltr_cc = function(opts)
             false,
             evt.ppqpos,
             CC_CONSTANTS.type.pitch,
-            0,             -- chan
+            0, -- chan
             LSB,
             MSB
           )
+          cc_count = cc_count + 1
           if evt.shape then
-            -- local retval, selected, muted, ppqpos, msg = reaper.MIDI_GetEvt( take, evtidx )
-            local get_cc_count = function()
-              local _, _, ccevtcnt, _ = reaper.MIDI_CountEvts(opts.take)
-              return ccevtcnt
-            end
-            local cc_count = get_cc_count()
-
-            reaper.MIDI_SetCCShape(opts.take, cc_count - 1, 1, 0, true)
-            log.user("setting shape of idx =", cc_count - 1)
+            set_shape_of_last_event(evt.shape)
           end
         end
       end
@@ -821,6 +830,11 @@ envelopes.list_all_curve_objects = function() end
 local function round(num)
   return math.floor(num + 0.5)
 end
+
+local function compute_step_delta(delta)
+  return round(delta * envelope_templates.ENV_STEP_MULT)
+end
+
 
 envelopes.unselect_all_points = function(env)
   local count_env_pts = reaper.CountEnvelopePoints(env)
@@ -853,11 +867,26 @@ envelopes.delete_curve_obj = function(env, cobj)
   reaper.UpdateArrange()
 end
 
+-- NOTE:
+-- With the current implementation, if curve A ends at the same point that curve
+-- B starts, then there will be two points at the exact same position/ppqpos.
+-- BUT
+-- would it be smarter to only allow for one point at the exact same position,
+-- so that the end point and subsequent start point is the same point. so you have
+-- to check if there is an adjacent curve before, eg. removing etc.
+--
+---comment
+---@param env any
+---@param start_idx any
+---@return function
 envelopes.enum_curve_nodes = function(env, start_idx)
   local i = start_idx ~= nil and (start_idx - 1) or -1
+  -- Nodes that consist of 2 envelope points are considered `delta nodes`
   local is_delta_node = false
   local prev_type
+
   return function()
+    -- The incrementation is made before instead of after.
     if is_delta_node then
       i = i + 2
       is_delta_node = false
@@ -873,36 +902,62 @@ envelopes.enum_curve_nodes = function(env, start_idx)
     end
 
     local delta = time2 - time_curve_node_0
-
-    local delta_processed
-    local delta_enlarged = delta * envelope_templates.ENV_STEP_MULT
-    local tpos_rounded = round(delta_enlarged)
-
-    local node_type, node_type_name, real_pos, tpos2
+    local node_type = 0
+    local node_type_name = "mid"
+    local real_pos = time_curve_node_0
+    local tpos2
+    local tpos_rounded = compute_step_delta(delta)
+    -- I dont know if this is useful...
+    local real_idx = i
 
     if tpos_rounded == nil or tpos_rounded > 2 then
-      node_type = 0
-      node_type_name = "mid"
-      real_pos = time_curve_node_0
-    elseif tpos_rounded == 1 then
-      node_type = 1
+      --
+    else
       is_delta_node = true
-      node_type_name = "start"
-      real_pos = time_curve_node_0
-    elseif tpos_rounded == 2 then
-      node_type = 2
-      is_delta_node = true
-      node_type_name = "end"
-      real_pos = time2
+      if tpos_rounded == 1 then
+        node_type = 1
+        node_type_name = "start"
+      elseif tpos_rounded == 2 then
+        node_type = 2
+        node_type_name = "end"
+        real_pos = time2
+        real_idx = i + 1
+      end
     end
 
-    -- TODO: Use `prev_type` to check if the sequence of nodes is valid,
-    -- analogous to how the track syntax is parsed
-    --
+    -- Validate sequences
+    if prev_type then
+      log.user(string.format([[%s -> %s]], prev_type, node_type))
+      if
+      -- mid -> can be followed by another mid_0 or end_2
+          (prev_type == 0 and node_type == 0) or (prev_type == 0 and node_type == 2) or
+          -- start -> can be followed by mid_0 or end_2
+          (prev_type == 1 and node_type == 0) or (prev_type == 1 and node_type == 2) or
+          -- end -> can be followed by start_1 only
+          (prev_type == 2 and node_type == 1)
+      then
+        log.user("good")
+      else
+        log.user("!!!")
+      end
+    else
+      -- the first node can be mid if the first curve starts later than zero or
+      -- it can be 1 if a curve starts at zero.
+      log.user("first; no prev_type, node_type =", node_type, "(expects 1 or 0)")
+    end
 
     prev_type = node_type
 
-    return node_type, node_type_name, i, time_curve_node_0, i + 1, time2, delta, real_pos
+
+    -- node_type        number: 0 = mid, 1 = start, 2 = end
+    -- node_type_name   string: start|mid|end
+    -- real_pos:    Is the real time position of the curve component node.
+    --              Ie. for the `end` type, then the last point is the real point,
+    --              but for `start` point, then the first point is the real point.
+    --              And if there are to curves that touch, acjacent, then the end
+    --              point of the first one will be the start point of the second
+    --              one.
+    return node_type, node_type_name, i, time_curve_node_0, i + 1, time2, delta, real_idx, real_pos
   end
 end
 
