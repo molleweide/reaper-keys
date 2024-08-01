@@ -502,6 +502,33 @@ local CC_CONSTANTS = {
   },
 }
 
+local function get_all_midi_cc_data(take, filter)
+  local t_cc = {}
+  local _, _, cc_count = reaper.MIDI_CountEvts(take)
+
+  -- NOTE: I could rewrite this as a special iterator so that I only
+  -- need to perform one single loop for all cc/insert -> filter -> transform.
+  for i = 0, cc_count do
+    local _, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
+
+    -- Move the filter to here actually.
+    local t_cc_evt = {
+      index = i,
+      selected = selected,
+      muted = muted,
+      ppqpos = ppqpos,
+      chanmsg = chanmsg,
+      chan = chan,
+      msg2 = msg2,
+      msg3 = msg3,
+    }
+    if not filter or (type(filter) == "function" and filter(t_cc_evt)) then
+      table.insert(t_cc, t_cc_evt)
+    end
+  end
+  return t_cc
+end
+
 -- this is the beginning of the midi cc transforming. this is going to be
 -- TEST: I wonder if it will make sense to merge this into the main midi
 -- fltr api. i will have to add a type parameter.
@@ -637,29 +664,7 @@ envelopes.midi_take_fltr_cc = function(opts)
     --   -- })
     -- end
 
-    local _, _, cc_count = reaper.MIDI_CountEvts(opts.take)
-
-    -- NOTE: I could rewrite this as a special iterator so that I only
-    -- need to perform one single loop for all cc/insert -> filter -> transform.
-    for i = 0, cc_count do
-      local _, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(opts.take, i)
-
-      -- Move the filter to here actually.
-      local t_cc_evt = {
-        index = i,
-        selected = selected,
-        muted = muted,
-        ppqpos = ppqpos,
-        chanmsg = chanmsg,
-        chan = chan,
-        msg2 = msg2,
-        msg3 = msg3,
-      }
-      -- if not filter or filter(t_cc_evt) then
-      table.insert(t_cc, t_cc_evt)
-      -- end
-      -- end
-    end
+    t_cc = get_all_midi_cc_data(take)
   else
     t_cc = opts.insert
   end
@@ -996,5 +1001,30 @@ envelopes.enum_curve_nodes = function(env, start_idx)
         delta, real_idx, real_pos, prev_type
   end
 end
+
+---Function made for iterating points of a specific type in midi take.
+---@param take userdata: reaper take
+---@param type string: pitch|cc
+---@param start_idx number: Index to start at
+---@param cc_num number: If type == "cc" then you need to supply which cc number here.
+envelopes.enum_midi_cc_curve_nodes = function(take, type, start_idx, cc_num)
+  cc_num = cc_num or 1
+
+  local cc_data = get_all_midi_cc_data(take, function(evt)
+    if type == "pitch" then
+      return evt.chanmsg == constants.CC_CONSTANTS.type[type]
+    end
+    if type == "cc" then
+      return evt.chanmsg == constants.CC_CONSTANTS.type[type] and evt.cc == cc_num
+    end
+  end)
+
+  log.user(string.format([[Type=%s, cc_num=%s; #evt = %s]], type, cc_num, #cc_data))
+
+  return function()
+    -- TODO: Actually, this could all be merged with the existing enum_curve_nodes
+  end
+end
+
 
 return envelopes

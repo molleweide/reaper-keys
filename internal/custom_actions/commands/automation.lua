@@ -31,9 +31,14 @@ local automation_actions = {}
 ---This function tries to compute whether or not it is safe to insert the
 ---desired curve template. WIP it is not perfect but it works well enough to
 ---start playing around with envelope curves.
+---Basically, it is a bit hard to figure out if you catch all cases that could
+---slip through errors but Im trying to be super verbose and get vars for everything
+---and then you can just check for enough posibilities that nothing should be
+---able to slip through.
 local function curve_obj_already_exists_at_position(env, range_left, range_right)
   local curve_obj_count = 0
 
+  -- TODO: This func has to support MIDI as well.
 
   -- this is a hack for now to simulate that there is only one point at pos == 0.
   local count_env_pts = reaper.CountEnvelopePoints(env)
@@ -60,6 +65,8 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
   --
 
   local start_count = 0
+  local mid_count = 0
+  local end_count = 0
 
 
   local start_found, mid_found, end_found
@@ -70,6 +77,7 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
   local mid_before, mid_inside, mid_after
 
   local end_before, end_inside, end_after
+  local end_eq_range_left, end_eq_range_right
 
   -- notice that we pass an explicit start index for the iterator.
   for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, ri, real_pos, prev_type in envelopes.enum_curve_nodes(env, i) do
@@ -97,22 +105,26 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
     end
 
     if ntype == 2 then
+      end_count = end_count + 1
       if real_pos < range_left then
         end_before = true
       end
-
+      if real_pos == range_left then
+        end_eq_range_left = true
+      end
       if range_left < real_pos and real_pos <= range_right then
         end_inside = true
+      end
+      if real_pos == range_right then
+        end_eq_range_right = true
       end
       if range_right < real_pos then
         end_after = true
       end
-      -- if tpos2 >= range_right then
-      --   e_end_after=true
-      -- end
     end
 
     if ntype == 0 then
+      mid_count = mid_count + 1
       mid_found = true
       -- prev_mid_time = tpos
       -- if range_left <= prev_mid_time and prev_mid_time <= range_right then
@@ -128,8 +140,6 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
         mid_after = true
       end
     end
-
-
 
     if tpos > range_right then
       -- This means we have iterated over and beyond the range interval, ie.
@@ -151,25 +161,27 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
   end_after:      %s
   ]], start_before, start_inside, start_after, mid_before, mid_inside, mid_after, end_before, end_inside, end_after))
 
-  if end_inside and start_count == 0 then
+  if start_eq_range_left or end_eq_range_right then
+    log.user("<< There is a start/end ligning up with L/R >>")
+    return true
+  end
+
+  if end_inside then
     log.user("<< left overlap >>")
     return true
   end
 
-  -- touching the LEFT
-  if start_inside and not end_inside then
+  if start_inside then
     log.user("<< right overlap >>")
     return true
   end
 
   if start_inside and end_inside then
-    log.user("<< wraps existing curve >>")
+    log.user("<< both a START and END _inside_ >>")
     return true
   end
-  if (mid_found and not start_found and not end_found)
-  --
-  then
-    log.user("<< range is inside of existing curve >>")
+  if mid_found and not start_found and not end_found then
+    log.user("<< only mid points found >>")
     return true
   end
 end
@@ -767,15 +779,11 @@ automation_actions.picker_insert_cc_curve = function()
             constants.BUILTIN_ENVELOPES[opts.code].search_string)
         end
 
-        -- 2. Ensure we can safely inject data.
-        -- FIX: This func has to work with both regular and midi
-        if not opts.cc then
-          -- local creates_overlap = find_existing_curve_at_new_range(target_env, range_left, range_right)
-          local creates_overlap = curve_obj_already_exists_at_position(target_env, range_left, range_right)
-          log.user("CREATES_OVERLAP:", creates_overlap)
-          if creates_overlap then
-            return true
-          end
+        -- ensure we can safely inject new curve obj.
+        local creates_overlap = curve_obj_already_exists_at_position(target_env, range_left, range_right)
+        log.user("CREATES_OVERLAP:", creates_overlap)
+        if creates_overlap then
+          return true
         end
 
         local target_midi_type
@@ -818,6 +826,9 @@ automation_actions.picker_insert_cc_curve = function()
         --
 
         if not opts.cc then
+          -- TODO: if built in, then values have to be transformed properly
+          -- based on the INFO param func, eg. volume has to be decibel
+          -- transformed.
           envelopes.fltr_single_envelope({
             target_env = target_env,
             insert = t_pts_to_insert,
