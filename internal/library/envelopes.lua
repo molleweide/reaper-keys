@@ -886,6 +886,10 @@ envelopes.enum_curve_nodes = function(env, start_idx)
   local is_delta_node = false
   local prev_type
 
+  local count_env_pts = reaper.CountEnvelopePoints(env)
+  log.user("env pt count =", count_env_pts)
+
+
   -- NOTE: If there aren't enough points in the envelope then we should return
   -- early and tell user that envelope doesnt have enough points to iter.
 
@@ -967,13 +971,12 @@ envelopes.enum_curve_nodes = function(env, start_idx)
       end
     end
 
-
     log.user(string.format([[(%s %s) -> %s;%s | %s;%s >> prev = %s]], node_type,
       s.makeStringLength(node_type_name, 6),
       s.makeStringLength(tostring(i), 4),
       s.makeStringLength(tostring(i + 1), 4),
-      s.makeStringLength(tostring(time1), 5),
-      s.makeStringLength(tostring(time2), 5),
+      s.makeStringLength(tostring(time1), 7),
+      s.makeStringLength(tostring(time2), 7),
       prev_type))
 
     prev_type = node_type
