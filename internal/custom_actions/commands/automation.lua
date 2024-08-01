@@ -28,6 +28,9 @@ local automation_actions = {}
 -- ~ Move cursor to next/prev template start.
 -- ~
 
+---This function tries to compute whether or not it is safe to insert the
+---desired curve template. WIP it is not perfect but it works well enough to
+---start playing around with envelope curves.
 local function curve_obj_already_exists_at_position(env, range_left, range_right)
   local curve_obj_count = 0
 
@@ -43,9 +46,13 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
   local i = pt_before_or_equal
   log.user("Starting @ i =", i)
 
+  -- If we should start at the last env point, shift back one to ensure
+  -- that we have two notes to work with.
   if i > 0 and i == count_env_pts - 1 then
     i = i - 1
   end
+
+  -- TODO: Count each type
 
   local prev_start_time, prev_end_time, prev_mid_time
 
@@ -56,8 +63,12 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
 
 
   local start_found, mid_found, end_found
+
   local start_before, start_inside, start_after
+  local start_eq_range_left, start_eq_range_right
+
   local mid_before, mid_inside, mid_after
+
   local end_before, end_inside, end_after
 
   -- notice that we pass an explicit start index for the iterator.
@@ -66,33 +77,26 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
 
     if ntype == 1 then
       start_count = start_count + 1
-
-      log.user("1")
-
       start_found = true
-      -- prev_start_time = tpos
-      -- if range_left <= prev_start_time and prev_start_time < range_right then
-      --   return true
-      -- end
-      if tpos < range_left then
-        log.user("start before")
+
+      if real_pos < range_left then
         start_before = true
       end
-      if range_left < real_pos and real_pos <= range_right then
-        log.user("start inside...")
+      if real_pos == range_left then
+        start_eq_range_left = true
+      end
+      if range_left < real_pos and real_pos < range_right then
         start_inside = true
       end
+      if real_pos == range_right then
+        start_eq_range_right = true
+      end
       if range_right < real_pos then
-        log.user("start after")
         start_after = true
       end
     end
 
     if ntype == 2 then
-      -- prev_end_time = tpos2
-      -- if range_left < prev_end_time and prev_end_time <= range_right then
-      --   return true
-      -- end
       if real_pos < range_left then
         end_before = true
       end
@@ -147,34 +151,27 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
   end_after:      %s
   ]], start_before, start_inside, start_after, mid_before, mid_inside, mid_after, end_before, end_inside, end_after))
 
-  local touching_left, touching_right, wraps, within
-  -- touching the RIGHT side of existing curve
-  if not start_inside and end_inside then
+  if end_inside and start_count == 0 then
     log.user("<< left overlap >>")
-    touching_right = true
     return true
   end
 
   -- touching the LEFT
   if start_inside and not end_inside then
     log.user("<< right overlap >>")
-    touching_left = true
     return true
   end
 
   if start_inside and end_inside then
     log.user("<< wraps existing curve >>")
-    wraps = true
     return true
   end
   if (mid_found and not start_found and not end_found)
   --
   then
     log.user("<< range is inside of existing curve >>")
-    within = true
     return true
   end
-  log.user("???")
 end
 
 --   ms = reaper.MIDI_GetPPQPosFromProjTime(ctxm.take, ms)
