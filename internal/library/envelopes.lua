@@ -756,20 +756,15 @@ envelopes.midi_take_fltr_cc = function(opts)
     reaper.PreventUIRefresh(-1)
     reaper.MIDI_Sort(opts.take)
   elseif opts.insert and not opts.dry_run then
+    reaper.MIDI_DisableSort(opts.take)
+
     local _, _, cc_count = reaper.MIDI_CountEvts(opts.take)
 
     local function set_shape_of_last_event(evt)
       local shape = evt.shape
-
-      local index_of_evt_match = envelopes.get_midi_cc_event_match(opts.take, evt)
-
       local shape_id = constants.CC_SHAPES[shape].id
-      -- local retval, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(opts.take)
-      local idx = index_of_evt_match
-      -- local idx = ccevtcnt - 1
-      reaper.MIDI_SetCCShape(opts.take, idx, shape_id, 0, true)
-
-      log.user(string.format([[shape = %s, count = %s]], shape, ccevtcnt))
+      reaper.MIDI_SetCCShape(opts.take, cc_count - 1, shape_id, 0, true)
+      log.user(string.format([[shape = %s, count = %s]], shape, cc_count))
     end
 
 
