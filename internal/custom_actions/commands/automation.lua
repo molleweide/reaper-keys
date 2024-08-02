@@ -35,6 +35,27 @@ local automation_actions = {}
 -- ~ Move cursor to next/prev template start.
 -- ~
 
+local function preview_curve_obj(env, curve_obj)
+  reaper.SetEditCurPos(curve_obj[1].real_pos, false, false)
+  reaper.PreventUIRefresh(1)
+  envelopes.unselect_all_points(env)
+  for _, v in ipairs(curve_obj) do
+    if v.type == 0 then
+      local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
+    elseif v.type == 1 then
+      local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
+      local ret = reaper.SetEnvelopePoint(env, v.pt_idx2, nil, nil, nil, nil, true, true)
+    elseif v.type == 2 then
+      local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
+      local ret = reaper.SetEnvelopePoint(env, v.pt_idx2, nil, nil, nil, nil, true, true)
+    end
+  end
+  reaper.PreventUIRefresh(-1)
+  reaper.Envelope_SortPoints(env)         -- I dont need to sort here wtf?!
+  reaper.UpdateArrange()
+end
+
+
 ---
 ---This function tries to compute whether or not it is safe to insert the
 ---    desired curve template. WIP it is not perfect but it works well enough to
@@ -1002,25 +1023,9 @@ automation_actions.picker_edit_track_curves_ui = function()
         -- 2. call reset func()
       end,
       on_focus_next = function(gui)
-        local entry = gui:get_currently_focused_entry()
+        local curve_obj = gui:get_currently_focused_entry()
         -- log.user("[on_focus_next]: set position:", entry[1].real_pos)
-        reaper.SetEditCurPos(entry[1].real_pos, false, false)
-        reaper.PreventUIRefresh(1)
-        envelopes.unselect_all_points(sel_in.env)
-        for _, v in ipairs(entry) do
-          if v.type == 0 then
-            local ret = reaper.SetEnvelopePoint(sel_in.env, v.pt_idx, nil, nil, nil, nil, true, true)
-          elseif v.type == 1 then
-            local ret = reaper.SetEnvelopePoint(sel_in.env, v.pt_idx, nil, nil, nil, nil, true, true)
-            local ret = reaper.SetEnvelopePoint(sel_in.env, v.pt_idx2, nil, nil, nil, nil, true, true)
-          elseif v.type == 2 then
-            local ret = reaper.SetEnvelopePoint(sel_in.env, v.pt_idx, nil, nil, nil, nil, true, true)
-            local ret = reaper.SetEnvelopePoint(sel_in.env, v.pt_idx2, nil, nil, nil, nil, true, true)
-          end
-        end
-        reaper.PreventUIRefresh(-1)
-        reaper.Envelope_SortPoints(sel_in.env) -- I dont need to sort here wtf?!
-        reaper.UpdateArrange()
+        preview_curve_obj(sel_in.env, curve_obj)
         -- todo: select the nodes of the curve
       end,
       sort_comp = function(a, b)
@@ -1080,23 +1085,12 @@ automation_actions.picker_edit_track_curves_ui = function()
       sort_comp = "name",
       entry_maker = require("pickers.entry_makers.track_envelopes"), --{ "type_name", "name", "active" },
       extended_mappings = {
-        ---Remove envelope
+        --Remove envelope
         ["C-u"] = function(o)
-          -- reset envelope
           local entry = o.gui_ref:get_currently_focused_entry()
-          log.user("entry:", format.block(entry))
-          local env = entry.env
-
-          reaper.PreventUIRefresh(1)
-          -- reaper.DeleteEnvelopePointRange(env, 0, reaper.GetProjectLength(0))
-          -- reaper.Envelope_SortPoints(env)
-          -- removing envelopes does not work.
-          require("library.delete_envelope")(entry.env)
-          reaper.PreventUIRefresh(-1)
-          reaper.UpdateArrange()
+          envelopes.delete(entry.env)
         end,
-        ---Select entry
-        ["C-s"] = function(t)
+        ["C-s"] = function(t) --Select entry
           local selection = t.gui_ref.t_search_results[t.sel_idx]
           selection.selected = true
           t.gui_ref:add_to_current_selection(selection)
@@ -1107,18 +1101,17 @@ automation_actions.picker_edit_track_curves_ui = function()
         end,
         ---Remove selection
         ["C-r"] = function(t)
-          -- TODO: Remove selection.
           -- 1. check if mult select?
           -- 2. remove points by idx
         end,
       },
-      -- NOTE: env picker: what do I store here
-      -- zoom state arrange / midi
-      -- for each picker chain level I might zoom in on the curve.
-      -- On exit i want to zoom out to start zoom.
-      -- snapshot = function () end,
       on_exit_callback = function(self)
-        log.user(":: PICKER EXIT ::")
+        -- log.user(":: PICKER EXIT ::")
+        -- note: env picker: what do I store here
+        -- zoom state arrange / midi
+        -- for each picker chain level I might zoom in on the curve.
+        -- On exit i want to zoom out to start zoom.
+        -- snapshot = function () end,
       end,
     })
   end
