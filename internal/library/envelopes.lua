@@ -881,21 +881,93 @@ end
 -- so that the end point and subsequent start point is the same point. so you have
 -- to check if there is an adjacent curve before, eg. removing etc.
 --
+-- TODO: Track prev_position =current so that we can always check that three
+-- points at same position never occurs.
+-- TODO: If we start at a point that has a subsequent event at the same position,
+-- then we also have to check that the event before also doesn't
+
+--
 ---comment
 ---@param env any
 ---@param start_idx any
----@return function
-envelopes.enum_curve_nodes = function(env, start_idx)
+---@return function | nil
+---
+--- env
+--- start_idx
+--- midi table
+---     take
+---     start_idx
+---     type
+---     cc_num
+envelopes.enum_curve_nodes = function(opts)
+  local function get_a_and_b(env, i, is_midi, cc_data)
+    local ret1, tpos1, ret2, tpos2
+    if is_midi then
+      local node_a = cc_data[i]
+      local node_b = cc_data[i + 1]
+      if node_a then
+        ret1 = true
+        tpos1 = node_a.ppqpos
+      end
+      if node_b then
+        ret2 = true
+        tpos2 = node_b.ppqpos
+      end
+    else
+      ret1, tpos1, _, _, _, _ = reaper.GetEnvelopePointEx(env, -1, i)
+      ret2, tpos2, _, _, _, _ = reaper.GetEnvelopePointEx(env, -1, i + 1)
+    end
+    return ret1, tpos1, ret2, tpos2
+  end
+
+  opts = opts or {}
+  local is_midi = true
+  if not opts.midi then
+    is_midi = false
+    opts.midi = {}
+  end
+
+  local env = opts.env
+  local start_idx = opts.start_idx or nil
+  local midi_take = opts.midi.take
+  local midi_type = opts.midi.type
+  local cc_num = opts.midi.cc_num
+
+  if not opts.env and not is_midi then
+    return
+  end
+  if is_midi and not midi_take then
+    return
+  end
+
+  -- Why do I need to jump back with -1, explain!!!!
   local i = start_idx ~= nil and (start_idx - 1) or -1
+
   -- Nodes that consist of 2 envelope points are considered `delta nodes`
   local is_delta_node = false
   local prev_type
 
-  local count_env_pts = reaper.CountEnvelopePoints(env)
+  local cc_data
+  if is_midi then
+    cc_data = envelopes.get_all_midi_cc_data(midi_take, function(evt)
+      if midi_type == "pitch" then
+        return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type]
+      end
+      if midi_type == "cc" then
+        return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type] and evt.cc == cc_num
+      end
+    end)
+  end
+
+  local count_env_pts
+  if is_midi then
+    count_env_pts = #cc_data
+  else
+    count_env_pts = reaper.CountEnvelopePoints(env)
+  end
   log.user("env pt count =", count_env_pts)
 
-
-  -- NOTE: If there aren't enough points in the envelope then we should return
+  -- if there aren't enough points in the envelope then we should return
   -- early and tell user that envelope doesnt have enough points to iter.
 
   return function()
@@ -907,48 +979,63 @@ envelopes.enum_curve_nodes = function(env, start_idx)
       i = i + 1
     end
 
-    local retval, time1, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
-    local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
+    local ret1, tpos1, ret2, tpos2 = get_a_and_b(env, i, is_midi, cc_data)
 
-    if not retval then
+    if ret1 and not ret2 then
+      log.user("RETURN: ret2 is false")
       return
     end
 
-    if time1 == time2 then
+    if tpos1 == tpos2 then
       log.user("SHIFT FWD >>> due to pos A == pos B")
       -- This means that we started at the second point of and `end` node.
       --
       -- This means that we should want to jump forward to the next "expected to be"
       --     start point
       i = i + 1
-      retval, time1, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
-      retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
+      ret1, tpos1, ret2, tpos2 = get_a_and_b(env, i, is_midi, cc_data)
     end
 
-    local delta = time2 - time1
+    if not (ret1 and ret2) then
+      return
+    end
+
+    local delta = tpos2 - tpos1
     local node_type = 0
     local node_type_name = "mid"
-    local real_pos = time1
-    local tpos2
-    local tpos_rounded = compute_step_delta(delta)
-    -- I dont know if this is useful...
+    local real_pos = tpos1
+
+    local delta_normalized
+    if is_midi then
+      delta_normalized = delta
+    else
+      delta_normalized = compute_step_delta(delta)
+    end
+
     local real_idx = i
 
-    if tpos_rounded == nil or tpos_rounded > 2 then
+    if delta_normalized == nil or delta_normalized > 2 then
       --
     else
       is_delta_node = true
-      if tpos_rounded == 1 then
+      if delta_normalized == 1 then
         node_type = 1
         node_type_name = "start"
-      elseif tpos_rounded == 2 then
+      elseif delta_normalized == 2 then
         node_type = 2
         node_type_name = "end"
-        real_pos = time2
+        real_pos = tpos2
         real_idx = i + 1
       end
     end
 
+    log.user(string.format([[(%s %s) -> %s;%s | %s;%s >> prev = %s]], node_type,
+      s.makeStringLength(node_type_name, 6),
+      s.makeStringLength(tostring(i), 4),
+      s.makeStringLength(tostring(i + 1), 4),
+      s.makeStringLength(tostring(tpos1), 7),
+      s.makeStringLength(tostring(tpos2), 7),
+      prev_type))
 
     -- Validate sequences
     if prev_type then
@@ -963,7 +1050,7 @@ envelopes.enum_curve_nodes = function(env, start_idx)
       then
         -- log.user("good")
       else
-        log.user("<err>")
+        log.user(string.format [[ERROR(enum curve nodes): %s -> %s]], prev_type, node_type)
       end
     else
       -- the first node can be mid if the first curve starts later than zero or
@@ -976,14 +1063,6 @@ envelopes.enum_curve_nodes = function(env, start_idx)
       end
     end
 
-    log.user(string.format([[(%s %s) -> %s;%s | %s;%s >> prev = %s]], node_type,
-      s.makeStringLength(node_type_name, 6),
-      s.makeStringLength(tostring(i), 4),
-      s.makeStringLength(tostring(i + 1), 4),
-      s.makeStringLength(tostring(time1), 7),
-      s.makeStringLength(tostring(time2), 7),
-      prev_type))
-
     prev_type = node_type
 
     -- node_type        number: 0 = mid, 1 = start, 2 = end
@@ -994,26 +1073,99 @@ envelopes.enum_curve_nodes = function(env, start_idx)
     --              And if there are to curves that touch, acjacent, then the end
     --              point of the first one will be the start point of the second
     --              one.
-    return node_type, node_type_name,
-        --
-        i, time1, i + 1, time2,
-        --
-        delta, real_idx, real_pos, prev_type
+    return {
+      type = node_type,
+      name = node_type_name,
+      pt_idx = i,
+      tpos = tpos1,
+      pt_idx2 = i + 1,
+      tpos2 = tpos2,
+      delta = delta,
+      real_idx = real_idx,
+      real_pos = real_pos,
+      prev_type = prev_type
+    }
   end
 end
 
----Function made for iterating points of a specific type in midi take.
----@param take userdata: reaper take
----@param type string: pitch|cc
----@param start_idx number: Index to start at
----@param cc_num number: If type == "cc" then you need to supply which cc number here.
-envelopes.enum_curve_nodes_midi = function(take, midi_type, start_idx, cc_num)
-  local i = start_idx ~= nil and (start_idx - 1) or -1
-  cc_num = cc_num or 1
+-- ---Function made for iterating points of a specific type in midi take.
+-- ---@param take userdata: reaper take
+-- ---@param type string: pitch|cc
+-- ---@param start_idx number: Index to start at
+-- ---@param cc_num number: If type == "cc" then you need to supply which cc number here.
+-- envelopes.enum_curve_nodes_midi = function(opts)
+--   -- take, midi_type, start_idx, cc_num
+--   local take = opts.midi.take
+--   local start_idx = opts.start_idx
+--
+--   local take = opts.midi.take
+--   local midi_type = opts.midi.type
+--   local cc_num = opts.midi.cc_num
+--
+--
+--   local i = start_idx ~= nil and (start_idx - 1) or -1
+--   cc_num = cc_num or 1
+--
+--   local is_delta_node = false
+--
+--   local cc_data = get_all_midi_cc_data(take, function(evt)
+--     if midi_type == "pitch" then
+--       return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type]
+--     end
+--     if midi_type == "cc" then
+--       return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type] and evt.cc == cc_num
+--     end
+--   end)
+--
+--   log.user(string.format([[Type=%s, cc_num=%s; #evt = %s]], midi_type, cc_num, #cc_data))
+--   return function()
+--     if is_delta_node then
+--       i = i + 2
+--       is_delta_node = false
+--     else
+--       i = i + 1
+--     end
+--
+--     local node_a = cc_data[i]
+--     local node_b = cc_data[i + 1]
+--
+--
+--     -- local retval, time1, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
+--     -- local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
+--
+--     if not node_a then
+--       return
+--     end
+--
+--     -- node_type        number: 0 = mid, 1 = start, 2 = end
+--     -- node_type_name   string: start|mid|end
+--     -- real_pos:    Is the real time position of the curve component node.
+--     --              Ie. for the `end` type, then the last point is the real point,
+--     --              but for `start` point, then the first point is the real point.
+--     --              And if there are to curves that touch, acjacent, then the end
+--     --              point of the first one will be the start point of the second
+--     --              one.
+--     return {
+--       type = node_type,
+--       name = node_type_name,
+--       pt_idx = i,
+--       tpos = time1,
+--       pt_idx2 = i + 1,
+--       tpos2 = time2,
+--       delta = delta,
+--       real_idx = real_idx,
+--       real_pos = real_pos,
+--       prev_type = prev_type
+--     }
+--   end
+-- end
 
-  local is_delta_node = false
+envelopes.MIDI_GetEnvelopePointByPPQPosEx = function(take, ppqpos, midi_type, cc_num)
+  if not (take or ppqpos) then
+    return
+  end
 
-  local cc_data = get_all_midi_cc_data(take, function(evt)
+  local cc_data = envelopes.get_all_midi_cc_data(take, function(evt)
     if midi_type == "pitch" then
       return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type]
     end
@@ -1022,70 +1174,22 @@ envelopes.enum_curve_nodes_midi = function(take, midi_type, start_idx, cc_num)
     end
   end)
 
-  log.user(string.format([[Type=%s, cc_num=%s; #evt = %s]], midi_type, cc_num, #cc_data))
-  return function()
-    if is_delta_node then
-      i = i + 2
-      is_delta_node = false
-    else
-      i = i + 1
+  local point_found = false
+  local point_prev
+
+  for i, pt in ipairs(cc_data) do
+    if pt.ppqpos > ppqpos then
+      break
     end
-
-    local node_a = cc_data[i]
-    local node_b = cc_data[i + 1]
-
-
-    -- local retval, time1, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
-    -- local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
-
-    if not node_a then
-      return
-    end
-
-    -- node_type        number: 0 = mid, 1 = start, 2 = end
-    -- node_type_name   string: start|mid|end
-    -- real_pos:    Is the real time position of the curve component node.
-    --              Ie. for the `end` type, then the last point is the real point,
-    --              but for `start` point, then the first point is the real point.
-    --              And if there are to curves that touch, acjacent, then the end
-    --              point of the first one will be the start point of the second
-    --              one.
-    return node_type, node_type_name,--
-        i, time1, i + 1, time2, --
-        delta, real_idx, real_pos, prev_type
+    point_prev = pt
   end
+
+  if point_prev then
+    point_found = point_prev
+  end
+
+  return cc_data, point_found
 end
-
-envelopes.MIDI_GetEnvelopePointByPPQPosEx = function(take, ppqpos, midi_type, cc_num)
-    if not (take or ppqpos) then
-      return
-    end
-
-    local cc_data = envelopes.get_all_midi_cc_data(take, function(evt)
-      if midi_type == "pitch" then
-        return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type]
-      end
-      if midi_type == "cc" then
-        return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type] and evt.cc == cc_num
-      end
-    end)
-
-    local point_found = false
-    local point_prev
-
-    for i, pt in ipairs(cc_data) do
-      if pt.ppqpos > ppqpos then
-        break
-      end
-      point_prev = pt
-    end
-
-    if point_prev then
-      point_found = point_prev
-    end
-
-    return cc_data, point_found
-  end
 
 
 return envelopes

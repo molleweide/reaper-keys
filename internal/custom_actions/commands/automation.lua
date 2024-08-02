@@ -28,18 +28,21 @@ local automation_actions = {}
 -- ~ Move cursor to next/prev template start.
 -- ~
 
+---
 ---This function tries to compute whether or not it is safe to insert the
----desired curve template. WIP it is not perfect but it works well enough to
----start playing around with envelope curves.
----Basically, it is a bit hard to figure out if you catch all cases that could
----slip through errors but Im trying to be super verbose and get vars for everything
----and then you can just check for enough posibilities that nothing should be
----able to slip through.
+---    desired curve template. WIP it is not perfect but it works well enough to
+---    start playing around with envelope curves.
+---    Basically, it is a bit hard to figure out if you catch all cases that could
+---    slip through errors but Im trying to be super verbose and get vars for everything
+---    and then you can just check for enough posibilities that nothing should be
+---    able to slip through.
 ---MIDI: Then all positions are assumed to be PPQ instead of time positions.
----IE. ranges are assumed to have been converted to ppq because my impl treats
----CC evts and Env pts the same, I mean, my API abstracts the difference btw them.
+---    IE. ranges are assumed to have been converted to ppq because my impl treats
+---    CC evts and Env pts the same, I mean, my API abstracts the difference btw them.
 local function curve_obj_already_exists_at_position(env, range_left, range_right, is_midi, midi_take, midi_type, cc_num)
   -- TODO: This func has to support MIDI as well.
+  -- TODO: Rename range l/r to start_pos/end_pos in order to move away from the range name/confusion?
+  --
 
   -- this is a hack for now to simulate that there is only one point at pos == 0.
   local count_env_pts = reaper.CountEnvelopePoints(env)
@@ -47,21 +50,18 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
     return false
   end
 
-
-
   -- Ther is no MIDI equivalent to GetEnvelopePointEx.
-  local pt_before_or_equal
+  local idx_of_point_before_or_equal
 
   if is_midi then
     -- can this return nil??
-    pt_before_or_equal = envelopes.MIDI_GetEnvelopePointByPPQPosEx(env, range_left, midi_type, cc_num)
+    idx_of_point_before_or_equal = envelopes.MIDI_GetEnvelopePointByPPQPosEx(env, range_left, midi_type, cc_num)
   else
-    pt_before_or_equal = reaper.GetEnvelopePointByTimeEx(env, -1, range_left)
+    idx_of_point_before_or_equal = reaper.GetEnvelopePointByTimeEx(env, -1, range_left)
   end
 
-
-  local i = pt_before_or_equal
-  log.user("Starting @ i =", i)
+  local i = idx_of_point_before_or_equal
+  log.user(string.format("Starting @ i = %s %s", i, is_midi and "(ppq)" or ""))
 
   -- If we should start at the last env point, shift back one to ensure
   -- that we have two notes to work with.
@@ -80,7 +80,6 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
   local mid_count = 0
   local end_count = 0
 
-
   local start_found, mid_found, end_found
 
   local start_before, start_inside, start_after
@@ -91,11 +90,14 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
   local end_before, end_inside, end_after
   local end_eq_range_left, end_eq_range_right
 
-  -- notice that we pass an explicit start index for the iterator.
-  for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, ri, real_pos, prev_type in envelopes.enum_curve_nodes(env, i) do
+  -- TODO: iters currently only works on regular envelops.
+  -- 1. I need to pass is_midi to iters, so that I only need one statement
+  -- regardless if midi or not.
+  for cn in envelopes.enum_curve_nodes({ env = env, start_idx = i, midi = { take = midi_take, type = midi_type, cc_num = cc_num } }) do
+    local real_pos = cn.real_pos
     log.user("-", real_pos)
 
-    if ntype == 1 then
+    if cn.ntype == 1 then
       start_count = start_count + 1
       start_found = true
 
@@ -116,7 +118,7 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
       end
     end
 
-    if ntype == 2 then
+    if cn.ntype == 2 then
       end_count = end_count + 1
       if real_pos < range_left then
         end_before = true
@@ -135,28 +137,28 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
       end
     end
 
-    if ntype == 0 then
+    if cn.ntype == 0 then
       mid_count = mid_count + 1
       mid_found = true
       -- prev_mid_time = tpos
       -- if range_left <= prev_mid_time and prev_mid_time <= range_right then
       --   return true
       -- end
-      if tpos < range_left then
+      if real_pos < range_left then
         mid_before = true
       end
-      if tpos >= range_left and tpos <= range_right then
+      if real_pos >= range_left and real_pos <= range_right then
         mid_inside = true
       end
-      if tpos > range_right then
+      if real_pos > range_right then
         mid_after = true
       end
     end
 
-    if tpos > range_right then
+    if real_pos > range_right then
       -- This means we have iterated over and beyond the range interval, ie.
       -- there should not be a conflict.
-      log.user("<BREAK> idx/idx2:", pt_idx, pt_idx2)
+      log.user("<BREAK> idx/idx2:", cn.pt_idx, cn.pt_idx2)
       break
     end
   end
@@ -1005,26 +1007,15 @@ automation_actions.picker_edit_track_curves_ui = function()
     local function get_curve_objs()
       local t_curve_objs = {}
       local start_count = 0
-      for ntype, nname, pt_idx, tpos, pt_idx2, tpos2, delta, ri, rp in envelopes.enum_curve_nodes(sel_in.env) do
-        if ntype == 1 then
+      for cn in envelopes.enum_curve_nodes({ env = sel_in.env }) do
+        if cn.type == 1 then
           start_count = start_count + 1
           table.insert(t_curve_objs, { name = "curve " .. start_count, curve_index = start_count })
         end
         if start_count > 0 then
-          table.insert(t_curve_objs[#t_curve_objs], {
-            name = nname,
-            type = ntype,
-            pt_idx = pt_idx,
-            tpos = tpos,
-            pt_idx2 = pt_idx2,
-            tpos2 = tpos2,
-            delta = delta,
-            real_idx = ri,
-            real_pos = rp,
-          })
+          table.insert(t_curve_objs[#t_curve_objs], cn)
         end
       end
-
       log.user("t_curve_objs:", format.block(t_curve_objs))
       return t_curve_objs
     end
