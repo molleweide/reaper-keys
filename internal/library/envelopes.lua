@@ -1142,5 +1142,21 @@ envelopes.MIDI_GetEnvelopePointByPPQPosEx = function(take, ppqpos, midi_type, cc
   return cc_data, point_found
 end
 
+envelopes.get_existing_curve_objects = function(env)
+      local t_curve_objs = {}
+      local start_count = 0
+      for cn in envelopes.enum_curve_nodes({ env = env }) do
+        if cn.type == 1 then
+          start_count = start_count + 1
+          table.insert(t_curve_objs, { name = "curve " .. start_count, curve_index = start_count })
+        end
+        if start_count > 0 then
+          table.insert(t_curve_objs[#t_curve_objs], cn)
+        end
+      end
+      log.user("t_curve_objs:", format.block(t_curve_objs))
+      return t_curve_objs
+end
+
 
 return envelopes
