@@ -35,9 +35,10 @@ local automation_actions = {}
 ---slip through errors but Im trying to be super verbose and get vars for everything
 ---and then you can just check for enough posibilities that nothing should be
 ---able to slip through.
-local function curve_obj_already_exists_at_position(env, range_left, range_right)
-  local curve_obj_count = 0
-
+---MIDI: Then all positions are assumed to be PPQ instead of time positions.
+---IE. ranges are assumed to have been converted to ppq because my impl treats
+---CC evts and Env pts the same, I mean, my API abstracts the difference btw them.
+local function curve_obj_already_exists_at_position(env, range_left, range_right, is_midi, midi_take, midi_type, cc_num)
   -- TODO: This func has to support MIDI as well.
 
   -- this is a hack for now to simulate that there is only one point at pos == 0.
@@ -47,7 +48,18 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
   end
 
 
-  local pt_before_or_equal = reaper.GetEnvelopePointByTimeEx(env, -1, range_left)
+
+  -- Ther is no MIDI equivalent to GetEnvelopePointEx.
+  local pt_before_or_equal
+
+  if is_midi then
+    -- can this return nil??
+    pt_before_or_equal = envelopes.MIDI_GetEnvelopePointByPPQPosEx(env, range_left, midi_type, cc_num)
+  else
+    pt_before_or_equal = reaper.GetEnvelopePointByTimeEx(env, -1, range_left)
+  end
+
+
   local i = pt_before_or_equal
   log.user("Starting @ i =", i)
 
@@ -598,50 +610,6 @@ end
 --     -- 1. Insert point at cursor for selection. <CR>
 -- end
 
--- local function enum_curve_points(env, start_idx)
---     local i = start_idx ~= nil and (start_idx - 1) or -1
---     local is_delta_node = false
---     return function()
---         if is_delta_node then
---             i = i + 2
---             is_delta_node = false
---         else
---             i = i + 1
---         end
---
---         local retval, time_curve_node_0, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
---         local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
---
---         if not retval then
---             return
---         end
---
---         local delta = time2 - time_curve_node_0
---
---         local delta_processed
---         local delta_enlarged = delta * envelope_templates.ENV_STEP_MULT
---         local ceiled = math.ceil(delta_enlarged)
---         local ceil_diff = ceiled - delta_enlarged
---         local floored = math.floor(delta_enlarged)
---         local floor_diff = delta_enlarged - floored
---         if floor_diff < ceil_diff then
---             delta_processed = floored
---         elseif ceil_diff < floor_diff then
---             delta_processed = ceiled
---         end
---         local dp = delta_processed
---         if dp == nil or dp > 20 then
---             return "mid"
---         elseif dp == 1 then
---             is_delta_node = true
---             return "start"
---         elseif dp == 2 then
---             is_delta_node = true
---             return "end"
---         end
---     end
--- end
-
 ---Insert CC curves w/picker. Can be used as OP or CMD.
 ---WIP!! Only some env types have basic support.
 ---One (or two) step process. The list of built-in envs AND certain FX are listed
@@ -779,11 +747,16 @@ automation_actions.picker_insert_cc_curve = function()
             constants.BUILTIN_ENVELOPES[opts.code].search_string)
         end
 
-        -- ensure we can safely inject new curve obj.
-        local creates_overlap = curve_obj_already_exists_at_position(target_env, range_left, range_right)
-        log.user("CREATES_OVERLAP:", creates_overlap)
-        if creates_overlap then
-          return true
+        -- TEST: HERE, before analyzing env points, should I convert both ranges
+        -- to ppq since I should know here?????
+        -- I can do this because it should NOT be possible to select an opts.cc == true
+        -- entry in the picker unless I know for sure that there is an item within
+        -- the range of my action, hence, I should know FOR SURE that I can
+        -- convert to ppq, -> This should greatly simply the impl of subsequent
+        -- analyticts since I can reuse the same conditionals for MIDI.
+        if opts.cc then
+          range_left = reaper.MIDI_GetPPQPosFromProjTime(midi_target_take, range_left)
+          range_right = reaper.MIDI_GetPPQPosFromProjTime(midi_target_take, range_right)
         end
 
         local target_midi_type
@@ -798,6 +771,15 @@ automation_actions.picker_insert_cc_curve = function()
           if not cc_num then
             cc_num = 1
           end
+        end
+
+        -- ensure we can safely inject new curve obj.
+        local creates_overlap = curve_obj_already_exists_at_position(target_env, range_left, range_right, opts.cc,
+          midi_target_take, target_midi_type,
+          cc_num)
+        log.user("CREATES_OVERLAP:", creates_overlap)
+        if creates_overlap then
+          return true
         end
 
         -- remove this...
@@ -1003,7 +985,7 @@ automation_actions.picker_edit_track_curves_ui = function()
   local function picker_env_curve_objs(sel_in)
     -- TODO: Modify the `find_existing_curve_at_new_range` so that it becomes
     -- `env_get_curves()`
-    -- I also need an enum_curve_objs which is going to be a bit annoying to
+    -- I also need an ITERATOR for full CURVE OBJECTS which is going to be a bit annoying to
     -- code but it is pretty simple.
 
     -- log.user("?????", format.block(sel), sel.env)
