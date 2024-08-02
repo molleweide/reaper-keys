@@ -38,6 +38,14 @@ local ENV_TYPE_MAP_TO_REAL_NAME = {
 -- list_cnt: if viewing list view, returns event count
 -- if setting_desc is unsupported, the function returns -1.
 
+local function set_shape_of_last_event(take, cc_count, evt)
+  local shape = evt.shape
+  local shape_id = constants.CC_SHAPES[shape].id
+  reaper.MIDI_SetCCShape(take, cc_count - 1, shape_id, 0, true)
+end
+
+
+
 local envelopes = {}
 
 -- NOTE: CURVE SHAPE
@@ -760,16 +768,6 @@ envelopes.midi_take_fltr_cc = function(opts)
 
     local _, _, cc_count = reaper.MIDI_CountEvts(opts.take)
 
-    local function set_shape_of_last_event(evt)
-      local shape = evt.shape
-      local shape_id = constants.CC_SHAPES[shape].id
-      reaper.MIDI_SetCCShape(opts.take, cc_count - 1, shape_id, 0, true)
-      log.user(string.format([[shape = %s, count = %s]], shape, cc_count))
-    end
-
-
-
-
     -- INSERT NEW EVENTS
     reaper.PreventUIRefresh(1)
 
@@ -802,9 +800,8 @@ envelopes.midi_take_fltr_cc = function(opts)
           )
           cc_count = cc_count + 1
           if evt.shape then
-            set_shape_of_last_event(evt)
+            set_shape_of_last_event(opts.take, cc_count, evt)
           end
-          -- set_shape_of_last_event(evt)
         end
       elseif k == "pitch" then
         -- NOTE: "Please enter a value from -8192 through 8191"
@@ -830,9 +827,8 @@ envelopes.midi_take_fltr_cc = function(opts)
           )
           cc_count = cc_count + 1
           if evt.shape then
-            set_shape_of_last_event(evt)
+            set_shape_of_last_event(opts.take, cc_count, evt)
           end
-          -- set_shape_of_last_event(evt)
         end
       end
     end
