@@ -43,19 +43,20 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
   -- TODO: This func has to support MIDI as well.
   -- TODO: Rename range l/r to start_pos/end_pos in order to move away from the range name/confusion?
   --
-
-  -- this is a hack for now to simulate that there is only one point at pos == 0.
-  local count_env_pts = reaper.CountEnvelopePoints(env)
-  if count_env_pts < 2 then
-    return false
+  if is_midi then
+    range_left = reaper.MIDI_GetPPQPosFromProjTime(midi_take, range_left)
+    range_right = reaper.MIDI_GetPPQPosFromProjTime(midi_take, range_right)
   end
 
-  -- Ther is no MIDI equivalent to GetEnvelopePointEx.
-  local idx_of_point_before_or_equal
 
+  local idx_of_point_before_or_equal
   if is_midi then
-    -- can this return nil??
-    idx_of_point_before_or_equal = envelopes.MIDI_GetEnvelopePointByPPQPosEx(env, range_left, midi_type, cc_num)
+    local cc_data, point = envelopes.MIDI_GetEnvelopePointByPPQPosEx(midi_take, range_left, midi_type, cc_num)
+    if point then
+      idx_of_point_before_or_equal = point.index
+    else
+      return -- eg. MIDI CC is empty / no points of desired type -> go ahead and insert.
+    end
   else
     idx_of_point_before_or_equal = reaper.GetEnvelopePointByTimeEx(env, -1, range_left)
   end
@@ -63,11 +64,12 @@ local function curve_obj_already_exists_at_position(env, range_left, range_right
   local i = idx_of_point_before_or_equal
   log.user(string.format("Starting @ i = %s %s", i, is_midi and "(ppq)" or ""))
 
-  -- If we should start at the last env point, shift back one to ensure
-  -- that we have two notes to work with.
-  if i > 0 and i == count_env_pts - 1 then
-    i = i - 1
-  end
+  -- This logic should be moved to inside the iterator.
+  -- -- If we should start at the last env point, shift back one to ensure
+  -- -- that we have two notes to work with.
+  -- if i > 0 and i == count_env_pts - 1 then
+  --   i = i - 1
+  -- end
 
   -- TODO: Count each type
 
@@ -747,18 +749,6 @@ automation_actions.picker_insert_cc_curve = function()
         elseif not opts.cc then
           target_env = reaper.GetTrackEnvelopeByChunkName(trobj.tr,
             constants.BUILTIN_ENVELOPES[opts.code].search_string)
-        end
-
-        -- TEST: HERE, before analyzing env points, should I convert both ranges
-        -- to ppq since I should know here?????
-        -- I can do this because it should NOT be possible to select an opts.cc == true
-        -- entry in the picker unless I know for sure that there is an item within
-        -- the range of my action, hence, I should know FOR SURE that I can
-        -- convert to ppq, -> This should greatly simply the impl of subsequent
-        -- analyticts since I can reuse the same conditionals for MIDI.
-        if opts.cc then
-          range_left = reaper.MIDI_GetPPQPosFromProjTime(midi_target_take, range_left)
-          range_right = reaper.MIDI_GetPPQPosFromProjTime(midi_target_take, range_right)
         end
 
         local target_midi_type

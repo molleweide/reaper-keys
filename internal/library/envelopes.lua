@@ -502,6 +502,21 @@ local CC_CONSTANTS = {
   },
 }
 
+-- Currently, only ppqpos is assigned to notes when generating envelops, BUT,
+-- the more attributes i attach then the more precise matching events will be.
+envelopes.get_midi_cc_event_match = function(take, evt)
+  local _, _, cc_count = reaper.MIDI_CountEvts(take)
+  for i = 0, cc_count - 1 do
+    local _, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
+    if ppqpos == evt.ppqpos then
+      -- selected == evt.selected and muted == evt.muted      --
+      --   and ppqpos == evt.ppqpos and chanmsg == evt.chanmsg --
+      --   and chan == evt.chan then
+      return i
+    end
+  end
+end
+
 envelopes.get_all_midi_cc_data = function(take, filter)
   local t_cc = {}
   local _, _, cc_count = reaper.MIDI_CountEvts(take)
@@ -743,9 +758,18 @@ envelopes.midi_take_fltr_cc = function(opts)
   elseif opts.insert and not opts.dry_run then
     local _, _, cc_count = reaper.MIDI_CountEvts(opts.take)
 
-    local function set_shape_of_last_event(shape)
-      reaper.MIDI_SetCCShape(opts.take, cc_count - 1, constants.CC_SHAPES[shape].id, 0, true)
-      log.user(string.format([[shape = %s, count = %s]], shape, cc_count - 1))
+    local function set_shape_of_last_event(evt)
+      local shape = evt.shape
+
+      local index_of_evt_match = envelopes.get_midi_cc_event_match(opts.take, evt)
+
+      local shape_id = constants.CC_SHAPES[shape].id
+      -- local retval, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(opts.take)
+      local idx = index_of_evt_match
+      -- local idx = ccevtcnt - 1
+      reaper.MIDI_SetCCShape(opts.take, idx, shape_id, 0, true)
+
+      log.user(string.format([[shape = %s, count = %s]], shape, ccevtcnt))
     end
 
 
@@ -783,8 +807,9 @@ envelopes.midi_take_fltr_cc = function(opts)
           )
           cc_count = cc_count + 1
           if evt.shape then
-            set_shape_of_last_event(evt.shape)
+            set_shape_of_last_event(evt)
           end
+          -- set_shape_of_last_event(evt)
         end
       elseif k == "pitch" then
         -- NOTE: "Please enter a value from -8192 through 8191"
@@ -810,8 +835,9 @@ envelopes.midi_take_fltr_cc = function(opts)
           )
           cc_count = cc_count + 1
           if evt.shape then
-            set_shape_of_last_event(evt.shape)
+            set_shape_of_last_event(evt)
           end
+          -- set_shape_of_last_event(evt)
         end
       end
     end
@@ -934,10 +960,14 @@ envelopes.enum_curve_nodes = function(opts)
   local cc_num = opts.midi.cc_num
 
   if not opts.env and not is_midi then
-    return
+    return function() return end
   end
   if is_midi and not midi_take then
-    return
+    return function() return end
+  end
+
+  if start_idx == -1 then
+    -- This implies that whatever curve we are targetting, is empty.
   end
 
   -- Why do I need to jump back with -1, explain!!!!
@@ -947,8 +977,10 @@ envelopes.enum_curve_nodes = function(opts)
   local is_delta_node = false
   local prev_type
 
-  local cc_data
-  if is_midi then
+  cc_data = opts.cc_data
+
+  if is_midi and not cc_data then
+    log.user("midi take ->", midi_take)
     cc_data = envelopes.get_all_midi_cc_data(midi_take, function(evt)
       if midi_type == "pitch" then
         return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type]
@@ -1087,78 +1119,6 @@ envelopes.enum_curve_nodes = function(opts)
     }
   end
 end
-
--- ---Function made for iterating points of a specific type in midi take.
--- ---@param take userdata: reaper take
--- ---@param type string: pitch|cc
--- ---@param start_idx number: Index to start at
--- ---@param cc_num number: If type == "cc" then you need to supply which cc number here.
--- envelopes.enum_curve_nodes_midi = function(opts)
---   -- take, midi_type, start_idx, cc_num
---   local take = opts.midi.take
---   local start_idx = opts.start_idx
---
---   local take = opts.midi.take
---   local midi_type = opts.midi.type
---   local cc_num = opts.midi.cc_num
---
---
---   local i = start_idx ~= nil and (start_idx - 1) or -1
---   cc_num = cc_num or 1
---
---   local is_delta_node = false
---
---   local cc_data = get_all_midi_cc_data(take, function(evt)
---     if midi_type == "pitch" then
---       return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type]
---     end
---     if midi_type == "cc" then
---       return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type] and evt.cc == cc_num
---     end
---   end)
---
---   log.user(string.format([[Type=%s, cc_num=%s; #evt = %s]], midi_type, cc_num, #cc_data))
---   return function()
---     if is_delta_node then
---       i = i + 2
---       is_delta_node = false
---     else
---       i = i + 1
---     end
---
---     local node_a = cc_data[i]
---     local node_b = cc_data[i + 1]
---
---
---     -- local retval, time1, value, shape, tension, selected = reaper.GetEnvelopePointEx(env, -1, i)
---     -- local retval2, time2, value2, shape2, tension2, selected2 = reaper.GetEnvelopePointEx(env, -1, i + 1)
---
---     if not node_a then
---       return
---     end
---
---     -- node_type        number: 0 = mid, 1 = start, 2 = end
---     -- node_type_name   string: start|mid|end
---     -- real_pos:    Is the real time position of the curve component node.
---     --              Ie. for the `end` type, then the last point is the real point,
---     --              but for `start` point, then the first point is the real point.
---     --              And if there are to curves that touch, acjacent, then the end
---     --              point of the first one will be the start point of the second
---     --              one.
---     return {
---       type = node_type,
---       name = node_type_name,
---       pt_idx = i,
---       tpos = time1,
---       pt_idx2 = i + 1,
---       tpos2 = time2,
---       delta = delta,
---       real_idx = real_idx,
---       real_pos = real_pos,
---       prev_type = prev_type
---     }
---   end
--- end
 
 envelopes.MIDI_GetEnvelopePointByPPQPosEx = function(take, ppqpos, midi_type, cc_num)
   if not (take or ppqpos) then
