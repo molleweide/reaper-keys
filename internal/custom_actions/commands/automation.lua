@@ -649,8 +649,6 @@ end
 ---in one view. Selecting an FX puts you in an intermediary "Select FX param"
 ---mode before proceeding to choosing the curve template to inject.
 automation_actions.picker_insert_cc_curve = function()
-  -- NOTE: I need to check that the target range does not overlap with an existing
-  -- curve.
   local state_interface = require("state_machine.state_interface")
 
   local range_left, range_right

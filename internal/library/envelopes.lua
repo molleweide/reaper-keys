@@ -1264,21 +1264,23 @@ end
 
 
 -- TODO: move the base picker to pickers.pickers
--- FIX: Support MIDI CC
 envelopes.picker_envelope_curve_objects = function(opts)
   opts = opts or {}
-
-  log.clear()
-
   if not opts.sel_in then
     return
   end
-  local t_curv_nodes = {}
-  local count_env_pts = reaper.CountEnvelopePoints(opts.sel_in.env)
-  -- log.user("?????", format.block(sel), sel.env)
-  -- log.user("TOTAL ENV POINT COUNT = ", count_env_pts)
 
-  local t_co = envelopes.get_existing_curve_objects(opts.sel_in.env)
+  log.clear()
+
+  local t_co
+  if opts.sel_in.cc then
+
+-- FIX: Support MIDI CC
+
+  else
+    t_co = envelopes.get_existing_curve_objects(opts.sel_in.env)
+  end
+
 
   fzf.init(tbl.deep_extend({
     title = "Curve objects for track = " .. "TRACK_NAME",
@@ -1374,8 +1376,11 @@ envelopes.picker__track_envelopes = function(opts)
   log.clear()
 
   --
-  -- range
+  -- RANGE
   --
+  -- This is a recurring pattern that needs to be moved into the state
+  -- interface so that I can always easilly get the target area for a given
+  -- action.
 
   local range_left, range_right
   if state_interface.last_command_has("timeline_operator") then
@@ -1409,13 +1414,6 @@ envelopes.picker__track_envelopes = function(opts)
   local t_foc_tr, _, context = lib_tr.get_focused_track_objects()
   local tobj = t_foc_tr[1]
   local tr = tobj.tr
-
-  -- FIX: SUPPORT MIDI
-  -- A. Include MIDI CC if possible
-  -- -> Currently, only track envelopes are included.
-  -- 1. Can I copy same checks from `picker_insert_cc_curve` and add the
-  --    MIDI names to `picker__track_envelopes`
-  -- 2. Support collecting MIDI CC curves with `get_curve_objs`
 
   local t_envs = envelopes.fltr_track_envelopes(tr, { log = true })
   -- log.user("envs found:", format.block(t_envs))
