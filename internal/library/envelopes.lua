@@ -50,23 +50,48 @@ local function set_shape_of_last_event(take, cc_count, evt)
   reaper.MIDI_SetCCShape(take, cc_count - 1, shape_id, 0, true)
 end
 
-local function preview_curve_obj(env, curve_obj)
-  reaper.SetEditCurPos(curve_obj[1].real_pos, false, false)
+local function preview_curve_obj(opts)
+  opts = opts or {}
+  if not opts.curve_obj then
+    return
+  end
+
+  local is_midi = opts.curve_obj.is_midi
+
+  local env
+  log.user(format.block(opts.curve_obj), "<<< co")
+
   reaper.PreventUIRefresh(1)
-  envelopes.unselect_all_points(env)
-  for _, v in ipairs(curve_obj) do
-    if v.type == 0 then
-      local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
-    elseif v.type == 1 then
-      local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
-      local ret = reaper.SetEnvelopePoint(env, v.pt_idx2, nil, nil, nil, nil, true, true)
-    elseif v.type == 2 then
-      local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
-      local ret = reaper.SetEnvelopePoint(env, v.pt_idx2, nil, nil, nil, nil, true, true)
+
+  if is_midi then
+    if not opts.take then
+      return
+    end
+    local time = reaper.MIDI_GetProjTimeFromPPQPos(opts.take, opts.curve_obj[1].real_pos)
+    reaper.SetEditCurPos(time, false, false)
+  else
+    reaper.SetEditCurPos(opts.curve_obj[1].real_pos, false, false)
+    env = opts.env
+    envelopes.unselect_all_points(env)
+    for _, v in ipairs(opts.curve_obj) do
+      if v.type == 0 then
+        local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
+      elseif v.type == 1 then
+        local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
+        local ret = reaper.SetEnvelopePoint(env, v.pt_idx2, nil, nil, nil, nil, true, true)
+      elseif v.type == 2 then
+        local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
+        local ret = reaper.SetEnvelopePoint(env, v.pt_idx2, nil, nil, nil, nil, true, true)
+      end
     end
   end
+
   reaper.PreventUIRefresh(-1)
-  reaper.Envelope_SortPoints(env) -- I dont need to sort here wtf?!
+
+  if is_midi then
+  else
+    reaper.Envelope_SortPoints(env) -- I dont need to sort here wtf?!
+  end
   reaper.UpdateArrange()
 end
 
@@ -1207,12 +1232,15 @@ envelopes.get_existing_curve_objects = function(opts)
     if cn.type == 1 then
       start_count = start_count + 1
       table.insert(t_curve_objs, { name = "curve " .. start_count, curve_index = start_count })
+      if opts.midi then
+        t_curve_objs[#t_curve_objs].is_midi = true
+      end
     end
     if start_count > 0 then
       table.insert(t_curve_objs[#t_curve_objs], cn)
     end
   end
-  -- log.user("t_curve_objs:", format.block(t_curve_objs))
+  log.user("t_curve_objs:", format.block(t_curve_objs), "<<<<<<< get existing.")
   return t_curve_objs
 end
 
@@ -1331,7 +1359,7 @@ envelopes.picker_envelope_curve_objects = function(opts)
   t_co = envelopes.get_existing_curve_objects(args)
 
 
-  log.user(format.block(t_co), "????")
+  -- log.user(format.block(t_co), "????")
 
 
 
@@ -1356,7 +1384,11 @@ envelopes.picker_envelope_curve_objects = function(opts)
     on_focus_next = function(gui)
       local curve_obj = gui:get_currently_focused_entry()
       -- log.user("[on_focus_next]: set position:", entry[1].real_pos)
-      preview_curve_obj(opts.sel_in.env, curve_obj)
+      preview_curve_obj({
+        env = opts.sel_in.env,
+        curve_obj = curve_obj,
+        take = opts.midi_target_take,
+      })
       -- todo: select the nodes of the curve
     end,
     sort_comp = function(a, b)
