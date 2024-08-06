@@ -2,10 +2,15 @@ local log = require("utils.log")
 local format = require("utils.format")
 local s = require("utils.string")
 
+local lib_tr = require("library.tracks")
+local fzf = require("library.fzf")
+
 local envelope_templates = require("constants.envelope_templates")
 local constants = require("constants.constants")
 
 local tbl = require("utils.table")
+
+local envelopes = {}
 
 -- NOTE: `type`
 -- type: envelope type: 0->Volume, 1->Volume (Pre-FX), 2->Pan, 3->Pan
@@ -44,9 +49,27 @@ local function set_shape_of_last_event(take, cc_count, evt)
   reaper.MIDI_SetCCShape(take, cc_count - 1, shape_id, 0, true)
 end
 
+local function preview_curve_obj(env, curve_obj)
+  reaper.SetEditCurPos(curve_obj[1].real_pos, false, false)
+  reaper.PreventUIRefresh(1)
+  envelopes.unselect_all_points(env)
+  for _, v in ipairs(curve_obj) do
+    if v.type == 0 then
+      local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
+    elseif v.type == 1 then
+      local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
+      local ret = reaper.SetEnvelopePoint(env, v.pt_idx2, nil, nil, nil, nil, true, true)
+    elseif v.type == 2 then
+      local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
+      local ret = reaper.SetEnvelopePoint(env, v.pt_idx2, nil, nil, nil, nil, true, true)
+    end
+  end
+  reaper.PreventUIRefresh(-1)
+  reaper.Envelope_SortPoints(env) -- I dont need to sort here wtf?!
+  reaper.UpdateArrange()
+end
 
 
-local envelopes = {}
 
 -- NOTE: CURVE SHAPE
 -- Shapes ID is in same order than in the right click dropdown menu for Set
@@ -1073,7 +1096,7 @@ envelopes.enum_curve_nodes = function(opts)
       then
         -- log.user("good")
       else
-        log.user(string.format [[ERROR(enum curve nodes): %s -> %s]], prev_type, node_type)
+        log.user(string.format([[ERROR(enum curve nodes): %s -> %s]], prev_type ~= nil and prev_type or "nil", node_type))
       end
     else
       -- the first node can be mid if the first curve starts later than zero or
@@ -1159,8 +1182,194 @@ envelopes.get_existing_curve_objects = function(env)
 end
 
 envelopes.delete = function(env)
+  reaper.PreventUIRefresh(1)
   require("library.delete_envelope")(env)
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
 end
 
+envelopes.picker_single_curve_components = function(sel)
+  if not sel then
+    return
+  end
+  local results = {}
+  for k, v in ipairs(sel) do
+    -- log.user("k:", k, "v:", v)
+    table.insert(results, v)
+  end
+  -- log.user("NODES:", format.block(results))
+  fzf.init({
+    title = "Curve nodes for track.curve = " .. "TRACK_NAME",
+    results = results,
+    results_filter = "name",
+    -- on_select_func = function(gui)
+    --     local sel = { gui:get_on_enter_selection() }
+    --     picker_env_curve_nodes(sel)
+    -- end,
+    on_focus_next = function(gui)
+      -- FIX: shift cursor to each node point position
+      -- and move zoom a little to just have a cool flashy
+      -- experience.
+    end,
+    on_exit_callback = function(self)
+      log.user(":: EXIT from [picker single curve components] ::")
+      -- FIX: RESET ZOOM
+      -- restore to initial zoom, copy the pattern from other picker.
+    end,
+    sort_comp = function(a, b)
+      return a.tpos < b.tpos
+    end,
+    entry_maker = require("pickers.entry_makers.env_curve_node"),
+    extended_mappings = {},
+    -- note: picker: nodes for curve X :
+    -- I want to move cursor/select internal pts of each curve.
+    -- zoom IN on the selected curve
+    -- snapshot = function () end,
+    ["C-z"] = function()
+      -- FIX: I need to pass the previous selection.
+      envelopes.picker_envelope_curve_objects(sel_in)
+    end,
+  })
+end
+
+
+
+
+envelopes.picker_envelope_curve_objects = function(sel_in)
+  local t_curv_nodes = {}
+  local count_env_pts = reaper.CountEnvelopePoints(sel_in.env)
+  -- log.user("?????", format.block(sel), sel.env)
+  -- log.user("TOTAL ENV POINT COUNT = ", count_env_pts)
+
+  -- FIX: Support MIDI CC
+  local t_co = envelopes.get_existing_curve_objects(sel_in.env)
+  fzf.init({
+    title = "Curve objects for track = " .. "TRACK_NAME",
+    results = t_co,
+    results_filter = "name",
+    on_select_func = function(gui)
+      envelopes.picker_single_curve_components(gui:get_on_enter_selection())
+    end,
+    on_exit_callback = function(self)
+      -- log.user(":: EXIT -> CURVE OBJECTS PICKER ::")
+      -- FIX: RESET ZOOM
+      -- 1. Ensure both zoom state and env point selection is assinged to var.
+      -- 2. call reset func()
+    end,
+    on_focus_next = function(gui)
+      local curve_obj = gui:get_currently_focused_entry()
+      -- log.user("[on_focus_next]: set position:", entry[1].real_pos)
+      preview_curve_obj(sel_in.env, curve_obj)
+      -- todo: select the nodes of the curve
+    end,
+    sort_comp = function(a, b)
+      return a[1].tpos < b[1].tpos
+    end,
+    entry_maker = require("pickers.entry_makers.env_curve_obj"),
+    -- NOTE: curve obj picker:
+    -- I want to move cursor/select START pt of each curve
+    -- snapshot = function () end,
+    -- TEST: Do I need to reset/garbage collect the previous extended
+    -- mappings? Ie. set new fresh binds for current picker.
+    extended_mappings = {
+      -- FIX: when i am deleting a curve, then i need to refresh all the indices
+      -- in following env objs
+      -- --
+      -- Can I pass `t_curve_objs` here and then use the curve index to
+      -- remove the target and then update all the indices in subsequent
+      -- curve objects.
+      ---<C-r>: Remove selection
+      ["C-r"] = function(o)
+        -- TODO: Remove selection.
+        -- 1. check if mult select?
+        local entry, idx = o.gui_ref:get_currently_focused_entry()
+
+        envelopes.delete_curve_obj(sel_in.env, entry)
+
+        -- NOTE: this is a bit of a hacky way to get the entries to update
+        -- but it will work for now.
+        local _, main_input = tbl.findIndexOf(o.gui_ref.controls, "title", "main_input")
+        main_input.value = " "
+        main_input.value = ""
+
+        -- TEST: what happes if i comment out the below.
+        -- Do I only need to reset the main_input.value to force a
+        -- reset?
+
+        o.gui_ref.t_results_data = get_curve_objs()
+        table.sort(o.gui_ref.t_results_data, o.gui_ref.sort_comp)
+        o.gui_ref:setFocus(textBox)
+      end,
+      ["C-z"] = function()
+        envelopes.picker__track_envelopes()
+      end,
+    },
+  })
+end
+
+
+-- results is expected to be a table of envelopes
+envelopes.picker__track_envelopes = function(opts)
+  opts = opts or {}
+
+  local t_foc_tr = lib_tr.get_focused_track_objects()
+  local tr = t_foc_tr[1].tr
+  -- TODO: A. Include MIDI CC if possible
+  -- -> Currently, only track envelopes are included.
+  -- 1. Can I copy same checks from `picker_insert_cc_curve` and add the
+  --    MIDI names to `picker__track_envelopes`
+  -- 2. Support collecting MIDI CC curves with `get_curve_objs`
+
+  local t_envs = envelopes.fltr_track_envelopes(tr, { log = true })
+  -- log.user("envs found:", format.block(t_envs))
+
+  if #t_envs == 0 then
+    return
+  end
+
+  fzf.init(tbl.deep_extend({
+    title = "List envelopes for track =" .. "TRACK_NAME (<CR> to inspect an env's curve_objects)",
+    width = 1000,
+    height = 400,
+    results = opts.results or t_envs,
+    results_filter = "name",
+    -- On <CR> inspect selected envelops curve objects.
+    on_select_func = function(gui)
+      envelopes.picker_envelope_curve_objects(gui:get_on_enter_selection())
+      return false
+    end,
+    sort_comp = "name",
+    entry_maker = require("pickers.entry_makers.track_envelopes"), --{ "type_name", "name", "active" },
+    extended_mappings = {
+      --Remove envelope
+      ["C-u"] = function(o)
+        local entry = o.gui_ref:get_currently_focused_entry()
+        envelopes.delete(entry.env)
+      end,
+      ["C-s"] = function(t) --Select entry
+        local selection = t.gui_ref.t_search_results[t.sel_idx]
+        selection.selected = true
+        t.gui_ref:add_to_current_selection(selection)
+      end,
+      ---Reset selection
+      ["C-a"] = function(t)
+        t.gui_ref:reset_current_selection()
+      end,
+      ---Remove selection
+      ["C-r"] = function(t)
+        -- 1. check if mult select?
+        -- 2. remove points by idx
+      end,
+    },
+    on_exit_callback = function(self)
+      -- log.user(":: PICKER EXIT ::")
+      -- note: env picker: what do I store here
+      -- zoom state arrange / midi
+      -- for each picker chain level I might zoom in on the curve.
+      -- On exit i want to zoom out to start zoom.
+      -- snapshot = function () end,
+    end,
+  }, opts))
+end
 
 return envelopes
