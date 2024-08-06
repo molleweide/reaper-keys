@@ -553,6 +553,8 @@ envelopes.get_all_midi_cc_data = function(take, filter)
   local t_cc = {}
   local _, _, cc_count = reaper.MIDI_CountEvts(take)
 
+  -- log.user("GET_ALL_MIDI_CC_DATA -> cc_count", cc_count)
+
   -- NOTE: I could rewrite this as a special iterator so that I only
   -- need to perform one single loop for all cc/insert -> filter -> transform.
   for i = 0, cc_count do
@@ -569,10 +571,24 @@ envelopes.get_all_midi_cc_data = function(take, filter)
       msg2 = msg2,
       msg3 = msg3,
     }
-    if not filter or (type(filter) == "function" and filter(t_cc_evt)) then
+
+    if filter and type(filter) == "function" then
+      -- if not filter or (type(filter) == "function" and filter(t_cc_evt)) then
+      -- end
+      -- log.user("filter")
+      if filter(t_cc_evt) then
+        -- log.user("?")
+        table.insert(t_cc, t_cc_evt)
+      end
+    else
+      -- log.user("! filter")
       table.insert(t_cc, t_cc_evt)
     end
   end
+
+
+  -- log.user(format.block(t_cc), "<<< t_cc")
+
   return t_cc
 end
 
@@ -944,6 +960,7 @@ envelopes.enum_curve_nodes = function(opts)
   local function get_a_and_b(env, i, is_midi, cc_data)
     local ret1, tpos1, ret2, tpos2
     if is_midi then
+      i = i + 1 -- since lua tables start from one??!
       local node_a = cc_data[i]
       local node_b = cc_data[i + 1]
       if node_a then
@@ -967,6 +984,8 @@ envelopes.enum_curve_nodes = function(opts)
     is_midi = false
     opts.midi = {}
   end
+
+  log.user("MIDI = :", is_midi, format.block(opts), "<<< enum_curve_nodes")
 
   local env = opts.env
   local start_idx = opts.start_idx or nil
@@ -992,22 +1011,30 @@ envelopes.enum_curve_nodes = function(opts)
   local is_delta_node = false
   local prev_type
 
-  cc_data = opts.cc_data
+  local cc_data = opts.cc_data
 
   if is_midi and not cc_data then
-    log.user("midi take ->", midi_take)
+    -- log.user("BEFORE `get_all_midi_cc_data`: midi take ->", midi_take)
     cc_data = envelopes.get_all_midi_cc_data(midi_take, function(evt)
+      -- log.user(">" ,evt.chanmsg,constants.CC_CONSTANTS.type[midi_type], evt.msg2, cc_num)
+      -- log.user(">" ,evt.chanmsg == constants.CC_CONSTANTS.type[midi_type] and evt.msg2 == cc_num)
       if midi_type == "pitch" then
+        -- log.user(evt.chanmsg, constants.CC_CONSTANTS.type[midi_type]
+        -- )
         return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type]
       end
       if midi_type == "cc" then
-        return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type] and evt.cc == cc_num
+        -- log.user("!")
+        return evt.chanmsg == constants.CC_CONSTANTS.type[midi_type] and evt.msg2 == cc_num
       end
     end)
+
+    -- log.user("CC_DATA =", format.block(cc_data), "<<< cc_data")
   end
 
   local count_env_pts
   if is_midi then
+    -- log.user("?x?")
     count_env_pts = #cc_data
   else
     count_env_pts = reaper.CountEnvelopePoints(env)
@@ -1026,7 +1053,10 @@ envelopes.enum_curve_nodes = function(opts)
       i = i + 1
     end
 
+
     local ret1, tpos1, ret2, tpos2 = get_a_and_b(env, i, is_midi, cc_data)
+
+    log.user(ret1, tpos1, ret2, tpos2)
 
     if ret1 and not ret2 then
       log.user("RETURN: ret2 is false")
@@ -1043,9 +1073,13 @@ envelopes.enum_curve_nodes = function(opts)
       ret1, tpos1, ret2, tpos2 = get_a_and_b(env, i, is_midi, cc_data)
     end
 
+    log.user("B")
+
     if not (ret1 and ret2) then
       return
     end
+
+    log.user("C")
 
     local delta = tpos2 - tpos1
     local node_type = 0
@@ -1166,10 +1200,10 @@ envelopes.MIDI_GetEnvelopePointByPPQPosEx = function(take, ppqpos, midi_type, cc
   return cc_data, point_found
 end
 
-envelopes.get_existing_curve_objects = function(env)
+envelopes.get_existing_curve_objects = function(opts)
   local t_curve_objs = {}
   local start_count = 0
-  for cn in envelopes.enum_curve_nodes({ env = env }) do
+  for cn in envelopes.enum_curve_nodes(opts) do
     if cn.type == 1 then
       start_count = start_count + 1
       table.insert(t_curve_objs, { name = "curve " .. start_count, curve_index = start_count })
@@ -1272,14 +1306,33 @@ envelopes.picker_envelope_curve_objects = function(opts)
 
   log.clear()
 
-  local t_co
+  local midi_type, cc_num
+
   if opts.sel_in.cc then
-
--- FIX: Support MIDI CC
-
-  else
-    t_co = envelopes.get_existing_curve_objects(opts.sel_in.env)
+    if opts.sel_in.code == "pitch_bend" then
+      midi_type = "pitch"
+    elseif opts.sel_in.code:match("^cc_") then
+      midi_type = "cc"
+      cc_num = tonumber(opts.sel_in.code:match("_(%d+)$"))
+      -- log.user("!! CC NUM ->", cc_num)
+      if not cc_num then
+        cc_num = 1
+      end
+    end
   end
+
+  local t_co
+  local args = {}
+  if opts.sel_in.cc then
+    args = { midi = { take = opts.midi_target_take, type = midi_type, cc_num = cc_num } }
+  else
+    args = { env = opts.sel_in.env }
+  end
+  t_co = envelopes.get_existing_curve_objects(args)
+
+
+  log.user(format.block(t_co), "????")
+
 
 
   fzf.init(tbl.deep_extend({
@@ -1456,7 +1509,8 @@ envelopes.picker__track_envelopes = function(opts)
       --
       envelopes.picker_envelope_curve_objects({
         sel_in = gui:get_on_enter_selection(),
-        meta = { prev_2_envelope_curve_objects = { func = envelopes.picker__track_envelopes } }
+        meta = { prev_2_envelope_curve_objects = { func = envelopes.picker__track_envelopes } },
+        midi_target_take = midi_target_take
       })
 
       return false
