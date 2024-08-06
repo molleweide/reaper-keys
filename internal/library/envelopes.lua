@@ -1188,17 +1188,24 @@ envelopes.delete = function(env)
   reaper.UpdateArrange()
 end
 
-envelopes.picker_single_curve_components = function(sel)
-  if not sel then
+
+--
+-- ENVELOPE PICKERS (SHOULD PROLLY GO INTO THE PICKERS DIR)
+--
+
+-- TODO: move the base picker to pickers.pickers
+envelopes.picker_single_curve_components = function(opts)
+  if not opts.sel_in then
     return
   end
   local results = {}
-  for k, v in ipairs(sel) do
+  for k, v in ipairs(opts.sel_in) do
     -- log.user("k:", k, "v:", v)
     table.insert(results, v)
   end
   -- log.user("NODES:", format.block(results))
-  fzf.init({
+  fzf.init(tbl.deep_extend({
+
     title = "Curve nodes for track.curve = " .. "TRACK_NAME",
     results = results,
     results_filter = "name",
@@ -1212,7 +1219,7 @@ envelopes.picker_single_curve_components = function(sel)
       -- experience.
     end,
     on_exit_callback = function(self)
-      log.user(":: EXIT from [picker single curve components] ::")
+      -- log.user(":: EXIT from [picker single curve components] ::")
       -- FIX: RESET ZOOM
       -- restore to initial zoom, copy the pattern from other picker.
     end,
@@ -1220,35 +1227,64 @@ envelopes.picker_single_curve_components = function(sel)
       return a.tpos < b.tpos
     end,
     entry_maker = require("pickers.entry_makers.env_curve_node"),
-    extended_mappings = {},
-    -- note: picker: nodes for curve X :
-    -- I want to move cursor/select internal pts of each curve.
-    -- zoom IN on the selected curve
-    -- snapshot = function () end,
-    ["C-z"] = function()
-      -- FIX: I need to pass the previous selection.
-      envelopes.picker_envelope_curve_objects(sel_in)
-    end,
-  })
+    extended_mappings = {
+      ["C-f"] = function(t)
+        log.user("!")
+      end,
+      -- note: picker: nodes for curve X :
+      -- I want to move cursor/select internal pts of each curve.
+      -- zoom IN on the selected curve
+      -- snapshot = function () end,
+      ["C-z"] = function(t)
+        -- FIX: I need to pass the previous selection.
+        -- In the `lib/fzf` file I specify that the meta attr can be used in
+        -- a picker to save stuff and use it later so that you can jump back
+        -- to a custom dynamic data. BUT this becomes a problem because
+        -- So, to un-hardcode this I have to do some pretty big refactors
+        -- which would be nice but take time so...
+        -- TEST: could I in default bindings make it so that I look for a key
+        -- in the gui.meta table,
+        --
+        -- I want to be able to jump back to the previous picker.
+        --
+        -- envelopes.picker_envelope_curve_objects(sel_in)
+        if t.gui_ref.meta.prev_2_single_curve_components then
+          t.gui_ref.meta.prev_2_single_curve_components.func(t.gui_ref.meta.prev_2_single_curve_components.args)
+        end
+      end
+    }
+  }, opts))
 end
 
 
 
 
-envelopes.picker_envelope_curve_objects = function(sel_in)
+-- TODO: move the base picker to pickers.pickers
+-- FIX: Support MIDI CC
+envelopes.picker_envelope_curve_objects = function(opts)
+  opts = opts or {}
+
+  if not opts.sel_in then
+    return
+  end
   local t_curv_nodes = {}
-  local count_env_pts = reaper.CountEnvelopePoints(sel_in.env)
+  local count_env_pts = reaper.CountEnvelopePoints(opts.sel_in.env)
   -- log.user("?????", format.block(sel), sel.env)
   -- log.user("TOTAL ENV POINT COUNT = ", count_env_pts)
 
-  -- FIX: Support MIDI CC
-  local t_co = envelopes.get_existing_curve_objects(sel_in.env)
-  fzf.init({
+  local t_co = envelopes.get_existing_curve_objects(opts.sel_in.env)
+
+  fzf.init(tbl.deep_extend({
     title = "Curve objects for track = " .. "TRACK_NAME",
     results = t_co,
     results_filter = "name",
     on_select_func = function(gui)
-      envelopes.picker_single_curve_components(gui:get_on_enter_selection())
+      envelopes.picker_single_curve_components({
+        sel_in = gui:get_on_enter_selection(),
+        meta = {
+          prev_2_single_curve_components = { func = envelopes.picker_envelope_curve_objects, args = { sel_in = opts.sel_in } }
+        }
+      })
     end,
     on_exit_callback = function(self)
       -- log.user(":: EXIT -> CURVE OBJECTS PICKER ::")
@@ -1259,7 +1295,7 @@ envelopes.picker_envelope_curve_objects = function(sel_in)
     on_focus_next = function(gui)
       local curve_obj = gui:get_currently_focused_entry()
       -- log.user("[on_focus_next]: set position:", entry[1].real_pos)
-      preview_curve_obj(sel_in.env, curve_obj)
+      preview_curve_obj(opts.sel_in.env, curve_obj)
       -- todo: select the nodes of the curve
     end,
     sort_comp = function(a, b)
@@ -1284,7 +1320,7 @@ envelopes.picker_envelope_curve_objects = function(sel_in)
         -- 1. check if mult select?
         local entry, idx = o.gui_ref:get_currently_focused_entry()
 
-        envelopes.delete_curve_obj(sel_in.env, entry)
+        envelopes.delete_curve_obj(opts.sel_in.env, entry)
 
         -- NOTE: this is a bit of a hacky way to get the entries to update
         -- but it will work for now.
@@ -1300,21 +1336,28 @@ envelopes.picker_envelope_curve_objects = function(sel_in)
         table.sort(o.gui_ref.t_results_data, o.gui_ref.sort_comp)
         o.gui_ref:setFocus(textBox)
       end,
-      ["C-z"] = function()
-        envelopes.picker__track_envelopes()
+      ["C-z"] = function(t)
+        -- note: This snippet is custom so it should not go into the base picker.
+        if t.gui_ref.meta.prev_2_envelope_curve_objects then
+          t.gui_ref.meta.prev_2_envelope_curve_objects.func()
+        else
+        end
       end,
     },
-  })
+  }, opts))
 end
 
-
 -- results is expected to be a table of envelopes
+--
+-- TODO: move the base picker to pickers.pickers
 envelopes.picker__track_envelopes = function(opts)
   opts = opts or {}
 
   local t_foc_tr = lib_tr.get_focused_track_objects()
   local tr = t_foc_tr[1].tr
-  -- TODO: A. Include MIDI CC if possible
+
+  -- FIX: SUPPORT MIDI
+  -- A. Include MIDI CC if possible
   -- -> Currently, only track envelopes are included.
   -- 1. Can I copy same checks from `picker_insert_cc_curve` and add the
   --    MIDI names to `picker__track_envelopes`
@@ -1335,7 +1378,14 @@ envelopes.picker__track_envelopes = function(opts)
     results_filter = "name",
     -- On <CR> inspect selected envelops curve objects.
     on_select_func = function(gui)
-      envelopes.picker_envelope_curve_objects(gui:get_on_enter_selection())
+      -- This should not be in the base picker - no, it should be passed as an opt to
+      -- the base picker when we define the picker-chain in the `action_handler`
+      --
+      envelopes.picker_envelope_curve_objects({
+        sel_in = gui:get_on_enter_selection(),
+        meta = { prev_2_envelope_curve_objects = { func = envelopes.picker__track_envelopes } }
+      })
+
       return false
     end,
     sort_comp = "name",

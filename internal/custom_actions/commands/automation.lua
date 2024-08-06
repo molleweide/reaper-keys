@@ -654,6 +654,8 @@ automation_actions.picker_insert_cc_curve = function()
 
   local range_left, range_right
 
+  log.clear()
+
   -- This func could probably go into state interface?
   -- Rename: "Get range for current action sequence".
   -- ( check for selector also )
@@ -880,13 +882,11 @@ automation_actions.picker_insert_cc_curve = function()
     end
   end
 
-  -- TODO: Route envelopes
+  --
+  -- todo: Route envelopes ??
   --
 
-  log.clear()
-
-  log.user(format.block(t_curve_results))
-
+  -- log.user(format.block(t_curve_results))
   local function picker_curve_menu_start()
     fzf.init({
       title = "Picker: Curve menu start",
@@ -894,25 +894,21 @@ automation_actions.picker_insert_cc_curve = function()
       x = 200,
       width = 1400,
       height = 600,
-
-      -- FIX: Upon hitting Enter> there is an error `attempt to index a nil value`
       on_select_func = function(gui)
-        log.user("!!!!!!")
         local sel = gui:get_on_enter_selection()
-        log.user("picker curve menu start ->", format.block(sel))
+
+        -- TODO: How do I make sure both regular and FX get the correct meta.prev
+        -- keys for C-z
 
         if sel.custom_next_menu and type(sel.custom_next_menu) == "function" then
-          log.user("???")
           sel.custom_next_menu()
         else
           apply_env_temp_picker({ code = sel.code, cc = sel.cc, search_string = sel.search_string })
         end
-
         return false
       end,
       results_filter = "name",
       sort_comp = "name",
-      -- FIX: move this to defaults
       entry_maker = function(item)
         return { { item.name, 125 } }
       end,

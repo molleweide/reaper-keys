@@ -71,7 +71,7 @@ local DEFAULT_OPTS = {
   -- whose data pertain to that specific media item.
   meta = {},
   extended_mappings = nil,
-  next = nil,   -- next picker func should default to nil ie close prev picker.
+  next = nil, -- next picker func should default to nil ie close prev picker.
   calling_command_meta = nil,
   column_legend_enabled = false,
   columns_ignore_last_sep = false,
@@ -149,7 +149,7 @@ function jGuiHighlightControl:_drawLabel()
         local totalX = 0
         if #parts > 1 then
           local highLightW, highLightH = gfx.measurestr(word)
-          for i = 1, #parts - 1 do           -- do all but the last
+          for i = 1, #parts - 1 do -- do all but the last
             local noLightW, noLightH = gfx.measurestr(parts[i])
             -- Draw highlight
             self:__setGfxColor(self.color_highlight)
@@ -213,7 +213,7 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
         label_align = "l",
         label_font = "Courier",
         border = false,
-        focus_index = i + 1,         --gui:getFocusIndex()
+        focus_index = i + 1, --gui:getFocusIndex()
         border_focus = true,
         x = x_start,
         y = y_start + (i - 1) * (height + y_space),
@@ -263,7 +263,7 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
         end
       end
 
-      function ResultsEntryControl:onMouseWheel(mw)       -- it looks like SCROLL_RESULTS can be a value between 0 and 1, should be a whole number?
+      function ResultsEntryControl:onMouseWheel(mw) -- it looks like SCROLL_RESULTS can be a value between 0 and 1, should be a whole number?
         _jScroll(mw / 120 * -1)
       end
 
@@ -280,7 +280,7 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
           _jScroll(-1)
           return false
         end
-        return true         -- else
+        return true -- else
       end
 
       function ResultsEntryControl:onTab()
@@ -288,7 +288,7 @@ local function createResultButtons(gui, tControls, iResultsPerPage, y_start)
           _jScroll(1)
           return false
         end
-        return true         -- else
+        return true -- else
       end
 
       gui:controlAdd(ResultsEntryControl)
@@ -440,7 +440,7 @@ local function create_control_label_stats(gui)
 
   local ls = jGuiControl:new({
     width = 50,
-    x = MID_RIGHT - 11,     -- gui.width - 11, --ls.width - 12,
+    x = MID_RIGHT - 11, -- gui.width - 11, --ls.width - 12,
     y = 10,
     label_fontsize = math.tointeger(gui.gui_size * 0.75),
     label_align = "r",
@@ -518,7 +518,7 @@ local function create_column_legend(gui)
     border = true,
     -- y = ResultsEntryControl.y,
     x = x_start,
-    y = accomodate_for_main_input + extra,     --y_start + (i - 1) * (height + y_space),
+    y = accomodate_for_main_input + extra, --y_start + (i - 1) * (height + y_space),
   })
 
   -- TODO: gui:
@@ -586,7 +586,7 @@ local function entry_maker_refact_wrapper(tButtons, gui)
           entry_width = entry_def[2]
         else
           str_part = entry_def
-          entry_width = 25           -- base fallback
+          entry_width = 25 -- base fallback
         end
         if GUI.columns_legend then
           entry_width = GUI.columns_legend[ei][1]
@@ -623,7 +623,7 @@ local function gui_default_update(self)
   log.debug("fzf.gui_default_update -> A. entered", UPDATE_RESULTS, NEW_PICKER_VIEW)
 
   if lastSearch ~= textBox.value then
-    SCROLL_RESULTS = 0     -- reset scrollbar on search update
+    SCROLL_RESULTS = 0 -- reset scrollbar on search update
   end
   if lastSearch ~= textBox.value or UPDATE_RESULTS or NEW_PICKER_VIEW then
     -- search changed, update results
@@ -641,7 +641,7 @@ local function gui_default_update(self)
       )
     )
 
-    if lastSearch ~= textBox.value or NEW_PICKER_VIEW then     -- only search again when input changes, not on scroll
+    if lastSearch ~= textBox.value or NEW_PICKER_VIEW then -- only search again when input changes, not on scroll
       NEW_PICKER_VIEW = false
 
       -- TODO: attach results_filter as a method on GUI inside init()
@@ -1065,7 +1065,21 @@ local function reset_new_picker(opts)
   GUI:reset_current_selection()
 
   for k, v in pairs(DEFAULT_OPTS) do
-    GUI[k] = opts[k] and opts[k] or v
+    -- GUI[k] = opts[k] and opts[k] or v
+
+    -- NOTE: opts/meta vars are being overwritten for each picker, but in order
+    -- to preserve the meta table, I ensure to merge it instead of overwriting.
+    -- Maybe all this should be handled differently in the future..
+
+    if k == "meta" then
+      GUI.meta = tbl.deep_extend(GUI.meta, opts.meta)
+    else
+      if opts[k] then
+        GUI[k] = opts[k]
+      else
+        GUI[k] = v
+      end
+    end
   end
 
   GUI.on_select_func = require("pickers.selectors.default")(opts.on_select_func)
