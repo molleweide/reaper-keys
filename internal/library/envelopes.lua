@@ -3,6 +3,7 @@ local format = require("utils.format")
 local s = require("utils.string")
 
 local lib_tr = require("library.tracks")
+local lib_items = require("library.items")
 local fzf = require("library.fzf")
 
 local envelope_templates = require("constants.envelope_templates")
@@ -1177,7 +1178,7 @@ envelopes.get_existing_curve_objects = function(env)
       table.insert(t_curve_objs[#t_curve_objs], cn)
     end
   end
-  log.user("t_curve_objs:", format.block(t_curve_objs))
+  -- log.user("t_curve_objs:", format.block(t_curve_objs))
   return t_curve_objs
 end
 
@@ -1198,6 +1199,9 @@ envelopes.picker_single_curve_components = function(opts)
   if not opts.sel_in then
     return
   end
+
+  log.clear()
+
   local results = {}
   for k, v in ipairs(opts.sel_in) do
     -- log.user("k:", k, "v:", v)
@@ -1263,6 +1267,8 @@ end
 -- FIX: Support MIDI CC
 envelopes.picker_envelope_curve_objects = function(opts)
   opts = opts or {}
+
+  log.clear()
 
   if not opts.sel_in then
     return
@@ -1347,14 +1353,62 @@ envelopes.picker_envelope_curve_objects = function(opts)
   }, opts))
 end
 
+-- This picker used in the context of an envelope editor UI lists existing
+-- envelopes and gives you actions to manage these curves.
+--
+-- In order to support MIDI we need to check if there are midi curves in the
+-- desired/given project area.
+--
 -- results is expected to be a table of envelopes
+--
+-- NOTE: the envelope editor UI (EE) EE can be both operator and command.
+-- This is because you probably want to analyze eg. midi curves at a specific
+-- range.
 --
 -- TODO: move the base picker to pickers.pickers
 envelopes.picker__track_envelopes = function(opts)
+  local state_interface = require("state_machine.state_interface")
+
   opts = opts or {}
 
-  local t_foc_tr = lib_tr.get_focused_track_objects()
-  local tr = t_foc_tr[1].tr
+  log.clear()
+
+  --
+  -- range
+  --
+
+  local range_left, range_right
+  if state_interface.last_command_has("timeline_operator") then
+    local tl_range = state_interface.getKey("last_set_timeline_range")
+    range_left = tl_range[1]
+    range_right = tl_range[2]
+
+    if range_left > range_right then
+      range_left, range_right = range_right, range_left
+    end
+
+    log.user("[ picker insert cc curve ]: operator; range:", tl_range[1], tl_range[2])
+  else
+    log.user("[ picker insert cc curve ]: NOT op")
+
+    local tl = require("library.timeline")
+    local cursor_info = tl.get_cursor_info()
+    range_left = cursor_info.msr.start
+    range_right = cursor_info.msr._end
+  end
+  -- The picker action depends on having a range target for insertion,
+  -- ie. this actions as a regular "command" is not yet supported.
+  if not range_left or not range_right then
+    return
+  end
+
+  --
+  -- tracks an context
+  --
+
+  local t_foc_tr, _, context = lib_tr.get_focused_track_objects()
+  local tobj = t_foc_tr[1]
+  local tr = tobj.tr
 
   -- FIX: SUPPORT MIDI
   -- A. Include MIDI CC if possible
@@ -1365,6 +1419,27 @@ envelopes.picker__track_envelopes = function(opts)
 
   local t_envs = envelopes.fltr_track_envelopes(tr, { log = true })
   -- log.user("envs found:", format.block(t_envs))
+  --
+
+  t_envs = t_envs or {}
+
+
+  local midi_target_take = lib_items.get_midi_item_takes_for_given_context(tobj, context, range_left, range_right)
+
+  if midi_target_take then
+    table.insert(t_envs, {
+      name = "(midi) Pitch",
+      code = "pitch_bend",
+      cc = true,
+    })
+    table.insert(t_envs, {
+      name = "(midi) CC20",
+      code = "cc_20",
+      cc = true,
+    })
+  end
+
+
 
   if #t_envs == 0 then
     return

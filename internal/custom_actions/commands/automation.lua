@@ -626,6 +626,7 @@ automation_actions.midi_cc_test = function()
   -- })
 end
 
+
 -- -- TODO: Select
 -- -- 1. tracks
 -- -- 2. select which types of params to randomize.
@@ -672,42 +673,23 @@ automation_actions.picker_insert_cc_curve = function()
   else
     log.user("[ picker insert cc curve ]: NOT op")
   end
-
   -- The picker action depends on having a range target for insertion,
   -- ie. this actions as a regular "command" is not yet supported.
   if not range_left or not range_right then
     return
   end
 
-  log.user("state.context = ", format.block(context))
-
+  -- I should just use the "context" variable instead of is_midi
   local is_main, is_midi
+
   local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
   local trobj = focused_track_objects[1]
   if not trobj then
     return
   end
+  -- log.user("state.context = ", format.block(context))
 
-  -- Check if there are possible midi take targets
-  -- This variable hosts possible midi item targets - this can vary depending on
-  -- whether or not context == main/midi..
-  local midi_target_take
-  if context == "main" then
-    is_main = true
-    local enclosing_item = lib_items.get_item_enclosing_range(trobj.tr, range_left, range_right)
-
-    log.user("items_in_range =", format.block(enclosing_item))
-
-    if enclosing_item then
-      local take = reaper.GetMediaItemTake(enclosing_item.ref, 0)
-      midi_target_take = reaper.TakeIsMIDI(take) and take
-    end
-    log.user("items_in_range = ", format.block(enclosing_item))
-  elseif context == "midi" then
-    is_midi = true
-    local ret, ctxm = require("library.midi_editor").getMidiValidContext()
-    midi_target_take = ret and ctxm.take
-  end
+  local midi_target_take = lib_items.get_midi_item_takes_for_given_context(trobj, context, range_left, range_right)
 
   --
   -- COLLECT POSSIBLE ENVELOPE OPTIONS
