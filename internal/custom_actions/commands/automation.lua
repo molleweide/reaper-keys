@@ -35,25 +35,25 @@ local automation_actions = {}
 -- ~ Move cursor to next/prev template start.
 -- ~
 
-local function preview_curve_obj(env, curve_obj)
-  reaper.SetEditCurPos(curve_obj[1].real_pos, false, false)
-  reaper.PreventUIRefresh(1)
-  envelopes.unselect_all_points(env)
-  for _, v in ipairs(curve_obj) do
-    if v.type == 0 then
-      local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
-    elseif v.type == 1 then
-      local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
-      local ret = reaper.SetEnvelopePoint(env, v.pt_idx2, nil, nil, nil, nil, true, true)
-    elseif v.type == 2 then
-      local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
-      local ret = reaper.SetEnvelopePoint(env, v.pt_idx2, nil, nil, nil, nil, true, true)
-    end
-  end
-  reaper.PreventUIRefresh(-1)
-  reaper.Envelope_SortPoints(env) -- I dont need to sort here wtf?!
-  reaper.UpdateArrange()
-end
+-- local function preview_curve_obj(env, curve_obj)
+--   reaper.SetEditCurPos(curve_obj[1].real_pos, false, false)
+--   reaper.PreventUIRefresh(1)
+--   envelopes.unselect_all_points(env)
+--   for _, v in ipairs(curve_obj) do
+--     if v.type == 0 then
+--       local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
+--     elseif v.type == 1 then
+--       local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
+--       local ret = reaper.SetEnvelopePoint(env, v.pt_idx2, nil, nil, nil, nil, true, true)
+--     elseif v.type == 2 then
+--       local ret = reaper.SetEnvelopePoint(env, v.pt_idx, nil, nil, nil, nil, true, true)
+--       local ret = reaper.SetEnvelopePoint(env, v.pt_idx2, nil, nil, nil, nil, true, true)
+--     end
+--   end
+--   reaper.PreventUIRefresh(-1)
+--   reaper.Envelope_SortPoints(env) -- I dont need to sort here wtf?!
+--   reaper.UpdateArrange()
+-- end
 
 
 ---

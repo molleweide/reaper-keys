@@ -56,20 +56,30 @@ local function preview_curve_obj(opts)
     return
   end
 
-  local is_midi = opts.curve_obj.is_midi
+  local context = opts.context
+  local is_midi_cc = opts.take ~= nil and true or false
 
   local env
-  log.user(format.block(opts.curve_obj), "<<< co")
+  -- log.user(format.block(opts.curve_obj), "<<< co")
+
+  log.user(context, is_midi_cc)
 
   reaper.PreventUIRefresh(1)
 
-  if is_midi then
+  if is_midi_cc then
+    log.user("??????? MIDI")
     if not opts.take then
       return
     end
     local time = reaper.MIDI_GetProjTimeFromPPQPos(opts.take, opts.curve_obj[1].real_pos)
     reaper.SetEditCurPos(time, false, false)
+
+    if context == "midi" then
+    else
+    end
+
   else
+    log.user("??????? NOT MIDI")
     reaper.SetEditCurPos(opts.curve_obj[1].real_pos, false, false)
     env = opts.env
     envelopes.unselect_all_points(env)
@@ -88,7 +98,7 @@ local function preview_curve_obj(opts)
 
   reaper.PreventUIRefresh(-1)
 
-  if is_midi then
+  if is_midi_cc then
   else
     reaper.Envelope_SortPoints(env) -- I dont need to sort here wtf?!
   end
@@ -1388,6 +1398,7 @@ envelopes.picker_envelope_curve_objects = function(opts)
         env = opts.sel_in.env,
         curve_obj = curve_obj,
         take = opts.midi_target_take,
+        context = gui.meta.context
       })
       -- todo: select the nodes of the curve
     end,
@@ -1530,6 +1541,7 @@ envelopes.picker__track_envelopes = function(opts)
 
   fzf.init(tbl.deep_extend({
     title = "List envelopes for track =" .. "TRACK_NAME (<CR> to inspect an env's curve_objects)",
+    meta = { context = context },
     width = 1000,
     height = 400,
     results = opts.results or t_envs,
