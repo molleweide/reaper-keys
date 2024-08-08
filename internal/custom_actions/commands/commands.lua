@@ -1,35 +1,36 @@
-local log = require("utils.log")
-local format = require("utils.format")
-local pickers = require("pickers.pickers")
-local lib_tr = require("library.tracks")
-local s = require("utils.string")
-local tl = require("library.timeline")
-local containers = require("library.items")
-local segments = require("library.segments")
-local marks = require("library.marks")
-local route = require("library.routing")
-local preferences = require("utils.preferences")
+local log                                                 = require("utils.log")
+local format                                              = require("utils.format")
+local pickers                                             = require("pickers.pickers")
+local lib_tr                                              = require("library.tracks")
+local s                                                   = require("utils.string")
+local tl                                                  = require("library.timeline")
+local containers                                          = require("library.items")
+local segments                                            = require("library.segments")
+local marks                                               = require("library.marks")
+local route                                               = require("library.routing")
+local preferences                                         = require("utils.preferences")
+local envelopes                                           = require("library.envelopes")
 
-local midi_utils = require("utils.midi_toolkit_funcs")
+local midi_utils                                          = require("utils.midi_toolkit_funcs")
 
-local fzf = require("library.fzf")
+local fzf                                                 = require("library.fzf")
 
-local fxu = require("library.fx")
-local tbl = require("utils.table")
+local fxu                                                 = require("library.fx")
+local tbl                                                 = require("utils.table")
 
-local project_state = require("utils.project_state")
+local project_state                                       = require("utils.project_state")
 
-local midi = require("library.midi")
-local midi_editor = require("library.midi_editor")
+local midi                                                = require("library.midi")
+local midi_editor                                         = require("library.midi_editor")
 
-local commands = {}
+local commands                                            = {}
 
 --
 -- NOTE: I need to revise everything here and see what I can refactor into
 -- lib modules.
 --
 
-commands.MIDI_ChangeActiveSelection = function(meta, opts)
+commands.MIDI_ChangeActiveSelection                       = function(meta, opts)
   pickers.all_tracks(_, {
     title = "jump to track midi",
     filter = "MCS", -- filter track_obj.class = [MCS]
@@ -39,7 +40,7 @@ commands.MIDI_ChangeActiveSelection = function(meta, opts)
   })
 end
 
-commands.MIDI_EditMidiAtCurPosForTrack = function()
+commands.MIDI_EditMidiAtCurPosForTrack                    = function()
   local log = require("utils.log")
   local format = require("utils.format")
 
@@ -54,7 +55,7 @@ commands.MIDI_EditMidiAtCurPosForTrack = function()
   end
 end
 
-commands.Midi_EditMidiForRegionsMarksAndSelectTrack = function(meta, opts)
+commands.Midi_EditMidiForRegionsMarksAndSelectTrack       = function(meta, opts)
   local function me_select_reg_and_edit_track(not_first)
     pickers.marks_and_regions(_, {
       title = "ME: 1. select regions/marks; 2. select track edit",
@@ -88,7 +89,7 @@ commands.Midi_EditMidiForRegionsMarksAndSelectTrack = function(meta, opts)
   me_select_reg_and_edit_track()
 end
 
-commands.MidiEditor_go_insert = function(meta, opts)
+commands.MidiEditor_go_insert                             = function(meta, opts)
   midi.jump_to_position_and_insert_by_string()
 end
 
@@ -97,7 +98,7 @@ end
 -- all subtracks, from within, eg, ME when editing a larger screenset of
 -- MC tracks within a group.
 
-commands.picker_first_eq_on_focused_track = function()
+commands.picker_first_eq_on_focused_track                 = function()
   local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
   local tr_node = focused_track_objects[1]
   local eq_instance = fxu.get_fx_objs_by_name_string(tr_node.guid, "ReaEQ")
@@ -109,7 +110,7 @@ commands.picker_first_eq_on_focused_track = function()
     pickers.track_fx_params(_, { node = tr_node, fx_index = eq_instance.idx })
   end
 end
-commands.picker_first_comp_on_focused_track = function()
+commands.picker_first_comp_on_focused_track               = function()
   local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
   local tr_node = focused_track_objects[1]
   local comp_instance = fxu.get_fx_objs_by_name_string(tr_node.guid, "ReaComp")
@@ -119,7 +120,7 @@ commands.picker_first_comp_on_focused_track = function()
   end
 end
 
-commands.add_track_nodes_ui = function(_, opts)
+commands.add_track_nodes_ui                               = function(_, opts)
   fzf.init({
     title = "Add track nodes",
     x = 200,
@@ -159,7 +160,7 @@ end
 --    specify information on a zone/group basis for how things should be
 --    handled when auto generating.
 --
-commands.main_insert_midi_block_from_string_UI = function()
+commands.main_insert_midi_block_from_string_UI            = function()
   local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
   if context ~= "main" then
     return
@@ -217,7 +218,7 @@ end
 -- TODO: make this default bindings
 --
 -- FIX: only pass `gui` to bindings functions!!
-local em = {
+local em                                                  = {
   ["C-s"] = function(t)
     local selection = t.gui_ref.t_search_results[t.sel_idx]
     selection.selected = true
@@ -233,7 +234,7 @@ local em = {
   -- [] = select all visible/filtered items
 }
 
-commands.apply_patterns_across_tracks = function()
+commands.apply_patterns_across_tracks                     = function()
   local function prompt()
     fzf.init({
       title = "Add MIDI blocks",
@@ -275,7 +276,7 @@ commands.apply_patterns_across_tracks = function()
   tracks()
 end
 
-commands.apply_patterns_across_sel_REGIONS_and_TRACKS = function(meta, opts)
+commands.apply_patterns_across_sel_REGIONS_and_TRACKS     = function(meta, opts)
   local function prompt()
     fzf.init({
       title = "Add MIDI blocks",
@@ -351,14 +352,14 @@ end
 --   the listener always percieves that "stuff" is happening.
 --
 --
-commands.MIDI_insert_fill_region = function()
+commands.MIDI_insert_fill_region                          = function()
   --
 end
 
 -- Create a UI that allows me to CRUD meta/macro info for a project so
 -- that this will be used later when rendering, eg. regions from project
 -- info.
-commands.project_patterns_and_harmony_manager = function()
+commands.project_patterns_and_harmony_manager             = function()
   -- ALL THEMES
   -- keybind -> add theme
   --     (a theme is a set of information that can be used as base input when
@@ -389,7 +390,7 @@ end
 -- This one is going to be fun to build, since this allows me to sketch out
 -- structure easilly and play around with copying songs.
 --
-commands.regions_manager_fuzzy_ui = function(meta, opts)
+commands.regions_manager_fuzzy_ui                         = function(meta, opts)
   -- TODO: CRUD ui that allows me to manage regions easilly.
   --
   -- >> on each key press -> reparse the commandline string,
@@ -419,7 +420,7 @@ end
 
 -- TEST: Later, this should be modified to create a MIDI edit SCREENSET from
 -- the group selection screenset.
-commands.MIDI_picker_edit_tracks_CHAIN_region_and_group = function()
+commands.MIDI_picker_edit_tracks_CHAIN_region_and_group   = function()
   -- 1. first select region.
   -- 2. then, select which Group,
   -- 3. then, select track.
@@ -427,7 +428,7 @@ end
 
 commands.MIDI_picker_tracks_edit_existing_items_at_cursor = function() end
 
-commands.routing_user_string = function()
+commands.routing_user_string                              = function()
   log.clear()
   log.user("ROUTING USER STRING PROMPT")
 
@@ -1737,28 +1738,40 @@ commands.apply_curve_to_prev_inserted_notes = function()
 
   -- get previous note data
   local state_prev_step_insertion = reaper_state.get(ns.namespace_prev_step_insertion_data)
+
+  if not state_prev_step_insertion then return end
+
   local len = #state_prev_step_insertion
   local last_insertion = state_prev_step_insertion[len]
 
   local prev_midi_note__first = last_insertion.prev_midi_notes[1]
 
 
-
   log.user("PREV MIDI STEP DATA:", format.block(prev_midi_note__first))
 
-  -- pull up picker `curve_templates_picker`
+  local range_left = prev_midi_note__first.time_pos_start
+  local range_right = prev_midi_note__first.time_pos_end
+
+  local focused_track_objects, _, context = lib_tr.get_focused_track_objects()
+  local trobj = focused_track_objects[1]
+  if not trobj then
+    return
+  end
+  -- log.user("state.context = ", format.block(context))
+
+  local midi_target_take = containers.get_midi_item_takes_for_given_context(trobj, context, range_left, range_right)
+
+  -- NOTE: reuse `automation_actions.picker__insert_envelope_curve__focused_track`
+  -- ->>> allows for selecting which target curve first.
+  -- TEST: This will allow for adding fx params based on the inserted notes!!
+
   pickers.envelope_templates({
     on_select_func = function(gui)
-      local sel = gui:get_on_enter_selection()
-
-      log.user("envelope_templates sel:", format.block(sel))
-
-
-
-      -- D. on select run `apply_curve_to_notes(notes_in)`
-
-
-    end
+      envelopes.insert_from_template(trobj, gui:get_on_enter_selection(),
+        { code = "pitch_bend", cc = true},
+        range_left, range_right, midi_target_take)
+      return true
+    end,
   })
 end
 

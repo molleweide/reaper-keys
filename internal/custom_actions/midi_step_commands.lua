@@ -9,9 +9,6 @@ local midi_editor = require("library.midi_editor")
 
 -- TODO: rename this to just `midi_commands.lua`.
 
--- should the namespace vars be used into eg. CONSTANTS
-local namespace_prev_step_insertion_data = "prev_step_insertion_data"
-
 local midi_step_commands = {}
 
 -- NOTE: This func `render_next_step` should prolly go into lib/state or
