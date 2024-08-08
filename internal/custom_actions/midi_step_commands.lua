@@ -9,15 +9,22 @@ local midi_editor = require("library.midi_editor")
 
 -- TODO: rename this to just `midi_commands.lua`.
 
+-- should the namespace vars be used into eg. CONSTANTS
 local namespace_prev_step_insertion_data = "prev_step_insertion_data"
 
 local midi_step_commands = {}
 
+-- NOTE: This func `render_next_step` should prolly go into lib/state or
+-- state_interface or sth
+--
+-- Function middleware that all midi step funcs are passed via/thru THAT
+-- handles updating state properly and building the correct midi note/event
+-- values.
 local function render_next_step(meta, opts)
-  -- TODO: check the NNN array and check whether or not use default or not.
+  -- todo: check the NNN array and check whether or not use default or not.
   local state = state_interface.get()
 
-  log.user("MIDI STEP STATE IN REDNER NEXT:", format.block(state.midi_step_state))
+  log.user("MIDI STEP STATE IN RENDER NEXT:", format.block(state.midi_step_state))
 
   if state.midi_step_state.next_note_rhythms == nil then
     log.debug("state.midi_step_state.next_note_rhythms == nil -> Adds to state.")

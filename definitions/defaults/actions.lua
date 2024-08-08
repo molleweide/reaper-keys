@@ -1132,16 +1132,17 @@ return {
   Test_insert_midi_cc_points = automation.midi_cc_test,
   Test_insert_cc = automation.test_insert_cc,
 
-  INSERT_MIDI_CC_BY_TEMPLATE = automation.picker_insert_cc_curve,
+  INSERT_MIDI_CC_BY_TEMPLATE = automation.picker__insert_envelope_curve__focused_track,
   Track_Automation_curves_ui = automation.picker_edit_track_curves_ui,
   Track_Edit_All_curves_for_current_region = automation.picker_edit_all_curve_objects_for_current_region,
   Picker_All_curves_for_track = automation.picker_edit_track_curves_ui,
-  Picker_AddTracks_to_ME_view = commands.picker_midi_editor_add_track_to_view,
+  Picker_AddTracks_to_ME_view = commands.picker__midi_source_manager,
 
   PickerConfigVariables = commands.browse_reaper_preferences,
 
   Picker_test_rpp_classes = require("custom_actions.commands.test_rpp_classes") .picker,
   Picker_track_info_params = commands.picker_track_info_params,
   Picker_media_item_info_params = commands.picker_media_item_info_params,
-  Picker_media_item_take_info_params = commands.picker_media_item_take_info_params
+  Picker_media_item_take_info_params = commands.picker_media_item_take_info_params,
+  ApplyCurveToPrevInsertedNotes = commands.apply_curve_to_prev_inserted_notes
 }

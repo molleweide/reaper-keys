@@ -331,7 +331,18 @@ return {
     -- ["e"] = "",
     -- ["r"] = "",
     -- ["t"] = "", --
-    ["a"] = "SetModeNormal", -- set pause/silent
+    -- ["a"] = "SetModeNormal", -- set pause/silent
+
+    ["a"] ={
+      "+alt",
+      {
+        ["w"] ="SetModeNormal",
+        ["e"] ="ApplyCurveToPrevInsertedNotes"
+      }
+    },
+
+
+
     ["s"] = "ToggleMidiStepSilent",
     ["W"] = {
       "+silent step",

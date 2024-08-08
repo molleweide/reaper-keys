@@ -350,7 +350,7 @@ local function generate_points_for_insertion(sel, range_left, range_right, is_mi
       )
     end
   end
-  log.user("[picker_insert_cc_curve]: computed curve nodes:", format.block(t_pts_to_insert))
+  log.user("[picker__insert_envelope_curve__focused_track]: computed curve nodes:", format.block(t_pts_to_insert))
   return t_pts_to_insert
 end
 
@@ -648,7 +648,7 @@ end
 ---One (or two) step process. The list of built-in envs AND certain FX are listed
 ---in one view. Selecting an FX puts you in an intermediary "Select FX param"
 ---mode before proceeding to choosing the curve template to inject.
-automation_actions.picker_insert_cc_curve = function()
+automation_actions.picker__insert_envelope_curve__focused_track = function()
   local state_interface = require("state_machine.state_interface")
 
   local range_left, range_right
@@ -741,6 +741,17 @@ automation_actions.picker_insert_cc_curve = function()
         local sel = gui:get_on_enter_selection()
         log.user("envelope_templates sel:", format.block(sel))
 
+
+        --
+        --
+        --
+        -- TODO: This has to be moved into its own `envelopes.insert_template()`
+        --
+        --
+        --
+
+
+
         local target_tr = trobj.tr
         local target_env
         local t_pts_to_insert
@@ -803,7 +814,7 @@ automation_actions.picker_insert_cc_curve = function()
         t_pts_to_insert = generate_points_for_insertion(sel, range_left, range_right, opts.cc, midi_target_take,
           target_midi_type,
           cc_num)
-        log.user("[picker_insert_cc_curve]: computed curve nodes:", format.block(t_pts_to_insert))
+        log.user("[picker__insert_envelope_curve__focused_track]: computed curve nodes:", format.block(t_pts_to_insert))
 
         --
         -- INSERT ENVELOPE POINTS
@@ -921,7 +932,7 @@ automation_actions.picker_edit_track_curves_ui = function()
   --
   -- -- TODO: A. Include MIDI CC if possible
   -- -- -> Currently, only track envelopes are included.
-  -- -- 1. Can I copy same checks from `picker_insert_cc_curve` and add the
+  -- -- 1. Can I copy same checks from `picker__insert_envelope_curve__focused_track` and add the
   -- --    MIDI names to `picker__track_envelopes`
   -- -- 2. Support collecting MIDI CC curves with `get_curve_objs`
   --
