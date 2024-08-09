@@ -1775,4 +1775,6 @@ commands.apply_curve_to_prev_inserted_notes = function()
   })
 end
 
+--
+
 return commands
