@@ -349,7 +349,7 @@ end
 ---One (or two) step process. The list of built-in envs AND certain FX are listed
 ---in one view. Selecting an FX puts you in an intermediary "Select FX param"
 ---mode before proceeding to choosing the curve template to inject.
-automation_actions.picker__insert_envelope_curve__focused_track = function()
+automation_actions.picker__curve_insert = function()
   local state_interface = require("state_machine.state_interface")
 
   -- TODO: Include existing enabled envelopes in base picker
@@ -526,7 +526,7 @@ end
 ---1. Track envelopes view
 ---2. Envelope curve entries
 ---3. single curve components view
-automation_actions.picker_edit_track_curves_ui = function()
+automation_actions.picker__curve_manager = function()
   -- local picker__track_envelopes, picker_envelope_curve_objects, picker_single_curve_components
   --
   -- local t_foc_tr = lib_tr.get_focused_track_objects()
@@ -534,7 +534,7 @@ automation_actions.picker_edit_track_curves_ui = function()
   --
   -- -- TODO: A. Include MIDI CC if possible
   -- -- -> Currently, only track envelopes are included.
-  -- -- 1. Can I copy same checks from `picker__insert_envelope_curve__focused_track` and add the
+  -- -- 1. Can I copy same checks from `picker__curve_insert` and add the
   -- --    MIDI names to `picker__track_envelopes`
   -- -- 2. Support collecting MIDI CC curves with `get_curve_objs`
   --

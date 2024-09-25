@@ -1761,7 +1761,7 @@ commands.apply_curve_to_prev_inserted_notes = function()
 
   local midi_target_take = containers.get_midi_item_takes_for_given_context(trobj, context, range_left, range_right)
 
-  -- NOTE: reuse `automation_actions.picker__insert_envelope_curve__focused_track`
+  -- NOTE: reuse `automation_actions.picker__curve_insert`
   -- ->>> allows for selecting which target curve first.
   -- TEST: This will allow for adding fx params based on the inserted notes!!
 

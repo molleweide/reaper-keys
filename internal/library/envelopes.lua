@@ -223,7 +223,7 @@ local function generate_points_for_insertion(sel, range_left, range_right, is_mi
       )
     end
   end
-  log.user("[picker__insert_envelope_curve__focused_track]: computed curve nodes:", format.block(t_pts_to_insert))
+  log.user("[picker__curve_insert]: computed curve nodes:", format.block(t_pts_to_insert))
   return t_pts_to_insert
 end
 
@@ -1935,7 +1935,7 @@ envelopes.insert_from_template = function(trobj, t_template, target_def, range_l
   t_pts_to_insert = generate_points_for_insertion(t_template, range_left, range_right, is_cc, midi_target_take,
     target_midi_type,
     cc_num)
-  log.user("[picker__insert_envelope_curve__focused_track]: computed curve nodes:", format.block(t_pts_to_insert))
+  log.user("[picker__curve_insert]: computed curve nodes:", format.block(t_pts_to_insert))
 
   -- Insert events
   if not is_cc then

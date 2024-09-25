@@ -1132,10 +1132,10 @@ return {
   Test_insert_midi_cc_points = automation.midi_cc_test,
   Test_insert_cc = automation.test_insert_cc,
 
-  INSERT_MIDI_CC_BY_TEMPLATE = automation.picker__insert_envelope_curve__focused_track,
-  Track_Automation_curves_ui = automation.picker_edit_track_curves_ui,
+  INSERT_MIDI_CC_BY_TEMPLATE = automation.picker__curve_insert,
+  Track_Automation_curves_ui = automation.picker__curve_manager,
   Track_Edit_All_curves_for_current_region = automation.picker_edit_all_curve_objects_for_current_region,
-  Picker_All_curves_for_track = automation.picker_edit_track_curves_ui,
+  Picker_All_curves_for_track = automation.picker__curve_manager,
   Picker_AddTracks_to_ME_view = commands.picker__midi_source_manager,
 
   PickerConfigVariables = commands.browse_reaper_preferences,
